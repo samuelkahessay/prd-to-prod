@@ -26,7 +26,7 @@
 # Also maintains its own PRs by fixing CI failures and resolving merge conflicts.
 # Can be triggered on-demand via /repo-assist <instructions>.
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"ca4d8958b360f1a6dbf523c3a2fae59face9bd8eb0f868ef5630bfcc292f8cd1","compiler_version":"v0.50.1"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"05c0d8b8f437deed99195b17092c94623a875395953639b052ca9d20ae67c46e","compiler_version":"v0.50.1"}
 
 name: "Pipeline Repo Assist"
 "on":
@@ -165,7 +165,7 @@ jobs:
           cat "/opt/gh-aw/prompts/safe_outputs_prompt.md"
           cat << 'GH_AW_PROMPT_EOF'
           <safe-output-tools>
-          Tools: add_comment, create_issue, create_pull_request, add_labels, remove_labels, push_to_pull_request_branch, dispatch_workflow, missing_tool, missing_data
+          Tools: add_comment, create_issue, create_pull_request, add_labels, remove_labels, push_to_pull_request_branch, missing_tool, missing_data
           GH_AW_PROMPT_EOF
           cat "/opt/gh-aw/prompts/safe_outputs_create_pull_request.md"
           cat "/opt/gh-aw/prompts/safe_outputs_push_to_pr_branch.md"
@@ -430,7 +430,7 @@ jobs:
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
           cat > /opt/gh-aw/safeoutputs/config.json << 'GH_AW_SAFE_OUTPUTS_CONFIG_EOF'
-          {"add_comment":{"max":10,"target":"*"},"add_labels":{"allowed":["feature","test","infra","docs","bug","pipeline","blocked","ready","in-progress","completed"],"max":20,"target":"*"},"create_issue":{"max":2},"create_pull_request":{"max":4},"dispatch_workflow":{"max":4,"workflow_files":{"pr-reviewer":".yml"},"workflows":["pr-reviewer"]},"missing_data":{},"missing_tool":{},"noop":{"max":1},"push_to_pull_request_branch":{"max":4,"target":"*"},"remove_labels":{"allowed":["ready","in-progress","blocked"],"max":10}}
+          {"add_comment":{"max":10,"target":"*"},"add_labels":{"allowed":["feature","test","infra","docs","bug","pipeline","blocked","ready","in-progress","completed"],"max":20,"target":"*"},"create_issue":{"max":2},"create_pull_request":{"max":4},"missing_data":{},"missing_tool":{},"noop":{"max":1},"push_to_pull_request_branch":{"max":4,"target":"*"},"remove_labels":{"allowed":["ready","in-progress","blocked"],"max":10}}
           GH_AW_SAFE_OUTPUTS_CONFIG_EOF
           cat > /opt/gh-aw/safeoutputs/tools.json << 'GH_AW_SAFE_OUTPUTS_TOOLS_EOF'
           [
@@ -674,24 +674,6 @@ jobs:
                 "type": "object"
               },
               "name": "missing_data"
-            },
-            {
-              "_workflow_name": "pr-reviewer",
-              "description": "Dispatch the 'pr-reviewer' workflow with workflow_dispatch trigger. This workflow must support workflow_dispatch and be in .github/workflows/ directory in the same repository.",
-              "inputSchema": {
-                "additionalProperties": false,
-                "properties": {
-                  "pr_number": {
-                    "description": "PR number to review",
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "pr_number"
-                ],
-                "type": "object"
-              },
-              "name": "pr_reviewer"
             }
           ]
           GH_AW_SAFE_OUTPUTS_TOOLS_EOF
@@ -1301,7 +1283,6 @@ jobs:
     if: (always()) && (needs.agent.result != 'skipped')
     runs-on: ubuntu-slim
     permissions:
-      actions: write
       contents: write
       discussions: write
       issues: write
@@ -1541,7 +1522,6 @@ jobs:
     if: ((!cancelled()) && (needs.agent.result != 'skipped')) && (needs.agent.outputs.detection_success == 'true')
     runs-on: ubuntu-slim
     permissions:
-      actions: write
       contents: write
       discussions: write
       issues: write
@@ -1608,7 +1588,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"add_comment\":{\"hide_older_comments\":true,\"max\":10,\"target\":\"*\"},\"add_labels\":{\"allowed\":[\"feature\",\"test\",\"infra\",\"docs\",\"bug\",\"pipeline\",\"blocked\",\"ready\",\"in-progress\",\"completed\"],\"max\":20,\"target\":\"*\"},\"create_issue\":{\"labels\":[\"automation\",\"pipeline\"],\"max\":2,\"title_prefix\":\"[Pipeline] \"},\"create_pull_request\":{\"base_branch\":\"${{ github.base_ref || github.ref_name }}\",\"draft\":false,\"labels\":[\"automation\",\"pipeline\"],\"max\":4,\"max_patch_size\":1024,\"title_prefix\":\"[Pipeline] \"},\"dispatch_workflow\":{\"max\":4,\"workflow_files\":{\"pr-reviewer\":\".yml\"},\"workflows\":[\"pr-reviewer\"]},\"missing_data\":{},\"missing_tool\":{},\"push_to_pull_request_branch\":{\"base_branch\":\"${{ github.base_ref || github.ref_name }}\",\"if_no_changes\":\"warn\",\"max\":4,\"max_patch_size\":1024,\"target\":\"*\",\"title_prefix\":\"[Pipeline] \"},\"remove_labels\":{\"allowed\":[\"ready\",\"in-progress\",\"blocked\"],\"max\":10,\"target\":\"*\"}}"
+          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"add_comment\":{\"hide_older_comments\":true,\"max\":10,\"target\":\"*\"},\"add_labels\":{\"allowed\":[\"feature\",\"test\",\"infra\",\"docs\",\"bug\",\"pipeline\",\"blocked\",\"ready\",\"in-progress\",\"completed\"],\"max\":20,\"target\":\"*\"},\"create_issue\":{\"labels\":[\"automation\",\"pipeline\"],\"max\":2,\"title_prefix\":\"[Pipeline] \"},\"create_pull_request\":{\"base_branch\":\"${{ github.base_ref || github.ref_name }}\",\"draft\":false,\"labels\":[\"automation\",\"pipeline\"],\"max\":4,\"max_patch_size\":1024,\"title_prefix\":\"[Pipeline] \"},\"missing_data\":{},\"missing_tool\":{},\"push_to_pull_request_branch\":{\"base_branch\":\"${{ github.base_ref || github.ref_name }}\",\"if_no_changes\":\"warn\",\"max\":4,\"max_patch_size\":1024,\"target\":\"*\",\"title_prefix\":\"[Pipeline] \"},\"remove_labels\":{\"allowed\":[\"ready\",\"in-progress\",\"blocked\"],\"max\":10,\"target\":\"*\"}}"
           GH_AW_CI_TRIGGER_TOKEN: ${{ secrets.GH_AW_CI_TRIGGER_TOKEN }}
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}

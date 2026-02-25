@@ -52,9 +52,10 @@ safe-outputs:
     allowed: [ready, in-progress, blocked]
     max: 10
     target: "*"
-  dispatch-workflow:
-    workflows: [pr-reviewer]
-    max: 4
+  # NOTE: Do NOT dispatch pr-reviewer here — it triggers automatically on pull_request:opened.
+  # Dispatching it causes a race condition that cancels the natural trigger and leaves
+  # the PR with a failed status check. The re-dispatch loop (repo-assist cycling) is
+  # handled by pr-reviewer after it approves and merges.
 
 tools:
   web-fetch:
@@ -116,7 +117,7 @@ Each run, work on 2-4 tasks from the list below. Use round-robin scheduling base
       - Body containing: `Closes #N`, description of changes, and test results
       - AI disclosure: "This PR was created by Pipeline Assistant."
    h. Label the source issue `in-progress`.
-   i. After creating the PR, dispatch the `pr-reviewer` workflow so it is reviewed automatically.
+   Note: PR reviewer triggers automatically when the PR is created — do NOT dispatch it manually.
 4. Update memory with attempts and outcomes.
 
 ### Task 2: Maintain Pipeline Pull Requests
