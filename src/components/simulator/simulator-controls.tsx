@@ -13,7 +13,7 @@ export default function SimulatorControls() {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
 
   return (
-    <div className="flex flex-col items-center gap-8">
+    <div className="w-full flex flex-col items-center gap-8">
       <PipelineGraph key={resetKey} speed={speed} onNodeSelect={setSelectedNode} />
 
       <NodeDetail nodeId={selectedNode} onClose={() => setSelectedNode(null)} />

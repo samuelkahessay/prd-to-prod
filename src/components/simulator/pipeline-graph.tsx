@@ -6,10 +6,10 @@ import { MessageParticle, ParticleType } from "./message-particle";
 
 // Node data
 const NODES = [
-  { id: "decomposer", label: "PRD Decomposer", icon: "📋", cx: 112, cy: 100 },
-  { id: "assist", label: "Repo Assist", icon: "🤖", cx: 337, cy: 100 },
-  { id: "reviewer", label: "PR Reviewer", icon: "🔍", cx: 562, cy: 100 },
-  { id: "merge", label: "Auto-Merge", icon: "✅", cx: 787, cy: 100 },
+  { id: "decomposer", label: "PRD Decomposer", icon: "📋", cx: 150, cy: 150 },
+  { id: "assist", label: "Repo Assist", icon: "🤖", cx: 450, cy: 150 },
+  { id: "reviewer", label: "PR Reviewer", icon: "🔍", cx: 750, cy: 150 },
+  { id: "merge", label: "Auto-Merge", icon: "✅", cx: 1050, cy: 150 },
 ] as const;
 
 type NodeId = (typeof NODES)[number]["id"];
@@ -20,16 +20,16 @@ const NODE_SEQUENCE: NodeId[] = ["decomposer", "assist", "reviewer", "merge"];
 // Curved path between consecutive nodes
 function forwardPath(x1: number, x2: number, y: number): string {
   const mx = (x1 + x2) / 2;
-  return `M ${x1 + 75} ${y} C ${mx} ${y}, ${mx} ${y}, ${x2 - 75} ${y}`;
+  return `M ${x1 + 100} ${y} C ${mx} ${y}, ${mx} ${y}, ${x2 - 100} ${y}`;
 }
 
 // Dashed return path: Merge → Assist (below the nodes)
-const RETURN_PATH = `M 787 ${100 + 45} C 787 165, 337 165, 337 ${100 + 45}`;
+const RETURN_PATH = `M 1050 ${150 + 55} C 1050 245, 450 245, 450 ${150 + 55}`;
 
 const EDGE_PATHS = [
-  forwardPath(112, 337, 100),
-  forwardPath(337, 562, 100),
-  forwardPath(562, 787, 100),
+  forwardPath(150, 450, 150),
+  forwardPath(450, 750, 150),
+  forwardPath(750, 1050, 150),
   RETURN_PATH,
 ];
 
@@ -109,10 +109,10 @@ export function PipelineGraph({ speed, onNodeSelect }: PipelineGraphProps) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="w-full flex flex-col items-center gap-6">
       <svg
-        viewBox="0 0 900 200"
-        className="w-full max-w-3xl"
+        viewBox="0 0 1200 300"
+        className="w-full"
         aria-label="Pipeline node graph"
         role="img"
       >
@@ -157,25 +157,25 @@ export function PipelineGraph({ speed, onNodeSelect }: PipelineGraphProps) {
               role="button"
             >
               <motion.rect
-                x={cx - 75}
-                y={cy - 40}
-                width={150}
-                height={80}
-                rx={12}
+                x={cx - 100}
+                y={cy - 55}
+                width={200}
+                height={110}
+                rx={14}
                 fill="#1f2937"
                 stroke={borderColor(s)}
                 strokeWidth={2}
                 animate={{ stroke: borderColor(s), filter: glowFilter(s) }}
                 transition={{ duration: 0.3 }}
               />
-              <text x={cx} y={cy - 10} textAnchor="middle" fontSize={22} dominantBaseline="middle">
+              <text x={cx} y={cy - 14} textAnchor="middle" fontSize={30} dominantBaseline="middle">
                 {icon}
               </text>
               <text
                 x={cx}
-                y={cy + 18}
+                y={cy + 24}
                 textAnchor="middle"
-                fontSize={11}
+                fontSize={14}
                 fill={s === "idle" ? "#9ca3af" : "#f9fafb"}
                 dominantBaseline="middle"
               >
@@ -185,9 +185,9 @@ export function PipelineGraph({ speed, onNodeSelect }: PipelineGraphProps) {
                 {s === "completed" && (
                   <motion.text
                     key="check"
-                    x={cx + 58}
-                    y={cy - 28}
-                    fontSize={14}
+                    x={cx + 78}
+                    y={cy - 43}
+                    fontSize={18}
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
