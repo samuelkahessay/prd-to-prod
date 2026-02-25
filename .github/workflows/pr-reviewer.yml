@@ -32,11 +32,10 @@ concurrency:
 jobs:
   review:
     runs-on: ubuntu-latest
-    # Only review [Pipeline] PRs, skip if PR is from a fork
+    # Review all PRs from this repo (skip forks for security)
     if: |
       (github.event_name == 'workflow_dispatch') ||
-      (startsWith(github.event.pull_request.title, '[Pipeline]') &&
-       github.event.pull_request.head.repo.full_name == github.repository)
+      (github.event.pull_request.head.repo.full_name == github.repository)
 
     steps:
       - name: Checkout repository
@@ -293,10 +292,14 @@ jobs:
             gh pr ready "$PR_NUMBER" || echo "::warning::Could not mark PR as ready"
           fi
 
-          # Enable auto-merge
-          gh pr merge "$PR_NUMBER" --auto --squash || echo "::warning::Could not enable auto-merge (may not be configured on repo)"
-
-          echo "PR #${PR_NUMBER} approved and auto-merge enabled."
+          # Enable auto-merge only for [Pipeline] PRs (human PRs should be merged manually)
+          PR_TITLE="${{ steps.pr.outputs.title }}"
+          if [[ "$PR_TITLE" == "[Pipeline]"* ]]; then
+            gh pr merge "$PR_NUMBER" --auto --squash || echo "::warning::Could not enable auto-merge"
+            echo "PR #${PR_NUMBER} approved and auto-merge enabled."
+          else
+            echo "PR #${PR_NUMBER} approved. Non-pipeline PR — skipping auto-merge."
+          fi
 
       - name: Dispatch repo-assist for next cycle
         if: steps.review.outputs.decision == 'APPROVE'
