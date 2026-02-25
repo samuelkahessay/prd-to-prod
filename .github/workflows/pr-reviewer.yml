@@ -20,9 +20,10 @@ on:
         type: number
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
   issues: read
+  actions: write
 
 concurrency:
   group: "pr-reviewer-${{ github.event.pull_request.number || github.event.inputs.pr_number }}"
@@ -280,6 +281,26 @@ jobs:
           gh pr merge "$PR_NUMBER" --auto --squash || echo "::warning::Could not enable auto-merge (may not be configured on repo)"
 
           echo "PR #${PR_NUMBER} approved and auto-merge enabled."
+
+      - name: Dispatch repo-assist for next cycle
+        if: steps.review.outputs.decision == 'APPROVE'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if there are still open pipeline issues to implement
+          OPEN_ISSUES=$(gh issue list --repo "${{ github.repository }}" \
+            --label pipeline --label feature --state open --json number --jq 'length')
+          OPEN_INFRA=$(gh issue list --repo "${{ github.repository }}" \
+            --label pipeline --label infra --state open --json number --jq 'length')
+          TOTAL=$((OPEN_ISSUES + OPEN_INFRA))
+
+          if [ "$TOTAL" -gt 0 ]; then
+            echo "Found $TOTAL open pipeline issues. Dispatching repo-assist for next cycle."
+            gh workflow run repo-assist.lock.yml --repo "${{ github.repository }}" || \
+              echo "::warning::Could not dispatch repo-assist"
+          else
+            echo "No open pipeline issues remaining. Pipeline complete!"
+          fi
 
       - name: Submit review — REQUEST_CHANGES
         if: steps.review.outputs.decision != 'APPROVE'
