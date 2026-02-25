@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, act, fireEvent } from "@testing-library/react";
 import { PipelineGraph } from "@/components/simulator/pipeline-graph";
+import { NodeDetail } from "@/components/simulator/node-detail";
 
 // Mock framer-motion to avoid animation issues in tests
 vi.mock("framer-motion", () => ({
@@ -14,8 +15,12 @@ vi.mock("framer-motion", () => ({
     text: ({ children, ...props }: React.SVGProps<SVGTextElement>) => (
       <text {...props}>{children}</text>
     ),
+    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+      <div {...props}>{children}</div>
+    ),
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useReducedMotion: () => false,
 }));
 
 describe("PipelineGraph", () => {
@@ -57,4 +62,42 @@ describe("PipelineGraph", () => {
     expect(screen.getByLabelText(/PRD Decomposer: idle/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Repo Assist: idle/i)).toBeInTheDocument();
   });
+
+  it("calls onNodeSelect with the node id when a node is clicked", () => {
+    const onNodeSelect = vi.fn();
+    render(<PipelineGraph speed={1} onNodeSelect={onNodeSelect} />);
+    fireEvent.click(screen.getByLabelText(/Repo Assist/i));
+    expect(onNodeSelect).toHaveBeenCalledWith("assist");
+  });
 });
+
+describe("NodeDetail", () => {
+  it("shows the correct panel content for a given nodeId", () => {
+    const onClose = vi.fn();
+    render(<NodeDetail nodeId="decomposer" onClose={onClose} />);
+    expect(screen.getByText("PRD Decomposer")).toBeInTheDocument();
+    expect(screen.getByText(/Reads Product Requirements Documents/i)).toBeInTheDocument();
+    expect(screen.getByText(/PRD pushed to docs\/prd\//i)).toBeInTheDocument();
+    expect(screen.getByText(/GitHub Issues with \[Pipeline\] prefix/i)).toBeInTheDocument();
+  });
+
+  it("renders different content when nodeId changes", () => {
+    const { rerender } = render(<NodeDetail nodeId="assist" onClose={vi.fn()} />);
+    expect(screen.getByText("Repo Assist")).toBeInTheDocument();
+    rerender(<NodeDetail nodeId="reviewer" onClose={vi.fn()} />);
+    expect(screen.getByText("PR Reviewer")).toBeInTheDocument();
+  });
+
+  it("calls onClose when the close button is clicked", () => {
+    const onClose = vi.fn();
+    render(<NodeDetail nodeId="merge" onClose={onClose} />);
+    fireEvent.click(screen.getByLabelText("Close panel"));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("renders nothing when nodeId is null", () => {
+    const { container } = render(<NodeDetail nodeId={null} onClose={vi.fn()} />);
+    expect(container.firstChild).toBeNull();
+  });
+});
+

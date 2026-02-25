@@ -27,9 +27,10 @@ const RETURN_PATH = `M 787 ${100 + 45} C 787 165, 337 165, 337 ${100 + 45}`;
 
 interface PipelineGraphProps {
   speed: number; // multiplier: 0.5 | 1 | 2
+  onNodeSelect?: (id: string) => void;
 }
 
-export function PipelineGraph({ speed }: PipelineGraphProps) {
+export function PipelineGraph({ speed, onNodeSelect }: PipelineGraphProps) {
   const [states, setStates] = useState<Record<NodeId, NodeState>>({
     decomposer: "idle",
     assist: "idle",
@@ -59,6 +60,7 @@ export function PipelineGraph({ speed }: PipelineGraphProps) {
 
   const handleNodeClick = useCallback(
     (id: NodeId) => {
+      onNodeSelect?.(id);
       if (id === "decomposer") {
         reset();
         // slight delay to let reset render first
@@ -68,7 +70,7 @@ export function PipelineGraph({ speed }: PipelineGraphProps) {
         activateChain(idx);
       }
     },
-    [reset, activateChain]
+    [reset, activateChain, onNodeSelect]
   );
 
   function borderColor(s: NodeState) {
