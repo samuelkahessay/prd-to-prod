@@ -1,0 +1,19 @@
+{
+  "last_run": "2026-02-25T06:07:24Z",
+  "backlog_cursor": 13,
+  "attempted_issues": {
+    "7": {"status": "pr_created", "pr_branch": "repo-assist/issue-7-scaffold-express-ts", "timestamp": "2026-02-25T06:07:24Z"},
+    "10": {"status": "pr_created", "pr_branch": "repo-assist/issue-10-snippet-data-model", "timestamp": "2026-02-25T06:07:24Z"},
+    "13": {"status": "pr_created", "pr_branch": "repo-assist/issue-13-crud-api-endpoints", "timestamp": "2026-02-25T06:07:24Z"}
+  },
+  "dependency_state": {
+    "10_depends_on_7": "pending_merge",
+    "11_depends_on_10": "blocked",
+    "13_depends_on_10": "pending_merge",
+    "14_depends_on_13": "blocked",
+    "8_depends_on_13": "blocked",
+    "9_depends_on_8": "blocked",
+    "12_depends_on_9": "blocked"
+  },
+  "notes": "PRs stacked: issue-7 -> issue-10 -> issue-13. Merge in order."
+}
