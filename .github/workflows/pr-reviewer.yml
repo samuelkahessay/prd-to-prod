@@ -98,25 +98,21 @@ jobs:
           ISSUE_NUMBER=$(echo "$PR_BODY" | grep -oP 'Closes #\K[0-9]+' | head -1 || true)
           echo "issue_number=${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
 
-          # Fetch the diff
+          # Fetch the full diff (no truncation — premium models support large inputs)
           gh pr diff "$PR_NUMBER" > pr_diff.txt
-
-          # Truncate diff to fit GitHub Models API token limit (4000 tokens ≈ 200 lines of diff).
-          # Keep file summary (--stat) for full picture, then truncate actual diff.
           TOTAL_LINES=$(wc -l < pr_diff.txt)
-          if [ "$TOTAL_LINES" -gt 200 ]; then
-            gh pr diff "$PR_NUMBER" --stat > pr_diff_summary.txt 2>/dev/null || true
-            {
-              echo "### Changed files summary"
-              cat pr_diff_summary.txt
-              echo ""
-              echo "### Diff (first 200 of $TOTAL_LINES lines)"
-              head -n 200 pr_diff.txt
-              echo ""
-              echo "[... diff truncated — $TOTAL_LINES total lines. Review based on acceptance criteria + summary above. ...]"
-            } > pr_diff_truncated.txt
-            mv pr_diff_truncated.txt pr_diff.txt
-          fi
+          echo "Diff: $TOTAL_LINES lines"
+
+          # Prepend file summary for quick overview
+          gh pr diff "$PR_NUMBER" --stat > pr_diff_summary.txt 2>/dev/null || true
+          {
+            echo "### Changed files summary"
+            cat pr_diff_summary.txt
+            echo ""
+            echo "### Full diff ($TOTAL_LINES lines)"
+            cat pr_diff.txt
+          } > pr_diff_full.txt
+          mv pr_diff_full.txt pr_diff.txt
 
       - name: Fetch linked issue
         id: issue
@@ -225,8 +221,17 @@ jobs:
             echo "" >> review_prompt.txt
           fi
 
-          # Skip full issue body and AGENTS.md to stay within token limits.
-          # Acceptance criteria + diff summary is sufficient for review.
+          if [ -f issue_body.txt ]; then
+            echo "## Full Issue Body" >> review_prompt.txt
+            cat issue_body.txt >> review_prompt.txt
+            echo "" >> review_prompt.txt
+          fi
+
+          if [ -f agents_context.txt ]; then
+            echo "## Project Standards (AGENTS.md)" >> review_prompt.txt
+            cat agents_context.txt >> review_prompt.txt
+            echo "" >> review_prompt.txt
+          fi
 
           echo "## Diff" >> review_prompt.txt
           echo '```diff' >> review_prompt.txt
