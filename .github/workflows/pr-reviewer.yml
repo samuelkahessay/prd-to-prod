@@ -341,11 +341,12 @@ jobs:
         if: always() && steps.review.outputs.decision != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REVIEW_SUMMARY: ${{ steps.review.outputs.summary }}
         run: |
           DECISION="${{ steps.review.outputs.decision }}"
           PR_NUMBER="${{ steps.pr.outputs.number }}"
           ISSUE_NUMBER="${{ steps.pr.outputs.issue_number }}"
-          SUMMARY="${{ steps.review.outputs.summary }}"
+          SUMMARY="$REVIEW_SUMMARY"
 
           OPEN_ISSUES=$(gh issue list --repo "${{ github.repository }}" \
             --label pipeline --label feature --state open --json number --jq 'length')
