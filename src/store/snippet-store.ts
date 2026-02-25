@@ -10,6 +10,20 @@ export type UpdateSnippetInput = Partial<Omit<Snippet, 'id' | 'createdAt' | 'upd
 export class SnippetStore {
   private store = new Map<string, Snippet>();
 
+  private normalizeTags(tags?: string[]): string[] {
+    if (!tags) return [];
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const tag of tags) {
+      const normalized = tag.trim().toLowerCase();
+      if (normalized && !seen.has(normalized)) {
+        seen.add(normalized);
+        result.push(normalized);
+      }
+    }
+    return result;
+  }
+
   create(input: CreateSnippetInput): Snippet {
     const now = new Date().toISOString();
     const snippet: Snippet = {
@@ -18,7 +32,7 @@ export class SnippetStore {
       code: input.code,
       language: input.language,
       description: input.description ?? '',
-      tags: input.tags ?? [],
+      tags: this.normalizeTags(input.tags),
       createdAt: now,
       updatedAt: now,
     };
@@ -40,6 +54,7 @@ export class SnippetStore {
     const updated: Snippet = {
       ...existing,
       ...input,
+      tags: input.tags !== undefined ? this.normalizeTags(input.tags) : existing.tags,
       id: existing.id,
       createdAt: existing.createdAt,
       updatedAt: new Date().toISOString(),
@@ -71,5 +86,17 @@ export class SnippetStore {
   filterByLanguage(language: string): Snippet[] {
     const lang = language.toLowerCase();
     return this.getAll().filter((s) => s.language.toLowerCase() === lang);
+  }
+
+  getAllTags(): { name: string; count: number }[] {
+    const counts = new Map<string, number>();
+    for (const snippet of this.getAll()) {
+      for (const tag of snippet.tags) {
+        counts.set(tag, (counts.get(tag) ?? 0) + 1);
+      }
+    }
+    return Array.from(counts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 }

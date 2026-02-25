@@ -46,7 +46,7 @@ app.get('/api/snippets/search', (req, res) => {
     return;
   }
   const snippets = snippetStore.searchByText(q);
-  res.json({ snippets, count: snippets.length });
+  res.json({ snippets, count: snippets.length, query: q });
 });
 
 // GET /api/snippets/:id — get one
@@ -81,6 +81,18 @@ app.delete('/api/snippets/:id', (req, res) => {
     return;
   }
   res.status(204).send();
+});
+
+// GET /api/tags — list all unique tags with snippet counts
+app.get('/api/tags', (_req, res) => {
+  const tags = snippetStore.getAllTags();
+  res.json({ tags });
+});
+
+// GET /api/tags/:tag/snippets — list all snippets with a given tag
+app.get('/api/tags/:tag/snippets', (req, res) => {
+  const snippets = snippetStore.filterByTag(req.params.tag);
+  res.json({ snippets, count: snippets.length });
 });
 
 export default app;
