@@ -108,6 +108,13 @@ function renderCard(snippet) {
     });
   });
 
+  // Card click → navigate to snippet detail page
+  card.style.cursor = 'pointer';
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('.tag-chip')) return;
+    location.href = `snippet.html?id=${encodeURIComponent(snippet.id)}`;
+  });
+
   return card;
 }
 

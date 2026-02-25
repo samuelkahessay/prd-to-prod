@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snippet — Code Snippet Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
+  <style>
+    .snippet-detail { max-width: 860px; margin: 28px auto; padding: 0 16px; }
+    .snippet-detail-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    .snippet-detail-title { font-size: 1.5rem; font-weight: 700; flex: 1; }
+    .snippet-detail-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-danger { padding: 6px 14px; border-radius: 6px; background: var(--color-danger); color: #fff; font-weight: 600; font-size: .875rem; border: 1px solid transparent; transition: background .15s; }
+    .btn-danger:hover { background: #a40e26; }
+    .snippet-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; font-size: .875rem; color: var(--color-text-muted); }
+    .snippet-meta .lang-badge { font-size: .82rem; }
+    .code-block-wrapper { position: relative; margin-bottom: 20px; border-radius: var(--radius); border: 1px solid var(--color-border); overflow: hidden; }
+    .code-block-wrapper pre { margin: 0; overflow-x: auto; }
+    .code-block-wrapper code { font-size: .875rem; font-family: var(--font-mono); }
+    .copy-btn {
+      position: absolute; top: 8px; right: 8px;
+      padding: 4px 10px; border-radius: 5px; font-size: .78rem; font-weight: 600;
+      background: var(--color-surface); color: var(--color-text);
+      border: 1px solid var(--color-border);
+      transition: background .15s, color .15s;
+    }
+    .copy-btn:hover { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+    .copy-btn.copied { background: #2da44e; color: #fff; border-color: #2da44e; }
+    .snippet-description { margin-bottom: 20px; line-height: 1.7; color: var(--color-text); white-space: pre-wrap; }
+    .snippet-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+    .snippet-timestamps { font-size: .8rem; color: var(--color-text-muted); display: flex; gap: 16px; flex-wrap: wrap; }
+    .back-link { display: inline-flex; align-items: center; gap: 4px; font-size: .875rem; margin-bottom: 20px; }
+    .error-state, .loading-state { text-align: center; padding: 60px 0; color: var(--color-text-muted); font-size: .95rem; }
+    .confirm-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .confirm-overlay[hidden] { display: none; }
+    .confirm-box { background: var(--color-surface); border-radius: var(--radius); box-shadow: 0 8px 32px rgba(0,0,0,.2); width: 100%; max-width: 380px; padding: 24px; }
+    .confirm-box h2 { font-size: 1.05rem; margin-bottom: 10px; }
+    .confirm-box p { font-size: .9rem; color: var(--color-text-muted); margin-bottom: 20px; }
+    .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <h1 class="logo"><a href="/" style="color:inherit;text-decoration:none">Code Snippet Manager</a></h1>
+      <div class="header-actions">
+        <a href="edit.html" class="btn-primary" id="header-new-btn">+ New Snippet</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="snippet-detail" id="main">
+    <div class="loading-state" id="loading">Loading…</div>
+    <div id="content" hidden>
+      <a href="/" class="back-link" id="back-link">← All Snippets</a>
+      <div class="snippet-detail-header">
+        <h2 class="snippet-detail-title" id="snippet-title"></h2>
+        <div class="snippet-detail-actions">
+          <a class="btn-secondary" id="edit-btn" href="#">Edit</a>
+          <button class="btn-danger" id="delete-btn">Delete</button>
+        </div>
+      </div>
+      <div class="snippet-meta">
+        <span id="snippet-lang"></span>
+        <span id="snippet-created"></span>
+        <span id="snippet-updated"></span>
+      </div>
+      <div class="code-block-wrapper">
+        <button class="copy-btn" id="copy-btn" aria-label="Copy code to clipboard">Copy</button>
+        <pre><code id="snippet-code" class="hljs"></code></pre>
+      </div>
+      <p class="snippet-description" id="snippet-description" hidden></p>
+      <div class="snippet-tags" id="snippet-tags"></div>
+      <div class="snippet-timestamps">
+        <span>Created: <time id="ts-created"></time></span>
+        <span>Updated: <time id="ts-updated"></time></span>
+      </div>
+    </div>
+    <div class="error-state" id="error" hidden>
+      <p id="error-msg">Snippet not found.</p>
+      <a href="/" class="btn-primary" style="display:inline-block;margin-top:16px">← Back to All Snippets</a>
+    </div>
+  </main>
+
+  <!-- Delete confirmation -->
+  <div class="confirm-overlay" id="confirm-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="confirm-box">
+      <h2 id="confirm-title">Delete Snippet?</h2>
+      <p>This action cannot be undone.</p>
+      <div class="confirm-actions">
+        <button class="btn-secondary" id="confirm-cancel-btn">Cancel</button>
+        <button class="btn-danger" id="confirm-delete-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Helpers ────────────────────────────────────────────────────────────────
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function relativeTime(isoString) {
+      const diffMs = Date.now() - new Date(isoString).getTime();
+      const diffSec = Math.floor(diffMs / 1000);
+      if (diffSec < 60) return 'just now';
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr}h ago`;
+      const diffDay = Math.floor(diffHr / 24);
+      return `${diffDay}d ago`;
+    }
+
+    function formatDate(isoString) {
+      return new Date(isoString).toLocaleString();
+    }
+
+    // ── Init ───────────────────────────────────────────────────────────────────
+    const params = new URLSearchParams(location.search);
+    const snippetId = params.get('id');
+
+    const loadingEl    = document.getElementById('loading');
+    const contentEl    = document.getElementById('content');
+    const errorEl      = document.getElementById('error');
+    const errorMsg     = document.getElementById('error-msg');
+    const titleEl      = document.getElementById('snippet-title');
+    const langEl       = document.getElementById('snippet-lang');
+    const createdEl    = document.getElementById('snippet-created');
+    const updatedEl    = document.getElementById('snippet-updated');
+    const codeEl       = document.getElementById('snippet-code');
+    const descEl       = document.getElementById('snippet-description');
+    const tagsEl       = document.getElementById('snippet-tags');
+    const tsCreated    = document.getElementById('ts-created');
+    const tsUpdated    = document.getElementById('ts-updated');
+    const editBtn      = document.getElementById('edit-btn');
+    const deleteBtn    = document.getElementById('delete-btn');
+    const copyBtn      = document.getElementById('copy-btn');
+    const confirmOverlay  = document.getElementById('confirm-overlay');
+    const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+
+    let snippetData = null;
+
+    if (!snippetId) {
+      showError('No snippet ID provided.');
+    } else {
+      loadSnippet(snippetId);
+    }
+
+    async function loadSnippet(id) {
+      try {
+        const res = await fetch(`/api/snippets/${encodeURIComponent(id)}`);
+        if (res.status === 404) { showError('Snippet not found.'); return; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        snippetData = await res.json();
+        renderSnippet(snippetData);
+      } catch (err) {
+        showError('Failed to load snippet: ' + err.message);
+      }
+    }
+
+    function renderSnippet(s) {
+      document.title = `${s.title} — Code Snippet Manager`;
+      titleEl.textContent = s.title;
+
+      if (s.language) {
+        langEl.innerHTML = `<span class="lang-badge">${escapeHtml(s.language)}</span>`;
+      }
+
+      createdEl.textContent = `Created ${relativeTime(s.createdAt)}`;
+      updatedEl.textContent = s.updatedAt !== s.createdAt ? `Updated ${relativeTime(s.updatedAt)}` : '';
+
+      // Code block with highlight.js
+      codeEl.textContent = s.code;
+      if (s.language) {
+        codeEl.className = `language-${s.language}`;
+      }
+      // Highlight after DOM paint
+      requestAnimationFrame(() => {
+        if (window.hljs) {
+          hljs.highlightElement(codeEl);
+        }
+      });
+
+      if (s.description) {
+        descEl.textContent = s.description;
+        descEl.removeAttribute('hidden');
+      }
+
+      if (s.tags && s.tags.length) {
+        tagsEl.innerHTML = s.tags
+          .map(t => `<a href="/?tag=${encodeURIComponent(t)}" class="tag-chip">${escapeHtml(t)}</a>`)
+          .join('');
+      }
+
+      tsCreated.textContent = formatDate(s.createdAt);
+      tsCreated.setAttribute('datetime', s.createdAt);
+      tsUpdated.textContent = formatDate(s.updatedAt);
+      tsUpdated.setAttribute('datetime', s.updatedAt);
+
+      editBtn.href = `edit.html?id=${encodeURIComponent(s.id)}`;
+
+      loadingEl.hidden = true;
+      contentEl.removeAttribute('hidden');
+    }
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      loadingEl.hidden = true;
+      errorEl.removeAttribute('hidden');
+    }
+
+    // ── Copy to clipboard ──────────────────────────────────────────────────────
+    copyBtn.addEventListener('click', async () => {
+      if (!snippetData) return;
+      try {
+        await navigator.clipboard.writeText(snippetData.code);
+        copyBtn.textContent = 'Copied!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      } catch {
+        // Fallback for browsers without Clipboard API
+        const ta = document.createElement('textarea');
+        ta.value = snippetData.code;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        copyBtn.textContent = 'Copied!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      }
+    });
+
+    // ── Delete ─────────────────────────────────────────────────────────────────
+    deleteBtn.addEventListener('click', () => {
+      confirmOverlay.removeAttribute('hidden');
+      confirmDeleteBtn.focus();
+    });
+
+    confirmCancelBtn.addEventListener('click', () => {
+      confirmOverlay.setAttribute('hidden', '');
+    });
+
+    confirmDeleteBtn.addEventListener('click', async () => {
+      confirmDeleteBtn.disabled = true;
+      confirmDeleteBtn.textContent = 'Deleting…';
+      try {
+        const res = await fetch(`/api/snippets/${encodeURIComponent(snippetId)}`, { method: 'DELETE' });
+        if (!res.ok && res.status !== 204) throw new Error(`HTTP ${res.status}`);
+        location.href = '/';
+      } catch (err) {
+        confirmOverlay.setAttribute('hidden', '');
+        confirmDeleteBtn.disabled = false;
+        confirmDeleteBtn.textContent = 'Delete';
+        alert('Delete failed: ' + err.message);
+      }
+    });
+
+    // Close confirm on backdrop click
+    confirmOverlay.addEventListener('click', (e) => {
+      if (e.target === confirmOverlay) confirmOverlay.setAttribute('hidden', '');
+    });
+
+    // Keyboard: Escape closes confirm
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !confirmOverlay.hasAttribute('hidden')) {
+        confirmOverlay.setAttribute('hidden', '');
+      }
+    });
+
+    // Highlight.js loads deferred — re-highlight after it loads
+    document.querySelector('script[src*="highlight"]').addEventListener('load', () => {
+      if (codeEl.textContent && window.hljs) {
+        hljs.highlightElement(codeEl);
+      }
+    });
+  </script>
+</body>
+</html>
