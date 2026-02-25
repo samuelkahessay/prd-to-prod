@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-02-25T13:45:25Z",
+  "last_run": "2026-02-25T13:50:37Z",
   "backlog_cursor": 35,
   "attempted_issues": {
     "7": {"status": "merged", "timestamp": "2026-02-25T06:07:24Z"},
@@ -15,10 +15,11 @@
     "32": {"status": "merged", "pr": 46, "notes": "PR #46 merged.", "timestamp": "2026-02-25T12:45:57Z"},
     "33": {"status": "merged", "pr": 47, "notes": "PR #47 merged. Issue #33 closed.", "timestamp": "2026-02-25T13:41:54Z"},
     "36": {"status": "merged", "pr": 48, "notes": "PR #48 merged.", "timestamp": "2026-02-25T12:56:56Z"},
-    "37": {"status": "pr_open", "pr": 51, "notes": "PR #51 open draft, CI pending.", "timestamp": "2026-02-25T13:45:00Z"},
+    "37": {"status": "pr_open", "pr": 51, "notes": "PR #51 open draft. PR Reviewer ran: success.", "timestamp": "2026-02-25T13:50:00Z"},
     "38": {"status": "merged", "pr": 49, "notes": "PR #49 merged.", "timestamp": "2026-02-25T12:56:31Z"},
-    "39": {"status": "pr_open", "pr": 50, "notes": "PR #50 open draft, CI pending.", "timestamp": "2026-02-25T13:45:00Z"},
-    "34": {"status": "pr_open", "pr": 52, "notes": "PR #52 open draft, CI pending. NodeDetail panel + simulator-content.ts + 5 new tests.", "timestamp": "2026-02-25T13:45:00Z"}
+    "39": {"status": "pr_open", "pr": 50, "notes": "PR #50 open draft. PR Reviewer ran: success.", "timestamp": "2026-02-25T13:50:00Z"},
+    "34": {"status": "pr_open", "pr": 52, "notes": "PR #52 open draft. PR Reviewer ran: success.", "timestamp": "2026-02-25T13:50:00Z"},
+    "35": {"status": "blocked", "notes": "Blocked on #34 (PR #52 not yet merged).", "timestamp": "2026-02-25T13:50:00Z"}
   },
   "dependency_state": {
     "31_depends_on_30": "resolved",
@@ -36,9 +37,9 @@
     "39_depends_on_38": "resolved"
   },
   "open_prs": {
-    "50": {"issue": 39, "status": "draft", "ci": "pending"},
-    "51": {"issue": 37, "status": "draft", "ci": "pending"},
-    "52": {"issue": 34, "status": "draft", "ci": "pending"}
+    "50": {"issue": 39, "status": "draft", "ci": "pr_reviewer_passed"},
+    "51": {"issue": 37, "status": "draft", "ci": "pr_reviewer_passed"},
+    "52": {"issue": 34, "status": "draft", "ci": "pr_reviewer_passed"}
   },
-  "notes": "Run 2026-02-25T13:45: No new issues to implement. All 3 open PRs (#50, #51, #52) are drafts with CI pending. Issue #35 blocked until #34 (PR #52) merges. Updated status issue #41."
+  "notes": "Run 2026-02-25T13:50: No new issues to implement. All 3 open PRs (#50, #51, #52) are drafts — PR Reviewer passed on all 3. Issue #35 blocked until #34 (PR #52) merges. Updated status issue #41."
 }
