@@ -200,21 +200,22 @@ jobs:
         env:
           MODELS_TOKEN: ${{ secrets.MODELS_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
-          PROMPT_CONTENT=$(cat review_prompt.txt)
-
           # Use GitHub Models REST API with a PAT that has models:read scope
           # Falls back to GITHUB_TOKEN if MODELS_TOKEN secret isn't set (will fail gracefully)
+          # NOTE: Prompt is read from file by jq (not bash) to avoid shell expansion
+          # corruption with large diffs containing special characters.
           REVIEW_OUTPUT=""
           for MODEL in openai/gpt-5 openai/gpt-5-mini openai/gpt-5-nano; do
             echo "Trying model: $MODEL"
+            jq -n --arg model "$MODEL" --rawfile prompt review_prompt.txt '{
+              model: $model,
+              messages: [{role: "user", content: $prompt}]
+            }' > /tmp/request.json
             HTTP_CODE=$(curl -s -o /tmp/response.json -w "%{http_code}" -X POST \
               "https://models.github.ai/inference/chat/completions" \
               -H "Authorization: Bearer $MODELS_TOKEN" \
               -H "Content-Type: application/json" \
-              -d "$(jq -n --arg model "$MODEL" --arg prompt "$PROMPT_CONTENT" '{
-                model: $model,
-                messages: [{role: "user", content: $prompt}]
-              }')")
+              -d @/tmp/request.json)
 
             if [ "$HTTP_CODE" = "200" ]; then
               REVIEW_OUTPUT=$(jq -r '.choices[0].message.content // empty' /tmp/response.json)
