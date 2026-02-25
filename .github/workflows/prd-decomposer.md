@@ -12,6 +12,10 @@ on:
 
 timeout-minutes: 15
 
+engine:
+  id: copilot
+  model: gpt-4.1
+
 permissions: read-all
 
 network: defaults

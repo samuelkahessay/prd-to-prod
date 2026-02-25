@@ -8,6 +8,10 @@ on:
 
 timeout-minutes: 5
 
+engine:
+  id: copilot
+  model: gpt-4.1
+
 permissions: read-all
 
 safe-outputs:
