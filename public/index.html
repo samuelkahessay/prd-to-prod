@@ -4,9 +4,81 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Code Snippet Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
 </head>
 <body>
-  <h1>Code Snippet Manager</h1>
-  <p>Welcome to the Code Snippet Manager.</p>
+  <header class="header">
+    <div class="header-inner">
+      <h1 class="logo">Code Snippet Manager</h1>
+      <div class="header-actions">
+        <input
+          type="search"
+          id="search-input"
+          class="search-bar"
+          placeholder="Search snippets…"
+          aria-label="Search snippets"
+        >
+        <button id="new-snippet-btn" class="btn-primary">+ New Snippet</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <section class="sidebar-section">
+        <h2 class="sidebar-heading">Languages</h2>
+        <ul id="language-list" class="filter-list">
+          <li><button class="filter-btn active" data-language="">All</button></li>
+        </ul>
+      </section>
+      <section class="sidebar-section">
+        <h2 class="sidebar-heading">Tags</h2>
+        <div id="tag-cloud" class="tag-cloud"></div>
+      </section>
+    </aside>
+
+    <main class="main-content">
+      <div id="active-filter" class="active-filter" hidden>
+        Filtering by: <span id="filter-label"></span>
+        <button id="clear-filter-btn" class="clear-filter">✕ Clear</button>
+      </div>
+      <div id="snippets-grid" class="snippets-grid" role="list">
+        <p class="loading">Loading snippets…</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- New Snippet Modal -->
+  <div id="modal-overlay" class="modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="modal-title">
+    <div class="modal">
+      <h2 id="modal-title">New Snippet</h2>
+      <form id="new-snippet-form" novalidate>
+        <label for="f-title">Title <span class="required">*</span></label>
+        <input id="f-title" name="title" type="text" required placeholder="e.g. Debounce function">
+
+        <label for="f-language">Language</label>
+        <input id="f-language" name="language" type="text" placeholder="e.g. javascript">
+
+        <label for="f-description">Description</label>
+        <input id="f-description" name="description" type="text" placeholder="Short description">
+
+        <label for="f-tags">Tags (comma-separated)</label>
+        <input id="f-tags" name="tags" type="text" placeholder="e.g. utils, async">
+
+        <label for="f-code">Code <span class="required">*</span></label>
+        <textarea id="f-code" name="code" rows="8" required placeholder="Paste your code here…"></textarea>
+
+        <div class="modal-actions">
+          <button type="button" id="modal-cancel-btn" class="btn-secondary">Cancel</button>
+          <button type="submit" class="btn-primary">Save Snippet</button>
+        </div>
+        <p id="form-error" class="form-error" hidden></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
 </body>
 </html>
