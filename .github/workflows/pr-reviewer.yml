@@ -199,30 +199,34 @@ jobs:
       - name: Run AI review
         id: review
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODELS_TOKEN: ${{ secrets.MODELS_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           PROMPT_CONTENT=$(cat review_prompt.txt)
 
-          # Use GitHub Models REST API directly (gh models CLI not available in Actions)
+          # Use GitHub Models REST API with a PAT that has models:read scope
+          # Falls back to GITHUB_TOKEN if MODELS_TOKEN secret isn't set (will fail gracefully)
           REVIEW_OUTPUT=""
           for MODEL in openai/gpt-5 openai/gpt-5-mini openai/gpt-5-nano; do
             echo "Trying model: $MODEL"
-            RESPONSE=$(curl -sf -X POST \
+            HTTP_CODE=$(curl -s -o /tmp/response.json -w "%{http_code}" -X POST \
               "https://models.github.ai/inference/chat/completions" \
-              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Authorization: Bearer $MODELS_TOKEN" \
               -H "Content-Type: application/json" \
               -d "$(jq -n --arg model "$MODEL" --arg prompt "$PROMPT_CONTENT" '{
                 model: $model,
                 messages: [{role: "user", content: $prompt}],
                 temperature: 0.2
-              }')" 2>&1) && {
-              REVIEW_OUTPUT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty')
+              }')")
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              REVIEW_OUTPUT=$(jq -r '.choices[0].message.content // empty' /tmp/response.json)
               if [ -n "$REVIEW_OUTPUT" ]; then
-                echo "Success with $MODEL"
+                echo "Success with $MODEL (HTTP $HTTP_CODE)"
                 break
               fi
-            }
-            echo "::warning::$MODEL failed: $(echo "$RESPONSE" | head -c 200)"
+            fi
+            ERROR_MSG=$(cat /tmp/response.json 2>/dev/null | head -c 300)
+            echo "::warning::$MODEL failed (HTTP $HTTP_CODE): $ERROR_MSG"
             REVIEW_OUTPUT=""
           done
 
