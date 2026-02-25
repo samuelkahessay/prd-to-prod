@@ -305,23 +305,29 @@ jobs:
           fi
 
       - name: Dispatch repo-assist for next cycle
-        if: steps.review.outputs.decision == 'APPROVE'
+        if: always() && steps.review.outputs.decision != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Check if there are still open pipeline issues to implement
+          DECISION="${{ steps.review.outputs.decision }}"
+
+          # Always dispatch repo-assist after review:
+          # - APPROVE: repo-assist picks up next unblocked issues
+          # - REQUEST_CHANGES: repo-assist addresses review feedback (Task 4)
           OPEN_ISSUES=$(gh issue list --repo "${{ github.repository }}" \
             --label pipeline --label feature --state open --json number --jq 'length')
           OPEN_INFRA=$(gh issue list --repo "${{ github.repository }}" \
             --label pipeline --label infra --state open --json number --jq 'length')
-          TOTAL=$((OPEN_ISSUES + OPEN_INFRA))
+          OPEN_PRS=$(gh pr list --repo "${{ github.repository }}" \
+            --state open --json number --jq '[.[] | select(.title | startswith("[Pipeline]"))] | length')
+          TOTAL=$((OPEN_ISSUES + OPEN_INFRA + OPEN_PRS))
 
           if [ "$TOTAL" -gt 0 ]; then
-            echo "Found $TOTAL open pipeline issues. Dispatching repo-assist for next cycle."
+            echo "Review decision: $DECISION. Found $TOTAL open pipeline items (issues: $((OPEN_ISSUES + OPEN_INFRA)), PRs needing fixes: $OPEN_PRS). Dispatching repo-assist."
             gh workflow run repo-assist.lock.yml --repo "${{ github.repository }}" || \
               echo "::warning::Could not dispatch repo-assist"
           else
-            echo "No open pipeline issues remaining. Pipeline complete!"
+            echo "No open pipeline issues or PRs remaining. Pipeline complete!"
           fi
 
       - name: Submit review — REQUEST_CHANGES
