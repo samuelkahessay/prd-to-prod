@@ -25,7 +25,7 @@
 # Each issue gets clear acceptance criteria, dependency references, and type labels.
 # Triggered by the /decompose command on any issue or discussion containing a PRD.
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"a04a2099de69574e2718ad2a5cbc60e51929d746bf65568aa1a7bd3e12fb07e4","compiler_version":"v0.50.1"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"b74d8ec8ba52b848fef0dad968a341bfaeaa2c90fa715c565cc9f11d1acb2a4b","compiler_version":"v0.50.1"}
 
 name: "PRD Decomposer"
 "on":
@@ -55,6 +55,7 @@ name: "PRD Decomposer"
     types:
     - created
     - edited
+  workflow_dispatch: null
 
 permissions: {}
 
@@ -67,7 +68,9 @@ jobs:
   activation:
     needs: pre_activation
     if: >
-      (needs.pre_activation.outputs.activated == 'true') && ((github.event_name == 'issues') && ((startsWith(github.event.issue.body, '/decompose ')) ||
+      (needs.pre_activation.outputs.activated == 'true') && (((github.event_name == 'issues' || github.event_name == 'issue_comment' ||
+      github.event_name == 'pull_request' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' ||
+      github.event_name == 'discussion_comment') && ((github.event_name == 'issues') && ((startsWith(github.event.issue.body, '/decompose ')) ||
       (github.event.issue.body == '/decompose')) || (github.event_name == 'issue_comment') && (((startsWith(github.event.comment.body, '/decompose ')) ||
       (github.event.comment.body == '/decompose')) && (github.event.issue.pull_request == null)) || (github.event_name == 'issue_comment') &&
       (((startsWith(github.event.comment.body, '/decompose ')) || (github.event.comment.body == '/decompose')) &&
@@ -76,7 +79,9 @@ jobs:
       (github.event_name == 'pull_request') && ((startsWith(github.event.pull_request.body, '/decompose ')) ||
       (github.event.pull_request.body == '/decompose')) || (github.event_name == 'discussion') && ((startsWith(github.event.discussion.body, '/decompose ')) ||
       (github.event.discussion.body == '/decompose')) || (github.event_name == 'discussion_comment') && ((startsWith(github.event.comment.body, '/decompose ')) ||
-      (github.event.comment.body == '/decompose')))
+      (github.event.comment.body == '/decompose')))) || (!(github.event_name == 'issues' || github.event_name == 'issue_comment' ||
+      github.event_name == 'pull_request' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' ||
+      github.event_name == 'discussion_comment')))
     runs-on: ubuntu-slim
     permissions:
       contents: read
@@ -1165,7 +1170,9 @@ jobs:
 
   pre_activation:
     if: >
-      (github.event_name == 'issues') && ((startsWith(github.event.issue.body, '/decompose ')) || (github.event.issue.body == '/decompose')) ||
+      ((github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request' ||
+      github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment') &&
+      ((github.event_name == 'issues') && ((startsWith(github.event.issue.body, '/decompose ')) || (github.event.issue.body == '/decompose')) ||
       (github.event_name == 'issue_comment') && (((startsWith(github.event.comment.body, '/decompose ')) ||
       (github.event.comment.body == '/decompose')) && (github.event.issue.pull_request == null)) || (github.event_name == 'issue_comment') &&
       (((startsWith(github.event.comment.body, '/decompose ')) || (github.event.comment.body == '/decompose')) &&
@@ -1174,7 +1181,9 @@ jobs:
       (github.event_name == 'pull_request') && ((startsWith(github.event.pull_request.body, '/decompose ')) ||
       (github.event.pull_request.body == '/decompose')) || (github.event_name == 'discussion') && ((startsWith(github.event.discussion.body, '/decompose ')) ||
       (github.event.discussion.body == '/decompose')) || (github.event_name == 'discussion_comment') && ((startsWith(github.event.comment.body, '/decompose ')) ||
-      (github.event.comment.body == '/decompose'))
+      (github.event.comment.body == '/decompose')))) || (!(github.event_name == 'issues' || github.event_name == 'issue_comment' ||
+      github.event_name == 'pull_request' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' ||
+      github.event_name == 'discussion_comment'))
     runs-on: ubuntu-slim
     permissions:
       discussions: write

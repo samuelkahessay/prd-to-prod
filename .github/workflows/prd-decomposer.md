@@ -5,6 +5,7 @@ description: |
   Triggered by the /decompose command on any issue or discussion containing a PRD.
 
 on:
+  workflow_dispatch:
   slash_command:
     name: decompose
   reaction: "eyes"
