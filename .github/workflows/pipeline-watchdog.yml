@@ -130,7 +130,7 @@ jobs:
               grep -oiP '(closes|close|fix|fixes|resolve|resolves)\s+#\K[0-9]+' || true
           done | sort -u)
 
-          for ISSUE_ROW in $(echo "$PIPELINE_ISSUES" | jq -c '.[]'); do
+          while IFS= read -r ISSUE_ROW; do
             ISSUE_NUM=$(echo "$ISSUE_ROW" | jq -r '.number')
             ISSUE_UPDATED=$(echo "$ISSUE_ROW" | jq -r '.updatedAt')
 
@@ -162,7 +162,7 @@ jobs:
             ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
             # One dispatch per cycle
             break
-          done
+          done < <(echo "$PIPELINE_ISSUES" | jq -c '.[]')
 
           # ── Completion check ──
           echo ""
