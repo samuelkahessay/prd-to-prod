@@ -9,4 +9,5 @@
 node_modules/
 dist/
 .next/
-node_modules/
+.github/aw/
+.vscode/
