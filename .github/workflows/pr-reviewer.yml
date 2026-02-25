@@ -11,7 +11,7 @@ name: "PR Reviewer"
 
 on:
   pull_request:
-    types: [opened, synchronize, ready_for_review]
+    types: [opened, synchronize, ready_for_review, closed]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -30,12 +30,47 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Close linked issues when a PR is merged (GITHUB_TOKEN can't trigger Closes #N auto-close)
+  close-issues:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true
+    steps:
+      - name: Close linked issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
+
+          # Extract all "Closes #N" references
+          ISSUES=$(echo "$PR_BODY" | grep -oP 'Closes #\K[0-9]+' || true)
+
+          if [ -z "$ISSUES" ]; then
+            echo "No 'Closes #N' found in PR body. Nothing to close."
+            exit 0
+          fi
+
+          for ISSUE_NUM in $ISSUES; do
+            STATE=$(gh issue view "$ISSUE_NUM" --repo "${{ github.repository }}" --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
+            if [ "$STATE" = "OPEN" ]; then
+              gh issue close "$ISSUE_NUM" --repo "${{ github.repository }}" \
+                -c "Closed by merge of PR #${PR_NUMBER}." || \
+                echo "::warning::Could not close issue #${ISSUE_NUM}"
+              echo "Closed issue #${ISSUE_NUM}"
+            else
+              echo "Issue #${ISSUE_NUM} is already ${STATE}"
+            fi
+          done
+
   review:
     runs-on: ubuntu-latest
-    # Review all PRs from this repo (skip forks for security)
+    # Review all PRs from this repo (skip forks for security, skip closed PRs)
     if: |
-      (github.event_name == 'workflow_dispatch') ||
-      (github.event.pull_request.head.repo.full_name == github.repository)
+      github.event.action != 'closed' &&
+      ((github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.head.repo.full_name == github.repository))
 
     steps:
       - name: Checkout repository
