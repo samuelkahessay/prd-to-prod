@@ -1,19 +1,20 @@
 {
-  "last_run": "2026-02-25T06:22:00Z",
-  "backlog_cursor": 14,
+  "last_run": "2026-02-25T06:33:00Z",
+  "backlog_cursor": 8,
   "attempted_issues": {
     "7": {"status": "merged", "timestamp": "2026-02-25T06:07:24Z"},
     "10": {"status": "merged", "timestamp": "2026-02-25T06:07:24Z"},
     "13": {"status": "merged", "timestamp": "2026-02-25T06:07:24Z"},
-    "11": {"status": "pr_created", "pr_branch": "repo-assist/issue-11-tag-management-api", "timestamp": "2026-02-25T06:22:00Z"},
-    "14": {"status": "pr_created", "pr_branch": "repo-assist/issue-11-tag-management-api", "timestamp": "2026-02-25T06:22:00Z"}
+    "11": {"status": "merged", "notes": "Tag endpoints + normalization in main. Issue still open.", "timestamp": "2026-02-25T06:30:00Z"},
+    "14": {"status": "merged", "notes": "Search endpoint with query field + tests in main. Issue still open.", "timestamp": "2026-02-25T06:30:00Z"},
+    "8": {"status": "pr_created", "pr_branch": "repo-assist/issue-8-web-ui-snippet-list", "timestamp": "2026-02-25T06:33:00Z"}
   },
   "dependency_state": {
     "11_depends_on_13": "resolved",
     "14_depends_on_13": "resolved",
-    "8_depends_on_11": "pending_merge",
-    "9_depends_on_8": "blocked",
+    "8_depends_on_11": "resolved",
+    "9_depends_on_8": "pending_merge",
     "12_depends_on_9": "blocked"
   },
-  "notes": "Issues #7, #10, #13 merged. PRs for #11 and #14 created together on branch issue-11-tag-management-api. #8 waiting on #11 to merge."
+  "notes": "Issues #7,#10,#13,#11,#14 code all merged to main (49 tests pass). PR created for #8 (Web UI). #9 waiting on #8 to merge."
 }
