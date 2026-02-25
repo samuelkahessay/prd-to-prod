@@ -1,43 +1,12 @@
 {
-  "last_run": "2026-02-25T20:43:44Z",
-  "backlog_cursor": 39,
-  "attempted_issues": {
-    "7": {"status": "merged", "timestamp": "2026-02-25T06:07:24Z"},
-    "10": {"status": "merged", "timestamp": "2026-02-25T06:07:24Z"},
-    "13": {"status": "merged", "timestamp": "2026-02-25T06:07:24Z"},
-    "11": {"status": "merged", "notes": "Tag endpoints + normalization in main.", "timestamp": "2026-02-25T06:30:00Z"},
-    "14": {"status": "merged", "notes": "Search endpoint with query field + tests in main.", "timestamp": "2026-02-25T06:30:00Z"},
-    "8": {"status": "merged", "notes": "Issue closed as completed.", "timestamp": "2026-02-25T06:37:06Z"},
-    "9": {"status": "merged", "pr": 26, "notes": "PR #26 merged.", "timestamp": "2026-02-25T06:53:08Z"},
-    "12": {"status": "closed", "pr": 27, "notes": "PR #27 closed.", "timestamp": "2026-02-25T07:01:00Z"},
-    "30": {"status": "merged", "notes": "Issue closed, code in main.", "timestamp": "2026-02-25T12:42:00Z"},
-    "31": {"status": "merged", "notes": "Issue closed, code in main.", "timestamp": "2026-02-25T12:42:00Z"},
-    "32": {"status": "merged", "notes": "Issue closed, code in main.", "timestamp": "2026-02-25T14:18:00Z"},
-    "33": {"status": "merged", "notes": "Issue closed, code in main.", "timestamp": "2026-02-25T14:18:00Z"},
-    "36": {"status": "merged", "notes": "Issue closed, code in main.", "timestamp": "2026-02-25T14:18:00Z"},
-    "38": {"status": "merged", "notes": "Issue closed, code in main.", "timestamp": "2026-02-25T14:18:00Z"},
-    "37": {"status": "merged", "pr": 51, "notes": "PR #51 merged.", "timestamp": "2026-02-25T14:22:00Z"},
-    "39": {"status": "merged", "pr": 50, "notes": "PR #50 merged.", "timestamp": "2026-02-25T14:22:00Z"},
-    "34": {"status": "merged", "pr": 52, "notes": "PR #52 merged.", "timestamp": "2026-02-25T14:22:00Z"},
-    "35": {"status": "merged", "pr": 53, "notes": "PR #53 merged. All Pipeline Observatory tasks complete.", "timestamp": "2026-02-25T14:31:33Z"}
-  },
-  "dependency_state": {
-    "31_depends_on_30": "resolved",
-    "32_depends_on_30": "resolved",
-    "32_depends_on_31": "resolved",
-    "33_depends_on_32": "resolved",
-    "34_depends_on_33": "resolved",
-    "35_depends_on_33": "resolved",
-    "35_depends_on_34": "resolved",
-    "36_depends_on_31": "resolved",
-    "36_depends_on_32": "resolved",
-    "37_depends_on_36": "resolved",
-    "38_depends_on_31": "resolved",
-    "38_depends_on_32": "resolved",
-    "39_depends_on_38": "resolved"
-  },
-  "open_prs": {
-    "56": {"title": "[WIP] Diagnose failures in pipeline workflows", "status": "draft", "notes": "All checklist items complete. Awaiting owner review to un-draft and merge."}
-  },
-  "notes": "Run 2026-02-25T20:43: Pipeline complete. All 20 Pipeline Observatory issues closed (23 total pipeline issues closed). No new implementable issues. Open draft PR #56 (workflow fixes) awaits human review."
+  "last_run": "2026-02-25T21:04:56Z",
+  "attempts": [
+    {
+      "issue": 57,
+      "title": "Simulator pipeline graph and nodes are too small — scale to fill the screen",
+      "branch": "repo-assist/issue-57-scale-graph",
+      "status": "pr_created",
+      "timestamp": "2026-02-25T21:08:00Z"
+    }
+  ]
 }
