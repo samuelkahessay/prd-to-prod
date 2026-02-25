@@ -8,3 +8,5 @@
 .claude/
 node_modules/
 dist/
+.next/
+node_modules/
