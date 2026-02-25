@@ -107,61 +107,42 @@ jobs:
 
           gh pr diff "$PR_NUMBER" --stat > pr_diff_summary.txt 2>/dev/null || true
 
-          # Split diff into test files and non-test files
-          # Test files: anything with test, spec, __tests__ in the path
-          python3 << 'PYEOF' > pr_diff.txt
-import re, sys
-
-with open("pr_diff_raw.txt") as f:
-    raw = f.read()
-
-with open("pr_diff_summary.txt") as f:
-    stat = f.read().strip()
-
-# Split diff into per-file chunks
-chunks = re.split(r'(?=^diff --git )', raw, flags=re.MULTILINE)
-chunks = [c for c in chunks if c.strip()]
-
-test_chunks = []
-data_chunks = []
-impl_chunks = []
-
-for chunk in chunks:
-    first_line = chunk.split('\n')[0] if chunk else ''
-    path = first_line.split(' b/')[-1] if ' b/' in first_line else ''
-    if any(k in path.lower() for k in ['test', 'spec', '__test']):
-        test_chunks.append(chunk)
-    elif any(k in path.lower() for k in ['data/', 'fixture', 'failures.ts', 'simulator-content']):
-        data_chunks.append(chunk)
-    else:
-        impl_chunks.append(chunk)
-
-# Build output: stat + tests (full) + data (full) + impl (truncated)
-MAX_LINES = 300  # ~2000 tokens
-out_lines = []
-out_lines.append("### Changed files summary")
-out_lines.append(stat)
-out_lines.append("")
-
-# Always include test and data files in full
-for label, group in [("test", test_chunks), ("data", data_chunks)]:
-    for chunk in group:
-        out_lines.extend(chunk.rstrip().split('\n'))
-
-used = len(out_lines)
-remaining = MAX_LINES - used
-
-# Add impl files with remaining budget
-impl_text = '\n'.join(c.rstrip() for c in impl_chunks)
-impl_lines = impl_text.split('\n')
-if len(impl_lines) <= remaining:
-    out_lines.extend(impl_lines)
-else:
-    out_lines.extend(impl_lines[:remaining])
-    out_lines.append(f"[... implementation truncated — {len(impl_lines)} impl lines, showed {remaining}. Tests and data shown in full above. ...]")
-
-print('\n'.join(out_lines))
-PYEOF
+          # Smart truncation: test/data files in full, implementation truncated.
+          # Write Python script to temp file to avoid YAML indentation conflicts.
+          cat > /tmp/smart_diff.py << 'PYEOF'
+          import re, sys
+          with open("pr_diff_raw.txt") as f:
+              raw = f.read()
+          with open("pr_diff_summary.txt") as f:
+              stat = f.read().strip()
+          chunks = re.split(r'(?=^diff --git )', raw, flags=re.MULTILINE)
+          chunks = [c for c in chunks if c.strip()]
+          test_chunks, data_chunks, impl_chunks = [], [], []
+          for chunk in chunks:
+              first_line = chunk.split('\n')[0] if chunk else ''
+              path = first_line.split(' b/')[-1] if ' b/' in first_line else ''
+              if any(k in path.lower() for k in ['test', 'spec', '__test']):
+                  test_chunks.append(chunk)
+              elif any(k in path.lower() for k in ['data/', 'fixture', 'failures.ts', 'simulator-content']):
+                  data_chunks.append(chunk)
+              else:
+                  impl_chunks.append(chunk)
+          MAX_LINES = 300
+          out = ["### Changed files summary", stat, ""]
+          for group in [test_chunks, data_chunks]:
+              for chunk in group:
+                  out.extend(chunk.rstrip().split('\n'))
+          remaining = MAX_LINES - len(out)
+          impl_text = '\n'.join(c.rstrip() for c in impl_chunks)
+          impl_lines = impl_text.split('\n')
+          if len(impl_lines) <= remaining:
+              out.extend(impl_lines)
+          else:
+              out.extend(impl_lines[:remaining])
+              out.append(f"[... impl truncated — {len(impl_lines)} lines, showed {remaining}. Tests+data in full above. ...]")
+          print('\n'.join(out))
+          PYEOF
+          python3 /tmp/smart_diff.py > pr_diff.txt
           echo "Smart diff: $(wc -l < pr_diff.txt) lines (tests+data prioritized)"
 
       - name: Fetch linked issue
