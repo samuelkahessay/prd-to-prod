@@ -31,6 +31,31 @@ echo "Compiling gh-aw workflows..."
 gh aw compile
 echo "Workflows compiled."
 
+# Seed repo-memory branch (prevents first-run artifact error)
+echo "Seeding repo-memory branch..."
+if ! git ls-remote --heads origin memory/repo-assist | grep -q memory/repo-assist; then
+  TEMP_DIR=$(mktemp -d)
+  echo '{"initialized": true, "note": "Seeded by bootstrap.sh"}' > "$TEMP_DIR/state.json"
+  cd "$TEMP_DIR"
+  git init -q && git checkout -q --orphan memory/repo-assist
+  git add state.json && git commit -q -m "Seed repo memory"
+  git remote add origin "$(gh repo view --json url -q .url).git"
+  git push -q origin memory/repo-assist
+  cd - > /dev/null
+  rm -rf "$TEMP_DIR"
+  echo "Repo-memory branch created."
+else
+  echo "Repo-memory branch already exists, skipping."
+fi
+
+# Configure repo settings for pipeline
+echo "Configuring repo settings..."
+gh api repos/{owner}/{repo} --method PATCH \
+  -f squash_merge_commit_message="PR_BODY" \
+  -f squash_merge_commit_title="PR_TITLE" \
+  --silent 2>/dev/null || true
+echo "Squash merge set to use PR body (preserves Closes #N)."
+
 # Configure secrets reminder
 echo ""
 echo "=== Setup Complete ==="
