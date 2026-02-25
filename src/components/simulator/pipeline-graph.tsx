@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { MessageParticle, ParticleType } from "./message-particle";
 
 // Node data
 const NODES = [
@@ -25,6 +26,20 @@ function forwardPath(x1: number, x2: number, y: number): string {
 // Dashed return path: Merge → Assist (below the nodes)
 const RETURN_PATH = `M 787 ${100 + 45} C 787 165, 337 165, 337 ${100 + 45}`;
 
+const EDGE_PATHS = [
+  forwardPath(112, 337, 100),
+  forwardPath(337, 562, 100),
+  forwardPath(562, 787, 100),
+  RETURN_PATH,
+];
+
+const EDGE_TYPES: ParticleType[] = ["Issues", "PRs", "Review", "Dispatch"];
+
+interface Particle {
+  id: string;
+  pathIndex: number;
+}
+
 interface PipelineGraphProps {
   speed: number; // multiplier: 0.5 | 1 | 2
   onNodeSelect?: (id: string) => void;
@@ -37,9 +52,14 @@ export function PipelineGraph({ speed, onNodeSelect }: PipelineGraphProps) {
     reviewer: "idle",
     merge: "idle",
   });
+  const [particles, setParticles] = useState<Particle[]>([]);
 
   const reset = useCallback(() => {
     setStates({ decomposer: "idle", assist: "idle", reviewer: "idle", merge: "idle" });
+  }, []);
+
+  const removeParticle = useCallback((id: string) => {
+    setParticles((prev) => prev.filter((p) => p.id !== id));
   }, []);
 
   const activateChain = useCallback(
@@ -47,8 +67,12 @@ export function PipelineGraph({ speed, onNodeSelect }: PipelineGraphProps) {
       const delay = 1500 / speed;
       for (let i = startIndex; i < NODE_SEQUENCE.length; i++) {
         const nodeId = NODE_SEQUENCE[i];
+        const edgeIndex = i;
         setTimeout(() => {
           setStates((prev) => ({ ...prev, [nodeId]: "active" }));
+          // Spawn a particle for each active node's outgoing edge
+          const pId = `p-${edgeIndex}-${Date.now()}`;
+          setParticles((prev) => [...prev, { id: pId, pathIndex: edgeIndex }]);
           setTimeout(() => {
             setStates((prev) => ({ ...prev, [nodeId]: "completed" }));
           }, delay);
@@ -176,6 +200,19 @@ export function PipelineGraph({ speed, onNodeSelect }: PipelineGraphProps) {
             </motion.g>
           );
         })}
+        {/* Message particles */}
+        <AnimatePresence>
+          {particles.map((p) => (
+            <MessageParticle
+              key={p.id}
+              id={p.id}
+              type={EDGE_TYPES[p.pathIndex]}
+              pathD={EDGE_PATHS[p.pathIndex]}
+              duration={1 / speed}
+              onComplete={removeParticle}
+            />
+          ))}
+        </AnimatePresence>
       </svg>
     </div>
   );

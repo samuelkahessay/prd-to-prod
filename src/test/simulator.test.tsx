@@ -18,6 +18,7 @@ vi.mock("framer-motion", () => ({
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
       <div {...props}>{children}</div>
     ),
+    circle: (props: React.SVGProps<SVGCircleElement>) => <circle {...props} />,
   },
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useReducedMotion: () => false,
@@ -68,6 +69,17 @@ describe("PipelineGraph", () => {
     render(<PipelineGraph speed={1} onNodeSelect={onNodeSelect} />);
     fireEvent.click(screen.getByLabelText(/Repo Assist/i));
     expect(onNodeSelect).toHaveBeenCalledWith("assist");
+  });
+
+  it("activating the first node causes a particle to appear between the first two nodes", async () => {
+    render(<PipelineGraph speed={1} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText(/PRD Decomposer/i));
+      vi.advanceTimersByTime(100); // past the 50ms reset delay and 0ms activation timeout
+    });
+
+    expect(screen.getByLabelText("particle-Issues")).toBeInTheDocument();
   });
 });
 
