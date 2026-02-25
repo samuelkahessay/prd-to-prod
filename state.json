@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-25T12:53:00Z",
-  "backlog_cursor": 38,
+  "last_run": "2026-02-25T13:04:00Z",
+  "backlog_cursor": 39,
   "attempted_issues": {
     "7": {"status": "merged", "timestamp": "2026-02-25T06:07:24Z"},
     "10": {"status": "merged", "timestamp": "2026-02-25T06:07:24Z"},
@@ -13,9 +13,11 @@
     "30": {"status": "in_main", "notes": "Scaffold code is in main.", "timestamp": "2026-02-25T12:42:00Z"},
     "31": {"status": "in_main", "notes": "Fixture data & data loading layer is in main.", "timestamp": "2026-02-25T12:42:00Z"},
     "32": {"status": "merged", "pr": 46, "notes": "PR #46 merged.", "timestamp": "2026-02-25T12:45:57Z"},
-    "33": {"status": "pr_open", "notes": "Draft PR created. Branch: repo-assist/issue-33-simulator-node-graph. 11 tests pass.", "timestamp": "2026-02-25T12:53:00Z"},
-    "36": {"status": "pr_open", "notes": "Draft PR created. Branch: repo-assist/issue-36-replay-timeline. 11 tests pass.", "timestamp": "2026-02-25T12:53:00Z"},
-    "38": {"status": "pr_open", "notes": "Draft PR created. Branch: repo-assist/issue-38-forensics-cycles. 13 tests pass.", "timestamp": "2026-02-25T12:53:00Z"}
+    "33": {"status": "pr_open", "pr": 47, "notes": "Draft PR #47 open. Branch: repo-assist/issue-33-simulator-node-graph. 11 tests pass.", "timestamp": "2026-02-25T12:53:00Z"},
+    "36": {"status": "merged", "pr": 48, "notes": "PR #48 merged.", "timestamp": "2026-02-25T12:56:56Z"},
+    "37": {"status": "pr_open", "notes": "Draft PR created. Branch: repo-assist/issue-37-replay-event-detail. 17 tests pass.", "timestamp": "2026-02-25T13:04:00Z"},
+    "38": {"status": "merged", "pr": 49, "notes": "PR #49 merged.", "timestamp": "2026-02-25T12:56:31Z"},
+    "39": {"status": "pr_open", "notes": "Draft PR created. Branch: repo-assist/issue-39-forensics-failure-timeline. 19 tests pass.", "timestamp": "2026-02-25T13:04:00Z"}
   },
   "dependency_state": {
     "31_depends_on_30": "resolved",
@@ -27,10 +29,10 @@
     "35_depends_on_34": "pending",
     "36_depends_on_31": "resolved",
     "36_depends_on_32": "resolved",
-    "37_depends_on_36": "pending",
+    "37_depends_on_36": "resolved",
     "38_depends_on_31": "resolved",
     "38_depends_on_32": "resolved",
-    "39_depends_on_38": "pending"
+    "39_depends_on_38": "resolved"
   },
-  "notes": "This run: implemented #33 (Simulator), #36 (Replay), #38 (Forensics). All tests pass. Once these merge: #34 #35 (need #33), #37 (needs #36), #39 (needs #38)."
+  "notes": "This run: implemented #37 (Replay EventDetail+Controls) and #39 (Forensics FailureTimeline). Open PRs: #47 (Simulator #33), #37-branch, #39-branch. Once #33 merges: #34 and #35 unlock."
 }
