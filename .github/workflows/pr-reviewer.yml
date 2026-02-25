@@ -261,7 +261,7 @@ jobs:
           # If the PR is still a draft, mark it ready for review
           PR_DRAFT=$(gh pr view "$PR_NUMBER" --json isDraft -q '.isDraft')
           if [ "$PR_DRAFT" = "true" ]; then
-            gh pr ready "$PR_NUMBER"
+            gh pr ready "$PR_NUMBER" || echo "::warning::Could not mark PR as ready"
           fi
 
           # Enable auto-merge
