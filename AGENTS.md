@@ -12,9 +12,9 @@ by the prd-decomposer workflow, and implemented by the repo-assist workflow.
 - Use TypeScript strict mode
 
 ## Build & Test
-- Build: `npm run build`
-- Test: `npm test`
-- Lint: `npm run lint`
+Commands are defined by the active PRD. When no application code is deployed:
+- No build/test commands are available
+- The next PRD will establish the tech stack and commands
 
 ## PR Requirements
 - PR body must include `Closes #N` referencing the source issue
