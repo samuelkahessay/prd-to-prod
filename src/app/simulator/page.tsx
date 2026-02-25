@@ -1,4 +1,3 @@
-import { PipelineGraph } from "@/components/simulator/pipeline-graph";
 import SimulatorControls from "@/components/simulator/simulator-controls";
 
 export default function SimulatorPage() {

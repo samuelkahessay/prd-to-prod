@@ -77,8 +77,8 @@ export function PipelineGraph({ speed }: PipelineGraphProps) {
     return "#4b5563"; // gray-600
   }
 
-  function glowColor(s: NodeState) {
-    if (s === "active") return "0 0 20px 4px rgba(59,130,246,0.5)";
+  function glowFilter(s: NodeState): string {
+    if (s === "active") return "drop-shadow(0 0 8px rgba(59,130,246,0.7))";
     return "none";
   }
 
@@ -139,9 +139,8 @@ export function PipelineGraph({ speed }: PipelineGraphProps) {
                 fill="#1f2937"
                 stroke={borderColor(s)}
                 strokeWidth={2}
-                animate={{ stroke: borderColor(s) }}
+                animate={{ stroke: borderColor(s), filter: glowFilter(s) }}
                 transition={{ duration: 0.3 }}
-                style={{ filter: glowColor(s) }}
               />
               <text x={cx} y={cy - 10} textAnchor="middle" fontSize={22} dominantBaseline="middle">
                 {icon}
