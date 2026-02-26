@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-02-26T03:28:00Z",
+  "last_run": "2026-02-26T03:42:00Z",
   "attempts": [
     {
       "issue": 63,
@@ -23,32 +23,50 @@
       "issue": 66,
       "title": "Card Component — Profile Section (Avatar, Bio, Stats)",
       "branch": "repo-assist/issue-66-card-profile-section",
-      "pr": null,
-      "status": "pr_open_draft",
-      "ci": "pending",
+      "pr": 80,
+      "status": "pr_open",
+      "ci": "passing",
       "timestamp": "2026-02-26T03:28:00Z"
     },
     {
       "issue": 67,
       "title": "Card Component — Language Breakdown Bar and Color Map",
       "branch": "repo-assist/issue-67-language-bar",
-      "pr": null,
-      "status": "pr_open_draft",
-      "ci": "pending",
+      "pr": 81,
+      "status": "pr_open",
+      "ci": "passing",
       "timestamp": "2026-02-26T03:28:00Z"
     },
     {
       "issue": 68,
       "title": "Card Component — Top Repositories List",
       "branch": "repo-assist/issue-68-top-repos",
-      "pr": null,
-      "status": "pr_open_draft",
-      "ci": "pending",
+      "pr": 82,
+      "status": "pr_open",
+      "ci": "passing",
       "timestamp": "2026-02-26T03:28:00Z"
+    },
+    {
+      "issue": 65,
+      "title": "Navigation Bar and Landing Page with Username Form",
+      "branch": "repo-assist/issue-65-nav-landing",
+      "pr": null,
+      "status": "pr_open",
+      "ci": "pending",
+      "timestamp": "2026-02-26T03:42:00Z"
+    },
+    {
+      "issue": 72,
+      "title": "OG Image API Route — Social Media Preview Image Generation",
+      "branch": "repo-assist/issue-72-og-image",
+      "pr": null,
+      "status": "pr_open",
+      "ci": "pending",
+      "timestamp": "2026-02-26T03:42:00Z"
     }
   ],
   "completed_issues": [63, 64],
-  "in_progress_issues": [66, 67, 68],
-  "blocked_issues": [65, 69, 70, 71, 72, 73],
-  "notes": "PRs for #66, #67, #68 opened. All depend on #64 which is merged. Note: #68 and #67 both create src/data/language-colors.ts with identical content — merge order matters, second merge will have no-op on that file. Next: implement #65 (nav+landing, depends on #63+#64), #72 (OG image, depends on #64), and #69 (themes, depends on #66+#67+#68 — wait for those to merge)."
+  "in_progress_issues": [65, 66, 67, 68, 72],
+  "blocked_issues": [69, 70, 71, 73],
+  "notes": "PRs open for #65, #66, #67, #68, #72. Issues #69, #70, #73 depend on #66/#67/#68 (PRs open, awaiting review). #71 depends on #70 (not started). After those PRs merge, implement #69 (themes), #70 (card page), #73 (gallery) in that order. Note: #67 and #68 both create src/data/language-colors.ts with identical content — second merge will be a no-op on that file. #72 OG route skips the generateMetadata update in card/[username]/page.tsx since #70 hasn't created it yet — should be added when implementing #70."
 }
