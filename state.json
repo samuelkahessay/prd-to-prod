@@ -1,18 +1,27 @@
 {
-  "last_run": "2026-02-25T23:36:37Z",
+  "last_run": "2026-02-26T02:03:00Z",
   "attempts": [
     {
       "issue": 63,
       "title": "Project Scaffold — Next.js 14 + TypeScript + Tailwind + Vitest",
       "branch": "repo-assist/issue-63-project-scaffold",
       "pr": 74,
-      "status": "pr_open_awaiting_review",
+      "status": "merged",
       "ci": "passing",
       "timestamp": "2026-02-25T23:09:00Z"
+    },
+    {
+      "issue": 64,
+      "title": "GitHub Data Layer — Types, Fixtures, and API Fetching",
+      "branch": "repo-assist/issue-64-github-data-layer",
+      "pr": "pending_open",
+      "status": "pr_open_awaiting_review",
+      "ci": "passing",
+      "timestamp": "2026-02-26T02:03:00Z"
     }
   ],
-  "completed_issues": [],
-  "in_progress_issues": [63],
-  "blocked_issues": [64, 65, 66, 67, 68, 69, 70, 71, 72, 73],
-  "notes": "PR #74 open for issue #63 (project scaffold). CI passing (Vercel deployment success). No reviews yet. All other issues blocked until #63 merges. Run 2 checked status - no changes needed."
+  "completed_issues": [63],
+  "in_progress_issues": [64],
+  "blocked_issues": [65, 66, 67, 68, 69, 70, 71, 72, 73],
+  "notes": "PR #74 merged (issue #63). Opened PR for issue #64 (data layer). All issues 65-73 blocked until #64 merges. #65 unblocks after #64."
 }
