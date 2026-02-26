@@ -1,7 +1,7 @@
 #
 # Close Linked Issues — Closes issues referenced by "Closes #N" in merged PRs.
 #
-# Isolated from pr-reviewer to avoid concurrency group conflicts that
+# Isolated from pr-review-submit to avoid concurrency group conflicts that
 # previously caused this job to be cancelled on every run.
 #
 

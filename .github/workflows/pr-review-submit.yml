@@ -1,0 +1,161 @@
+#
+# PR Review Submit — Watches for pr-review-agent verdict comments and submits
+# the formal GitHub review as github-actions[bot].
+#
+# This is a standard GitHub Actions workflow (not an agentic .md workflow)
+# so that it always uses GITHUB_TOKEN (github-actions[bot] identity).
+# This ensures a different identity from the GitHub App that creates PRs,
+# avoiding GitHub's self-approval restriction.
+#
+# Flow:
+#   1. pr-review-agent posts a verdict comment starting with <!-- pr-review-verdict -->
+#   2. This workflow fires on issue_comment:created, detects the marker
+#   3. Parses APPROVE or REQUEST_CHANGES from the comment body
+#   4. Submits the formal GitHub review as github-actions[bot]
+#   5. On APPROVE: marks draft PRs ready, enables auto-merge for [Pipeline] PRs
+#   6. Dispatches repo-assist for next cycle (APPROVE) or posts /repo-assist (REQUEST_CHANGES)
+#
+
+name: "PR Review Submit"
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: "pr-review-submit-${{ github.event.issue.number }}"
+  cancel-in-progress: false
+
+jobs:
+  submit-review:
+    runs-on: ubuntu-latest
+    # Only fire on PR comments (not issue comments) containing the verdict marker
+    if: |
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '<!-- pr-review-verdict -->')
+
+    steps:
+      - name: Parse verdict and submit review
+        id: review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Fetch the comment body via API to avoid direct shell exposure to user content
+          COMMENT_BODY=$(gh api "/repos/${REPO}/issues/comments/${COMMENT_ID}" \
+            --jq '.body')
+
+          # Extract verdict — default to REQUEST_CHANGES if not parseable (fail-safe)
+          VERDICT=$(echo "$COMMENT_BODY" | grep -oP '\*\*VERDICT:\s*\K(APPROVE|REQUEST_CHANGES)' | head -1 || echo "")
+          if [ "$VERDICT" != "APPROVE" ] && [ "$VERDICT" != "REQUEST_CHANGES" ]; then
+            echo "::warning::Could not parse verdict from comment, defaulting to REQUEST_CHANGES"
+            VERDICT="REQUEST_CHANGES"
+          fi
+          echo "verdict=${VERDICT}" >> "$GITHUB_OUTPUT"
+          echo "Parsed verdict: ${VERDICT}"
+
+          # Extract summary (first non-empty line after "### Summary")
+          SUMMARY=$(echo "$COMMENT_BODY" | awk '/^### Summary/{found=1; next} found && /^[^[:space:]]/{print; exit} found && /^[[:space:]]*$/{next} found{print; exit}' | head -1 || echo "Review completed.")
+          echo "summary=${SUMMARY}" >> "$GITHUB_OUTPUT"
+
+          # Get PR title for [Pipeline] detection and linked issue extraction
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --json title --jq '.title')
+          echo "pr_title=${PR_TITLE}" >> "$GITHUB_OUTPUT"
+
+          # Extract linked issue number from PR body via jq (zero shell exposure to body)
+          ISSUE_NUMBER=$(gh pr view "$PR_NUMBER" --json body \
+            --jq '[.body | scan("(?i)(?:closes|close|fix|fixes|resolve|resolves)\\s+#(\\d+)")] | first | .[]? // empty' \
+            | head -1 || true)
+          echo "issue_number=${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
+
+          # Build review body from the agent comment (strip the HTML marker line)
+          REVIEW_BODY=$(echo "$COMMENT_BODY" | grep -v '^<!-- pr-review-verdict -->' | sed '/./,$!d')
+          if [ "$VERDICT" = "APPROVE" ]; then
+            REVIEW_BODY="## Pipeline Review — Approved"$'\n\n'"${REVIEW_BODY}"$'\n\n'"---"$'\n'"*Submitted by Pipeline Review Submit (github-actions[bot]).*"
+          else
+            REVIEW_BODY="## Pipeline Review — Changes Requested"$'\n\n'"${REVIEW_BODY}"$'\n\n'"---"$'\n'"*Submitted by Pipeline Review Submit (github-actions[bot]).*"
+          fi
+
+          # Submit the formal review as github-actions[bot] (via GITHUB_TOKEN)
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${REPO}/pulls/${PR_NUMBER}/reviews" \
+            -f event="${VERDICT}" \
+            -f body="${REVIEW_BODY}"
+
+          echo "Submitted ${VERDICT} review on PR #${PR_NUMBER}"
+
+      - name: Mark draft PR ready and enable auto-merge (APPROVE only)
+        if: steps.review.outputs.verdict == 'APPROVE'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          PR_TITLE: ${{ steps.review.outputs.pr_title }}
+        run: |
+          # If the PR is still a draft, mark it ready for review
+          PR_DRAFT=$(gh pr view "$PR_NUMBER" --json isDraft -q '.isDraft')
+          if [ "$PR_DRAFT" = "true" ]; then
+            gh pr ready "$PR_NUMBER" || echo "::warning::Could not mark PR as ready"
+          fi
+
+          # Enable auto-merge only for [Pipeline] PRs (human PRs should be merged manually)
+          if [[ "$PR_TITLE" == "[Pipeline]"* ]]; then
+            gh pr merge "$PR_NUMBER" --auto --squash || echo "::warning::Could not enable auto-merge"
+            echo "PR #${PR_NUMBER} approved and auto-merge enabled."
+          else
+            echo "PR #${PR_NUMBER} approved. Non-pipeline PR — skipping auto-merge."
+          fi
+
+      - name: Dispatch repo-assist for next cycle
+        if: always() && steps.review.outputs.verdict != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REVIEW_VERDICT: ${{ steps.review.outputs.verdict }}
+          REVIEW_SUMMARY: ${{ steps.review.outputs.summary }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_NUMBER: ${{ steps.review.outputs.issue_number }}
+          REPO: ${{ github.repository }}
+        run: |
+          VERDICT="$REVIEW_VERDICT"
+          SUMMARY="$REVIEW_SUMMARY"
+
+          OPEN_ISSUES=$(gh issue list --repo "$REPO" \
+            --label pipeline --label feature --state open --json number --jq 'length')
+          OPEN_INFRA=$(gh issue list --repo "$REPO" \
+            --label pipeline --label infra --state open --json number --jq 'length')
+          OPEN_PRS=$(gh pr list --repo "$REPO" \
+            --state open --json number,title --jq '[.[] | select(.title // "" | startswith("[Pipeline]"))] | length')
+          TOTAL=$((OPEN_ISSUES + OPEN_INFRA + OPEN_PRS))
+
+          if [ "$TOTAL" -eq 0 ]; then
+            echo "No open pipeline issues or PRs remaining. Pipeline complete!"
+            exit 0
+          fi
+
+          echo "Review verdict: $VERDICT. Found $TOTAL open pipeline items."
+
+          if [ "$VERDICT" = "APPROVE" ]; then
+            # APPROVE path: dispatch repo-assist in scheduled mode for next issue
+            gh workflow run repo-assist.lock.yml --repo "$REPO" || \
+              echo "::warning::Could not dispatch repo-assist"
+          else
+            # REQUEST_CHANGES path: post /repo-assist on the linked issue so the
+            # agent enters Command Mode with specific fix instructions.
+            TARGET_ISSUE="${ISSUE_NUMBER:-}"
+            if [ -n "$TARGET_ISSUE" ]; then
+              gh issue comment "$TARGET_ISSUE" --repo "$REPO" \
+                --body "/repo-assist Fix review feedback on PR #${PR_NUMBER}. The reviewer said: ${SUMMARY}. Read the full review on PR #${PR_NUMBER}, implement all requested changes, push fixes to the PR branch, and comment what you changed." || \
+                echo "::warning::Could not post /repo-assist comment"
+            else
+              echo "::warning::No linked issue found for PR #${PR_NUMBER} — cannot post /repo-assist"
+            fi
+          fi

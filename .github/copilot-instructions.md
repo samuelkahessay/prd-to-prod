@@ -9,8 +9,9 @@ Product Requirements Documents (PRDs) into implemented code via AI agents:
 2. **`prd-decomposer`** — AI reads the PRD, creates GitHub Issues with
    acceptance criteria
 3. **`repo-assist`** — AI picks up issues, writes code, opens draft PRs
-4. **`pr-reviewer`** — Automated review approves or requests changes
-5. **`pipeline-status`** — Daily dashboard tracks progress
+4. **`pr-review-agent`** — Agentic review posts a verdict comment (full context, no truncation)
+5. **`pr-review-submit`** — Submits the formal APPROVE/REQUEST_CHANGES review as `github-actions[bot]`
+6. **`pipeline-status`** — Daily dashboard tracks progress
 
 Human role: write PRDs, review PRs, merge.
 
@@ -28,7 +29,9 @@ Human role: write PRDs, review PRs, merge.
     repo-assist.lock.yml         # Compiled Actions YAML
     pipeline-status.md           # Progress dashboard workflow
     pipeline-status.lock.yml     # Compiled Actions YAML
-    pr-reviewer.yml              # Automated PR review workflow
+    pr-review-agent.md           # Agentic PR review workflow
+    pr-review-agent.lock.yml     # Compiled Actions YAML
+    pr-review-submit.yml         # Formal review submission workflow
     close-issues.yml             # Auto-close issues on PR merge
     pipeline-watchdog.yml        # Stall detector (cron)
     copilot-setup-steps.yml      # Agent environment bootstrap
@@ -65,7 +68,8 @@ The pipeline follows a **drop → run → tag → showcase → reset** cycle.
 | `prd-decomposer` | `/decompose` command | Parses PRD → creates issues |
 | `repo-assist` | Daily + `/repo-assist` | Implements issues → opens PRs |
 | `pipeline-status` | Daily | Updates progress dashboard issue |
-| `pr-reviewer` | PR opened/updated | AI-powered code review |
+| `pr-review-agent` | PR opened/updated | AI code review (full context) |
+| `pr-review-submit` | Verdict comment created | Submits formal review + auto-merge |
 
 ## Pipeline Issue Lifecycle
 1. `prd-decomposer` creates issues with `[Pipeline]` prefix and `pipeline` label
@@ -73,10 +77,11 @@ The pipeline follows a **drop → run → tag → showcase → reset** cycle.
    type labels (`feature`, `test`, `infra`, `docs`, `bug`)
 3. `repo-assist` picks up issues in dependency order, creates branches
    (`repo-assist/issue-<N>-<desc>`), implements code, and opens draft PRs
-4. `pr-reviewer` auto-reviews pipeline PRs, approves or requests changes
-5. On approval, auto-merge is enabled; on merge, the linked issue auto-closes
+4. `pr-review-agent` reviews pipeline PRs with full context, posts a verdict comment
+5. `pr-review-submit` reads the verdict and submits the formal APPROVE/REQUEST_CHANGES review
+6. On approval, auto-merge is enabled; on merge, the linked issue auto-closes
    via `Closes #N`
-6. `repo-assist` re-dispatches to pick up the next issue
+7. `repo-assist` re-dispatches to pick up the next issue
 
 ## PR Conventions
 - Title prefix: `[Pipeline]` for all agent-created PRs

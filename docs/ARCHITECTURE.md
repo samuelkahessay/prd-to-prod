@@ -23,10 +23,10 @@ with minimal human intervention. Six workflows cooperate in a loop:
        |
        | opens PR
        v
- +-----------------+     approves     +------------------+
- | pr-reviewer     | ──────────────>  | Squash merge     |
- | (GHA, gpt-5    )|                  | (auto)           |
- +-----------------+                  +------------------+
+ +-----------------+  posts verdict   +--------------------+
+ | pr-review-agent | ──────────────> | pr-review-submit | ──> Squash merge (auto)
+ | (agentic, gpt-5)|  (comment)       | (GHA, bot)         |
+ +-----------------+                  +--------------------+
        |                                      |
        | re-dispatches if                     | triggers
        | issues remain                        v
@@ -69,7 +69,7 @@ all issues, dispatches `repo-assist` once.
 |---|---|
 | **File** | `.github/workflows/repo-assist.md` |
 | **Engine** | Copilot (gpt-5) |
-| **Trigger** | Dispatch from prd-decomposer or pr-reviewer, daily schedule, `/repo-assist` command |
+| **Trigger** | Dispatch from prd-decomposer or pr-review-submit, daily schedule, `/repo-assist` command |
 | **Output** | Up to 4 PRs per run |
 
 Runs a 5-task cycle each invocation:
@@ -77,37 +77,64 @@ Runs a 5-task cycle each invocation:
 1. **Implement issues** — picks unblocked pipeline issues, creates branches from `main`, writes code, runs tests, opens PRs with `Closes #N`
 2. **Maintain PRs** — fixes CI failures and merge conflicts on open pipeline PRs
 3. **Unblock dependents** — comments on issues whose dependencies have resolved
-4. **Handle review feedback** — implements requested changes from pr-reviewer
+4. **Handle review feedback** — implements requested changes from pr-review-agent
 5. **Update status** — maintains a rolling status issue with progress table
 
 Persists memory on an orphan branch (`memory/repo-assist`) to track attempted
 issues, outcomes, and backlog state across runs.
 
-### pr-reviewer
+### pr-review-agent + pr-review-submit
+
+The PR reviewer is split into two workflows to preserve **identity separation**:
+
+#### pr-review-agent
 
 | | |
 |---|---|
-| **File** | `.github/workflows/pr-reviewer.yml` |
-| **Engine** | GitHub Models API (gpt-5 cascade: gpt-5 -> gpt-5-mini -> gpt-5-nano) |
-| **Trigger** | Automatic on PR opened/updated/ready |
-| **Output** | APPROVE or REQUEST_CHANGES review |
+| **File** | `.github/workflows/pr-review-agent.md` |
+| **Engine** | Copilot (gpt-5) — full 64K-128K+ context window |
+| **Trigger** | Automatic on PR opened/updated/ready; `workflow_dispatch` |
+| **Output** | Verdict comment on the PR (starting with `<!-- pr-review-verdict -->`) |
 
-Standard GitHub Actions workflow (not agentic) that runs as `github-actions[bot]`.
-This identity separation is critical — the bot that creates PRs (Copilot) is
-different from the bot that approves them, satisfying GitHub's self-approval restriction.
+Agentic workflow that runs as the Copilot app identity. Reads the **full PR diff**
+(no truncation), linked issue acceptance criteria, CI status, and AGENTS.md. Posts
+a structured verdict comment — does NOT submit a formal GitHub review.
 
 Review process:
-1. Fetches PR diff, linked issue acceptance criteria, AGENTS.md guidelines
-2. Calls GitHub Models API with the full context (smart diff truncation prioritizes tests)
-3. Validates decision output — unrecognized decisions default to REQUEST_CHANGES
-4. Submits APPROVE or REQUEST_CHANGES via GitHub API
-5. On APPROVE of `[Pipeline]` PRs: enables auto-merge (squash)
-6. After review: checks for remaining pipeline issues, dispatches `repo-assist` if any exist
+1. Reads AGENTS.md for project context and coding standards
+2. Reads the full PR diff via `gh pr diff` (no truncation — full Copilot context window)
+3. Reads the PR description and extracts linked issue number from `Closes #N`
+4. Reads acceptance criteria from the linked issue
+5. Checks CI status via `gh pr checks`
+6. Reviews against: acceptance criteria, correctness, security, scope, code quality, tests
+7. Posts verdict comment with `<!-- pr-review-verdict -->` marker and `VERDICT: APPROVE` or `VERDICT: REQUEST_CHANGES`
 
-Fallback behavior when all AI models fail:
-- **Pipeline PRs**: REQUEST_CHANGES (never rubber-stamped — no human is watching)
-- **Human PRs**: APPROVE with note (human reviewer will do real review; status check still passes)
-- **CI failing**: always REQUEST_CHANGES regardless of PR type
+Decision rules:
+- **APPROVE**: all acceptance criteria met, no bugs/security issues, code is in scope
+- **REQUEST_CHANGES**: any criteria not met, bugs/security issues, or out-of-scope changes
+- **CI failing**: always REQUEST_CHANGES
+- **Minor style issues**: not grounds for REQUEST_CHANGES (be pragmatic)
+
+#### pr-review-submit
+
+| | |
+|---|---|
+| **File** | `.github/workflows/pr-review-submit.yml` |
+| **Engine** | Standard GitHub Actions (`github-actions[bot]`) |
+| **Trigger** | `issue_comment: created` — fires when pr-review-agent posts its verdict |
+| **Output** | Formal APPROVE or REQUEST_CHANGES GitHub review; auto-merge; repo-assist dispatch |
+
+Standard workflow that runs as `github-actions[bot]`. Watches for comments containing
+`<!-- pr-review-verdict -->` on PRs, parses the verdict, and submits the formal GitHub
+review. This is the identity that satisfies GitHub's self-approval restriction.
+
+Submit process:
+1. Detects verdict comment via `<!-- pr-review-verdict -->` marker
+2. Fetches comment body via API (avoids shell injection — never uses `${{ github.event.comment.body }}` in run blocks)
+3. Parses `VERDICT: APPROVE` or `VERDICT: REQUEST_CHANGES` — defaults to REQUEST_CHANGES if unparseable
+4. Submits formal GitHub review as `github-actions[bot]`
+5. On APPROVE of `[Pipeline]` PRs: marks draft ready, enables auto-merge (squash)
+6. After review: checks for remaining pipeline issues, dispatches `repo-assist` (APPROVE) or posts `/repo-assist` on linked issue (REQUEST_CHANGES)
 
 ### pipeline-status
 
@@ -132,7 +159,7 @@ issue with a summary table.
 | **Output** | Closes linked issues via `gh issue close` |
 
 Dedicated workflow for closing issues referenced by `Closes #N` (and variants) in
-merged PR bodies. Isolated from pr-reviewer with its own concurrency group
+merged PR bodies. Isolated from pr-review-submit with its own concurrency group
 (`close-issues-{PR_NUMBER}`, `cancel-in-progress: false`) to prevent the job from
 being cancelled by concurrent workflow runs.
 
@@ -173,16 +200,19 @@ handles issue closing explicitly after each merge.
 `memory/repo-assist` orphan branch. This persists across workflow runs without
 polluting the main branch history.
 
-**Model cascade** — pr-reviewer tries gpt-5 first, falls back to gpt-5-mini,
-then gpt-5-nano. If all models fail: pipeline PRs get REQUEST_CHANGES (never
-rubber-stamped), while human PRs get APPROVE with a note (human will do real
-review). CI-failing PRs always get REQUEST_CHANGES regardless of type.
+**Full context review** — pr-review-agent uses the Copilot engine (gpt-5) with a
+64K-128K+ context window and reads the full PR diff via `gh pr diff` with no
+truncation. This eliminates false "missing files" rejections that occurred with the
+previous GitHub Models API approach (4K token limit, 300-line truncation).
+Unrecognized verdicts default to REQUEST_CHANGES (fail-safe).
 
 **Identity separation** — Agentic workflows run under the Copilot app identity.
-pr-reviewer runs under `github-actions[bot]`. This lets the reviewer approve PRs
+pr-review-submit runs under `github-actions[bot]`. This lets the reviewer approve PRs
 created by the Copilot agent without violating GitHub's self-approval rules.
+pr-review-agent (Copilot identity) posts only a verdict comment; pr-review-submit
+(github-actions[bot] identity) submits the formal GitHub review.
 
-**Re-dispatch loop** — After each merge, pr-reviewer checks for remaining open
+**Re-dispatch loop** — After each merge, pr-review-submit checks for remaining open
 issues and re-dispatches repo-assist. This creates a continuous loop that runs
 until all issues from the PRD are implemented.
 
@@ -190,9 +220,11 @@ until all issues from the PRD are implemented.
 
 | Secret | Purpose |
 |--------|---------|
-| `MODELS_TOKEN` | GitHub PAT with `models:read` scope for AI code review |
 | `GH_AW_GITHUB_TOKEN` | Token for gh-aw agentic workflow engine |
 | `COPILOT_GITHUB_TOKEN` | Copilot agent token |
+
+Note: `MODELS_TOKEN` is no longer required — pr-review-agent uses the Copilot engine
+directly instead of the GitHub Models REST API.
 
 ## Repo Settings
 

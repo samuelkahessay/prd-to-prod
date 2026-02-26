@@ -17,7 +17,9 @@ Write a PRD. AI decomposes it into issues, implements each one, reviews its own 
                       repo-assist ──> Pull Requests (branched, tested)
                            |               |
                            |               v
-                           |         pr-reviewer (AI code review)
+                           |         pr-review-agent  (AI code review)
+                           |               |
+                           |         pr-review-submit (formal review)
                            |               |
                            |          APPROVE + auto-merge (squash)
                            |               |
@@ -25,7 +27,7 @@ Write a PRD. AI decomposes it into issues, implements each one, reviews its own 
                            +──── re-dispatch if issues remain
 ```
 
-Each cycle: repo-assist implements an issue as a PR, pr-reviewer approves and squash-merges it (auto-closing the linked issue via `Closes #N`), then re-dispatches repo-assist for the next issue. The loop runs until every issue from the PRD is done.
+Each cycle: repo-assist implements an issue as a PR, pr-review-agent reviews it with full context (no truncation), pr-review-submit approves and squash-merges it (auto-closing the linked issue via `Closes #N`), then re-dispatches repo-assist for the next issue. The loop runs until every issue from the PRD is done.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
 
@@ -92,9 +94,10 @@ The pipeline follows a repeatable **drop → run → tag → showcase → reset*
 1. **You write a PRD** — paste it in a GitHub Issue (or reference `docs/prd/sample-prd.md` for the format)
 2. **`/decompose`** — AI reads the PRD, creates issues with acceptance criteria and dependency ordering
 3. **`repo-assist`** — AI implements issues as PRs (branches from main, writes code, runs tests)
-4. **`pr-reviewer`** — AI reviews each PR against the issue's acceptance criteria, approves or requests changes
-5. **Auto-merge** — approved `[Pipeline]` PRs are squash-merged, closing the linked issue
-6. **Re-dispatch** — pr-reviewer triggers repo-assist again for the next issue, looping until done
+4. **`pr-review-agent`** — AI reviews each PR with full context (no truncation), posts a structured verdict comment
+5. **`pr-review-submit`** — Submits the formal APPROVE/REQUEST_CHANGES review as `github-actions[bot]`
+6. **Auto-merge** — approved `[Pipeline]` PRs are squash-merged, closing the linked issue
+7. **Re-dispatch** — pr-review-submit triggers repo-assist again for the next issue, looping until done
 
 ## Workflows
 
@@ -102,7 +105,8 @@ The pipeline follows a repeatable **drop → run → tag → showcase → reset*
 |----------|------|---------|--------------|
 | `prd-decomposer` | Agentic | `/decompose` command | Parses PRD into atomic issues |
 | `repo-assist` | Agentic | Dispatch + daily schedule | Implements issues as PRs |
-| `pr-reviewer` | Standard GHA | PR opened/updated | AI code review + auto-merge |
+| `pr-review-agent` | Agentic | PR opened/updated | AI code review (full context, no truncation) |
+| `pr-review-submit` | Standard GHA | Verdict comment created | Submits formal review + auto-merge |
 | `pipeline-status` | Agentic | Daily schedule | Updates rolling status issue |
 
 ## Quick Start
@@ -120,7 +124,6 @@ bash scripts/bootstrap.sh
 
 # 4. Configure secrets
 gh aw secrets bootstrap
-# Also set: MODELS_TOKEN (PAT with models:read scope) for AI code review
 
 # 5. Push
 git push
@@ -133,7 +136,6 @@ git push
 - GitHub account with Copilot subscription
 - GitHub CLI (`gh`) v2.0+
 - `gh-aw` extension installed
-- `MODELS_TOKEN` secret (GitHub PAT with `models:read` scope)
 
 ## License
 
