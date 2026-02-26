@@ -115,11 +115,11 @@ jobs:
           echo "summary=${SUMMARY}" >> "$GITHUB_OUTPUT"
 
           # Get PR title for [Pipeline] detection and linked issue extraction
-          PR_TITLE=$(gh pr view "$PR_NUMBER" --json title --jq '.title')
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title --jq '.title')
           echo "pr_title=${PR_TITLE}" >> "$GITHUB_OUTPUT"
 
           # Extract linked issue number from PR body via jq (zero shell exposure to body)
-          ISSUE_NUMBER=$(gh pr view "$PR_NUMBER" --json body \
+          ISSUE_NUMBER=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body \
             --jq '[.body | scan("(?i)(?:closes|close|fix|fixes|resolve|resolves)\\s+#(\\d+)")] | first | .[]? // empty' \
             | head -1 || true)
           echo "issue_number=${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
@@ -148,16 +148,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.issue.number }}
           PR_TITLE: ${{ steps.review.outputs.pr_title }}
+          REPO: ${{ github.repository }}
         run: |
           # If the PR is still a draft, mark it ready for review
-          PR_DRAFT=$(gh pr view "$PR_NUMBER" --json isDraft -q '.isDraft')
+          PR_DRAFT=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json isDraft -q '.isDraft')
           if [ "$PR_DRAFT" = "true" ]; then
-            gh pr ready "$PR_NUMBER" || echo "::warning::Could not mark PR as ready"
+            gh pr ready "$PR_NUMBER" --repo "$REPO" || echo "::warning::Could not mark PR as ready"
           fi
 
           # Enable auto-merge only for [Pipeline] PRs (human PRs should be merged manually)
           if [[ "$PR_TITLE" == "[Pipeline]"* ]]; then
-            gh pr merge "$PR_NUMBER" --auto --squash || echo "::warning::Could not enable auto-merge"
+            gh pr merge "$PR_NUMBER" --repo "$REPO" --auto --squash || echo "::warning::Could not enable auto-merge"
             echo "PR #${PR_NUMBER} approved and auto-merge enabled."
           else
             echo "PR #${PR_NUMBER} approved. Non-pipeline PR — skipping auto-merge."
@@ -255,11 +256,11 @@ jobs:
           echo "Submitting break-glass ${VERDICT} review on PR #${PR_NUMBER}"
 
           # Get PR title for [Pipeline] detection and linked issue extraction
-          PR_TITLE=$(gh pr view "$PR_NUMBER" --json title --jq '.title')
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title --jq '.title')
           echo "pr_title=${PR_TITLE}" >> "$GITHUB_OUTPUT"
 
           # Extract linked issue number from PR body
-          ISSUE_NUMBER=$(gh pr view "$PR_NUMBER" --json body \
+          ISSUE_NUMBER=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body \
             --jq '[.body | scan("(?i)(?:closes|close|fix|fixes|resolve|resolves)\\s+#(\\d+)")] | first | .[]? // empty' \
             | head -1 || true)
           echo "issue_number=${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
@@ -281,14 +282,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.inputs.pr_number }}
           PR_TITLE: ${{ steps.review.outputs.pr_title }}
+          REPO: ${{ github.repository }}
         run: |
-          PR_DRAFT=$(gh pr view "$PR_NUMBER" --json isDraft -q '.isDraft')
+          PR_DRAFT=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json isDraft -q '.isDraft')
           if [ "$PR_DRAFT" = "true" ]; then
-            gh pr ready "$PR_NUMBER" || echo "::warning::Could not mark PR as ready"
+            gh pr ready "$PR_NUMBER" --repo "$REPO" || echo "::warning::Could not mark PR as ready"
           fi
 
           if [[ "$PR_TITLE" == "[Pipeline]"* ]]; then
-            gh pr merge "$PR_NUMBER" --auto --squash || echo "::warning::Could not enable auto-merge"
+            gh pr merge "$PR_NUMBER" --repo "$REPO" --auto --squash || echo "::warning::Could not enable auto-merge"
             echo "PR #${PR_NUMBER} approved and auto-merge enabled."
           else
             echo "PR #${PR_NUMBER} approved. Non-pipeline PR — skipping auto-merge."
