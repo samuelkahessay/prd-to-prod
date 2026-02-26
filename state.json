@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-02-26T04:05:00Z",
+  "last_run": "2026-02-26T04:17:00Z",
   "attempts": [
     {
       "issue": 63,
@@ -77,23 +77,32 @@
       "issue": 70,
       "title": "Card Generator Page — /card/[username] Dynamic Route",
       "branch": "repo-assist/issue-70-card-generator-page",
-      "pr": null,
-      "status": "in_review",
+      "pr": 86,
+      "status": "merged",
       "ci": "passing",
-      "timestamp": "2026-02-26T04:04:00Z"
+      "timestamp": "2026-02-26T04:12:00Z"
     },
     {
       "issue": 73,
       "title": "Gallery Page — Grid of Notable Developer DevCards",
       "branch": "repo-assist/issue-73-gallery-page",
+      "pr": 87,
+      "status": "merged",
+      "ci": "passing",
+      "timestamp": "2026-02-26T04:12:00Z"
+    },
+    {
+      "issue": 71,
+      "title": "Card Export — Download PNG and Copy Link Buttons",
+      "branch": "repo-assist/issue-71-card-export",
       "pr": null,
       "status": "in_review",
       "ci": "passing",
-      "timestamp": "2026-02-26T04:05:00Z"
+      "timestamp": "2026-02-26T04:17:00Z"
     }
   ],
-  "completed_issues": [63, 64, 65, 66, 67, 68, 69, 72],
-  "in_progress_issues": [70, 73],
-  "blocked_issues": [71],
-  "notes": "PR for #70 (card generator page) and #73 (gallery page) opened. Issue #71 (Card Export) depends on #70 — implement after #70 merges. After all issues merge, pipeline run 03 is complete."
+  "completed_issues": [63, 64, 65, 66, 67, 68, 69, 70, 72, 73],
+  "in_progress_issues": [71],
+  "blocked_issues": [],
+  "notes": "PR for #71 (card export) opened. This is the final feature issue. After #71 merges, all PRD issues are complete and pipeline run 03 can be archived."
 }
