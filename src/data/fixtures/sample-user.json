@@ -1,0 +1,92 @@
+{
+  "user": {
+    "login": "octocat",
+    "name": "The Octocat",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/583231?v=4",
+    "bio": "A mysterious entity that loves Git.",
+    "company": "@github",
+    "location": "San Francisco, CA",
+    "blog": "https://github.blog",
+    "twitterUsername": null,
+    "publicRepos": 8,
+    "followers": 15000,
+    "following": 9,
+    "createdAt": "2011-01-25T18:44:36Z"
+  },
+  "topRepos": [
+    {
+      "name": "Hello-World",
+      "description": "My first repository on GitHub!",
+      "language": "JavaScript",
+      "stargazerCount": 2300,
+      "forkCount": 1800,
+      "updatedAt": "2024-01-01T00:00:00Z",
+      "url": "https://github.com/octocat/Hello-World",
+      "topics": ["sample", "git"]
+    },
+    {
+      "name": "Spoon-Knife",
+      "description": "This repo is for demonstration purposes only.",
+      "language": "HTML",
+      "stargazerCount": 12000,
+      "forkCount": 130000,
+      "updatedAt": "2024-02-15T00:00:00Z",
+      "url": "https://github.com/octocat/Spoon-Knife",
+      "topics": ["fork-me"]
+    },
+    {
+      "name": "linguist",
+      "description": "Language Savant.",
+      "language": "Ruby",
+      "stargazerCount": 1200,
+      "forkCount": 400,
+      "updatedAt": "2024-03-10T00:00:00Z",
+      "url": "https://github.com/octocat/linguist",
+      "topics": ["language-detection"]
+    },
+    {
+      "name": "octocat.github.io",
+      "description": "octocat's personal website",
+      "language": "HTML",
+      "stargazerCount": 800,
+      "forkCount": 200,
+      "updatedAt": "2024-04-05T00:00:00Z",
+      "url": "https://github.com/octocat/octocat.github.io",
+      "topics": []
+    },
+    {
+      "name": "git-consortium",
+      "description": "This repo is for demonstration purposes only.",
+      "language": "TypeScript",
+      "stargazerCount": 350,
+      "forkCount": 80,
+      "updatedAt": "2024-05-20T00:00:00Z",
+      "url": "https://github.com/octocat/git-consortium",
+      "topics": []
+    },
+    {
+      "name": "boysenberry-repo-1",
+      "description": "Testing.",
+      "language": "Python",
+      "stargazerCount": 120,
+      "forkCount": 50,
+      "updatedAt": "2024-06-01T00:00:00Z",
+      "url": "https://github.com/octocat/boysenberry-repo-1",
+      "topics": []
+    }
+  ],
+  "languages": [
+    { "name": "JavaScript", "percentage": 35, "color": "#f1e05a", "bytes": 52000 },
+    { "name": "HTML", "percentage": 28, "color": "#e34c26", "bytes": 41600 },
+    { "name": "Ruby", "percentage": 18, "color": "#701516", "bytes": 26800 },
+    { "name": "TypeScript", "percentage": 12, "color": "#3178c6", "bytes": 17900 },
+    { "name": "Python", "percentage": 4, "color": "#3572A5", "bytes": 5950 },
+    { "name": "CSS", "percentage": 3, "color": "#563d7c", "bytes": 4500 }
+  ],
+  "contributions": {
+    "totalContributions": 1247,
+    "currentStreak": 7,
+    "longestStreak": 42,
+    "contributionsLastYear": 487
+  }
+}
