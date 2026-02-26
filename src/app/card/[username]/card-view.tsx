@@ -4,6 +4,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import DevCard from "@/components/card/dev-card";
 import ThemeSelector from "@/components/card/theme-selector";
+import ExportButton from "@/components/card/export-button";
+import { THEMES } from "@/data/themes";
 import type { DevCardData } from "@/data/types";
 
 interface CardViewProps {
@@ -13,6 +15,7 @@ interface CardViewProps {
 
 export default function CardView({ data, username }: CardViewProps) {
   const [theme, setTheme] = useState("midnight");
+  const currentTheme = THEMES.find((t) => t.id === theme) ?? THEMES[0];
 
   return (
     <motion.div
@@ -23,6 +26,7 @@ export default function CardView({ data, username }: CardViewProps) {
     >
       <DevCard data={data} theme={theme} />
       <ThemeSelector currentTheme={theme} onChange={setTheme} />
+      <ExportButton username={username} accentColor={currentTheme.accentColor} />
       <div className="text-center mt-2">
         <p className="text-gray-400 text-sm mb-1">Share this card</p>
         <input
@@ -32,8 +36,6 @@ export default function CardView({ data, username }: CardViewProps) {
           className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 w-72 text-center outline-none"
         />
       </div>
-      {/* Export controls placeholder */}
-      <div className="text-gray-500 text-sm">Export controls coming soon</div>
     </motion.div>
   );
 }
