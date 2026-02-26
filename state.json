@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-02-26T02:39:00Z",
+  "last_run": "2026-02-26T03:15:00Z",
   "attempts": [
     {
       "issue": 63,
@@ -15,7 +15,7 @@
       "title": "GitHub Data Layer — Types, Fixtures, and API Fetching",
       "branch": "repo-assist/issue-64-github-data-layer",
       "pr": 79,
-      "status": "pr_open_awaiting_review",
+      "status": "pr_open_draft_review_stuck",
       "ci": "passing",
       "timestamp": "2026-02-26T02:03:00Z"
     }
@@ -23,5 +23,5 @@
   "completed_issues": [63],
   "in_progress_issues": [64],
   "blocked_issues": [65, 66, 67, 68, 69, 70, 71, 72, 73],
-  "notes": "PR #74 merged (issue #63). PR #79 open for issue #64 (data layer), CI passing, awaiting review. All issues 65-73 blocked until #64 merges. #65 unblocks after #64."
+  "notes": "PR #79 open for issue #64 (data layer), CI passing. 3x APPROVE from review agent. pr-review-submit workflow fails due to missing --repo on gh pr view (no git checkout). PR stuck as draft. All issues 65-73 blocked until #64 merges. Commented on PR #79 requesting human action. Break-glass: trigger pr-review-submit.yml workflow_dispatch with pr_number=79, verdict=APPROVE."
 }
