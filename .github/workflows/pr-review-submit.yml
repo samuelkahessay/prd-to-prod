@@ -144,22 +144,31 @@ jobs:
           echo "Submitted ${VERDICT} review on PR #${PR_NUMBER}"
 
       - name: Set review status check
-        if: steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict != ''
+        if: always() && steps.idempotency.outputs.head_sha != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEAD_SHA: ${{ steps.idempotency.outputs.head_sha }}
-          VERDICT: ${{ steps.review.outputs.verdict }}
+          PR_NUMBER: ${{ github.event.issue.number }}
           REPO: ${{ github.repository }}
         run: |
           # The "review" status check is required by the branch protection ruleset.
-          # Set it to success so auto-merge can proceed.
-          STATE="success"
-          DESCRIPTION="Review completed: ${VERDICT}"
+          # Always set it — even if the review step was skipped by idempotency,
+          # the status check may still be missing from a prior run.
+          VERDICT="${{ steps.review.outputs.verdict }}"
+          if [ -z "$VERDICT" ]; then
+            # Review was skipped — check existing review to determine verdict
+            VERDICT=$(gh api "/repos/${REPO}/pulls/${PR_NUMBER}/reviews" \
+              --jq '[.[] | select(.user.login == "github-actions[bot]")] | last | .state // ""' || echo "")
+          fi
+          if [ -z "$VERDICT" ]; then
+            echo "No verdict available — skipping status check"
+            exit 0
+          fi
           gh api --method POST "/repos/${REPO}/statuses/${HEAD_SHA}" \
-            -f state="${STATE}" \
+            -f state="success" \
             -f context="review" \
-            -f description="${DESCRIPTION}"
-          echo "Set 'review' status check to ${STATE} on ${HEAD_SHA}"
+            -f description="Review completed: ${VERDICT}"
+          echo "Set 'review' status check to success on ${HEAD_SHA} (verdict: ${VERDICT})"
 
       - name: Mark draft PR ready and enable auto-merge (APPROVE only)
         if: steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict == 'APPROVE'
@@ -296,29 +305,40 @@ jobs:
           echo "Submitted ${VERDICT} review on PR #${PR_NUMBER}"
 
       - name: Set review status check
-        if: steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict != ''
+        if: always() && steps.idempotency.outputs.head_sha != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEAD_SHA: ${{ steps.idempotency.outputs.head_sha }}
-          VERDICT: ${{ steps.review.outputs.verdict }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number }}
           REPO: ${{ github.repository }}
         run: |
-          STATE="success"
-          DESCRIPTION="Review completed: ${VERDICT}"
+          VERDICT="${{ steps.review.outputs.verdict }}"
+          if [ -z "$VERDICT" ]; then
+            VERDICT=$(gh api "/repos/${REPO}/pulls/${PR_NUMBER}/reviews" \
+              --jq '[.[] | select(.user.login == "github-actions[bot]")] | last | .state // ""' || echo "")
+          fi
+          if [ -z "$VERDICT" ]; then
+            VERDICT="${{ github.event.inputs.verdict }}"
+          fi
+          if [ -z "$VERDICT" ]; then
+            echo "No verdict available — skipping status check"
+            exit 0
+          fi
           gh api --method POST "/repos/${REPO}/statuses/${HEAD_SHA}" \
-            -f state="${STATE}" \
+            -f state="success" \
             -f context="review" \
-            -f description="${DESCRIPTION}"
-          echo "Set 'review' status check to ${STATE} on ${HEAD_SHA}"
+            -f description="Review completed: ${VERDICT}"
+          echo "Set 'review' status check to success on ${HEAD_SHA} (verdict: ${VERDICT})"
 
       - name: Mark draft PR ready and enable auto-merge (APPROVE only)
-        if: steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict == 'APPROVE'
+        if: always() && github.event.inputs.verdict == 'APPROVE'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.inputs.pr_number }}
-          PR_TITLE: ${{ steps.review.outputs.pr_title }}
           REPO: ${{ github.repository }}
         run: |
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title --jq '.title')
+
           PR_DRAFT=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json isDraft -q '.isDraft')
           if [ "$PR_DRAFT" = "true" ]; then
             gh pr ready "$PR_NUMBER" --repo "$REPO" || echo "::warning::Could not mark PR as ready"
@@ -332,16 +352,17 @@ jobs:
           fi
 
       - name: Dispatch repo-assist for next cycle
-        if: always() && steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict != ''
+        if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REVIEW_VERDICT: ${{ steps.review.outputs.verdict }}
+          INPUT_VERDICT: ${{ github.event.inputs.verdict }}
           REVIEW_SUMMARY: ${{ github.event.inputs.summary }}
           PR_NUMBER: ${{ github.event.inputs.pr_number }}
           ISSUE_NUMBER: ${{ steps.review.outputs.issue_number }}
           REPO: ${{ github.repository }}
         run: |
-          VERDICT="$REVIEW_VERDICT"
+          VERDICT="${REVIEW_VERDICT:-$INPUT_VERDICT}"
           SUMMARY="$REVIEW_SUMMARY"
 
           OPEN_ISSUES=$(gh issue list --repo "$REPO" \
