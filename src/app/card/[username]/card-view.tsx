@@ -17,6 +17,11 @@ export default function CardView({ data, username }: CardViewProps) {
   const [theme, setTheme] = useState("midnight");
   const [shareUrl, setShareUrl] = useState(`/card/${username}`);
   const currentTheme = THEMES.find((t) => t.id === theme) ?? THEMES[0];
+  const [shareUrl, setShareUrl] = useState(`/card/${username}`);
+
+  useEffect(() => {
+    setShareUrl(`${window.location.origin}/card/${username}`);
+  }, [username]);
 
   useEffect(() => {
     setShareUrl(window.location.href);
