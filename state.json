@@ -1,148 +1,27 @@
 {
-  "last_run": "2026-02-27T17:55:00Z",
+  "last_run": "2026-02-27T18:02:59Z",
   "attempts": [
-    {
-      "issue": 63,
-      "title": "Project Scaffold",
-      "pr": 74,
-      "status": "merged"
-    },
-    {
-      "issue": 64,
-      "title": "GitHub Data Layer",
-      "pr": 79,
-      "status": "merged"
-    },
-    {
-      "issue": 65,
-      "title": "Navigation Bar and Landing Page",
-      "pr": 83,
-      "status": "merged"
-    },
-    {
-      "issue": 66,
-      "title": "Card Component \u2014 Profile Section",
-      "pr": 80,
-      "status": "merged"
-    },
-    {
-      "issue": 67,
-      "title": "Card Component \u2014 Language Breakdown Bar",
-      "pr": 81,
-      "status": "merged"
-    },
-    {
-      "issue": 68,
-      "title": "Card Component \u2014 Top Repositories List",
-      "pr": 82,
-      "status": "merged"
-    },
-    {
-      "issue": 69,
-      "title": "Card Themes",
-      "pr": 85,
-      "status": "merged"
-    },
-    {
-      "issue": 70,
-      "title": "Card Generator Page",
-      "pr": 86,
-      "status": "merged"
-    },
-    {
-      "issue": 71,
-      "title": "Card Export",
-      "pr": 88,
-      "status": "merged"
-    },
-    {
-      "issue": 72,
-      "title": "OG Image API Route",
-      "pr": 84,
-      "status": "merged"
-    },
-    {
-      "issue": 73,
-      "title": "Gallery Page",
-      "pr": 87,
-      "status": "merged"
-    },
-    {
-      "issue": 89,
-      "title": "DevCard missing LanguageBar and TopRepos",
-      "pr": "95 (merged)",
-      "status": "closed"
-    },
-    {
-      "issue": 90,
-      "title": "Gallery user sarah-edo returns 404",
-      "pr": "98 (merged)",
-      "status": "closed"
-    },
-    {
-      "issue": 91,
-      "title": "Add OpenClaw creator steipete to gallery",
-      "pr": "99 (merged)",
-      "status": "closed"
-    },
-    {
-      "issue": 101,
-      "title": "Gallery cards clip text \u2014 overflow on scaled cards",
-      "branch": "repo-assist/issue-101-gallery-card-clipping",
-      "pr": "pending",
-      "status": "in-progress",
-      "timestamp": "2026-02-27T17:55:00Z"
-    },
-    {
-      "issue": 102,
-      "title": "DevCard has no visual separation from page background",
-      "branch": "repo-assist/issue-102-card-visual-separation",
-      "pr": "pending",
-      "status": "in-progress",
-      "timestamp": "2026-02-27T17:55:00Z"
-    },
-    {
-      "issue": 103,
-      "title": "Fix gallery user sdrasner \u2014 correct username is sdras",
-      "branch": "repo-assist/issue-103-fix-sdras-username",
-      "pr": "pending",
-      "status": "in-progress",
-      "timestamp": "2026-02-27T17:55:00Z"
-    },
-    {
-      "issue": 104,
-      "title": "Share URL input shows wrong path on card page",
-      "branch": "repo-assist/issue-104-fix-share-url",
-      "pr": "pending",
-      "status": "in-progress",
-      "timestamp": "2026-02-27T17:55:00Z"
-    }
+    {"issue": 63, "title": "Project Scaffold", "pr": 74, "status": "merged"},
+    {"issue": 64, "title": "GitHub Data Layer", "pr": 79, "status": "merged"},
+    {"issue": 65, "title": "Navigation Bar and Landing Page", "pr": 83, "status": "merged"},
+    {"issue": 66, "title": "Card Component — Profile Section", "pr": 80, "status": "merged"},
+    {"issue": 67, "title": "Card Component — Language Breakdown Bar", "pr": 81, "status": "merged"},
+    {"issue": 68, "title": "Card Component — Top Repositories List", "pr": 82, "status": "merged"},
+    {"issue": 69, "title": "Card Themes", "pr": 85, "status": "merged"},
+    {"issue": 70, "title": "Card Generator Page", "pr": 86, "status": "merged"},
+    {"issue": 71, "title": "Card Export", "pr": 88, "status": "merged"},
+    {"issue": 72, "title": "OG Image API Route", "pr": 84, "status": "merged"},
+    {"issue": 73, "title": "Gallery Page", "pr": 87, "status": "merged"},
+    {"issue": 89, "title": "DevCard missing LanguageBar and TopRepos", "pr": 95, "status": "merged"},
+    {"issue": 90, "title": "Gallery user sarah-edo returns 404", "pr": 98, "status": "merged"},
+    {"issue": 91, "title": "Add OpenClaw creator steipete to gallery", "pr": 99, "status": "merged"},
+    {"issue": 101, "title": "Gallery cards clip text — overflow on scaled cards", "pr": 108, "status": "merged"},
+    {"issue": 102, "title": "DevCard has no visual separation from page background", "pr": 107, "status": "merged"},
+    {"issue": 103, "title": "Fix gallery user sdrasner — correct username is sdras", "pr": 105, "status": "merged"},
+    {"issue": 104, "title": "Share URL input shows wrong path on card page", "pr": 106, "status": "merged"}
   ],
-  "completed_issues": [
-    63,
-    64,
-    65,
-    66,
-    67,
-    68,
-    69,
-    70,
-    71,
-    72,
-    73,
-    89,
-    90,
-    91
-  ],
-  "in_progress_issues": [
-    101,
-    102,
-    103,
-    104
-  ],
-  "open_duplicate_prs": [
-    92,
-    96
-  ],
-  "notes": "Implemented bug fixes #101-#104. PRs queued post-run. Labels in-progress added to issues."
+  "completed_issues": [63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 89, 90, 91, 101, 102, 103, 104],
+  "in_progress_issues": [],
+  "open_stale_prs": [92, 96, 110, 114, 115, 116, 119, 120],
+  "notes": "All pipeline issues closed and merged. 4 bug fixes in latest batch (#101-#104). Multiple duplicate PRs exist due to parallel runs — stale, need manual cleanup."
 }
