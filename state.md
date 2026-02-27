@@ -1,16 +1,16 @@
 # Pipeline State — 2026-02-27
 
 ## Last Run
-- Workflow run: 22504184597
-- Date: 2026-02-27T21:30:00Z
+- Workflow run: 22504859105
+- Date: 2026-02-27T21:42:47Z
 
 ## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 8)
 
 ### Issues
 | Issue | Title | Deps | Status | PR |
 |-------|-------|------|--------|----|
-| #125 | Scaffold ASP.NET Core 8 Solution Structure | None | in-progress | submitted |
-| #126 | Ticket Data Model & EF Core InMemory DbContext | #125 | blocked | — |
+| #125 | Scaffold ASP.NET Core 8 Solution Structure | None | merged | #138 |
+| #126 | Ticket Data Model & EF Core InMemory DbContext | #125 | in-progress | submitted |
 | #127 | Ticket CRUD Minimal API Endpoints | #126 | blocked | — |
 | #128 | Ticket Classification Service & Classify Endpoint | #126 | blocked | — |
 | #129 | Knowledge Base Matching & Resolution Service | #128 | blocked | — |
@@ -21,14 +21,12 @@
 | #134 | Dashboard Activity Log Razor Page | #132 | blocked | — |
 | #135 | Landing Page with Demo Run Button | #132 | blocked | — |
 | #136 | Dockerfile & Production Configuration | #135 | blocked | — |
+| #137 | Knowledge Base CRUD Endpoints & Seed Data | #126 | blocked | — |
 
 ### ⚠️ Environment Constraint
 The agent environment's squid proxy blocks `api.nuget.org:443` (HTTP 403 ERR_ACCESS_DENIED).
 NuGet packages cannot be restored locally. Implementations are correct and will work in
 standard GitHub Actions CI which has internet access.
 
-### Branch Naming
-PR for #125 was committed to: `repo-assist/issue-125-scaffold-aspnet-core-8`
-
 ## Previous Run (Run 03) — All Completed ✅
-All 18 pipeline task issues implemented and merged (see previous state.md).
+All 18 pipeline task issues implemented and merged.
