@@ -2,30 +2,22 @@ name: Auto-Dispatch Pipeline Issues
 
 on:
   issues:
-    types: [opened, labeled, reopened]
+    types: [opened, reopened, labeled]
 
 jobs:
   dispatch:
-    # Only fire for issues carrying the 'pipeline' label
-    if: contains(github.event.issue.labels.*.name, 'pipeline')
+    # For 'opened' and 'reopened': fire if issue has 'pipeline' label
+    # For 'labeled': fire only when the label being added IS 'pipeline'
+    if: >
+      (github.event.action == 'opened' || github.event.action == 'reopened') &&
+      contains(github.event.issue.labels.*.name, 'pipeline')
+      ||
+      github.event.action == 'labeled' && github.event.label.name == 'pipeline'
     runs-on: ubuntu-latest
     steps:
-      - name: Check for existing /repo-assist comment
-        id: check
+      - name: Dispatch repo-assist scheduled mode
         env:
           GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
         run: |
-          EXISTS=$(gh issue view ${{ github.event.issue.number }} \
-            --repo ${{ github.repository }} \
-            --json comments \
-            --jq '[.comments[] | select(.body == "/repo-assist")] | length')
-          echo "already_dispatched=$([[ "$EXISTS" -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-
-      - name: Comment /repo-assist to trigger the agent
-        if: steps.check.outputs.already_dispatched != 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
-        run: |
-          gh issue comment ${{ github.event.issue.number }} \
-            --repo ${{ github.repository }} \
-            --body "/repo-assist"
+          gh workflow run repo-assist.lock.yml \
+            --repo ${{ github.repository }}
