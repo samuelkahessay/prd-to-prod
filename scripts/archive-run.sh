@@ -6,7 +6,7 @@
 #   bash scripts/archive-run.sh <run-number> <slug> <tag> [deployment-url]
 #
 # Example:
-#   bash scripts/archive-run.sh 02 pipeline-observatory v2.0.0 https://agentic-pipeline.vercel.app
+#   bash scripts/archive-run.sh 02 pipeline-observatory v2.0.0 https://prdtoprod.vercel.app
 # ─────────────────────────────────────────────────────────────────────
 set -euo pipefail
 

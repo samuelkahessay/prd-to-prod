@@ -2,7 +2,7 @@
 
 **PRD**: [docs/prd/pipeline-observatory-prd.md](../../docs/prd/pipeline-observatory-prd.md)
 **Tag**: [`v2.0.0`](https://github.com/samuelkahessay/agentic-pipeline/tree/v2.0.0)
-**Deployment**: [agentic-pipeline.vercel.app](https://agentic-pipeline.vercel.app)
+**Deployment**: [prdtoprod.vercel.app](https://prdtoprod.vercel.app)
 **Date**: February 2026
 
 ## Summary
