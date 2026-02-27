@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-02-27T15:10:22Z",
+  "last_run": "2026-02-27T17:32:30Z",
   "attempts": [
     {"issue": 63, "title": "Project Scaffold — Next.js 14 + TypeScript + Tailwind + Vitest", "branch": "repo-assist/issue-63-project-scaffold", "pr": 74, "status": "merged", "ci": "passing", "timestamp": "2026-02-25T23:09:00Z"},
     {"issue": 64, "title": "GitHub Data Layer — Types, Fixtures, and API Fetching", "branch": "repo-assist/issue-64-github-data-layer", "pr": 79, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T03:22:51Z"},
@@ -11,10 +11,13 @@
     {"issue": 69, "title": "Card Themes — Theme Data, DevCard Theming, and Theme Selector", "branch": "repo-assist/issue-69-card-themes-62adfbaac8e42e19", "pr": 85, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T03:50:00Z"},
     {"issue": 70, "title": "Card Generator Page — /card/[username] Dynamic Route", "branch": "repo-assist/issue-70-card-generator-page", "pr": 86, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T04:12:00Z"},
     {"issue": 73, "title": "Gallery Page — Grid of Notable Developer DevCards", "branch": "repo-assist/issue-73-gallery-page", "pr": 87, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T04:12:00Z"},
-    {"issue": 71, "title": "Card Export — Download PNG and Copy Link Buttons", "branch": "repo-assist/issue-71-card-export", "pr": 88, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T04:21:32Z"}
+    {"issue": 71, "title": "Card Export — Download PNG and Copy Link Buttons", "branch": "repo-assist/issue-71-card-export", "pr": 88, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T04:21:32Z"},
+    {"issue": 89, "title": "DevCard missing LanguageBar and TopRepos — empty placeholders never wired up", "branch": "repo-assist/issue-89-devcard-wire-language-repos", "pr": "pending", "status": "pr_open", "ci": "pending", "timestamp": "2026-02-27T17:32:00Z"},
+    {"issue": 90, "title": "Gallery user sarah-edo returns 404 — update stale GitHub username", "branch": "repo-assist/issue-90-fix-sarah-edo-username", "pr": "pending", "status": "pr_open", "ci": "pending", "timestamp": "2026-02-27T17:32:10Z"},
+    {"issue": 91, "title": "Add OpenClaw creator steipete to DevCard gallery", "branch": "repo-assist/issue-91-add-steipete-gallery", "pr": "pending", "status": "pr_open", "ci": "pending", "timestamp": "2026-02-27T17:32:20Z"}
   ],
   "completed_issues": [63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73],
-  "in_progress_issues": [],
+  "in_progress_issues": [89, 90, 91],
   "blocked_issues": [],
-  "notes": "Pipeline run 03 (DevCard Generator) COMPLETE. All 11 issues implemented and merged (PRs #74, #79-88). No open PRs. Status issue #75 is current. Ready for archive. Run at 2026-02-27T15:10:22Z confirmed no new work."
+  "notes": "Run at 2026-02-27T17:32:30Z. Implemented issues #89 (DevCard LanguageBar/TopRepos wiring), #90 (sarah-edo -> sdrasner), #91 (add steipete to gallery). All 3 PRs opened and awaiting review."
 }
