@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-02-27T15:10:22Z",
+  "last_run": "2026-02-27T17:39:38Z",
   "attempts": [
     {"issue": 63, "title": "Project Scaffold — Next.js 14 + TypeScript + Tailwind + Vitest", "branch": "repo-assist/issue-63-project-scaffold", "pr": 74, "status": "merged", "ci": "passing", "timestamp": "2026-02-25T23:09:00Z"},
     {"issue": 64, "title": "GitHub Data Layer — Types, Fixtures, and API Fetching", "branch": "repo-assist/issue-64-github-data-layer", "pr": 79, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T03:22:51Z"},
@@ -11,10 +11,14 @@
     {"issue": 69, "title": "Card Themes — Theme Data, DevCard Theming, and Theme Selector", "branch": "repo-assist/issue-69-card-themes-62adfbaac8e42e19", "pr": 85, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T03:50:00Z"},
     {"issue": 70, "title": "Card Generator Page — /card/[username] Dynamic Route", "branch": "repo-assist/issue-70-card-generator-page", "pr": 86, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T04:12:00Z"},
     {"issue": 73, "title": "Gallery Page — Grid of Notable Developer DevCards", "branch": "repo-assist/issue-73-gallery-page", "pr": 87, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T04:12:00Z"},
-    {"issue": 71, "title": "Card Export — Download PNG and Copy Link Buttons", "branch": "repo-assist/issue-71-card-export", "pr": 88, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T04:21:32Z"}
+    {"issue": 71, "title": "Card Export — Download PNG and Copy Link Buttons", "branch": "repo-assist/issue-71-card-export", "pr": 88, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T04:21:32Z"},
+    {"issue": 89, "title": "DevCard missing LanguageBar and TopRepos", "branch": "multiple", "pr": "95 (merged), 92 (superseded), 96 (superseded)", "status": "closed", "ci": "passing", "timestamp": "2026-02-27T17:39:38Z"},
+    {"issue": 90, "title": "Gallery user sarah-edo returns 404", "branch": "multiple", "pr": "93/97/98 (merged)", "status": "closed", "ci": "passing", "timestamp": "2026-02-27T17:39:38Z"},
+    {"issue": 91, "title": "Add OpenClaw creator steipete to gallery", "branch": "multiple", "pr": "94/99 (merged)", "status": "closed", "ci": "passing", "timestamp": "2026-02-27T17:39:38Z"}
   ],
-  "completed_issues": [63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73],
+  "completed_issues": [63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 89, 90, 91],
   "in_progress_issues": [],
   "blocked_issues": [],
-  "notes": "Pipeline run 03 (DevCard Generator) COMPLETE. All 11 issues implemented and merged (PRs #74, #79-88). No open PRs. Status issue #75 is current. Ready for archive. Run at 2026-02-27T15:10:22Z confirmed no new work."
+  "open_duplicate_prs": [92, 96],
+  "notes": "Pipeline run 03 (DevCard Generator) COMPLETE. All 14 issues implemented and merged. PRs #92 and #96 are superseded duplicates for issue #89 (commented). Status issue #75 updated. Ready for archive."
 }
