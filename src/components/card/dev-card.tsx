@@ -4,6 +4,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import type { DevCardData } from "@/data/types";
 import { THEMES } from "@/data/themes";
+import LanguageBar from "./language-bar";
+import TopRepos from "./top-repos";
 
 interface DevCardProps {
   data: DevCardData;
@@ -11,7 +13,7 @@ interface DevCardProps {
 }
 
 export default function DevCard({ data, theme = "midnight" }: DevCardProps) {
-  const { user } = data;
+  const { user, languages, topRepos } = data;
   const activeTheme = THEMES.find((t) => t.id === theme) ?? THEMES[0];
   const isNeon = activeTheme.id === "neon";
 
@@ -108,21 +110,25 @@ export default function DevCard({ data, theme = "midnight" }: DevCardProps) {
         </motion.div>
       </motion.div>
 
-      {/* Language Bar Placeholder */}
+      {/* Language Bar */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
         style={{ marginTop: "1rem" }}
-      />
+      >
+        <LanguageBar languages={languages} />
+      </motion.div>
 
-      {/* Top Repos Placeholder */}
+      {/* Top Repos */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
         style={{ marginTop: "1rem" }}
-      />
+      >
+        <TopRepos repos={topRepos} />
+      </motion.div>
     </div>
   );
 }
