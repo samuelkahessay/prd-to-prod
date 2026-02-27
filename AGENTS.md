@@ -38,20 +38,19 @@ Determined by the active PRD. The pipeline is tech-stack agnostic.
 - `bug` — Bug fix
 
 ## PRD Lifecycle
-This repo follows a **drop → run → tag → showcase → reset** cycle.
-The pipeline is the permanent product; each PRD run is a demo.
+This repo follows a drop → run → tag → showcase → reset cycle:
 
-### Permanent files (pipeline infrastructure — never removed)
+### Permanent files (pipeline infrastructure)
 - `.github/` — Workflows, agent configs, copilot instructions
-- `scripts/` — Bootstrap, archive, start-run, monitoring scripts
-- `docs/prd/` — PRD input records (kept forever as historical inputs)
+- `scripts/` — Bootstrap, archive, monitoring scripts
+- `docs/prd/` — PRD input records (kept forever)
 - `docs/ARCHITECTURE.md` — Pipeline architecture documentation
 - `showcase/` — Completed run summaries with links to git tags
-- `AGENTS.md` — This file (tech-stack section reset between runs)
+- `AGENTS.md` — This file (reset to defaults between runs)
 - `README.md`, `LICENSE`, `.gitignore`
 
 ### Ephemeral files (removed on archive)
 - `src/` — Application code (implementation of the active PRD)
-- `package.json`, `tsconfig.json`, etc. — PRD-specific config files
+- `package.json`, `tsconfig.json`, etc. — PRD-specific configs
 - `docs/plans/` — Design documents for the active PRD
 - `node_modules/`, `.next/`, `dist/` — Build artifacts

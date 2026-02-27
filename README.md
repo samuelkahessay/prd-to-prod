@@ -71,6 +71,7 @@ Full code is recoverable via `git checkout <tag> -- src/`.
 |-----|-----|-----------|-----|
 | 01 | [Code Snippet Manager](showcase/01-code-snippet-manager/) | Express + TypeScript | [`v1.0.0`](https://github.com/samuelkahessay/agentic-pipeline/tree/v1.0.0) |
 | 02 | [Pipeline Observatory](showcase/02-pipeline-observatory/) | Next.js 14 + TypeScript | [`v2.0.0`](https://github.com/samuelkahessay/agentic-pipeline/tree/v2.0.0) |
+| 03 | [DevCard](showcase/03-devcard/) | Next.js 14 + TypeScript + Framer Motion | [`v3.0.0`](https://github.com/samuelkahessay/agentic-pipeline/tree/v3.0.0) |
 
 See [`showcase/`](showcase/) for detailed run reports.
 
