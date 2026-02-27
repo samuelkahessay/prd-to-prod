@@ -27,6 +27,10 @@ export default function CardView({ data, username }: CardViewProps) {
     setShareUrl(window.location.href);
   }, []);
 
+  useEffect(() => {
+    setShareUrl(window.location.href);
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
