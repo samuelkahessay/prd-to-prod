@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import DevCard from "@/components/card/dev-card";
 import ThemeSelector from "@/components/card/theme-selector";
@@ -15,7 +15,12 @@ interface CardViewProps {
 
 export default function CardView({ data, username }: CardViewProps) {
   const [theme, setTheme] = useState("midnight");
+  const [shareUrl, setShareUrl] = useState(`/card/${username}`);
   const currentTheme = THEMES.find((t) => t.id === theme) ?? THEMES[0];
+
+  useEffect(() => {
+    setShareUrl(window.location.href);
+  }, []);
 
   return (
     <motion.div
@@ -32,7 +37,7 @@ export default function CardView({ data, username }: CardViewProps) {
         <input
           type="text"
           readOnly
-          value={typeof window !== "undefined" ? window.location.href : `/card/${username}`}
+          value={shareUrl}
           className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-300 w-72 text-center outline-none"
         />
       </div>
