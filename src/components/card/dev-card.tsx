@@ -31,7 +31,7 @@ export default function DevCard({ data, theme = "midnight" }: DevCardProps) {
         flexDirection: "column",
         padding: "1.5rem",
         boxSizing: "border-box",
-        ...(isNeon ? { boxShadow: activeTheme.borderColor } : {}),
+        ...(isNeon ? { boxShadow: activeTheme.borderColor } : { boxShadow: "0 0 0 1px rgba(255,255,255,0.1), 0 4px 24px rgba(0,0,0,0.3)" }),
       }}
     >
       {/* Profile Section */}
