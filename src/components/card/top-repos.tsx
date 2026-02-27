@@ -41,8 +41,6 @@ export default function TopRepos({ repos }: TopReposProps) {
               display: "flex",
               flexDirection: "column",
               gap: "0.1rem",
-              maxHeight: 48,
-              overflow: "hidden",
             }}
           >
             <a
