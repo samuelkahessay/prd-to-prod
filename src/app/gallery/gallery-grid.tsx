@@ -26,8 +26,8 @@ export default function GalleryGrid({ cards }: GalleryGridProps) {
           transition={{ delay: i * 0.05 }}
         >
           <Link href={`/card/${user.username}`} className="block">
-            <div style={{ height: 400, overflow: "hidden", position: "relative" }}>
-              <div style={{ transform: "scale(0.75)", transformOrigin: "top center" }}>
+            <div style={{ width: 300, height: 420, overflow: "hidden", position: "relative" }}>
+              <div style={{ transform: "scale(0.75)", transformOrigin: "top left", width: 400, height: 560, flexShrink: 0 }}>
                 <DevCard data={data} theme="midnight" />
               </div>
             </div>
