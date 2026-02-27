@@ -4,6 +4,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import type { DevCardData } from "@/data/types";
 import { THEMES } from "@/data/themes";
+import LanguageBar from "@/components/card/language-bar";
+import TopRepos from "@/components/card/top-repos";
 
 interface DevCardProps {
   data: DevCardData;
@@ -108,21 +110,25 @@ export default function DevCard({ data, theme = "midnight" }: DevCardProps) {
         </motion.div>
       </motion.div>
 
-      {/* Language Bar Placeholder */}
+      {/* Language Bar */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
         style={{ marginTop: "1rem" }}
-      />
+      >
+        <LanguageBar languages={data.languages} />
+      </motion.div>
 
-      {/* Top Repos Placeholder */}
+      {/* Top Repos */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
         style={{ marginTop: "1rem" }}
-      />
+      >
+        <TopRepos repos={data.topRepos} />
+      </motion.div>
     </div>
   );
 }
