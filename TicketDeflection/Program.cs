@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 // --- Service Registrations ---
 builder.Services.AddDbContext<TicketDbContext>(o => o.UseInMemoryDatabase("TicketDb"));
 builder.Services.AddScoped<ClassificationService>();
+builder.Services.AddScoped<MatchingService>();
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
@@ -24,6 +25,7 @@ app.MapRazorPages();
 app.MapTicketEndpoints();
 app.MapKnowledgeEndpoints();
 app.MapClassifyEndpoints();
+app.MapResolveEndpoints();
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "1.0.0" }));
 
