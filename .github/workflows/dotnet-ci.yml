@@ -1,0 +1,20 @@
+name: .NET CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet restore TicketDeflection.sln
+      - run: dotnet build TicketDeflection.sln --no-restore
+      - run: dotnet test TicketDeflection.sln --no-build --verbosity normal
