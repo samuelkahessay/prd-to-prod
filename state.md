@@ -1,7 +1,7 @@
 # Pipeline State — 2026-02-27
 
 ## Last Run
-- Workflow run: 22497004510
+- Workflow run: 22497045642
 - Trigger: scheduled
 
 ## Issues Attempted
@@ -15,8 +15,8 @@
 All 14 issues for DevCard PRD run are complete. No new work to pick up.
 
 ## Open Duplicate PRs
-- PR #92: Superseded (issue #89 fixed via #95). Has merge conflicts. Commented; ready to close.
-- PR #96: Superseded (issue #89 fixed via #95). Has merge conflicts. Commented; ready to close.
+- PR #92: Superseded (issue #89 fixed via #95). Has merge conflicts. Commented; needs manual close.
+- PR #96: Superseded (issue #89 fixed via #95). Has merge conflicts. Commented; needs manual close.
 
 ## Status
 Pipeline run (DevCard — Developer Identity Card Generator, #62) is COMPLETE. All 14 issues implemented and merged. Status updated in issue #75. Ready for archiving or a new PRD.

@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-02-27T17:39:38Z",
+  "last_run": "2026-02-27T17:45:38Z",
   "attempts": [
     {"issue": 63, "title": "Project Scaffold — Next.js 14 + TypeScript + Tailwind + Vitest", "branch": "repo-assist/issue-63-project-scaffold", "pr": 74, "status": "merged", "ci": "passing", "timestamp": "2026-02-25T23:09:00Z"},
     {"issue": 64, "title": "GitHub Data Layer — Types, Fixtures, and API Fetching", "branch": "repo-assist/issue-64-github-data-layer", "pr": 79, "status": "merged", "ci": "passing", "timestamp": "2026-02-26T03:22:51Z"},
@@ -20,5 +20,5 @@
   "in_progress_issues": [],
   "blocked_issues": [],
   "open_duplicate_prs": [92, 96],
-  "notes": "Pipeline run 03 (DevCard Generator) COMPLETE. All 14 issues implemented and merged. PRs #92 and #96 are superseded duplicates for issue #89 (commented). Status issue #75 updated. Ready for archive."
+  "notes": "Pipeline run 03 (DevCard Generator) COMPLETE. All 14 issues implemented and merged. PRs #92 and #96 are superseded duplicates (commented, need manual close). Status issue #75 updated. Ready for archive."
 }
