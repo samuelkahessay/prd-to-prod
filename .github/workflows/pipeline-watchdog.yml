@@ -164,6 +164,53 @@ jobs:
             break
           done < <(echo "$PIPELINE_ISSUES" | jq -c '.[]')
 
+          # ── Detect superseded PRs ──
+          # Open [Pipeline] PRs whose linked issue is already closed AND
+          # another [Pipeline] PR already merged for that issue.
+          echo ""
+          echo "=== Checking for superseded PRs ==="
+
+          while IFS= read -r PR_ROW; do
+            PR_NUM=$(echo "$PR_ROW" | jq -r '.number')
+
+            # Extract linked issue number from PR body
+            LINKED_ISSUE=$(gh pr view "$PR_NUM" --repo "$REPO" --json body \
+              --jq '[.body | scan("(?i)(?:closes|close|fix|fixes|resolve|resolves)\\s+#(\\d+)")] | first | .[]? // empty' \
+              | head -1 || true)
+
+            if [ -z "$LINKED_ISSUE" ]; then
+              echo "PR #${PR_NUM}: no linked issue. Skipping."
+              continue
+            fi
+
+            # Check if linked issue is closed
+            ISSUE_STATE=$(gh issue view "$LINKED_ISSUE" --repo "$REPO" --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
+            if [ "$ISSUE_STATE" != "CLOSED" ]; then
+              echo "PR #${PR_NUM}: issue #${LINKED_ISSUE} is ${ISSUE_STATE}. Skipping."
+              continue
+            fi
+
+            # Check if another [Pipeline] PR already merged for this issue
+            MERGED_PR=$(gh pr list --repo "$REPO" --state merged \
+              --json number,title,body \
+              --jq "[.[] | select(
+                .number != ${PR_NUM} and
+                (.title | startswith(\"[Pipeline]\")) and
+                (.body | test(\"(?i)(closes?|fix(es)?|resolves?)\\\\s+#${LINKED_ISSUE}\\\\b\"))
+              )] | first | .number // empty" | head -1 || true)
+
+            if [ -z "$MERGED_PR" ]; then
+              echo "PR #${PR_NUM}: issue #${LINKED_ISSUE} closed but no merged [Pipeline] PR found. Skipping (may be won't-fix)."
+              continue
+            fi
+
+            echo "PR #${PR_NUM}: SUPERSEDED (issue #${LINKED_ISSUE} closed by merged PR #${MERGED_PR})"
+            gh pr close "$PR_NUM" --repo "$REPO" --delete-branch \
+              -c "Superseded: issue #${LINKED_ISSUE} was already closed by PR #${MERGED_PR}. Closed by Pipeline Watchdog." || \
+              echo "::warning::Could not close PR #${PR_NUM}"
+            ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
+          done < <(echo "$PIPELINE_PRS" | jq -c '.[]')
+
           # ── Completion check ──
           echo ""
           echo "=== Completion check ==="
