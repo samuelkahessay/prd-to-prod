@@ -1,11 +1,13 @@
 {
-  "last_run": "2026-02-27T21:14:06Z",
+  "last_run": "2026-02-27T21:30:00Z",
+  "workflow_run_id": "22504184597",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
-    "status": "waiting_decompose"
+    "status": "decomposed"
   },
   "attempts": [
+    {"issue": 125, "title": "Scaffold ASP.NET Core 8 Solution Structure", "branch": "repo-assist/issue-125-scaffold-aspnet-core-8", "status": "pr_submitted"},
     {"issue": 63, "title": "Project Scaffold", "pr": 74, "status": "merged"},
     {"issue": 64, "title": "GitHub Data Layer", "pr": 79, "status": "merged"},
     {"issue": 65, "title": "Navigation Bar and Landing Page", "pr": 83, "status": "merged"},
@@ -26,7 +28,8 @@
     {"issue": 104, "title": "Share URL input shows wrong path on card page", "pr": 106, "status": "merged"}
   ],
   "completed_issues": [63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 89, 90, 91, 101, 102, 103, 104],
-  "in_progress_issues": [],
+  "in_progress_issues": [125],
   "open_stale_prs": [],
-  "notes": "New PRD #123 (Run 04 Ticket Deflection Service C#/.NET 8) waiting for /decompose. No feature issues yet."
+  "environment_notes": "Squid proxy at 172.30.0.10:3128 blocks api.nuget.org (ERR_ACCESS_DENIED). NuGet package restore fails locally. github.com and api.github.com are accessible.",
+  "notes": "Run 04 started. Issue #125 PR submitted. All remaining issues blocked on #125 merge."
 }
