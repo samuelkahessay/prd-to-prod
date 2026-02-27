@@ -12,4 +12,5 @@ export const GALLERY_USERS: GalleryUser[] = [
   { username: "sarah-edo", tagline: "Core Vue.js team member" },
   { username: "ThePrimeagen", tagline: "Developer educator and Neovim advocate" },
   { username: "octocat", tagline: "GitHub's mascot" },
+  { username: "steipete", tagline: "Creator of OpenClaw" },
 ];
