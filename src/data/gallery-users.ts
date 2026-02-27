@@ -9,7 +9,7 @@ export const GALLERY_USERS: GalleryUser[] = [
   { username: "sindresorhus", tagline: "Prolific open-source maintainer" },
   { username: "addyosmani", tagline: "Engineering manager at Google Chrome" },
   { username: "kentcdodds", tagline: "Creator of Testing Library" },
-  { username: "sarah-edo", tagline: "Core Vue.js team member" },
+  { username: "sdrasner", tagline: "Core Vue.js team member" },
   { username: "ThePrimeagen", tagline: "Developer educator and Neovim advocate" },
   { username: "octocat", tagline: "GitHub's mascot" },
 ];
