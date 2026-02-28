@@ -1,0 +1,84 @@
+@page "/"
+@model IndexModel
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ticket Deflection Service</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-6">
+    <div class="max-w-2xl w-full bg-white rounded-xl shadow-lg p-8">
+
+        <h1 class="text-4xl font-bold text-gray-800 mb-2 text-center">Ticket Deflection Service</h1>
+        <p class="text-gray-500 text-center mb-8">AI-powered pipeline that automatically classifies, matches, and resolves support tickets.</p>
+
+        <div class="bg-gray-50 rounded-lg p-4 mb-8 text-center">
+            <p class="text-sm text-gray-500 mb-2 font-semibold">Pipeline Flow</p>
+            <pre class="text-blue-700 font-mono text-lg">Intake → Classify → Match → Resolve/Escalate</pre>
+        </div>
+
+        <div class="flex flex-col items-center mb-8">
+            <button id="runDemoBtn" onclick="runDemo()"
+                    class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-lg shadow">
+                Run Demo
+            </button>
+            <p class="text-xs text-gray-400 mt-2">Generates 25 demo tickets through the pipeline</p>
+        </div>
+
+        <div id="demoResults" class="hidden bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
+            <h2 class="text-lg font-semibold text-green-800 mb-2">Demo Results</h2>
+            <pre id="demoResultsContent" class="text-sm text-green-700 whitespace-pre-wrap"></pre>
+        </div>
+
+        <div id="demoError" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+            <p class="text-sm text-red-700" id="demoErrorContent"></p>
+        </div>
+
+        <nav class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <a href="/dashboard"
+               class="block text-center px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
+                Dashboard
+            </a>
+            <a href="/activity"
+               class="block text-center px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium">
+                Activity Log
+            </a>
+            <a href="/tickets"
+               class="block text-center px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium">
+                Ticket Feed
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        async function runDemo() {
+            const btn = document.getElementById('runDemoBtn');
+            const results = document.getElementById('demoResults');
+            const resultsContent = document.getElementById('demoResultsContent');
+            const errorDiv = document.getElementById('demoError');
+            const errorContent = document.getElementById('demoErrorContent');
+
+            btn.disabled = true;
+            btn.textContent = 'Running…';
+            results.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/simulate?count=25', { method: 'POST' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                resultsContent.textContent = JSON.stringify(data, null, 2);
+                results.classList.remove('hidden');
+            } catch (err) {
+                errorContent.textContent = `Demo failed: ${err.message}`;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Run Demo';
+            }
+        }
+    </script>
+</body>
+</html>
