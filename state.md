@@ -1,12 +1,12 @@
 # Pipeline State — 2026-02-28
 
 ## Last Run
-- Workflow run: 22515352565
-- Date: 2026-02-28T06:36:09Z
+- Workflow run: 22515499710
+- Date: 2026-02-28T06:45:26Z
 
 ## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 10)
 
-### Status: **ON_TRACK** — Pipeline active; 2 PRs in flight
+### Status: **ON_TRACK** — Pipeline nearly complete; 1 PR awaiting merge
 
 ### Issues
 | Issue | Title | Status | PR |
@@ -51,11 +51,10 @@
 | #220 | Fix OpenGraph og:url to use correct Azure domain | merged | — |
 | #225 | Add OpenGraph image for social sharing | merged | — |
 | #229 | Fix demo button stuck on bfcache restore | merged | #230 |
-| #231 | Static files not served — og-image.png returns 404 | in-progress | #232 (pending review) |
+| #231 | Static files not served — og-image.png returns 404 | merged | #232 |
 
 ### Open Items
-- #214: Fix gh-aw link → PR #221 approved, auto-merge pending
-- #231: Static files not served → PR #232 created, awaiting review
+- #214: Fix gh-aw link → PR #221 approved, auto-merge pending (only remaining open issue)
 
 ### Environment Notes
 - NuGet restore succeeded (.NET 10.0.102 SDK installed)

@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-28T06:36:09Z",
-  "workflow_run_id": "22515352565",
+  "last_run": "2026-02-28T06:45:26Z",
+  "workflow_run_id": "22515499710",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -48,7 +48,7 @@
     {"issue": 220, "title": "Fix OpenGraph og:url to use correct Azure domain", "status": "merged"},
     {"issue": 225, "title": "Add OpenGraph image for social sharing preview cards", "status": "merged"},
     {"issue": 229, "title": "Fix demo button stuck in executing state after browser back navigation", "pr": 230, "status": "merged"},
-    {"issue": 231, "title": "Static files not served — og-image.png returns 404 in production", "pr": 232, "status": "in_progress"}
+    {"issue": 231, "title": "Static files not served — og-image.png returns 404 in production", "pr": 232, "status": "merged"}
   ],
-  "notes": "Run 43. Issue #231 (UseStaticFiles fix) implemented as PR #232. Issue #214 covered by PR #221 (approved, auto-merge enabled). Pipeline nearly complete."
+  "notes": "Run 44. PR #232 (UseStaticFiles fix for #231) was merged. PR #221 (gh-aw link fix for #214) is approved with auto-merge enabled, awaiting merge. Pipeline nearly complete - only issue #214 remains open."
 }
