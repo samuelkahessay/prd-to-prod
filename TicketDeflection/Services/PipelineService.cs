@@ -86,9 +86,13 @@ public class PipelineService
         Details = details
     };
 
+    private static readonly char[] _punctuation =
+        ['.', '!', '?', ';', ':', '\'', '"', '(', ')', '[', ']', '{', '}', '<', '>', '/'];
+
     private static HashSet<string> Tokenize(string text) =>
         text.Split([' ', '\t', ',', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries)
-            .Select(t => t.ToLowerInvariant())
+            .Select(t => t.Trim(_punctuation).ToLowerInvariant())
+            .Where(t => t.Length > 0)
             .ToHashSet();
 
     private static double Jaccard(HashSet<string> a, HashSet<string> b)
