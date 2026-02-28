@@ -3,7 +3,7 @@
 ## Pipeline Overview
 
 The agentic pipeline turns Product Requirements Documents (PRDs) into shipped code
-with minimal human intervention. Six workflows cooperate in a loop:
+with minimal human intervention. Ten workflows cooperate in a loop:
 
 ```
  You write a PRD
@@ -78,7 +78,7 @@ Runs a 5-task cycle each invocation:
 2. **Maintain PRs** — fixes CI failures and merge conflicts on open pipeline PRs
 3. **Unblock dependents** — comments on issues whose dependencies have resolved
 4. **Handle review feedback** — implements requested changes from pr-review-agent
-5. **Update status** — maintains a rolling status issue with progress table
+5. **Update project board** — posts a status update to the [GitHub Projects v2 board](https://github.com/users/samuelkahessay/projects/2) every run
 
 Persists memory on an orphan branch (`memory/repo-assist`) to track attempted
 issues, outcomes, and backlog state across runs.
@@ -187,6 +187,68 @@ Safety mechanisms:
 - One action per cycle (stalled PR takes priority over orphaned issue)
 - Concurrency group `pipeline-watchdog` with `cancel-in-progress: false`
 - Posts completion notice on status issue when all pipeline items are resolved
+
+### ci-failure-issue
+
+| | |
+|---|---|
+| **File** | `.github/workflows/ci-failure-issue.yml` |
+| **Engine** | Standard GitHub Actions |
+| **Trigger** | `workflow_run: completed` (fires when `.NET CI` finishes with `conclusion == 'failure'`) |
+| **Output** | Creates a `[Pipeline] CI Build Failure` issue with `pipeline` + `bug` labels |
+
+Self-healing workflow. When CI fails on a PR, this workflow extracts the failed-step
+logs via `gh run view --log-failed`, parses .NET error codes (CS/FS/BC), and creates
+a bug issue. The `pipeline` label triggers `auto-dispatch`, which dispatches
+`repo-assist` to fix the build — closing the self-healing loop.
+
+Dedup: skips creation if an open `pipeline` + `bug` issue already starts with
+`[Pipeline] CI Build Failure`.
+
+### dotnet-ci
+
+| | |
+|---|---|
+| **File** | `.github/workflows/dotnet-ci.yml` |
+| **Engine** | Standard GitHub Actions |
+| **Trigger** | `pull_request` to `main` |
+| **Output** | Pass/fail status on the PR |
+
+Runs `dotnet restore`, `dotnet build`, and `dotnet test` against the solution file.
+Feeds into `ci-failure-issue` on failure.
+
+## Self-Healing Loops
+
+The pipeline has three feedback loops that allow it to recover from failures without
+human intervention:
+
+1. **Watchdog stall recovery** — `pipeline-watchdog` runs every 30 minutes. If a PR
+   has a `CHANGES_REQUESTED` review and no activity for 30+ min, it posts `/repo-assist`
+   on the linked issue. If an issue has no linked PR for 30+ min, it dispatches
+   `repo-assist` directly.
+
+2. **CI failure auto-fix** — When `.NET CI` fails, `ci-failure-issue` creates a bug
+   issue from the error logs. `auto-dispatch` picks it up and sends `repo-assist` to
+   fix the build. The cycle: CI failure → bug issue → auto-dispatch → repo-assist → PR → CI pass.
+
+3. **Superseded PR cleanup** — Both `pr-review-submit` (on merge) and `pipeline-watchdog`
+   (on cron) detect open PRs whose linked issue was already closed by another merged PR,
+   and close them with `--delete-branch`.
+
+## PRD Lifecycle
+
+The pipeline follows a repeatable **drop → run → tag → showcase → reset** cycle:
+
+```
+1. Drop PRD          bash scripts/start-run.sh ~/my-prd.md
+2. Decompose         Comment /decompose on the PRD issue
+3. Pipeline runs     Agent implements all issues → PRs → merge (no-touch)
+4. Tag & archive     bash scripts/archive-run.sh 03 my-project v3.0.0
+5. Clean slate       Ready for the next PRD
+```
+
+**Permanent** (pipeline infrastructure): `.github/`, `scripts/`, `docs/prd/`, `showcase/`, `AGENTS.md`, `README.md`
+**Ephemeral** (removed on archive): application source code, project/solution files, dependency manifests, config files, `docs/plans/`
 
 ## Key Design Decisions
 
