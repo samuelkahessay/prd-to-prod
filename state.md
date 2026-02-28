@@ -1,10 +1,10 @@
 # Pipeline State — 2026-02-28
 
 ## Last Run
-- Workflow run: 22510486779
-- Date: 2026-02-28T01:35:30Z
+- Workflow run: 22510897436
+- Date: 2026-02-28T02:08:15Z
 
-## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 8)
+## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 8 → .NET 10)
 
 ### Issues
 | Issue | Title | Deps | Status | PR |
@@ -24,17 +24,23 @@
 | #137 | Knowledge Base CRUD Endpoints & Seed Data | None | merged | #142 |
 | #140 | Add .NET 8 CI workflow | None | closed/completed | — |
 | #165 | CI Build Failure: CS0246 _ViewImports | None | merged | #166 |
-| #172 | Fix CS0117: KnowledgeArticle missing CreatedAt | None | pr_open | (new PR) |
+| #172 | Fix CS0117: KnowledgeArticle missing CreatedAt | None | merged | #173 |
+| #176 | Update target framework from net8.0 to net10.0 | None | pr_open | (new PR) |
 
-### This Run's Actions (run 22510486779)
-- PR #170 was already merged (Dockerfile & Production Configuration, issue #136 closed)
-- Issue #172 found open: Fix CS0117 build error (KnowledgeArticle.CreatedAt missing)
-- Added `public DateTime CreatedAt { get; set; } = DateTime.UtcNow;` to KnowledgeArticle.cs
-- Created PR for issue #172 on branch repo-assist/issue-172-fix-knowledge-article-createdat
+### This Run's Actions (run 22510897436)
+- All 16 implementation issues already merged
+- Issue #176 found open: Upgrade from net8.0 to net10.0
+- No existing PR for #176 found — implemented upgrade
+- Changes: global.json SDK 8.0.418→10.0.102, csproj net8.0→net10.0
+- EF Core InMemory 8.0.0→9.0.0, Mvc.Testing 8.0.0→9.0.0
+- Dockerfile sdk:8.0→sdk:10.0 and aspnet:8.0→aspnet:10.0
+- CI workflow dotnet-version 8.0.x→10.0.x
+- Created PR on branch repo-assist/issue-176-upgrade-to-net10
+- Labeled #176 in-progress
 - Created new pipeline status issue
-- Labeled #172 in-progress
 
 ### ⚠️ Environment Constraint
 The agent environment's squid proxy blocks `api.nuget.org:443` (HTTP 403 ERR_ACCESS_DENIED).
 NuGet packages cannot be restored locally. Implementations are correct and will work in
 standard GitHub Actions CI which has internet access.
+.NET 10.0.102 SDK and 10.0.2 runtime ARE installed locally.

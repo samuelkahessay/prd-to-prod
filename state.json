@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-28T03:00:00Z",
-  "workflow_run_id": "22510487006",
+  "last_run": "2026-02-28T02:08:15Z",
+  "workflow_run_id": "22510897436",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -23,12 +23,11 @@
     {"issue": 135, "title": "Landing Page with Demo Run Button", "pr": 167, "status": "merged"},
     {"issue": 136, "title": "Dockerfile & Production Configuration", "pr": 170, "status": "merged"},
     {"issue": 172, "title": "Fix CS0117: KnowledgeArticle missing CreatedAt", "pr": 173, "status": "merged"},
-    {"issue": 175, "title": "CI Build Failure: 2 failing tests", "status": "pr_open", "note": "PR created for test DB isolation + tokenizer fixes; closes #175"},
-    {"issue": 176, "title": "Update target framework from net8.0 to net10.0", "status": "pr_open", "note": "PR created with net10.0 upgrade for all files"}
+    {"issue": 176, "title": "Update target framework from net8.0 to net10.0", "status": "pr_open", "branch": "repo-assist/issue-176-upgrade-to-net10", "note": "Upgrades SDK to 10.0.102, target framework to net10.0, EF Core to 9.0.0, Mvc.Testing to 9.0.0, Dockerfile and CI workflow to .NET 10"}
   ],
   "completed_issues": [125, 126, 137, 128, 127, 129, 130, 131, 132, 133, 140, 134, 165, 135, 136, 172],
-  "in_progress_issues": [175, 176],
+  "in_progress_issues": [176],
   "next_up": [],
-  "environment_notes": "Squid proxy at 172.30.0.10:3128 blocks api.nuget.org (ERR_ACCESS_DENIED). NuGet package restore fails locally. github.com and api.github.com are accessible.",
-  "notes": "Run 23. PR #173 merged (issue #172 closed). 2 failing tests identified post-merge: DB isolation bug (Guid.NewGuid() inside AddDbContext lambda) and tokenizer punctuation stripping. Created PR for issue #175 (test fixes) on branch repo-assist/issue-175-fix-test-failures. Created PR for issue #176 (net10.0 upgrade) on branch repo-assist/issue-176-upgrade-to-net10. Note: net10.0 PR changes dotnet-ci.yml from 8.0.x to 10.0.x."
+  "environment_notes": "Squid proxy at 172.30.0.10:3128 blocks api.nuget.org (ERR_ACCESS_DENIED). NuGet package restore fails locally. github.com and api.github.com are accessible. .NET 10.0.102 SDK and 10.0.2 runtime are installed.",
+  "notes": "Run 24. All 16 implementation issues merged. Issue #176 (net10.0 upgrade) PR opened on branch repo-assist/issue-176-upgrade-to-net10. Changes: global.json SDK 8.0.418->10.0.102, both csproj net8.0->net10.0, EF Core 8.0.0->9.0.0, Mvc.Testing 8.0.0->9.0.0, Dockerfile sdk:8.0->sdk:10.0 and aspnet:8.0->aspnet:10.0, CI workflow 8.0.x->10.0.x."
 }
