@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-28T00:44:51Z",
-  "workflow_run_id": "22509427286",
+  "last_run": "2026-02-28T00:51:46Z",
+  "workflow_run_id": "22509645188",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -18,11 +18,13 @@
     {"issue": 132, "title": "Dashboard Overview Page with Metrics API", "pr": 159, "status": "merged"},
     {"issue": 133, "title": "Dashboard Ticket Feed Razor Page", "pr": 161, "status": "merged"},
     {"issue": 140, "title": "Add .NET 8 CI workflow", "status": "closed_completed"},
-    {"issue": 134, "title": "Dashboard Activity Log Razor Page", "branch": "repo-assist/issue-134-activity-log-v2", "status": "pr_created", "note": "New PR created this run (PR #162 was closed unmerged). Branch: repo-assist/issue-134-activity-log-v2"}
+    {"issue": 134, "title": "Dashboard Activity Log Razor Page", "pr": 164, "status": "merged"},
+    {"issue": 165, "title": "CI Build Failure CS0246 - missing _ViewImports.cshtml", "branch": "repo-assist/fix-razor-viewimports", "status": "pr_created", "note": "Fix: added _ViewImports.cshtml with @namespace TicketDeflection.Pages"},
+    {"issue": 135, "title": "Landing Page with Demo Run Button", "branch": "repo-assist/issue-135-landing-page", "status": "pr_created", "note": "Branched from fix branch. Includes Index.cshtml, Index.cshtml.cs, LandingPageTests.cs (7 tests)"}
   ],
-  "completed_issues": [125, 126, 137, 128, 127, 129, 130, 131, 132, 133, 140],
-  "in_progress_issues": [134],
-  "next_up": [135, 136],
+  "completed_issues": [125, 126, 137, 128, 127, 129, 130, 131, 132, 133, 140, 134],
+  "in_progress_issues": [135, 165],
+  "next_up": [136],
   "environment_notes": "Squid proxy at 172.30.0.10:3128 blocks api.nuget.org (ERR_ACCESS_DENIED). NuGet package restore fails locally. github.com and api.github.com are accessible.",
-  "notes": "Run 17. Re-implemented #134 (Activity Log). PR #162 was closed without merging; new branch repo-assist/issue-134-activity-log-v2 created with fresh implementation. Once #134 merges, #135 (landing page) unblocks. #136 needs #135."
+  "notes": "Run 18. PR #164 merged to main (issue #134 now closed). Found missing _ViewImports.cshtml causing CS0246 build errors. Fix PR created for #165. Landing page (#135) implemented and PR created. Once #135 merges, #136 (Dockerfile) unblocks."
 }
