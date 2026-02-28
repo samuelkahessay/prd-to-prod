@@ -24,6 +24,7 @@ using (var scope = app.Services.CreateScope())
 // --- Endpoint Mappings ---
 app.MapPipelineEndpoints();
 app.MapSimulateEndpoints();
+app.MapMetricsEndpoints();
 app.MapRazorPages();
 app.MapTicketEndpoints();
 app.MapKnowledgeEndpoints();
