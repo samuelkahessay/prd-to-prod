@@ -8,8 +8,9 @@
 #   3. Log in to Azure via service principal, then deploy the published output
 #
 # Prerequisites:
-#   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, AZURE_CLIENT_SECRET
-#     secrets for the github-deploy-prd-to-prod service principal
+#   - AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID secrets
+#   - Federated identity credential on the github-deploy-prd-to-prod service principal
+#     (subject: repo:samuelkahessay/prd-to-prod:ref:refs/heads/main)
 #
 # Safety:
 #   - Concurrency group ensures only one deploy runs at a time; newer pushes
@@ -51,7 +52,6 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
