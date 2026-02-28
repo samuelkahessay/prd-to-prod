@@ -1,8 +1,8 @@
 # Pipeline State — 2026-02-28
 
 ## Last Run
-- Workflow run: 22510897436
-- Date: 2026-02-28T02:08:15Z
+- Workflow run: 22511232237
+- Date: 2026-02-28T02:18:01Z
 
 ## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 8 → .NET 10)
 
@@ -25,18 +25,15 @@
 | #140 | Add .NET 8 CI workflow | None | closed/completed | — |
 | #165 | CI Build Failure: CS0246 _ViewImports | None | merged | #166 |
 | #172 | Fix CS0117: KnowledgeArticle missing CreatedAt | None | merged | #173 |
-| #176 | Update target framework from net8.0 to net10.0 | None | pr_open | (new PR) |
+| #176 | Update target framework from net8.0 to net10.0 | None | pr_open | (new PR this run) |
 
-### This Run's Actions (run 22510897436)
-- All 16 implementation issues already merged
-- Issue #176 found open: Upgrade from net8.0 to net10.0
-- No existing PR for #176 found — implemented upgrade
+### This Run's Actions (run 22511232237)
+- Issue #176 open with no existing PR — implemented the net10.0 upgrade
 - Changes: global.json SDK 8.0.418→10.0.102, csproj net8.0→net10.0
 - EF Core InMemory 8.0.0→9.0.0, Mvc.Testing 8.0.0→9.0.0
 - Dockerfile sdk:8.0→sdk:10.0 and aspnet:8.0→aspnet:10.0
 - CI workflow dotnet-version 8.0.x→10.0.x
 - Created PR on branch repo-assist/issue-176-upgrade-to-net10
-- Labeled #176 in-progress
 - Created new pipeline status issue
 
 ### ⚠️ Environment Constraint
