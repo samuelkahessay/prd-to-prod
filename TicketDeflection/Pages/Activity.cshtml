@@ -5,34 +5,146 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Activity Log — Ticket Deflection</title>
+    <title>Activity Log — prd-to-prod</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #080c12;
+            --grid-line: rgba(0, 160, 255, 0.04);
+            --border: rgba(0, 160, 255, 0.15);
+            --accent: #00aaff;
+            --accent-dim: rgba(0, 170, 255, 0.08);
+            --green: #3ddc84;
+            --amber: #f5a623;
+            --red: #f85149;
+            --text: #b8c4d4;
+            --dim: #4a5a72;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Space Grotesk', sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 48px 48px;
+            font-family: var(--mono);
+            color: var(--text);
+            font-size: 14px;
+        }
+        h1, h2, h3, .font-sans { font-family: var(--sans); }
+        .status-bar {
+            background: rgba(0, 170, 255, 0.04);
+            border-bottom: 1px solid var(--border);
+        }
+        .log-line {
+            border-bottom: 1px solid rgba(0, 160, 255, 0.06);
+            padding: 10px 0;
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+        .log-line:last-child { border-bottom: none; }
+        .log-ts {
+            color: var(--dim);
+            font-size: 0.7rem;
+            padding-top: 2px;
+            flex-shrink: 0;
+        }
+        .log-action {
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+        .log-details { color: var(--text); font-size: 0.8rem; margin-bottom: 3px; }
+        .log-ticket { color: var(--dim); font-size: 0.7rem; }
+        .log-ticket span { color: rgba(0, 170, 255, 0.5); }
+        .prompt { color: var(--dim); font-size: 0.75rem; margin-right: 6px; }
+        .page-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--dim);
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            padding: 6px 16px;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+        .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .nav-link {
+            color: rgba(0, 170, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .nav-link:hover { border-color: var(--border); color: var(--accent); }
+        .nav-link.active { border-color: var(--border); color: var(--accent); }
+        .terminal-block {
+            background: rgba(4, 10, 20, 0.7);
+            border: 1px solid var(--border);
+            padding: 1.25rem 1.5rem;
+        }
+        .text-accent { color: var(--accent); }
+        .text-dim { color: var(--dim); }
+        .text-white { color: #e8edf5; }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-6">
-    <div class="max-w-4xl mx-auto">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Activity Log</h1>
-            <div class="flex gap-3">
-                <a href="/dashboard" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Dashboard</a>
-                <a href="/tickets" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition">Tickets</a>
+<body class="min-h-screen">
+
+    <!-- Status bar -->
+    <div class="status-bar px-6 py-2 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-4">
+            <a href="/" class="text-accent font-bold tracking-widest hover:underline">PRD-TO-PROD</a>
+            <span class="text-dim">//</span>
+            <span class="text-accent">/activity</span>
+            <span class="text-dim">— pipeline event stream</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="/dashboard" class="nav-link">/dashboard</a>
+            <a href="/tickets" class="nav-link">/tickets</a>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 py-10">
+
+        <div class="flex items-end justify-between mb-8">
+            <div>
+                <div class="text-xs text-dim mb-2">// pipeline execution trace</div>
+                <h1 class="font-sans text-3xl font-bold text-white">Activity Log</h1>
+            </div>
+            <div class="text-xs text-dim">
+                <span id="pageInfo"></span>
             </div>
         </div>
 
-        <div id="activity-timeline" class="space-y-4">
-            <p class="text-gray-500">Loading activity...</p>
+        <!-- Terminal block -->
+        <div class="terminal-block">
+            <div class="text-xs text-dim mb-4">
+                <span class="text-accent">$</span> tail -f pipeline.log
+            </div>
+            <div id="activity-timeline">
+                <div class="text-dim text-xs py-4">streaming activity log...</div>
+            </div>
         </div>
 
-        <div class="flex justify-between mt-6">
+        <div class="flex items-center gap-3 mt-6">
             <button id="prevBtn" onclick="prevPage()"
-                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition disabled:opacity-50">
-                Previous
-            </button>
-            <span id="pageInfo" class="text-gray-600 self-center"></span>
+                    class="page-btn" disabled>[ &lt; prev ]</button>
             <button id="nextBtn" onclick="nextPage()"
-                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">
-                Next
-            </button>
+                    class="page-btn">[ next &gt; ]</button>
         </div>
+    </div>
+
+    <div class="text-center text-dim text-xs mt-8 pb-6">
+        Built end-to-end by an autonomous AI pipeline ·
+        <a href="/" class="hover:text-accent transition-colors">prd-to-prod</a>
     </div>
 
     <script>
@@ -40,36 +152,43 @@
         let currentOffset = 0;
         let totalLoaded = 0;
 
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
         async function loadActivity() {
             const res = await fetch(`/api/metrics/activity?limit=${PAGE_SIZE}&offset=${currentOffset}`);
             const items = await res.json();
             const container = document.getElementById('activity-timeline');
 
             if (items.length === 0 && currentOffset === 0) {
-                container.innerHTML = '<p class="text-gray-500">No activity recorded yet.</p>';
+                container.innerHTML = '<div class="text-dim text-xs py-4">no activity recorded yet.</div>';
                 document.getElementById('pageInfo').textContent = '';
                 document.getElementById('nextBtn').disabled = true;
                 document.getElementById('prevBtn').disabled = true;
                 return;
             }
 
-            container.innerHTML = items.map(item => `
-                <div class="bg-white rounded-lg shadow p-4 flex gap-4 items-start">
-                    <div class="w-3 h-3 rounded-full bg-blue-500 mt-1 flex-shrink-0"></div>
-                    <div class="flex-1">
-                        <div class="flex justify-between items-start">
-                            <span class="font-semibold text-gray-800">${escapeHtml(item.action)}</span>
-                            <span class="text-xs text-gray-400">${new Date(item.timestamp).toLocaleString()}</span>
-                        </div>
-                        <p class="text-gray-600 mt-1">${escapeHtml(item.details)}</p>
-                        <p class="text-xs text-gray-400 mt-1">Ticket: ${escapeHtml(item.ticketId)}</p>
+            container.innerHTML = items.map(item => {
+                const ts = new Date(item.timestamp).toISOString().replace('T', ' ').slice(0, 19);
+                return `
+                <div class="log-line">
+                    <div class="log-ts">${ts}</div>
+                    <div>
+                        <div class="log-action">&gt; ${escapeHtml(item.action)}</div>
+                        <div class="log-details">${escapeHtml(item.details)}</div>
+                        <div class="log-ticket">ticket: <span>${escapeHtml(item.ticketId)}</span></div>
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
 
             totalLoaded = items.length;
             const page = Math.floor(currentOffset / PAGE_SIZE) + 1;
-            document.getElementById('pageInfo').textContent = `Page ${page}`;
+            document.getElementById('pageInfo').textContent = `page ${page}`;
             document.getElementById('prevBtn').disabled = currentOffset === 0;
             document.getElementById('nextBtn').disabled = items.length < PAGE_SIZE;
         }
@@ -86,14 +205,6 @@
                 currentOffset += PAGE_SIZE;
                 loadActivity();
             }
-        }
-
-        function escapeHtml(str) {
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
         }
 
         loadActivity();

@@ -5,49 +5,182 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ticket Deflection Dashboard</title>
+    <title>Dashboard — prd-to-prod</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #080c12;
+            --grid-line: rgba(0, 160, 255, 0.04);
+            --border: rgba(0, 160, 255, 0.15);
+            --accent: #00aaff;
+            --accent-dim: rgba(0, 170, 255, 0.08);
+            --green: #3ddc84;
+            --amber: #f5a623;
+            --red: #f85149;
+            --text: #b8c4d4;
+            --dim: #4a5a72;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Space Grotesk', sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 48px 48px;
+            font-family: var(--mono);
+            color: var(--text);
+            font-size: 14px;
+        }
+        h1, h2, h3, .font-sans { font-family: var(--sans); }
+        .status-bar {
+            background: rgba(0, 170, 255, 0.04);
+            border-bottom: 1px solid var(--border);
+        }
+        .panel {
+            background: rgba(4, 10, 20, 0.7);
+            border: 1px solid var(--border);
+        }
+        .panel-top { border-top: 2px solid var(--accent); }
+        .panel-green { border-top: 2px solid var(--green); }
+        .panel-red { border-top: 2px solid var(--red); }
+        .metric-val {
+            font-family: var(--mono);
+            color: var(--accent);
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .metric-val-green { color: var(--green); }
+        .metric-val-red { color: var(--red); }
+        .metric-lbl {
+            color: var(--dim);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-top: 6px;
+        }
+        .chart-panel {
+            background: rgba(4, 10, 20, 0.7);
+            border: 1px solid var(--border);
+            padding: 1.25rem;
+        }
+        .chart-label {
+            color: var(--dim);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 0.75rem;
+        }
+        .refresh-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--dim);
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            padding: 6px 16px;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-link {
+            color: rgba(0, 170, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .nav-link:hover { border-color: var(--border); color: var(--accent); }
+        .nav-link.active { border-color: var(--border); color: var(--accent); }
+        .divider { border-top: 1px solid var(--border); margin: 0; }
+        .text-accent { color: var(--accent); }
+        .text-green { color: var(--green); }
+        .text-amber { color: var(--amber); }
+        .text-red { color: var(--red); }
+        .text-dim { color: var(--dim); }
+        .text-white { color: #e8edf5; }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-6">
-    <div class="max-w-5xl mx-auto">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Ticket Deflection Dashboard</h1>
-            <button onclick="loadMetrics()"
-                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-                Refresh
-            </button>
+<body class="min-h-screen">
+
+    <!-- Status bar -->
+    <div class="status-bar px-6 py-2 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-4">
+            <a href="/" class="text-accent font-bold tracking-widest hover:underline">PRD-TO-PROD</a>
+            <span class="text-dim">//</span>
+            <span class="text-accent">/dashboard</span>
+            <span class="text-dim">— mission control</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="/tickets" class="nav-link">/tickets</a>
+            <a href="/activity" class="nav-link">/activity</a>
+            <button onclick="loadMetrics()" class="refresh-btn">[ refresh ]</button>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-4 py-10">
+
+        <div class="mb-8">
+            <div class="text-xs text-dim mb-2">// pipeline output — ticket deflection metrics</div>
+            <h1 class="font-sans text-3xl font-bold text-white">Mission Control</h1>
         </div>
 
+        <!-- Instrument panels row -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="bg-white rounded-lg shadow p-4 text-center">
-                <p class="text-sm text-gray-500">Total Tickets</p>
-                <p id="totalTickets" class="text-4xl font-bold text-gray-800">—</p>
+            <div class="panel panel-top p-5">
+                <div class="metric-lbl">total tickets</div>
+                <div id="totalTickets" class="metric-val mt-2">—</div>
+                <div class="text-xs text-dim mt-3">PROC_IN: all pipeline stages</div>
             </div>
-            <div class="bg-white rounded-lg shadow p-4 text-center">
-                <p class="text-sm text-gray-500">Resolution Rate</p>
-                <p id="resolutionRate" class="text-4xl font-bold text-green-600">—</p>
+            <div class="panel panel-green p-5">
+                <div class="metric-lbl">deflection rate</div>
+                <div id="resolutionRate" class="metric-val metric-val-green mt-2">—</div>
+                <div class="text-xs text-dim mt-3">STATUS: auto-resolved</div>
             </div>
-            <div class="bg-white rounded-lg shadow p-4 text-center">
-                <p class="text-sm text-gray-500">Escalated</p>
-                <p id="escalated" class="text-4xl font-bold text-red-600">—</p>
+            <div class="panel panel-red p-5">
+                <div class="metric-lbl">escalated</div>
+                <div id="escalated" class="metric-val metric-val-red mt-2">—</div>
+                <div class="text-xs text-dim mt-3">ROUTE: human review queue</div>
             </div>
         </div>
 
+        <!-- Charts -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-white rounded-lg shadow p-4">
-                <h2 class="text-lg font-semibold text-gray-700 mb-2">By Category</h2>
+            <div class="chart-panel">
+                <div class="chart-label">// distribution by category</div>
                 <canvas id="categoryChart"></canvas>
             </div>
-            <div class="bg-white rounded-lg shadow p-4">
-                <h2 class="text-lg font-semibold text-gray-700 mb-2">By Severity</h2>
+            <div class="chart-panel">
+                <div class="chart-label">// distribution by severity</div>
                 <canvas id="severityChart"></canvas>
             </div>
+        </div>
+
+        <div class="text-center text-dim text-xs mt-12 pb-4">
+            Built end-to-end by an autonomous AI pipeline ·
+            <a href="/" class="hover:text-accent transition-colors">prd-to-prod</a>
         </div>
     </div>
 
     <script>
         let categoryChart, severityChart;
+
+        const CHART_COLORS = ['#00aaff', '#3ddc84', '#f5a623', '#f85149', '#a78bfa', '#34d399', '#fbbf24', '#60a5fa'];
+
+        const chartDefaults = {
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#b8c4d4',
+                        font: { family: "'JetBrains Mono', monospace", size: 11 }
+                    }
+                }
+            }
+        };
 
         async function loadMetrics() {
             const res = await fetch('/api/metrics/overview');
@@ -63,23 +196,28 @@
             const sevLabels = Object.keys(data.bySeverity);
             const sevValues = Object.values(data.bySeverity);
 
-            if (categoryChart) categoryChart.destroy();
-            categoryChart = new Chart(document.getElementById('categoryChart'), {
+            const doughnutOpts = (labels, values) => ({
                 type: 'doughnut',
                 data: {
-                    labels: catLabels,
-                    datasets: [{ data: catValues }]
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: CHART_COLORS.slice(0, values.length),
+                        borderColor: '#080c12',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    cutout: '60%'
                 }
             });
 
+            if (categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(document.getElementById('categoryChart'), doughnutOpts(catLabels, catValues));
+
             if (severityChart) severityChart.destroy();
-            severityChart = new Chart(document.getElementById('severityChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: sevLabels,
-                    datasets: [{ data: sevValues }]
-                }
-            });
+            severityChart = new Chart(document.getElementById('severityChart'), doughnutOpts(sevLabels, sevValues));
         }
 
         loadMetrics();

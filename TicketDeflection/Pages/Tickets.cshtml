@@ -5,42 +5,170 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ticket Feed</title>
+    <title>Ticket Feed — prd-to-prod</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #080c12;
+            --grid-line: rgba(0, 160, 255, 0.04);
+            --border: rgba(0, 160, 255, 0.15);
+            --accent: #00aaff;
+            --accent-dim: rgba(0, 170, 255, 0.08);
+            --green: #3ddc84;
+            --amber: #f5a623;
+            --red: #f85149;
+            --text: #b8c4d4;
+            --dim: #4a5a72;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Space Grotesk', sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 48px 48px;
+            font-family: var(--mono);
+            color: var(--text);
+            font-size: 14px;
+        }
+        h1, h2, h3, .font-sans { font-family: var(--sans); }
+        .status-bar {
+            background: rgba(0, 170, 255, 0.04);
+            border-bottom: 1px solid var(--border);
+        }
+        .log-entry {
+            background: rgba(4, 10, 20, 0.7);
+            border: 1px solid var(--border);
+            border-left: 2px solid var(--dim);
+            padding: 10px 14px;
+            transition: border-left-color 0.15s;
+        }
+        .log-entry:hover { border-left-color: var(--accent); }
+        .log-entry.status-resolved { border-left-color: var(--green); }
+        .log-entry.status-escalated { border-left-color: var(--red); }
+        .log-entry.status-classified { border-left-color: var(--accent); }
+        .log-entry.status-matched { border-left-color: var(--amber); }
+        .status-tag {
+            font-family: var(--mono);
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 2px 8px;
+            border: 1px solid;
+            white-space: nowrap;
+        }
+        .tag-resolved { color: var(--green); border-color: rgba(61, 220, 132, 0.3); background: rgba(61, 220, 132, 0.06); }
+        .tag-escalated { color: var(--red); border-color: rgba(248, 81, 73, 0.3); background: rgba(248, 81, 73, 0.06); }
+        .tag-new { color: var(--dim); border-color: var(--border); background: transparent; }
+        .tag-classified { color: var(--accent); border-color: rgba(0, 170, 255, 0.3); background: rgba(0, 170, 255, 0.06); }
+        .tag-matched { color: var(--amber); border-color: rgba(245, 166, 35, 0.3); background: rgba(245, 166, 35, 0.06); }
+        .page-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--dim);
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            padding: 6px 16px;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+        .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .nav-link {
+            color: rgba(0, 170, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .nav-link:hover { border-color: var(--border); color: var(--accent); }
+        .nav-link.active { border-color: var(--border); color: var(--accent); }
+        .text-accent { color: var(--accent); }
+        .text-dim { color: var(--dim); }
+        .text-white { color: #e8edf5; }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-6">
-    <div class="max-w-5xl mx-auto">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Ticket Feed</h1>
-            <div class="flex gap-2">
-                <a href="/dashboard" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">Dashboard</a>
-                <button onclick="loadTickets()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Refresh</button>
+<body class="min-h-screen">
+
+    <!-- Status bar -->
+    <div class="status-bar px-6 py-2 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-4">
+            <a href="/" class="text-accent font-bold tracking-widest hover:underline">PRD-TO-PROD</a>
+            <span class="text-dim">//</span>
+            <span class="text-accent">/tickets</span>
+            <span class="text-dim">— process feed</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="/dashboard" class="nav-link">/dashboard</a>
+            <a href="/activity" class="nav-link">/activity</a>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-4 py-10">
+
+        <div class="flex items-end justify-between mb-8">
+            <div>
+                <div class="text-xs text-dim mb-2">// ticket pipeline — process log</div>
+                <h1 class="font-sans text-3xl font-bold text-white">Ticket Feed</h1>
             </div>
+            <button onclick="loadTickets()" class="page-btn">[ refresh ]</button>
         </div>
 
-        <div id="ticket-feed" class="space-y-3">
-            <p class="text-gray-500">Loading...</p>
+        <!-- Feed header -->
+        <div class="text-xs text-dim mb-3 flex gap-6">
+            <span>PID</span>
+            <span class="flex-1">TITLE / ROUTE</span>
+            <span>STATUS</span>
+        </div>
+        <div style="border-top: 1px solid var(--border)" class="mb-2"></div>
+
+        <div id="ticket-feed" class="flex flex-col gap-2">
+            <div class="text-dim text-xs py-4">loading process log...</div>
         </div>
 
-        <div class="flex gap-2 mt-4">
-            <button id="prevBtn" onclick="prevPage()" disabled
-                    class="px-4 py-2 bg-gray-200 rounded disabled:opacity-50">Previous</button>
-            <button id="nextBtn" onclick="nextPage()"
-                    class="px-4 py-2 bg-gray-200 rounded disabled:opacity-50">Next</button>
+        <div class="flex items-center gap-3 mt-6">
+            <button id="prevBtn" onclick="prevPage()" disabled class="page-btn">[ &lt; prev ]</button>
+            <button id="nextBtn" onclick="nextPage()" class="page-btn">[ next &gt; ]</button>
         </div>
+    </div>
+
+    <div class="text-center text-dim text-xs mt-8 pb-6">
+        Built end-to-end by an autonomous AI pipeline ·
+        <a href="/" class="hover:text-accent transition-colors">prd-to-prod</a>
     </div>
 
     <script>
         const LIMIT = 20;
         let offset = 0;
 
-        const statusBadge = {
-            AutoResolved: 'bg-green-100 text-green-800',
-            Escalated: 'bg-red-100 text-red-800',
-            New: 'bg-gray-100 text-gray-800',
-            Classified: 'bg-blue-100 text-blue-800',
-            Matched: 'bg-yellow-100 text-yellow-800'
+        const statusClass = {
+            AutoResolved: 'status-resolved',
+            Escalated: 'status-escalated',
+            New: '',
+            Classified: 'status-classified',
+            Matched: 'status-matched'
         };
+
+        const statusTag = {
+            AutoResolved: '<span class="status-tag tag-resolved">AUTO_RESOLVED</span>',
+            Escalated: '<span class="status-tag tag-escalated">ESCALATED</span>',
+            New: '<span class="status-tag tag-new">NEW</span>',
+            Classified: '<span class="status-tag tag-classified">CLASSIFIED</span>',
+            Matched: '<span class="status-tag tag-matched">MATCHED</span>'
+        };
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
 
         async function loadTickets() {
             const res = await fetch(`/api/metrics/tickets?limit=${LIMIT}&offset=${offset}`);
@@ -48,22 +176,27 @@
             const feed = document.getElementById('ticket-feed');
 
             if (tickets.length === 0) {
-                feed.innerHTML = '<p class="text-gray-500">No tickets found.</p>';
+                feed.innerHTML = '<div class="text-dim text-xs py-4">no tickets found.</div>';
                 document.getElementById('nextBtn').disabled = true;
                 return;
             }
 
-            feed.innerHTML = tickets.map(t => {
-                const badge = statusBadge[t.status] || 'bg-gray-100 text-gray-800';
-                const date = new Date(t.createdAt).toLocaleString();
+            feed.innerHTML = tickets.map((t, i) => {
+                const pid = String(offset + i + 1).padStart(4, '0');
+                const tag = statusTag[t.status] || statusTag['New'];
+                const cls = statusClass[t.status] || '';
+                const date = new Date(t.createdAt).toISOString().replace('T', ' ').slice(0, 19);
                 return `
-                <div class="bg-white rounded-lg shadow p-4 flex items-start justify-between gap-4">
-                    <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-gray-800 truncate">${t.title}</p>
-                        <p class="text-sm text-gray-500">${t.category} · ${t.severity} · ${date}</p>
-                        ${t.resolution ? `<p class="text-sm text-gray-600 mt-1 italic">${t.resolution}</p>` : ''}
+                <div class="log-entry ${cls}">
+                    <div class="flex items-center gap-4">
+                        <span class="text-dim text-xs w-10 flex-shrink-0">#${pid}</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-white text-sm font-bold truncate">${escapeHtml(t.title)}</div>
+                            <div class="text-xs text-dim mt-1">${escapeHtml(t.category)} · ${escapeHtml(t.severity)} · <span style="color: rgba(0,170,255,0.4)">${date}</span></div>
+                            ${t.resolution ? `<div class="text-xs mt-1" style="color: rgba(184,196,212,0.6)">&gt; ${escapeHtml(t.resolution)}</div>` : ''}
+                        </div>
+                        <div class="flex-shrink-0">${tag}</div>
                     </div>
-                    <span class="text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ${badge}">${t.status}</span>
                 </div>`;
             }).join('');
 
