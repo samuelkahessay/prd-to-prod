@@ -5,10 +5,10 @@
 # Flow:
 #   1. Push lands on main (direct or via merged PR)
 #   2. Restore, build, and publish the .NET app in Release configuration
-#   3. Deploy the published output to Azure App Service using the publish profile
+#   3. Log in to Azure via service principal, then deploy the published output
 #
 # Prerequisites:
-#   - AZURE_WEBAPP_PUBLISH_PROFILE secret containing the App Service publish profile XML
+#   - AZURE_CREDENTIALS secret containing the service principal JSON (--sdk-auth output)
 #
 # Safety:
 #   - Concurrency group ensures only one deploy runs at a time; newer pushes
@@ -23,6 +23,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: deploy-azure
@@ -43,9 +44,13 @@ jobs:
       - run: dotnet test TicketDeflection.sln --no-build -c Release --verbosity normal
       - run: dotnet publish TicketDeflection/TicketDeflection.csproj --no-build -c Release -o ./publish
 
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: prd-to-prod
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./publish
