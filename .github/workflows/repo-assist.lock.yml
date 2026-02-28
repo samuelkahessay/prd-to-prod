@@ -26,7 +26,7 @@
 # Also maintains its own PRs by fixing CI failures and resolving merge conflicts.
 # Can be triggered on-demand via /repo-assist <instructions>.
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"81f6266d9e9356ef19be755f4553981ebf75ae16b597ac17686e179f5e6d92b0","compiler_version":"v0.50.1"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"474686be46e1d20ed1280f55f0f21f9ff11b0979ae8a98791596a8cfecbfe67d","compiler_version":"v0.50.1"}
 
 name: "Pipeline Repo Assist"
 "on":
@@ -57,14 +57,14 @@ name: "Pipeline Repo Assist"
     - created
     - edited
   schedule:
-  - cron: "27 5 * * *"
+  - cron: "27 9 * * *"
   workflow_dispatch: null
 
 permissions: {}
 
 concurrency:
-  group: "gh-aw-${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}"
-  cancel-in-progress: false
+  cancel-in-progress: true
+  group: gh-aw-${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number || github.event_name }}
 
 run-name: "Pipeline Repo Assist"
 
