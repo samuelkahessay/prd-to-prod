@@ -1,12 +1,12 @@
 {
-  "last_run": "2026-02-28T23:35:45Z",
-  "workflow_run_id": "22531436570",
+  "last_run": "2026-02-28T23:50:26Z",
+  "workflow_run_id": "22531659025",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
-    "status": "active"
+    "status": "complete"
   },
-  "pipeline_status": "ON_TRACK",
+  "pipeline_status": "COMPLETE",
   "attempts": [
     {"issue": 125, "title": "Scaffold ASP.NET Core 8 Solution Structure", "pr": 138, "status": "merged"},
     {"issue": 126, "title": "Ticket Data Model & EF Core InMemory DbContext", "pr": 139, "status": "merged"},
@@ -47,7 +47,7 @@
     {"issue": 225, "title": "Add OpenGraph image for social sharing", "status": "merged"},
     {"issue": 229, "title": "Fix demo button stuck after browser back navigation", "pr": 230, "status": "merged"},
     {"issue": 231, "title": "Static files not served — og-image.png returns 404", "pr": 232, "status": "merged"},
-    {"issue": 236, "title": "Consolidate Dashboard into single-page command center", "status": "in_progress", "branch": "repo-assist/issue-236-consolidate-dashboard"}
+    {"issue": 236, "title": "Consolidate Dashboard into single-page command center", "pr": 237, "status": "merged"}
   ],
-  "notes": "Run 66. Issue #236 implemented: consolidated /dashboard (absorbed /tickets and /activity). PR opened. Awaiting review."
+  "notes": "Run 67. Run 04 COMPLETE. All pipeline issues closed. PR #237 (issue #236 — dashboard consolidation) merged. No open pipeline issues or PRs remain. Ready for archive (scripts/archive-run.sh) and next PRD."
 }
