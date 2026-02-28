@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" fill="#080c12"/>
+  <rect x="0" y="0" width="32" height="2" fill="#00aaff" opacity="0.6"/>
+  <text x="7" y="23" font-family="monospace" font-size="18" font-weight="bold" fill="#00aaff">P</text>
+  <text x="17" y="23" font-family="monospace" font-size="18" font-weight="bold" fill="#3ddc84">▶</text>
+</svg>
