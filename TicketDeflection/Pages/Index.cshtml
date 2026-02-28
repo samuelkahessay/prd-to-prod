@@ -55,26 +55,26 @@
     <script>
         async function runDemo() {
             const btn = document.getElementById('runDemoBtn');
-            const results = document.getElementById('demoResults');
-            const resultsContent = document.getElementById('demoResultsContent');
             const errorDiv = document.getElementById('demoError');
             const errorContent = document.getElementById('demoErrorContent');
 
             btn.disabled = true;
             btn.textContent = 'Running…';
-            results.classList.add('hidden');
             errorDiv.classList.add('hidden');
 
             try {
                 const response = await fetch('/api/simulate?count=25', { method: 'POST' });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                resultsContent.textContent = JSON.stringify(data, null, 2);
-                results.classList.remove('hidden');
+                if (response.ok) {
+                    window.location.href = '/dashboard';
+                } else {
+                    errorContent.textContent = 'Simulation failed. Please try again.';
+                    errorDiv.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.textContent = 'Run Demo';
+                }
             } catch (err) {
                 errorContent.textContent = `Demo failed: ${err.message}`;
                 errorDiv.classList.remove('hidden');
-            } finally {
                 btn.disabled = false;
                 btn.textContent = 'Run Demo';
             }
