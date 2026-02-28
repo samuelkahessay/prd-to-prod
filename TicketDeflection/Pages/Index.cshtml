@@ -7,59 +7,144 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ticket Deflection Service</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+        }
+        .card-glow {
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.15), 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+        .step-connector {
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+        }
+        @@keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .loading-dot {
+            animation: pulse-dot 1s ease-in-out infinite;
+        }
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-6">
-    <div class="max-w-2xl w-full bg-white rounded-xl shadow-lg p-8">
+<body class="gradient-bg min-h-screen flex flex-col items-center justify-center p-6">
 
-        <h1 class="text-4xl font-bold text-gray-800 mb-2 text-center">Ticket Deflection Service</h1>
-        <p class="text-gray-500 text-center mb-8">AI-powered pipeline that automatically classifies, matches, and resolves support tickets.</p>
-
-        <div class="bg-gray-50 rounded-lg p-4 mb-8 text-center">
-            <p class="text-sm text-gray-500 mb-2 font-semibold">Pipeline Flow</p>
-            <pre class="text-blue-700 font-mono text-lg">Intake → Classify → Match → Resolve/Escalate</pre>
+    <div class="max-w-3xl w-full">
+        <!-- Hero -->
+        <div class="text-center mb-12">
+            <div class="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/30 rounded-full px-4 py-1.5 mb-6">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+                <span class="text-indigo-300 text-sm font-medium">Built autonomously by an AI pipeline</span>
+            </div>
+            <h1 class="text-5xl sm:text-6xl font-extrabold text-white mb-4 leading-tight tracking-tight">
+                Ticket Deflection
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Service</span>
+            </h1>
+            <p class="text-slate-400 text-lg sm:text-xl max-w-xl mx-auto leading-relaxed">
+                Automatically classifies, matches, and resolves support tickets using a multi-stage AI pipeline.
+            </p>
         </div>
 
-        <div class="flex flex-col items-center mb-8">
+        <!-- Stats row -->
+        <div class="grid grid-cols-3 gap-4 mb-10 text-center">
+            <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div class="text-3xl font-bold text-indigo-300">25</div>
+                <div class="text-slate-400 text-sm mt-1">Tickets per demo run</div>
+            </div>
+            <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div class="text-3xl font-bold text-violet-300">~70%</div>
+                <div class="text-slate-400 text-sm mt-1">Expected deflection rate</div>
+            </div>
+            <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div class="text-3xl font-bold text-emerald-300">&lt;2s</div>
+                <div class="text-slate-400 text-sm mt-1">Pipeline processing time</div>
+            </div>
+        </div>
+
+        <!-- Pipeline flow diagram -->
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6 mb-10">
+            <p class="text-slate-400 text-xs font-semibold uppercase tracking-widest text-center mb-5">Pipeline Flow</p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-0">
+                <div class="flex flex-col items-center bg-indigo-500/20 border border-indigo-500/40 rounded-xl px-5 py-3 min-w-[110px]">
+                    <span class="text-2xl mb-1">📥</span>
+                    <span class="text-indigo-200 font-semibold text-sm">Intake</span>
+                    <span class="text-slate-500 text-xs mt-0.5">Receive ticket</span>
+                </div>
+                <div class="text-slate-600 font-bold text-lg sm:mx-2 rotate-90 sm:rotate-0">→</div>
+                <div class="flex flex-col items-center bg-violet-500/20 border border-violet-500/40 rounded-xl px-5 py-3 min-w-[110px]">
+                    <span class="text-2xl mb-1">🏷️</span>
+                    <span class="text-violet-200 font-semibold text-sm">Classify</span>
+                    <span class="text-slate-500 text-xs mt-0.5">Category + severity</span>
+                </div>
+                <div class="text-slate-600 font-bold text-lg sm:mx-2 rotate-90 sm:rotate-0">→</div>
+                <div class="flex flex-col items-center bg-fuchsia-500/20 border border-fuchsia-500/40 rounded-xl px-5 py-3 min-w-[110px]">
+                    <span class="text-2xl mb-1">🔍</span>
+                    <span class="text-fuchsia-200 font-semibold text-sm">Match</span>
+                    <span class="text-slate-500 text-xs mt-0.5">Knowledge base</span>
+                </div>
+                <div class="text-slate-600 font-bold text-lg sm:mx-2 rotate-90 sm:rotate-0">→</div>
+                <div class="flex flex-col items-center bg-emerald-500/20 border border-emerald-500/40 rounded-xl px-5 py-3 min-w-[110px]">
+                    <span class="text-2xl mb-1">✅</span>
+                    <span class="text-emerald-200 font-semibold text-sm">Resolve/Escalate</span>
+                    <span class="text-slate-500 text-xs mt-0.5">Auto or human</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="flex flex-col items-center mb-10">
             <button id="runDemoBtn" onclick="runDemo()"
-                    class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-lg shadow">
-                Run Demo
+                    class="btn-glow px-10 py-4 bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-bold rounded-2xl text-lg transition-all duration-200 hover:from-indigo-400 hover:to-violet-500 active:scale-95 shadow-lg shadow-indigo-500/30 min-w-[220px]">
+                <span id="btnText">🚀 Run Demo</span>
+                <span id="btnLoading" class="hidden gap-1 justify-center items-center">
+                    <span class="loading-dot w-2 h-2 rounded-full bg-white inline-block"></span>
+                    <span class="loading-dot w-2 h-2 rounded-full bg-white inline-block"></span>
+                    <span class="loading-dot w-2 h-2 rounded-full bg-white inline-block"></span>
+                </span>
             </button>
-            <p class="text-xs text-gray-400 mt-2">Generates 25 demo tickets through the pipeline</p>
+            <p class="text-slate-500 text-sm mt-3">Generates 25 tickets and takes you straight to the live dashboard</p>
         </div>
 
-        <div id="demoResults" class="hidden bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
-            <h2 class="text-lg font-semibold text-green-800 mb-2">Demo Results</h2>
-            <pre id="demoResultsContent" class="text-sm text-green-700 whitespace-pre-wrap"></pre>
+        <!-- Error banner -->
+        <div id="demoError" class="hidden bg-red-900/40 border border-red-500/40 rounded-xl px-5 py-3 mb-8 text-center">
+            <p class="text-red-300 text-sm" id="demoErrorContent"></p>
         </div>
 
-        <div id="demoError" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <p class="text-sm text-red-700" id="demoErrorContent"></p>
-        </div>
-
-        <nav class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- Secondary nav -->
+        <nav class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <a href="/dashboard"
-               class="block text-center px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
-                Dashboard
+               class="block text-center px-4 py-3 bg-white/5 border border-white/10 text-slate-300 rounded-xl hover:bg-indigo-500/20 hover:border-indigo-500/40 hover:text-indigo-200 transition-all duration-200 font-medium text-sm">
+                📊 Dashboard
             </a>
             <a href="/activity"
-               class="block text-center px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium">
-                Activity Log
+               class="block text-center px-4 py-3 bg-white/5 border border-white/10 text-slate-300 rounded-xl hover:bg-violet-500/20 hover:border-violet-500/40 hover:text-violet-200 transition-all duration-200 font-medium text-sm">
+                📋 Activity Log
             </a>
             <a href="/tickets"
-               class="block text-center px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium">
-                Ticket Feed
+               class="block text-center px-4 py-3 bg-white/5 border border-white/10 text-slate-300 rounded-xl hover:bg-fuchsia-500/20 hover:border-fuchsia-500/40 hover:text-fuchsia-200 transition-all duration-200 font-medium text-sm">
+                🎫 Ticket Feed
             </a>
         </nav>
+
+        <p class="text-center text-slate-600 text-xs mt-8">Built end-to-end by an autonomous AI pipeline · <a href="https://github.com/samuelkahessay/prd-to-prod" class="hover:text-slate-400 transition-colors">prd-to-prod</a></p>
     </div>
 
     <script>
         async function runDemo() {
             const btn = document.getElementById('runDemoBtn');
+            const btnText = document.getElementById('btnText');
+            const btnLoading = document.getElementById('btnLoading');
             const errorDiv = document.getElementById('demoError');
             const errorContent = document.getElementById('demoErrorContent');
 
             btn.disabled = true;
-            btn.textContent = 'Running…';
+            btnText.classList.add('hidden');
+            btnLoading.classList.remove('hidden');
+            btnLoading.classList.add('flex');
             errorDiv.classList.add('hidden');
 
             try {
@@ -70,13 +155,17 @@
                     errorContent.textContent = 'Simulation failed. Please try again.';
                     errorDiv.classList.remove('hidden');
                     btn.disabled = false;
-                    btn.textContent = 'Run Demo';
+                    btnText.classList.remove('hidden');
+                    btnLoading.classList.add('hidden');
+                    btnLoading.classList.remove('flex');
                 }
             } catch (err) {
                 errorContent.textContent = `Demo failed: ${err.message}`;
                 errorDiv.classList.remove('hidden');
                 btn.disabled = false;
-                btn.textContent = 'Run Demo';
+                btnText.classList.remove('hidden');
+                btnLoading.classList.add('hidden');
+                btnLoading.classList.remove('flex');
             }
         }
     </script>
