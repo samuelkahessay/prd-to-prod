@@ -1,12 +1,12 @@
 # Pipeline State — 2026-02-28
 
 ## Last Run
-- Workflow run: 22515061772
-- Date: 2026-02-28T06:18:16Z
+- Workflow run: 22515352565
+- Date: 2026-02-28T06:36:09Z
 
 ## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 10)
 
-### Status: **ON_TRACK** — Pipeline nearly complete; 1 PR awaiting auto-merge
+### Status: **ON_TRACK** — Pipeline active; 2 PRs in flight
 
 ### Issues
 | Issue | Title | Status | PR |
@@ -45,15 +45,17 @@
 | #211 | Add OpenGraph meta tags to landing page | closed/not_planned | — |
 | #212 | Add favicon to all pages | closed/not_planned | — |
 | #213 | Add OpenGraph meta tags and favicon | merged | — |
-| #214 | Fix gh-aw link on landing page | in-progress | #221 (approved, auto-merge pending) |
+| #214 | Fix gh-aw link on landing page | in-progress | #221 (approved, auto-merge enabled) |
 | #215 | Fix header repo name to link to GitHub | merged | — |
 | #216 | Fix hero title: prd-to-prod link to GitHub | merged | — |
 | #220 | Fix OpenGraph og:url to use correct Azure domain | merged | — |
 | #225 | Add OpenGraph image for social sharing | merged | — |
-| #229 | Fix demo button stuck on bfcache restore | **merged** | #230 |
+| #229 | Fix demo button stuck on bfcache restore | merged | #230 |
+| #231 | Static files not served — og-image.png returns 404 | in-progress | #232 (pending review) |
 
 ### Open Items
 - #214: Fix gh-aw link → PR #221 approved, auto-merge pending
+- #231: Static files not served → PR #232 created, awaiting review
 
 ### Environment Notes
 - NuGet restore succeeded (.NET 10.0.102 SDK installed)

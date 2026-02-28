@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-28T06:18:16Z",
-  "workflow_run_id": "22515061772",
+  "last_run": "2026-02-28T06:36:09Z",
+  "workflow_run_id": "22515352565",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -47,7 +47,8 @@
     {"issue": 216, "title": "Fix hero title: prd-to-prod should link to GitHub repository", "status": "merged"},
     {"issue": 220, "title": "Fix OpenGraph og:url to use correct Azure domain", "status": "merged"},
     {"issue": 225, "title": "Add OpenGraph image for social sharing preview cards", "status": "merged"},
-    {"issue": 229, "title": "Fix demo button stuck in executing state after browser back navigation", "pr": 230, "status": "merged"}
+    {"issue": 229, "title": "Fix demo button stuck in executing state after browser back navigation", "pr": 230, "status": "merged"},
+    {"issue": 231, "title": "Static files not served — og-image.png returns 404 in production", "pr": 232, "status": "in_progress"}
   ],
-  "notes": "Run 42. Issue #229 (bfcache fix) merged as PR #230. Issue #214 covered by PR #221 (approved, auto-merge enabled). Pipeline nearly complete."
+  "notes": "Run 43. Issue #231 (UseStaticFiles fix) implemented as PR #232. Issue #214 covered by PR #221 (approved, auto-merge enabled). Pipeline nearly complete."
 }
