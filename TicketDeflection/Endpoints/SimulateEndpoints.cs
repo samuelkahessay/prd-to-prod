@@ -53,6 +53,11 @@ public static class SimulateEndpoints
         if (count < 1) count = 1;
         if (count > 100) count = 100;
 
+        // Reset to a clean slate before each demo run
+        db.ActivityLogs.RemoveRange(db.ActivityLogs);
+        db.Tickets.RemoveRange(db.Tickets);
+        await db.SaveChangesAsync();
+
         var autoResolved = 0;
         var escalated = 0;
         var byCategory = new Dictionary<string, int>();
