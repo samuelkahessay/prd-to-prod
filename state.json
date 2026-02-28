@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-28T05:09:57Z",
-  "workflow_run_id": "22513978604",
+  "last_run": "2026-02-28T05:22:54Z",
+  "workflow_run_id": "22514192430",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -34,12 +34,17 @@
     {"issue": 199, "title": "Fix demo deflection rate: tune seed tickets and lower matching threshold", "pr": 200, "status": "merged"},
     {"issue": 201, "title": "Redesign landing page with Blueprint×Terminal aesthetic", "status": "closed_completed"},
     {"issue": 202, "title": "Apply Blueprint×Terminal design to Dashboard, Tickets, and Activity pages", "pr": 204, "status": "merged"},
-    {"issue": 205, "title": "Add Run History section to landing page — showcase all 4 pipeline runs", "pr": 206, "status": "open", "note": "PR #206 created, CI pending, no reviews yet"}
+    {"issue": 205, "title": "Add Run History section to landing page", "pr": 206, "status": "merged"},
+    {"issue": 209, "title": "Fix demo button: executing... state can hang indefinitely", "pr": "pending", "status": "in_progress", "branch": "repo-assist/issue-209-demo-btn-timeout"},
+    {"issue": 210, "title": "Fix dashboard charts: doughnut charts oversized", "pr": "pending", "status": "in_progress", "branch": "repo-assist/issue-210-dashboard-charts-sizing"},
+    {"issue": 211, "title": "Add OpenGraph meta tags to landing page", "status": "closed_not_planned"},
+    {"issue": 212, "title": "Add favicon to all pages", "status": "closed_not_planned"},
+    {"issue": 213, "title": "Add OpenGraph meta tags and favicon for social sharing", "pr": "pending", "status": "in_progress", "branch": "repo-assist/issue-213-og-tags-favicon"}
   ],
-  "completed_issues": [125, 126, 137, 128, 127, 129, 130, 131, 132, 133, 140, 134, 165, 135, 136, 172, 176, 185, 186, 189, 190, 191, 197, 199, 201, 202],
-  "in_progress_issues": [205],
+  "completed_issues": [125, 126, 137, 128, 127, 129, 130, 131, 132, 133, 140, 134, 165, 135, 136, 172, 176, 185, 186, 189, 190, 191, 197, 199, 201, 202, 205],
+  "in_progress_issues": [209, 210, 213],
   "blocked_issues": [],
   "next_up": [],
-  "environment_notes": "NuGet restore succeeded. .NET 10.0.102 SDK installed. GH_AW_GITHUB_TOKEN can push branches to remote (PR #206 succeeded).",
-  "notes": "Run 37. Issue #205 has PR #206 open. CI pending. No reviews yet. All other issues merged/closed."
+  "environment_notes": "NuGet restore succeeded. .NET 10.0.102 SDK installed. GH_AW_GITHUB_TOKEN can push branches to remote. All 62 tests pass.",
+  "notes": "Run 38. 3 PRs created this run: #209 (demo timeout), #210 (chart sizing), #213 (OG tags + favicon). All awaiting review."
 }
