@@ -470,6 +470,8 @@
     </div>
 
     <script>
+        const DEMO_TIMEOUT_MS = 30000;
+
         async function runDemo() {
             const btn = document.getElementById('runDemoBtn');
             const btnText = document.getElementById('btnText');
@@ -482,23 +484,35 @@
             btnLoading.classList.remove('hidden');
             errorDiv.classList.add('hidden');
 
-            try {
-                const response = await fetch('/api/simulate?count=25', { method: 'POST' });
-                if (response.ok) {
-                    window.location.href = '/dashboard';
-                } else {
-                    errorContent.textContent = 'Simulation failed. Please try again.';
-                    errorDiv.classList.remove('hidden');
-                    btn.disabled = false;
-                    btnText.classList.remove('hidden');
-                    btnLoading.classList.add('hidden');
-                }
-            } catch (err) {
-                errorContent.textContent = err.message;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), DEMO_TIMEOUT_MS);
+
+            function recover(msg) {
+                clearTimeout(timeoutId);
+                errorContent.textContent = msg;
                 errorDiv.classList.remove('hidden');
                 btn.disabled = false;
                 btnText.classList.remove('hidden');
                 btnLoading.classList.add('hidden');
+            }
+
+            try {
+                const response = await fetch('/api/simulate?count=25', {
+                    method: 'POST',
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (response.ok) {
+                    window.location.href = '/dashboard';
+                } else {
+                    recover('Simulation failed (HTTP ' + response.status + '). Please try again.');
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    recover('Request timed out after 30 s. The server may be cold-starting — please try again.');
+                } else {
+                    recover(err.message || 'Network error. Please try again.');
+                }
             }
         }
     </script>
