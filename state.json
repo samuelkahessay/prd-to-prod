@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-28T00:51:46Z",
-  "workflow_run_id": "22509645188",
+  "last_run": "2026-02-28T01:01:27Z",
+  "workflow_run_id": "22509708869",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -19,12 +19,14 @@
     {"issue": 133, "title": "Dashboard Ticket Feed Razor Page", "pr": 161, "status": "merged"},
     {"issue": 140, "title": "Add .NET 8 CI workflow", "status": "closed_completed"},
     {"issue": 134, "title": "Dashboard Activity Log Razor Page", "pr": 164, "status": "merged"},
-    {"issue": 165, "title": "CI Build Failure CS0246 - missing _ViewImports.cshtml", "branch": "repo-assist/fix-razor-viewimports", "status": "pr_created", "note": "Fix: added _ViewImports.cshtml with @namespace TicketDeflection.Pages"},
-    {"issue": 135, "title": "Landing Page with Demo Run Button", "branch": "repo-assist/issue-135-landing-page", "status": "pr_created", "note": "Branched from fix branch. Includes Index.cshtml, Index.cshtml.cs, LandingPageTests.cs (7 tests)"}
+    {"issue": 165, "title": "CI Build Failure CS0246 - missing _ViewImports.cshtml", "pr": 166, "status": "pr_open", "note": "Branch repo-assist/fix-razor-viewimports-b78e88b30ba49ac7. CS0117 fix also pushed."},
+    {"issue": 135, "title": "Landing Page with Demo Run Button", "pr": 167, "status": "pr_open", "note": "Branch repo-assist/issue-135-landing-page-61785a25c296ae7a. CS0117 fix pushed."},
+    {"issue": 168, "title": "CI Build Failure CS0117 on PR #167", "status": "fixed", "note": "Fix pushed to PR #167 branch"},
+    {"issue": 169, "title": "CI Build Failure CS0117 on PR #166", "status": "fixed", "note": "Fix pushed to PR #166 branch"}
   ],
   "completed_issues": [125, 126, 137, 128, 127, 129, 130, 131, 132, 133, 140, 134],
   "in_progress_issues": [135, 165],
   "next_up": [136],
   "environment_notes": "Squid proxy at 172.30.0.10:3128 blocks api.nuget.org (ERR_ACCESS_DENIED). NuGet package restore fails locally. github.com and api.github.com are accessible.",
-  "notes": "Run 18. PR #164 merged to main (issue #134 now closed). Found missing _ViewImports.cshtml causing CS0246 build errors. Fix PR created for #165. Landing page (#135) implemented and PR created. Once #135 merges, #136 (Dockerfile) unblocks."
+  "notes": "Run 19. CS0117 errors: KnowledgeArticle.CreatedAt was missing from model but used in KnowledgeEndpoints.cs. Fix (add property) pushed to both PR #166 and PR #167. Once #135/#165 merge, #136 (Dockerfile) unblocks."
 }
