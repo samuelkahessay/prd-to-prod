@@ -1,8 +1,8 @@
 # Pipeline State — 2026-02-28
 
 ## Last Run
-- Workflow run: 22522955312
-- Date: 2026-02-28T14:52:36Z
+- Workflow run: 22523559723
+- Date: 2026-02-28T15:30:58Z
 
 ## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 10)
 
@@ -42,8 +42,6 @@
 | #208 | Fix landing page stats: deflection rate hardcoded | merged | #224 |
 | #209 | Fix demo button: executing... state can hang | merged | — |
 | #210 | Fix dashboard charts: doughnut charts oversized | merged | — |
-| #211 | Add OpenGraph meta tags to landing page | closed/not_planned | — |
-| #212 | Add favicon to all pages | closed/not_planned | — |
 | #213 | Add OpenGraph meta tags and favicon | merged | — |
 | #214 | Fix gh-aw link on landing page | merged/closed | — |
 | #215 | Fix header repo name to link to GitHub | merged | — |

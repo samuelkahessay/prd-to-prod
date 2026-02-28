@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-28T14:52:36Z",
-  "workflow_run_id": "22522955312",
+  "last_run": "2026-02-28T15:30:58Z",
+  "workflow_run_id": "22523559723",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -39,8 +39,6 @@
     {"issue": 208, "title": "Fix landing page stats: deflection rate is hardcoded", "pr": 224, "status": "merged"},
     {"issue": 209, "title": "Fix demo button: executing... state can hang indefinitely", "status": "merged"},
     {"issue": 210, "title": "Fix dashboard charts: doughnut charts oversized", "status": "merged"},
-    {"issue": 211, "title": "Add OpenGraph meta tags to landing page", "status": "closed_not_planned"},
-    {"issue": 212, "title": "Add favicon to all pages", "status": "closed_not_planned"},
     {"issue": 213, "title": "Add OpenGraph meta tags and favicon for social sharing", "status": "merged"},
     {"issue": 214, "title": "Fix gh-aw link on landing page", "status": "closed_completed"},
     {"issue": 215, "title": "Fix header repo name to link to GitHub repository", "status": "merged"},
@@ -50,5 +48,5 @@
     {"issue": 229, "title": "Fix demo button stuck in executing state after browser back navigation", "pr": 230, "status": "merged"},
     {"issue": 231, "title": "Static files not served — og-image.png returns 404 in production", "pr": 232, "status": "merged"}
   ],
-  "notes": "Run 55. Pipeline COMPLETE — all issues merged, no open PRs. Awaiting human archive/tag run."
+  "notes": "Run 56. Pipeline COMPLETE — all issues merged, no open PRs. Awaiting human archive/tag run."
 }
