@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-27T23:58:51Z",
-  "workflow_run_id": "22508492759",
+  "last_run": "2026-02-28T00:10:00Z",
+  "workflow_run_id": "22508770027",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -14,13 +14,13 @@
     {"issue": 127, "title": "Ticket CRUD Minimal API Endpoints", "pr": 150, "status": "merged"},
     {"issue": 129, "title": "Knowledge Base Matching & Resolution Service", "pr": 151, "status": "merged"},
     {"issue": 130, "title": "Ticket Pipeline Orchestrator & Submit Endpoint", "pr": 154, "status": "merged"},
-    {"issue": 131, "title": "Simulation Endpoint for Demo Data Generation", "status": "pr_open_draft", "branch": "repo-assist/issue-131-simulation-endpoint"},
-    {"issue": 132, "title": "Dashboard Overview Page with Metrics API", "status": "pr_open_draft", "branch": "repo-assist/issue-132-dashboard-overview"},
+    {"issue": 131, "title": "Simulation Endpoint for Demo Data Generation", "pr": 155, "status": "merged"},
+    {"issue": 132, "title": "Dashboard Overview Page with Metrics API", "pr": 156, "status": "pr_open", "branch": "repo-assist/issue-132-dashboard-overview-473930fad67af7b9", "note": "merge conflict fixed (MapSimulateEndpoints + MapMetricsEndpoints both registered)"},
     {"issue": 140, "title": "Add .NET 8 CI workflow", "status": "closed_completed"}
   ],
-  "completed_issues": [125, 126, 137, 128, 127, 129, 130, 140],
-  "in_progress_issues": [131, 132],
+  "completed_issues": [125, 126, 137, 128, 127, 129, 130, 131, 140],
+  "in_progress_issues": [132],
   "next_up": [133, 134, 135],
   "environment_notes": "Squid proxy at 172.30.0.10:3128 blocks api.nuget.org (ERR_ACCESS_DENIED). NuGet package restore fails locally. github.com and api.github.com are accessible.",
-  "notes": "Run 12. PRs for #131 (Simulation) and #132 (Dashboard Overview) created as drafts. Once #132 merges, #133, #134, #135 unlock. #136 needs #135."
+  "notes": "Run 13. PR #155 (Simulation #131) was merged. PR #156 (Dashboard Overview #132) had a merge conflict in Program.cs (add/add). Fixed: included both MapSimulateEndpoints and MapMetricsEndpoints. Once #132 merges, issues #133, #134, #135 unlock. #136 needs #135."
 }

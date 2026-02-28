@@ -1,8 +1,8 @@
-# Pipeline State — 2026-02-27
+# Pipeline State — 2026-02-28
 
 ## Last Run
-- Workflow run: 22508492759
-- Date: 2026-02-27T23:58:51Z
+- Workflow run: 22508770027
+- Date: 2026-02-28T00:10:00Z
 
 ## Current Run: Run 05 — Ticket Deflection Service (C#/.NET 8)
 
@@ -15,8 +15,8 @@
 | #128 | Ticket Classification Service & Classify Endpoint | #126 | merged | #145 |
 | #129 | Knowledge Base Matching & Resolution Service | #128,#137 | merged | #151 |
 | #130 | Ticket Pipeline Orchestrator & Submit Endpoint | #128,#129 | merged | #154 |
-| #131 | Simulation Endpoint for Demo Data Generation | #130 | PR open draft | — |
-| #132 | Dashboard Overview Page with Metrics API | #130 | PR open draft | — |
+| #131 | Simulation Endpoint for Demo Data Generation | #130 | merged | #155 |
+| #132 | Dashboard Overview Page with Metrics API | #130 | PR open | #156 |
 | #133 | Dashboard Ticket Feed Razor Page | #127,#132 | blocked | — |
 | #134 | Dashboard Activity Log Razor Page | #132 | blocked | — |
 | #135 | Landing Page with Demo Run Button | #132 | blocked | — |
@@ -25,9 +25,9 @@
 | #140 | Add .NET 8 CI workflow | None | closed/completed | — |
 
 ### This Run's Actions
-- Pipeline status #124 updated (run 22508492759)
-- PR for #131 (Simulation Endpoint) opened as draft
-- PR for #132 (Dashboard Overview) opened as draft
+- Pipeline status #124 updated (run 22508770027)
+- PR #155 (Simulation Endpoint) confirmed merged, issue #131 closed
+- Fixed merge conflict in PR #156 (Dashboard Overview): Program.cs now has both MapSimulateEndpoints + MapMetricsEndpoints
 
 ### ⚠️ Environment Constraint
 The agent environment's squid proxy blocks `api.nuget.org:443` (HTTP 403 ERR_ACCESS_DENIED).
