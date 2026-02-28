@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-27T23:53:56Z",
-  "workflow_run_id": "22508384840",
+  "last_run": "2026-02-27T23:58:51Z",
+  "workflow_run_id": "22508492759",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -13,12 +13,14 @@
     {"issue": 128, "title": "Ticket Classification Service & Classify Endpoint", "pr": 145, "status": "merged"},
     {"issue": 127, "title": "Ticket CRUD Minimal API Endpoints", "pr": 150, "status": "merged"},
     {"issue": 129, "title": "Knowledge Base Matching & Resolution Service", "pr": 151, "status": "merged"},
-    {"issue": 130, "title": "Ticket Pipeline Orchestrator & Submit Endpoint", "pr": 154, "status": "pr_open_draft", "branch": "repo-assist/issue-130-pipeline-orchestrator-e24653049a226230"},
+    {"issue": 130, "title": "Ticket Pipeline Orchestrator & Submit Endpoint", "pr": 154, "status": "merged"},
+    {"issue": 131, "title": "Simulation Endpoint for Demo Data Generation", "status": "pr_open_draft", "branch": "repo-assist/issue-131-simulation-endpoint"},
+    {"issue": 132, "title": "Dashboard Overview Page with Metrics API", "status": "pr_open_draft", "branch": "repo-assist/issue-132-dashboard-overview"},
     {"issue": 140, "title": "Add .NET 8 CI workflow", "status": "closed_completed"}
   ],
-  "completed_issues": [125, 126, 137, 128, 127, 129, 140],
-  "in_progress_issues": [130],
-  "next_up": [131, 132],
+  "completed_issues": [125, 126, 137, 128, 127, 129, 130, 140],
+  "in_progress_issues": [131, 132],
+  "next_up": [133, 134, 135],
   "environment_notes": "Squid proxy at 172.30.0.10:3128 blocks api.nuget.org (ERR_ACCESS_DENIED). NuGet package restore fails locally. github.com and api.github.com are accessible.",
-  "notes": "Run 11. PR #154 (#130 Pipeline Orchestrator) is open as draft, CI pending. Once #130 merges, #131 (Simulation Endpoint) and #132 (Dashboard Overview) unlock. Issues #149, #152, #153, #146, #144 are dead-end issues - ignore them."
+  "notes": "Run 12. PRs for #131 (Simulation) and #132 (Dashboard Overview) created as drafts. Once #132 merges, #133, #134, #135 unlock. #136 needs #135."
 }
