@@ -1,12 +1,12 @@
 # Pipeline State — 2026-02-28
 
 ## Last Run
-- Workflow run: 22513853785
-- Date: 2026-02-28T05:02:14Z
+- Workflow run: 22513978604
+- Date: 2026-02-28T05:09:57Z
 
 ## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 10)
 
-### Status: **AT_RISK** — PR creation blocked by token scope
+### Status: **ON_TRACK** — PR #206 open for issue #205, CI pending
 
 ### Issues
 | Issue | Title | Deps | Status | PR |
@@ -37,24 +37,11 @@
 | #199 | Fix demo deflection rate: tune seed tickets and lower matching threshold | None | merged | #200 |
 | #201 | Redesign landing page with Blueprint×Terminal aesthetic | None | closed/completed | — |
 | #202 | Apply Blueprint×Terminal to Dashboard/Tickets/Activity pages | #201 | merged | #204 |
-| #205 | Add Run History section to landing page | #201 | **attempted** | patch only |
+| #205 | Add Run History section to landing page | #201 | **open** | #206 (CI pending) |
 
-### This Run's Actions (run 22513853785)
-- Issue #205: implemented Run History section on landing page
-  - Build manifest / mission log layout (terminal process table style)
-  - All 4 pipeline runs shown: Run 04 ACTIVE, Runs 01-03 with git tag links
-  - Cumulative headline: 4 runs · 4 apps · 3 tech stacks · 50+ issues · 61+ PRs · zero human code
-  - Responsive: desktop grid, mobile stacked
-  - Anti-slop rules respected: no emoji, no card grids, no gradient text
-  - All 62 tests pass
-  - safeoutputs PR creation blocked → patch artifact at /tmp/gh-aw/aw-repo-assist-issue-205-run-history-landing-page.patch
-  - Branch committed locally: repo-assist/issue-205-run-history-landing-page
+### Open Items
+- #205: Add Run History section to landing page → PR #206 (open, CI pending, awaiting review)
 
-### Open Issues
-- #123: PRD tracking issue (open, not an implementation task)
-- #205: Add Run History section to landing page (attempted, patch-only)
-
-### ⚠️ Environment Constraints
-1. NuGet restore succeeded (.NET 10.0.102 SDK installed)
-2. GH_AW_GITHUB_TOKEN cannot push branches to the remote repository
-   safeoutputs falls back to creating patch artifacts instead of real PRs
+### Environment Notes
+- NuGet restore succeeded (.NET 10.0.102 SDK installed)
+- GH_AW_GITHUB_TOKEN can push branches / create PRs
