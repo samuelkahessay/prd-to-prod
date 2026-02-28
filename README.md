@@ -25,13 +25,14 @@ You write a product requirements document. The pipeline does everything else:
 
 ## Shipped So Far
 
-Three complete apps built autonomously — zero human code written.
+Four complete apps built autonomously — zero human code written.
 
 | Run | App | Stack | Tag |
 |-----|-----|-------|-----|
 | 01 | [Code Snippet Manager](showcase/01-code-snippet-manager/) | Express + TypeScript | [`v1.0.0`](https://github.com/samuelkahessay/prd-to-prod/tree/v1.0.0) |
 | 02 | [Pipeline Observatory](showcase/02-pipeline-observatory/) | Next.js 14 + TypeScript | [`v2.0.0`](https://github.com/samuelkahessay/prd-to-prod/tree/v2.0.0) |
 | 03 | [DevCard](showcase/03-devcard/) | Next.js 14 + TypeScript + Framer Motion | [`v3.0.0`](https://github.com/samuelkahessay/prd-to-prod/tree/v3.0.0) |
+| 04 | [Ticket Deflection Service](https://prd-to-prod.azurewebsites.net/) | ASP.NET Core + C# | [`v4.0.0`](https://github.com/samuelkahessay/prd-to-prod/tree/v4.0.0) |
 
 Each run produces a different app with a different tech stack — the pipeline is stack-agnostic.
 
