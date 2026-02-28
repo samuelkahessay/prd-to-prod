@@ -54,7 +54,16 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: prd-to-prod
-          package: ./publish
+        run: |
+          cd publish && zip -qr ../deploy.zip . && cd ..
+          az webapp config appsettings set \
+            --name prd-to-prod \
+            --resource-group prd-to-prod-rg \
+            --settings WEBSITE_RUN_FROM_PACKAGE=1 \
+            --output none
+          az webapp deploy \
+            --name prd-to-prod \
+            --resource-group prd-to-prod-rg \
+            --src-path deploy.zip \
+            --type zip \
+            --clean true
