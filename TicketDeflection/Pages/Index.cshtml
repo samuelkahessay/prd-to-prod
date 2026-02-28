@@ -276,11 +276,11 @@
                 <!-- Stats as instrument panels -->
                 <div class="grid grid-cols-3 gap-4 mb-6">
                     <div class="panel panel-top p-4">
-                        <div class="metric-val">25</div>
-                        <div class="metric-lbl">tickets / run</div>
+                        <div class="metric-val" id="statTickets">25</div>
+                        <div class="metric-lbl">tickets processed</div>
                     </div>
                     <div class="panel panel-top p-4">
-                        <div class="metric-val">~70%</div>
+                        <div class="metric-val" id="statDeflection">--</div>
                         <div class="metric-lbl">deflection rate</div>
                     </div>
                     <div class="panel panel-top p-4">
@@ -528,6 +528,27 @@
                 }
             }
         }
+
+        // Load live stats from the metrics API
+        (async function loadStats() {
+            try {
+                const res = await fetch('/api/metrics/overview');
+                if (!res.ok) return;
+                const data = await res.json();
+                const ticketEl = document.getElementById('statTickets');
+                const deflectionEl = document.getElementById('statDeflection');
+                if (ticketEl && data.totalTickets != null) {
+                    ticketEl.textContent = data.totalTickets > 0 ? data.totalTickets : '0';
+                }
+                if (deflectionEl) {
+                    deflectionEl.textContent = data.totalTickets > 0
+                        ? (data.resolutionRate * 100).toFixed(1) + '%'
+                        : '--';
+                }
+            } catch (_) {
+                // Non-critical: silently ignore if API unavailable
+            }
+        })();
     </script>
 </body>
 </html>
