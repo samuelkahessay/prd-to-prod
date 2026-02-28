@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-28T06:45:26Z",
-  "workflow_run_id": "22515499710",
+  "last_run": "2026-02-28T06:54:36Z",
+  "workflow_run_id": "22515649016",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -50,5 +50,5 @@
     {"issue": 229, "title": "Fix demo button stuck in executing state after browser back navigation", "pr": 230, "status": "merged"},
     {"issue": 231, "title": "Static files not served — og-image.png returns 404 in production", "pr": 232, "status": "merged"}
   ],
-  "notes": "Run 44. PR #232 (UseStaticFiles fix for #231) was merged. PR #221 (gh-aw link fix for #214) is approved with auto-merge enabled, awaiting merge. Pipeline nearly complete - only issue #214 remains open."
+  "notes": "Run 45. PR #221 (gh-aw link fix for #214) is approved with CI passing and auto-merge enabled. Pipeline nearly complete - only issue #214 remains open, blocked on auto-merge."
 }

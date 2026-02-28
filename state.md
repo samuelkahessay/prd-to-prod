@@ -1,8 +1,8 @@
 # Pipeline State — 2026-02-28
 
 ## Last Run
-- Workflow run: 22515499710
-- Date: 2026-02-28T06:45:26Z
+- Workflow run: 22515649016
+- Date: 2026-02-28T06:54:36Z
 
 ## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 10)
 
@@ -54,7 +54,7 @@
 | #231 | Static files not served — og-image.png returns 404 | merged | #232 |
 
 ### Open Items
-- #214: Fix gh-aw link → PR #221 approved, auto-merge pending (only remaining open issue)
+- #214: Fix gh-aw link → PR #221 approved, CI passing, auto-merge enabled (last remaining issue)
 
 ### Environment Notes
 - NuGet restore succeeded (.NET 10.0.102 SDK installed)
