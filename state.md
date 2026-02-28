@@ -1,14 +1,14 @@
 # Pipeline State — 2026-02-28
 
 ## Last Run
-- Workflow run: 22512715311
-- Date: 2026-02-28T03:50:26Z
+- Workflow run: 22512926406
+- Date: 2026-02-28T04:03:38Z
 
 ## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 8 → .NET 10)
 
-### Status: **COMPLETE** ✅
+### Status: **IN PROGRESS** 🔄
 
-All pipeline issues have been implemented and closed.
+Issue #197 (landing page redesign) is implemented and tested but awaiting PR creation via manual patch apply.
 
 ### Issues
 | Issue | Title | Deps | Status | PR |
@@ -33,13 +33,15 @@ All pipeline issues have been implemented and closed.
 | #185 | Upgrade NuGet packages to match net10.0 | None | closed/completed | — |
 | #186 | Update dotnet-ci.yml to use .NET 10 SDK | #185 | closed/completed | — |
 | #189 | Fix EF Core in-memory database scoping in test fixtures | None | merged | #192 |
-| #190 | Auto-seed 25 demo tickets on startup for cold-start dashboard | None | **closed/completed** | — |
-| #191 | Redirect Run Demo button to /dashboard after simulation | #190 | **closed/completed** | — |
+| #190 | Auto-seed 25 demo tickets on startup for cold-start dashboard | None | closed/completed | — |
+| #191 | Redirect Run Demo button to /dashboard after simulation | #190 | closed/completed | — |
+| **#197** | **Improve landing page visual design and demo flow** | None | **patch_generated** | pending |
 
-### This Run's Actions (run 22512715311)
-- All issues confirmed closed — pipeline COMPLETE
-- No open PRs remain
-- Posted final COMPLETE project status update
+### This Run's Actions (run 22512926406)
+- Implemented #197: landing page redesign (dark gradient, visual pipeline diagram, stats row, gradient CTA, loading animation)
+- All 62 tests pass
+- Branch: `repo-assist/issue-197-landing-page-redesign`
+- Patch: `/tmp/gh-aw/aw-repo-assist-issue-197-landing-page-redesign.patch`
 
 ### ⚠️ Environment Constraints
 1. NuGet restore succeeded in previous runs (.NET 10.0.102 SDK installed)
