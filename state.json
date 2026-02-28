@@ -1,12 +1,12 @@
 {
-  "last_run": "2026-02-28T04:03:38Z",
-  "workflow_run_id": "22512926406",
+  "last_run": "2026-02-28T04:03:51Z",
+  "workflow_run_id": "22512931965",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
     "status": "in_progress"
   },
-  "pipeline_status": "IN_PROGRESS",
+  "pipeline_status": "AT_RISK",
   "attempts": [
     {"issue": 125, "title": "Scaffold ASP.NET Core 8 Solution Structure", "pr": 138, "status": "merged"},
     {"issue": 126, "title": "Ticket Data Model & EF Core InMemory DbContext", "pr": 139, "status": "merged"},
@@ -30,11 +30,11 @@
     {"issue": 189, "title": "Fix EF Core in-memory database scoping in test fixtures", "pr": 192, "status": "merged"},
     {"issue": 190, "title": "Auto-seed 25 demo tickets on startup for cold-start dashboard", "status": "closed_completed"},
     {"issue": 191, "title": "Redirect Run Demo button to /dashboard after simulation", "status": "closed_completed"},
-    {"issue": 197, "title": "Improve landing page visual design and demo flow", "status": "patch_generated", "branch": "repo-assist/issue-197-landing-page-redesign", "patch": "/tmp/gh-aw/aw-repo-assist-issue-197-landing-page-redesign.patch"}
+    {"issue": 197, "title": "Improve landing page visual design and demo flow", "status": "patch_only", "note": "safeoutputs PR creation blocked by token scope; patch artifact created"}
   ],
   "completed_issues": [125, 126, 137, 128, 127, 129, 130, 131, 132, 133, 140, 134, 165, 135, 136, 172, 176, 185, 186, 189, 190, 191],
   "in_progress_issues": [197],
   "next_up": [],
   "environment_notes": "NuGet restore succeeded. .NET 10.0.102 SDK installed. GH_AW_GITHUB_TOKEN cannot push branches to remote repository. safeoutputs create_pull_request falls back to creating patch artifacts.",
-  "notes": "Run 32. Issue #197 implemented (landing page redesign). All 62 tests pass. Branch committed locally. Patch artifact generated."
+  "notes": "Run 32. New issue #197 discovered and implemented (visual landing page redesign). 62/62 tests pass. PR blocked by token scope — patch artifact at /tmp/gh-aw/aw-repo-assist-issue-197-landing-page-visual-redesign.patch"
 }

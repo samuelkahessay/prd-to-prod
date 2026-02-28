@@ -1,14 +1,12 @@
 # Pipeline State — 2026-02-28
 
 ## Last Run
-- Workflow run: 22512926406
-- Date: 2026-02-28T04:03:38Z
+- Workflow run: 22512931965
+- Date: 2026-02-28T04:03:51Z
 
-## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 8 → .NET 10)
+## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 10)
 
-### Status: **IN PROGRESS** 🔄
-
-Issue #197 (landing page redesign) is implemented and tested but awaiting PR creation via manual patch apply.
+### Status: **AT_RISK** — New issue #197 open, PR creation blocked by token scope
 
 ### Issues
 | Issue | Title | Deps | Status | PR |
@@ -35,15 +33,16 @@ Issue #197 (landing page redesign) is implemented and tested but awaiting PR cre
 | #189 | Fix EF Core in-memory database scoping in test fixtures | None | merged | #192 |
 | #190 | Auto-seed 25 demo tickets on startup for cold-start dashboard | None | closed/completed | — |
 | #191 | Redirect Run Demo button to /dashboard after simulation | #190 | closed/completed | — |
-| **#197** | **Improve landing page visual design and demo flow** | None | **patch_generated** | pending |
+| #197 | Improve landing page visual design and demo flow | None | **attempted** | patch only |
 
-### This Run's Actions (run 22512926406)
-- Implemented #197: landing page redesign (dark gradient, visual pipeline diagram, stats row, gradient CTA, loading animation)
-- All 62 tests pass
-- Branch: `repo-assist/issue-197-landing-page-redesign`
-- Patch: `/tmp/gh-aw/aw-repo-assist-issue-197-landing-page-redesign.patch`
+### This Run's Actions (run 22512931965)
+- Discovered new open issue #197: visual redesign of landing page
+- Implemented Index.cshtml redesign: gradient background, pill diagram, stats tagline, gradient CTA, secondary nav
+- All 62 tests pass (dotnet test)
+- safeoutputs PR creation returned patch artifact (GH_AW_GITHUB_TOKEN lacks push scope)
+- Patch at: /tmp/gh-aw/aw-repo-assist-issue-197-landing-page-visual-redesign.patch
 
 ### ⚠️ Environment Constraints
-1. NuGet restore succeeded in previous runs (.NET 10.0.102 SDK installed)
+1. NuGet restore succeeded (.NET 10.0.102 SDK installed)
 2. GH_AW_GITHUB_TOKEN cannot push branches to the remote repository
    safeoutputs falls back to creating patch artifacts instead of real PRs
