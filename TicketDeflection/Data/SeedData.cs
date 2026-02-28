@@ -64,7 +64,7 @@ public static class SeedData
             {
                 Title = "Password Reset Guide",
                 Content = "Click 'Forgot Password' on the login page, enter your email, and follow the reset link sent to your inbox.",
-                Tags = "password,reset,login,email,account",
+                Tags = "password,reset,login,email,account,forgot",
                 Category = TicketCategory.AccountIssue
             },
             new KnowledgeArticle

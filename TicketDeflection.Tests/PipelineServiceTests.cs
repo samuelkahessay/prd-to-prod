@@ -17,13 +17,14 @@ public class PipelineServiceTests : IClassFixture<WebApplicationFactory<Program>
 
     public PipelineServiceTests(WebApplicationFactory<Program> factory)
     {
+        var dbName = $"PipelineTestDb_{Guid.NewGuid()}";
         _factory = factory.WithWebHostBuilder(b =>
             b.ConfigureServices(services =>
             {
                 var existing = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<TicketDbContext>));
                 if (existing != null) services.Remove(existing);
                 services.AddDbContext<TicketDbContext>(o =>
-                    o.UseInMemoryDatabase($"PipelineTestDb_{Guid.NewGuid()}"));
+                    o.UseInMemoryDatabase(dbName));
             }));
     }
 

@@ -15,13 +15,14 @@ public class ActivityEndpointTests : IClassFixture<WebApplicationFactory<Program
 
     public ActivityEndpointTests(WebApplicationFactory<Program> factory)
     {
+        var dbName = $"ActivityTestDb_{Guid.NewGuid()}";
         _factory = factory.WithWebHostBuilder(b =>
             b.ConfigureServices(services =>
             {
                 var existing = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<TicketDbContext>));
                 if (existing != null) services.Remove(existing);
                 services.AddDbContext<TicketDbContext>(o =>
-                    o.UseInMemoryDatabase($"ActivityTestDb_{Guid.NewGuid()}"));
+                    o.UseInMemoryDatabase(dbName));
             }));
     }
 
