@@ -1,12 +1,12 @@
 # Pipeline State — 2026-02-28
 
 ## Last Run
-- Workflow run: 22513280325
-- Date: 2026-02-28T04:26:10Z
+- Workflow run: 22513447647
+- Date: 2026-02-28T04:35:53Z
 
 ## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 10)
 
-### Status: **AT_RISK** — Issue #199 open, PR creation blocked by token scope
+### Status: **AT_RISK** — Issue #201 open, PR creation blocked by token scope
 
 ### Issues
 | Issue | Title | Deps | Status | PR |
@@ -34,15 +34,22 @@
 | #190 | Auto-seed 25 demo tickets on startup for cold-start dashboard | None | closed/completed | — |
 | #191 | Redirect Run Demo button to /dashboard after simulation | #190 | closed/completed | — |
 | #197 | Improve landing page visual design and demo flow | None | merged | #198 |
-| #199 | Fix demo deflection rate: tune seed tickets and lower matching threshold | None | **attempted** | patch only |
+| #199 | Fix demo deflection rate: tune seed tickets and lower matching threshold | None | merged | #200 |
+| #201 | Redesign landing page with Blueprint×Terminal aesthetic | None | **attempted** | patch only |
+| #202 | Apply Blueprint×Terminal to Dashboard/Tickets/Activity pages | #201 | **blocked** | — |
 
-### This Run's Actions (run 22513280325)
-- Discovered issue #199: fix deflection rate (~1.3% → ~70%)
-- Implemented: MatchingThreshold 0.3→0.15, rewrote 24 SampleTickets with KB-aligned vocabulary
-- All 62 tests pass (dotnet test)
-- safeoutputs PR creation returned patch artifact (GH_AW_GITHUB_TOKEN lacks push scope)
-- Patch at: /tmp/gh-aw/aw-repo-assist-issue-199-fix-deflection-rate.patch
-- Confirmed #197 merged as PR #198 (previous run memory was inaccurate)
+### This Run's Actions (run 22513447647)
+- Issue #199: confirmed closed (merged as PR #200)
+- Issue #201: implemented Blueprint×Terminal landing page redesign
+  - JetBrains Mono + Space Grotesk fonts (Google Fonts CDN)
+  - Blueprint grid background (#080c12 + grid lines)
+  - Pipeline-first hero: "Drop a PRD. Get a deployed app. Zero human code."
+  - 4-stage pipeline schematic (prd-decomposer → repo-assist → pr-review-agent → auto-merge)
+  - Ticket deflection service framed as specimen/proof
+  - All 62 tests pass
+  - safeoutputs PR creation blocked → patch artifact at /tmp/gh-aw/aw-repo-assist-issue-201-blueprint-terminal-landing-page.patch
+  - Branch committed locally: repo-assist/issue-201-blueprint-terminal-landing-page
+- Issue #202: blocked on #201 (depends on it), cannot start yet
 
 ### ⚠️ Environment Constraints
 1. NuGet restore succeeded (.NET 10.0.102 SDK installed)

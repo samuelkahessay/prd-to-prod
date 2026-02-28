@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-28T04:26:10Z",
-  "workflow_run_id": "22513280325",
+  "last_run": "2026-02-28T04:35:53Z",
+  "workflow_run_id": "22513447647",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -31,11 +31,13 @@
     {"issue": 190, "title": "Auto-seed 25 demo tickets on startup for cold-start dashboard", "status": "closed_completed"},
     {"issue": 191, "title": "Redirect Run Demo button to /dashboard after simulation", "status": "closed_completed"},
     {"issue": 197, "title": "Improve landing page visual design and demo flow", "pr": 198, "status": "merged"},
-    {"issue": 199, "title": "Fix demo deflection rate: tune seed tickets and lower matching threshold", "status": "patch_only", "note": "safeoutputs PR creation blocked by token scope; patch artifact at /tmp/gh-aw/aw-repo-assist-issue-199-fix-deflection-rate.patch"}
+    {"issue": 199, "title": "Fix demo deflection rate: tune seed tickets and lower matching threshold", "pr": 200, "status": "merged"},
+    {"issue": 201, "title": "Redesign landing page with Blueprint×Terminal aesthetic", "status": "patch_only", "note": "safeoutputs PR creation blocked by token scope; patch at /tmp/gh-aw/aw-repo-assist-issue-201-blueprint-terminal-landing-page.patch; branch repo-assist/issue-201-blueprint-terminal-landing-page committed locally; 62/62 tests pass"}
   ],
-  "completed_issues": [125, 126, 137, 128, 127, 129, 130, 131, 132, 133, 140, 134, 165, 135, 136, 172, 176, 185, 186, 189, 190, 191, 197],
-  "in_progress_issues": [199],
+  "completed_issues": [125, 126, 137, 128, 127, 129, 130, 131, 132, 133, 140, 134, 165, 135, 136, 172, 176, 185, 186, 189, 190, 191, 197, 199],
+  "in_progress_issues": [201],
+  "blocked_issues": [202],
   "next_up": [],
   "environment_notes": "NuGet restore succeeded. .NET 10.0.102 SDK installed. GH_AW_GITHUB_TOKEN cannot push branches to remote repository. safeoutputs create_pull_request falls back to creating patch artifacts.",
-  "notes": "Run 33. Issue #199 implemented (deflection rate fix): threshold 0.3->0.15, rewrote 24 SampleTickets. 62/62 tests pass. PR blocked by token scope — patch artifact created. Issue #197 confirmed merged as PR #198."
+  "notes": "Run 34. Issue #201 implemented (Blueprint×Terminal landing page redesign): complete redesign with JetBrains Mono + Space Grotesk fonts, blueprint grid bg, pipeline-first story. 62/62 tests pass. PR blocked by token scope — patch artifact created at /tmp/gh-aw/aw-repo-assist-issue-201-blueprint-terminal-landing-page.patch. Issue #202 (dashboard/tickets/activity pages) depends on #201 and is blocked until #201 merges. Issue #199 closed as PR #200."
 }
