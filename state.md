@@ -1,8 +1,8 @@
 # Pipeline State — 2026-02-28
 
 ## Last Run
-- Workflow run: 22511345588
-- Date: 2026-02-28T02:25:13Z
+- Workflow run: 22511434911
+- Date: 2026-02-28T02:33:00Z
 
 ## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 8 → .NET 10)
 
@@ -25,17 +25,18 @@
 | #140 | Add .NET 8 CI workflow | None | closed/completed | — |
 | #165 | CI Build Failure: CS0246 _ViewImports | None | merged | #166 |
 | #172 | Fix CS0117: KnowledgeArticle missing CreatedAt | None | merged | #173 |
-| #176 | Update target framework from net8.0 to net10.0 | None | patch_pending | — |
+| #176 | Update target framework from net8.0 to net10.0 | None | **BLOCKED** | — |
 
-### This Run's Actions (run 22511345588)
-- Issue #176 still open — re-attempted net10.0 upgrade
-- Applied all changes: global.json, csproj files, Dockerfile, CI workflow
-- Committed to branch repo-assist/issue-176-upgrade-to-net10
-- safeoutputs create_pull_request returned success with patch
-- Issue #179 (from previous run) is the previous patch fallback for same changes
+### This Run's Actions (run 22511434911)
+- Issue #176 attempted (3rd time) — all code changes made correctly
+- safeoutputs create_pull_request returned patch artifact (push failed again)
+- Posted patch as comment on issue #176 for manual application
+- Created new [Pipeline] Status issue
 
 ### ⚠️ Environment Constraints
 1. The agent environment's squid proxy blocks `api.nuget.org:443` (HTTP 403 ERR_ACCESS_DENIED).
    NuGet packages cannot be restored locally.
-2. Branch pushes to the remote repository appear to be failing, causing safeoutputs to
-   fall back to creating patch artifacts/issues instead of real PRs.
+2. `GH_AW_GITHUB_TOKEN` cannot push branches to the remote repository.
+   safeoutputs falls back to creating patch artifacts instead of real PRs.
+3. Issue #176 is permanently blocked until human applies the patch from the issue comment
+   or the push permissions are fixed.
