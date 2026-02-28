@@ -1,0 +1,134 @@
+#
+# CI Failure Issue Creator — Automatically opens a [Pipeline] bug issue when
+# the .NET CI workflow fails, giving repo-assist an actionable item to fix.
+#
+# Flow:
+#   1. .NET CI fails on a PR → workflow_run:completed fires with conclusion=failure
+#   2. This workflow fetches the failed-step logs via `gh run view --log-failed`
+#   3. Dedup check: if an open pipeline+bug issue already starts with
+#      "[Pipeline] CI Build Failure", skip creation to avoid flooding
+#   4. Creates an issue with labels `pipeline` and `bug` so that
+#      auto-dispatch.yml picks it up and dispatches repo-assist
+#
+# Security: all github.event.* values are passed through `env:` blocks —
+# never interpolated directly into `run:` scripts — to prevent shell injection.
+#
+
+name: "CI Failure Issue Creator"
+
+on:
+  workflow_run:
+    workflows: [".NET CI"]
+    types: [completed]
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+# One run per failing CI run ID — prevents double-processing if the event
+# fires more than once for the same run.
+concurrency:
+  group: "ci-failure-issue-${{ github.event.workflow_run.id }}"
+  cancel-in-progress: false
+
+jobs:
+  create-issue:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure'
+    steps:
+      - name: Extract failure details and create issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number || '' }}
+        run: |
+          echo "=== CI Failure Issue Creator ==="
+          echo "Run ID  : ${RUN_ID}"
+          echo "Branch  : ${HEAD_BRANCH}"
+          echo "SHA     : ${HEAD_SHA}"
+
+          # ── Fetch failed-step logs ──
+          RAW_LOGS=$(gh run view "$RUN_ID" --repo "$REPO" --log-failed 2>&1 || true)
+
+          # ── Extract .NET error lines (CS/FS/BC codes, "Build FAILED", etc.) ──
+          ERROR_LINES=$(printf '%s' "$RAW_LOGS" \
+            | grep -iE "(error (CS|FS|BC)[0-9]+|Build FAILED|Tests? failed)" \
+            | head -20 \
+            || true)
+
+          if [ -z "$ERROR_LINES" ]; then
+            ERROR_LINES="(no structured error lines found — see run logs)"
+          fi
+
+          # ── Build a title-safe short summary ──
+          FIRST_CODE=$(printf '%s' "$RAW_LOGS" \
+            | grep -oiE "error (CS|FS|BC)[0-9]+" \
+            | head -1 \
+            || true)
+
+          if [ -n "$FIRST_CODE" ]; then
+            SHORT_ERROR=$(printf '%.80s' "$FIRST_CODE")
+          else
+            SHORT_ERROR="Build failure"
+          fi
+
+          TITLE="[Pipeline] CI Build Failure: ${SHORT_ERROR}"
+
+          # ── Dedup check ──
+          # Skip if an open pipeline+bug issue with the same title prefix exists.
+          EXISTING=$(gh issue list --repo "$REPO" \
+            --label "pipeline" --label "bug" \
+            --state open \
+            --json number,title \
+            --jq '[.[] | select(.title | startswith("[Pipeline] CI Build Failure"))] | length')
+
+          if [ "${EXISTING:-0}" -gt 0 ]; then
+            echo "An open CI failure issue already exists — skipping creation to avoid duplicates."
+            exit 0
+          fi
+
+          # ── Build PR/branch context line ──
+          if [ -n "$PR_NUMBER" ]; then
+            CONTEXT_LINE="- **PR**: #${PR_NUMBER} (branch: \`${HEAD_BRANCH}\`)"
+          else
+            CONTEXT_LINE="- **Branch**: \`${HEAD_BRANCH}\`"
+          fi
+
+          # ── Write issue body to a temp file (avoids YAML block-scalar issues) ──
+          BODY_FILE=$(mktemp "${RUNNER_TEMP}/ci-failure-body.XXXXXX.md")
+          {
+            printf '## CI Build Failure Detected\n\n'
+            printf 'The `.NET CI` workflow failed and requires a fix.\n\n'
+            printf '### Failure Details\n'
+            printf -- '- **Run**: %s\n' "$RUN_URL"
+            printf '%s\n' "$CONTEXT_LINE"
+            printf -- '- **Commit**: `%s`\n\n' "$HEAD_SHA"
+            printf '### Error Output\n'
+            printf '```\n'
+            printf '%s\n' "$ERROR_LINES"
+            printf '```\n\n'
+            printf '### Instructions\n'
+            printf '1. Review the error output above and the [full run logs](%s).\n' "$RUN_URL"
+            printf '2. Identify the root cause of the build/test failure.\n'
+            printf '3. Implement the necessary fix in the codebase.\n'
+            printf '4. Ensure `dotnet build` and `dotnet test` pass before opening a PR.\n'
+            printf '5. Open a PR with `Closes #<this-issue-number>` in the body.\n\n'
+            printf '> This issue was created automatically by the CI Failure Issue Creator workflow.\n'
+          } > "$BODY_FILE"
+
+          # ── Create the issue ──
+          gh issue create \
+            --repo "$REPO" \
+            --title "$TITLE" \
+            --body-file "$BODY_FILE" \
+            --label "pipeline" \
+            --label "bug"
+
+          rm -f "$BODY_FILE"
+
+          echo "Issue created."
