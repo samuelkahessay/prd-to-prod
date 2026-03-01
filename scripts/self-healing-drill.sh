@@ -37,6 +37,7 @@ SLA_DISPATCH_TO_PR=600
 SLA_PR_TO_GREEN=900
 SLA_GREEN_TO_MERGE=600
 SLA_MERGE_TO_RECOVERY=300
+DISPATCH_MARKER_GRACE_S=90
 
 # Colors
 RED='\033[0;31m'
@@ -405,6 +406,30 @@ derive_dispatch_substate() {
   fi
 }
 
+is_dispatch_candidate_run() {
+  local event="$1"
+  local status="$2"
+  local conclusion="$3"
+
+  case "$event" in
+    workflow_dispatch|issue_comment) ;;
+    *) return 1 ;;
+  esac
+
+  if [ "$status" = "completed" ] && [ "$conclusion" = "skipped" ]; then
+    return 1
+  fi
+
+  return 0
+}
+
+should_wait_for_dispatch_marker() {
+  local issue_epoch="$1"
+  local now_s="$2"
+
+  [ $((now_s - issue_epoch)) -lt "$DISPATCH_MARKER_GRACE_S" ]
+}
+
 find_dispatch() {
   local issue_number="$1"
   DISPATCH_WORKFLOW=""
@@ -471,6 +496,8 @@ find_dispatch() {
 
   local issue_epoch
   issue_epoch=$(iso_to_epoch "$issue_created_at")
+  local now_s
+  now_s=$(now_epoch)
 
   # Find "Pipeline Repo Assist" runs created after the issue
   local repo_assist_runs
@@ -482,15 +509,27 @@ find_dispatch() {
 
   local i=0
   while [ "$i" -lt "$run_count" ]; do
-    local run_created_at run_id
+    local run_created_at run_id run_event run_status run_conclusion
     run_created_at=$(echo "$repo_assist_runs" | jq -r ".[$i].created_at")
     run_id=$(echo "$repo_assist_runs" | jq -r ".[$i].id")
+    run_event=$(echo "$repo_assist_runs" | jq -r ".[$i].event // \"\"")
+    run_status=$(echo "$repo_assist_runs" | jq -r ".[$i].status // \"\"")
+    run_conclusion=$(echo "$repo_assist_runs" | jq -r ".[$i].conclusion // \"\"")
 
     local run_epoch
     run_epoch=$(iso_to_epoch "$run_created_at")
 
     # Only consider runs that started after the issue was created
     if [ "$run_epoch" -ge "$issue_epoch" ]; then
+      if ! is_dispatch_candidate_run "$run_event" "$run_status" "$run_conclusion"; then
+        i=$((i + 1))
+        continue
+      fi
+
+      if should_wait_for_dispatch_marker "$issue_epoch" "$now_s"; then
+        return
+      fi
+
       # Check the triggering actor for this run
       local run_detail
       run_detail=$(gh api "repos/${REPO}/actions/runs/${run_id}" 2>/dev/null || echo "{}")

@@ -19,4 +19,22 @@ HEURISTIC=$(derive_dispatch_substate "" "" "" "heuristic:first_repo_assist_after
 [ "$REQUEUED_BY_ORIGIN" = "deferred->requeued" ]
 [ "$HEURISTIC" = "heuristic" ]
 
+is_dispatch_candidate_run "workflow_dispatch" "in_progress" ""
+is_dispatch_candidate_run "issue_comment" "completed" "success"
+if is_dispatch_candidate_run "issues" "completed" "skipped"; then
+  echo "issues/skipped run should not be a dispatch candidate" >&2
+  exit 1
+fi
+
+if is_dispatch_candidate_run "workflow_dispatch" "completed" "skipped"; then
+  echo "skipped workflow_dispatch run should not be a dispatch candidate" >&2
+  exit 1
+fi
+
+should_wait_for_dispatch_marker 100 120
+if should_wait_for_dispatch_marker 100 220; then
+  echo "marker grace window should have expired" >&2
+  exit 1
+fi
+
 echo "self-healing-drill dispatch substate tests passed"
