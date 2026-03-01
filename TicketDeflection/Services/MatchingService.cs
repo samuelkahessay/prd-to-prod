@@ -25,7 +25,9 @@ public class MatchingService
         foreach (var article in articles)
         {
             var articleTokens = Tokenize($"{article.Content} {article.Tags}");
-            var score = Jaccard(ticketTokens, articleTokens);
+            // Asymmetric coverage: fraction of the ticket's terms found in the article.
+            // This correctly scores short tickets whose words all appear in a rich article.
+            var score = Coverage(ticketTokens, articleTokens);
             if (score > bestScore)
             {
                 bestScore = score;
@@ -56,11 +58,11 @@ public class MatchingService
             .Where(t => t.Length > 0)
             .ToHashSet();
 
-    private static double Jaccard(HashSet<string> a, HashSet<string> b)
+    // Returns the fraction of ticket tokens (a) that are present in the article tokens (b).
+    private static double Coverage(HashSet<string> ticketTokens, HashSet<string> articleTokens)
     {
-        if (a.Count == 0 && b.Count == 0) return 0;
-        var intersection = a.Intersect(b).Count();
-        var union = a.Union(b).Count();
-        return intersection / (double)union;
+        if (ticketTokens.Count == 0) return 0;
+        var matched = ticketTokens.Intersect(articleTokens).Count();
+        return matched / (double)ticketTokens.Count;
     }
 }

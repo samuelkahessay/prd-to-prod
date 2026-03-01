@@ -97,4 +97,67 @@ public class MatchingServiceTests
 
         Assert.Equal(TicketStatus.Escalated, ticket.Status);
     }
+
+    [Fact]
+    public void ShortTicket_ForgotPassword_AutoResolved()
+    {
+        // 2-word ticket whose both words appear in the article → coverage = 100%
+        using var context = CreateContext();
+        SeedPasswordArticle(context);
+
+        var ticket = new Ticket
+        {
+            Title = "forgot password",
+            Description = "",
+            Status = TicketStatus.New
+        };
+
+        var service = CreateService();
+        service.ResolveTicket(ticket, context);
+
+        Assert.Equal(TicketStatus.AutoResolved, ticket.Status);
+        Assert.NotNull(ticket.Resolution);
+        Assert.Contains("Password", ticket.Resolution);
+    }
+
+    [Fact]
+    public void ShortTicket_CantLogin_AutoResolved()
+    {
+        // "login" appears in both article content and tags → coverage ≥ 0.5
+        using var context = CreateContext();
+        SeedPasswordArticle(context);
+
+        var ticket = new Ticket
+        {
+            Title = "can't login",
+            Description = "",
+            Status = TicketStatus.New
+        };
+
+        var service = CreateService();
+        service.ResolveTicket(ticket, context);
+
+        Assert.Equal(TicketStatus.AutoResolved, ticket.Status);
+    }
+
+    [Fact]
+    public void LongTicket_ManyMatchingWords_AutoResolved()
+    {
+        // Long tickets still match correctly after the asymmetric change
+        using var context = CreateContext();
+        SeedPasswordArticle(context);
+
+        var ticket = new Ticket
+        {
+            Title = "Need help with account login and password reset",
+            Description = "I cannot access my account and need to reset my password via the email link",
+            Status = TicketStatus.New
+        };
+
+        var service = CreateService();
+        service.ResolveTicket(ticket, context);
+
+        Assert.Equal(TicketStatus.AutoResolved, ticket.Status);
+        Assert.Contains("Password", ticket.Resolution!);
+    }
 }
