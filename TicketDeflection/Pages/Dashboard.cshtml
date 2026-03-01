@@ -152,6 +152,80 @@
         .tag-escalated { background: rgba(248, 81, 73, 0.12); color: var(--red); border: 1px solid rgba(248, 81, 73, 0.25); }
         .tag-pending { background: rgba(245, 166, 35, 0.12); color: var(--amber); border: 1px solid rgba(245, 166, 35, 0.25); }
         #feed-empty { padding: 28px 16px; text-align: center; color: var(--dim); font-size: 0.8rem; }
+        .submit-panel {
+            background: rgba(4, 10, 20, 0.7);
+            border: 1px solid var(--border);
+            border-top: 2px solid var(--accent);
+        }
+        .submit-panel-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--dim);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .submit-panel-body { padding: 16px; }
+        .term-label {
+            color: var(--dim);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .term-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .term-input:focus { border-color: var(--accent); }
+        .term-input::placeholder { color: var(--dim); }
+        .term-textarea { resize: vertical; min-height: 60px; }
+        .exec-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.8rem;
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .exec-btn:hover { background: rgba(0, 170, 255, 0.1); }
+        .exec-btn:disabled { border-color: var(--dim); color: var(--dim); cursor: default; }
+        .reset-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--dim);
+            font-family: var(--mono);
+            font-size: 0.8rem;
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .result-panel { border-top: 1px solid var(--border); margin-top: 16px; padding-top: 16px; }
+        .result-line {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            padding: 3px 0;
+            font-size: 0.8rem;
+        }
+        .result-key { color: var(--dim); min-width: 130px; flex-shrink: 0; }
+        .result-val { color: var(--text); }
+        .result-val-resolved { color: var(--green); }
+        .result-val-escalated { color: var(--red); }
+        .result-val-accent { color: var(--accent); }
     </style>
 </head>
 <body class="min-h-screen">
@@ -190,6 +264,59 @@
             <div class="metric-item" style="border-left: 1px solid var(--border);">
                 <div class="metric-lbl">&nbsp;</div>
                 <button onclick="loadMetrics()" class="refresh-btn mt-1">[ refresh ]</button>
+            </div>
+        </div>
+
+        <!-- Ticket submission panel -->
+        <div class="submit-panel mb-8">
+            <div class="submit-panel-header">
+                <span>submit ticket</span>
+            </div>
+            <div class="submit-panel-body">
+                <!-- Input form -->
+                <div id="submit-form">
+                    <div class="flex gap-4 mb-4">
+                        <div style="flex: 2;">
+                            <label class="term-label" for="ticket-title">title</label>
+                            <input id="ticket-title" class="term-input" type="text" placeholder="e.g. password reset not working" autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="term-label" for="ticket-desc">description (optional)</label>
+                        <textarea id="ticket-desc" class="term-input term-textarea" placeholder="Additional context..."></textarea>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="submit-btn" class="exec-btn" onclick="submitTicket()">[ submit ]</button>
+                        <span id="submit-status" class="text-dim" style="font-size:0.75rem;"></span>
+                    </div>
+                </div>
+                <!-- Result display -->
+                <div id="submit-result" style="display:none;">
+                    <div class="result-panel">
+                        <div class="result-line">
+                            <span class="result-key">classification</span>
+                            <span id="res-category" class="result-val-accent result-val"></span>
+                            <span class="text-dim" style="font-size:0.7rem;">·</span>
+                            <span id="res-severity" class="result-val" style="font-size:0.75rem;"></span>
+                        </div>
+                        <div id="res-match-line" class="result-line">
+                            <span class="result-key">matched article</span>
+                            <span id="res-article" class="result-val"></span>
+                            <span id="res-score" class="text-dim" style="font-size:0.7rem;"></span>
+                        </div>
+                        <div class="result-line">
+                            <span class="result-key">outcome</span>
+                            <span id="res-status" class="result-val"></span>
+                        </div>
+                        <div id="res-resolution-line" class="result-line" style="display:none;">
+                            <span class="result-key">resolution</span>
+                            <span id="res-resolution" class="result-val" style="font-size:0.75rem; max-width:520px; white-space:normal;"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 mt-4">
+                        <button class="reset-btn" onclick="resetForm()">[ submit another ]</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -251,6 +378,80 @@
 
         loadMetrics();
         loadFeed();
+
+        async function submitTicket() {
+            const title = document.getElementById('ticket-title').value.trim();
+            if (!title) {
+                document.getElementById('submit-status').textContent = 'title is required';
+                return;
+            }
+            const description = document.getElementById('ticket-desc').value.trim();
+            const btn = document.getElementById('submit-btn');
+            const status = document.getElementById('submit-status');
+            btn.disabled = true;
+            status.textContent = 'processing...';
+
+            try {
+                const res = await fetch('/api/tickets/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description, source: 'dashboard' })
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+
+                document.getElementById('res-category').textContent = data.classification.category;
+                document.getElementById('res-severity').textContent = data.classification.severity;
+
+                const matched = data.match && data.match.articleTitle;
+                const matchLine = document.getElementById('res-match-line');
+                if (matched) {
+                    document.getElementById('res-article').textContent = data.match.articleTitle;
+                    document.getElementById('res-score').textContent =
+                        '(score: ' + (data.match.score * 100).toFixed(0) + '%)';
+                    matchLine.style.display = '';
+                } else {
+                    matchLine.style.display = 'none';
+                }
+
+                const outcomeEl = document.getElementById('res-status');
+                const isResolved = data.ticket.status === 'AutoResolved';
+                if (isResolved) {
+                    outcomeEl.textContent = 'AUTO_RESOLVED';
+                    outcomeEl.className = 'result-val result-val-resolved';
+                } else {
+                    outcomeEl.textContent = 'ESCALATED — no matching article found';
+                    outcomeEl.className = 'result-val result-val-escalated';
+                }
+
+                const resLine = document.getElementById('res-resolution-line');
+                if (isResolved && data.ticket.resolution) {
+                    document.getElementById('res-resolution').textContent = data.ticket.resolution;
+                    resLine.style.display = '';
+                } else {
+                    resLine.style.display = 'none';
+                }
+
+                document.getElementById('submit-form').style.display = 'none';
+                document.getElementById('submit-result').style.display = '';
+
+                // Refresh feed and metrics to show the new ticket
+                loadFeed();
+                loadMetrics();
+            } catch (e) {
+                status.textContent = 'error: ' + e.message;
+                btn.disabled = false;
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('ticket-title').value = '';
+            document.getElementById('ticket-desc').value = '';
+            document.getElementById('submit-status').textContent = '';
+            document.getElementById('submit-btn').disabled = false;
+            document.getElementById('submit-result').style.display = 'none';
+            document.getElementById('submit-form').style.display = '';
+        }
     </script>
 </body>
 </html>
