@@ -247,9 +247,9 @@ jobs:
 
           # Fetch the PR diff (truncated) so the agent has immediate context
           FULL_DIFF=$(gh pr diff "$PR_NUMBER" --repo "$REPO" 2>/dev/null || true)
-          DIFF_LINES=$(printf '%s' "$FULL_DIFF" | wc -l)
+          DIFF_LINES=$(printf '%s\n' "$FULL_DIFF" | wc -l | tr -d '[:space:]')
           if [ "$DIFF_LINES" -gt 200 ]; then
-            PR_DIFF="$(printf '%s' "$FULL_DIFF" | head -200)
+            PR_DIFF="$(printf '%s\n' "$FULL_DIFF" | head -200)
 ... (truncated at 200/${DIFF_LINES} lines — run \`gh pr diff ${PR_NUMBER}\` for full diff)"
           else
             PR_DIFF="$FULL_DIFF"
