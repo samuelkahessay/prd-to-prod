@@ -1,12 +1,12 @@
 {
-  "last_run": "2026-03-01T09:51:32Z",
-  "workflow_run_id": "22540848033",
+  "last_run": "2026-03-01T11:28:11Z",
+  "workflow_run_id": "22542435370",
   "current_prd": {
     "issue": 123,
-    "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 10)",
-    "status": "active"
+    "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
+    "status": "complete"
   },
-  "pipeline_status": "ON_TRACK",
+  "pipeline_status": "COMPLETE",
   "attempts": [
     {"issue": 125, "pr": 138, "status": "merged"},
     {"issue": 126, "pr": 139, "status": "merged"},
@@ -56,12 +56,12 @@
     {"issue": 246, "pr": 256, "status": "merged"},
     {"issue": 247, "status": "closed_completed"},
     {"issue": 248, "pr": 259, "status": "merged"},
+    {"issue": 249, "status": "closed_completed"},
     {"issue": 250, "pr": 255, "status": "merged"},
     {"issue": 251, "status": "closed_completed"},
-    {"issue": 252, "status": "merged"},
-    {"issue": 249, "status": "pr_open"}
+    {"issue": 252, "status": "merged"}
   ],
-  "open_issues": [249],
+  "open_issues": [],
   "dependency_chain": {},
-  "notes": "PR opened for #249 (Random button). After merge, Run 04 wave is complete."
+  "notes": "Run 04 fully complete. All issues closed. Ready to archive with scripts/archive-run.sh."
 }
