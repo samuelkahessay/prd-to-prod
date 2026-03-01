@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-01T19:48:43Z",
-  "workflow_run_id": "22551177256",
+  "last_run": "2026-03-01T19:53:18Z",
+  "workflow_run_id": "22551266225",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -40,9 +40,9 @@
     {"issue": 273, "status": "closed"},
     {"issue": 275, "status": "superseded"},
     {"issue": 277, "pr": 278, "status": "merged", "notes": "DrillCanary CS1002 fix merged 2026-03-01T19:15:59Z"},
-    {"issue": 279, "pr": null, "status": "in-progress", "notes": "PR opened 2026-03-01T19:48:43Z — CS1002 fix DrillCanary semicolon"}
+    {"issue": 279, "pr": 280, "status": "in-review", "notes": "PR #280 open — CS1002 fix DrillCanary semicolon — CI pending 2026-03-01T19:53Z"}
   ],
   "open_issues": [279],
-  "open_prs": ["repo-assist/issue-279-fix-drillcanary-cs1002"],
-  "notes": "Run 04 nearly complete. Issue #279 (recurring CS1002 DrillCanary) has a new PR opened. Awaiting CI and review."
+  "open_prs": [280],
+  "notes": "Run 04 nearly complete. PR #280 fixing #279 (DrillCanary CS1002) is open with correct fix, CI pending. Once merged, Run 04 can be archived."
 }
