@@ -25,3 +25,6 @@ obj/
 .vs/
 .azure/
 CLAUDE.md
+
+# Drill reports (generated, not committed)
+drills/reports/*.json
