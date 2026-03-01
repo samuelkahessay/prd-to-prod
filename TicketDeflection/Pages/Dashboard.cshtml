@@ -105,6 +105,53 @@
         .text-red { color: var(--red); }
         .text-dim { color: var(--dim); }
         .text-white { color: #e8edf5; }
+        .feed-panel {
+            background: rgba(4, 10, 20, 0.7);
+            border: 1px solid var(--border);
+            border-top: 2px solid var(--accent);
+        }
+        .feed-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--dim);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .feed-col-id    { width: 80px; flex-shrink: 0; }
+        .feed-col-title { flex: 1; min-width: 0; padding: 0 12px; }
+        .feed-col-cat   { width: 120px; flex-shrink: 0; }
+        .feed-col-status { width: 130px; flex-shrink: 0; text-align: right; }
+        .feed-body {
+            max-height: 380px;
+            overflow-y: auto;
+        }
+        .feed-row {
+            display: flex;
+            align-items: center;
+            padding: 7px 16px;
+            border-bottom: 1px solid rgba(0, 160, 255, 0.06);
+            font-size: 0.8rem;
+            transition: background 0.15s;
+        }
+        .feed-row:last-child { border-bottom: none; }
+        .feed-row:hover { background: rgba(0, 170, 255, 0.04); }
+        .feed-id { color: var(--dim); font-size: 0.7rem; }
+        .feed-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .feed-category { color: var(--dim); font-size: 0.75rem; }
+        .tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 2px 7px;
+            letter-spacing: 0.06em;
+            border-radius: 2px;
+        }
+        .tag-resolved { background: rgba(61, 220, 132, 0.12); color: var(--green); border: 1px solid rgba(61, 220, 132, 0.25); }
+        .tag-escalated { background: rgba(248, 81, 73, 0.12); color: var(--red); border: 1px solid rgba(248, 81, 73, 0.25); }
+        .tag-pending { background: rgba(245, 166, 35, 0.12); color: var(--amber); border: 1px solid rgba(245, 166, 35, 0.25); }
+        #feed-empty { padding: 28px 16px; text-align: center; color: var(--dim); font-size: 0.8rem; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -149,6 +196,19 @@
             </div>
         </div>
 
+        <!-- Ticket feed -->
+        <div class="feed-panel mb-8">
+            <div class="feed-header">
+                <span class="feed-col-id">id</span>
+                <span class="feed-col-title">title</span>
+                <span class="feed-col-cat">category</span>
+                <span class="feed-col-status">status</span>
+            </div>
+            <div id="feed-body" class="feed-body">
+                <div id="feed-empty">no tickets yet — submit one to see it here</div>
+            </div>
+        </div>
+
         <div class="text-center text-dim text-xs mt-12 pb-4">
             Built end-to-end by an autonomous AI pipeline ·
             <a href="/" class="hover:text-accent transition-colors">prd-to-prod</a>
@@ -156,6 +216,32 @@
     </div>
 
     <script>
+        async function loadFeed() {
+            const res = await fetch('/api/metrics/tickets?limit=20&offset=0');
+            const tickets = await res.json();
+            const body = document.getElementById('feed-body');
+            if (!tickets || tickets.length === 0) {
+                body.innerHTML = '<div id="feed-empty">no tickets yet — submit one to see it here</div>';
+                return;
+            }
+            body.innerHTML = tickets.map(t => {
+                const shortId = t.id.substring(0, 8);
+                const status = t.status === 'AutoResolved' ? 'AUTO_RESOLVED'
+                             : t.status === 'Escalated'   ? 'ESCALATED'
+                             : t.status.toUpperCase();
+                const tagClass = t.status === 'AutoResolved' ? 'tag-resolved'
+                               : t.status === 'Escalated'   ? 'tag-escalated'
+                               : 'tag-pending';
+                const title = t.title.length > 64 ? t.title.substring(0, 63) + '…' : t.title;
+                return `<div class="feed-row">
+                    <span class="feed-col-id feed-id">${shortId}</span>
+                    <span class="feed-col-title feed-title">${title}</span>
+                    <span class="feed-col-cat feed-category">${t.category}</span>
+                    <span class="feed-col-status"><span class="tag ${tagClass}">${status}</span></span>
+                </div>`;
+            }).join('');
+        }
+
         async function loadMetrics() {
             const res = await fetch('/api/metrics/overview');
             const data = await res.json();
@@ -167,6 +253,7 @@
         }
 
         loadMetrics();
+        loadFeed();
     </script>
 </body>
 </html>
