@@ -290,30 +290,12 @@
                         <span id="submit-status" class="text-dim" style="font-size:0.75rem;"></span>
                     </div>
                 </div>
-                <!-- Result display -->
+                <!-- Result display - staged terminal output -->
                 <div id="submit-result" style="display:none;">
                     <div class="result-panel">
-                        <div class="result-line">
-                            <span class="result-key">classification</span>
-                            <span id="res-category" class="result-val-accent result-val"></span>
-                            <span class="text-dim" style="font-size:0.7rem;">·</span>
-                            <span id="res-severity" class="result-val" style="font-size:0.75rem;"></span>
-                        </div>
-                        <div id="res-match-line" class="result-line">
-                            <span class="result-key">matched article</span>
-                            <span id="res-article" class="result-val"></span>
-                            <span id="res-score" class="text-dim" style="font-size:0.7rem;"></span>
-                        </div>
-                        <div class="result-line">
-                            <span class="result-key">outcome</span>
-                            <span id="res-status" class="result-val"></span>
-                        </div>
-                        <div id="res-resolution-line" class="result-line" style="display:none;">
-                            <span class="result-key">resolution</span>
-                            <span id="res-resolution" class="result-val" style="font-size:0.75rem; max-width:520px; white-space:normal;"></span>
-                        </div>
+                        <div id="stage-output"></div>
                     </div>
-                    <div class="flex items-center gap-3 mt-4">
+                    <div id="submit-another" class="flex items-center gap-3 mt-4" style="display:none;">
                         <button class="reset-btn" onclick="resetForm()">[ submit another ]</button>
                     </div>
                 </div>
@@ -379,6 +361,45 @@
         loadMetrics();
         loadFeed();
 
+        const STAGE_DELAY_MS = 500;
+
+        function stageDelay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function appendStageLine(key, value, extraClass) {
+            const el = document.createElement('div');
+            el.className = 'result-line';
+            const keySpan = document.createElement('span');
+            keySpan.className = 'result-key';
+            keySpan.textContent = key;
+            const valSpan = document.createElement('span');
+            valSpan.className = 'result-val' + (extraClass ? ' ' + extraClass : '');
+            valSpan.textContent = value;
+            el.appendChild(keySpan);
+            el.appendChild(valSpan);
+            document.getElementById('stage-output').appendChild(el);
+        }
+
+        function appendStageLineWithSuffix(key, value, valueClass, suffix) {
+            const el = document.createElement('div');
+            el.className = 'result-line';
+            const keySpan = document.createElement('span');
+            keySpan.className = 'result-key';
+            keySpan.textContent = key;
+            const valSpan = document.createElement('span');
+            valSpan.className = 'result-val' + (valueClass ? ' ' + valueClass : '');
+            valSpan.textContent = value;
+            const suffixSpan = document.createElement('span');
+            suffixSpan.className = 'text-dim';
+            suffixSpan.style.fontSize = '0.7rem';
+            suffixSpan.textContent = suffix;
+            el.appendChild(keySpan);
+            el.appendChild(valSpan);
+            el.appendChild(suffixSpan);
+            document.getElementById('stage-output').appendChild(el);
+        }
+
         async function submitTicket() {
             const title = document.getElementById('ticket-title').value.trim();
             if (!title) {
@@ -400,42 +421,51 @@
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
 
-                document.getElementById('res-category').textContent = data.classification.category;
-                document.getElementById('res-severity').textContent = data.classification.severity;
-
-                const matched = data.match && data.match.articleTitle;
-                const matchLine = document.getElementById('res-match-line');
-                if (matched) {
-                    document.getElementById('res-article').textContent = data.match.articleTitle;
-                    document.getElementById('res-score').textContent =
-                        '(score: ' + (data.match.score * 100).toFixed(0) + '%)';
-                    matchLine.style.display = '';
-                } else {
-                    matchLine.style.display = 'none';
-                }
-
-                const outcomeEl = document.getElementById('res-status');
-                const isResolved = data.ticket.status === 'AutoResolved';
-                if (isResolved) {
-                    outcomeEl.textContent = 'AUTO_RESOLVED';
-                    outcomeEl.className = 'result-val result-val-resolved';
-                } else {
-                    outcomeEl.textContent = 'ESCALATED — no matching article found';
-                    outcomeEl.className = 'result-val result-val-escalated';
-                }
-
-                const resLine = document.getElementById('res-resolution-line');
-                if (isResolved && data.ticket.resolution) {
-                    document.getElementById('res-resolution').textContent = data.ticket.resolution;
-                    resLine.style.display = '';
-                } else {
-                    resLine.style.display = 'none';
-                }
-
+                // Switch to result view with empty stage output
                 document.getElementById('submit-form').style.display = 'none';
+                document.getElementById('stage-output').innerHTML = '';
+                document.getElementById('submit-another').style.display = 'none';
                 document.getElementById('submit-result').style.display = '';
 
-                // Refresh feed and metrics concurrently to reflect the new ticket (#247)
+                // Stage 1: Intake
+                const shortId = data.ticket.id.substring(0, 8);
+                const shortTitle = data.ticket.title.length > 50
+                    ? data.ticket.title.substring(0, 49) + '…'
+                    : data.ticket.title;
+                appendStageLine('intake', 'ticket #' + shortId + ' created — "' + shortTitle + '"', '');
+                await stageDelay(STAGE_DELAY_MS);
+
+                // Stage 2: Classification
+                appendStageLine('classify',
+                    data.classification.category + ' · ' + data.classification.severity,
+                    'result-val-accent');
+                await stageDelay(STAGE_DELAY_MS);
+
+                // Stage 3: Match
+                if (data.match && data.match.articleTitle) {
+                    const score = (data.match.score * 100).toFixed(0);
+                    appendStageLineWithSuffix('match', data.match.articleTitle, '', ' (score: ' + score + '%)');
+                } else {
+                    appendStageLine('match', 'no matching article', 'text-dim');
+                }
+                await stageDelay(STAGE_DELAY_MS);
+
+                // Stage 4: Resolution outcome
+                const isResolved = data.ticket.status === 'AutoResolved';
+                if (isResolved) {
+                    appendStageLine('resolve', 'AUTO_RESOLVED', 'result-val-resolved');
+                    await stageDelay(STAGE_DELAY_MS);
+                    if (data.ticket.resolution) {
+                        appendStageLine('resolution', data.ticket.resolution, '');
+                    }
+                } else {
+                    appendStageLine('resolve', 'ESCALATED — no matching article found', 'result-val-escalated');
+                }
+
+                await stageDelay(STAGE_DELAY_MS);
+                document.getElementById('submit-another').style.display = '';
+
+                // Refresh feed and metrics after animation completes (#247)
                 Promise.all([loadFeed(), loadMetrics()]);
             } catch (e) {
                 status.textContent = 'error: ' + e.message;
