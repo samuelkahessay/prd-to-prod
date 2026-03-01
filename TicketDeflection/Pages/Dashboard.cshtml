@@ -435,9 +435,8 @@
                 document.getElementById('submit-form').style.display = 'none';
                 document.getElementById('submit-result').style.display = '';
 
-                // Refresh feed and metrics to show the new ticket
-                loadFeed();
-                loadMetrics();
+                // Refresh feed and metrics concurrently to reflect the new ticket (#247)
+                Promise.all([loadFeed(), loadMetrics()]);
             } catch (e) {
                 status.textContent = 'error: ' + e.message;
                 btn.disabled = false;
