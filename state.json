@@ -1,9 +1,9 @@
 {
-  "last_run": "2026-03-01T08:23:17Z",
-  "workflow_run_id": "22539396556",
+  "last_run": "2026-03-01T08:33:06Z",
+  "workflow_run_id": "22539551704",
   "current_prd": {
     "issue": 123,
-    "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
+    "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 10)",
     "status": "active"
   },
   "pipeline_status": "ON_TRACK",
@@ -51,18 +51,19 @@
     {"issue": 240, "title": "Specimen pages: rebrand as Ticket Deflection Service", "pr": 241, "status": "merged"},
     {"issue": 242, "title": "Dashboard: interactive unified specimen (closed/superseded)", "status": "closed"},
     {"issue": 243, "title": "Remove old specimen pages, update landing page specimen section", "status": "closed_completed"},
-    {"issue": 244, "title": "Dashboard: remove doughnut charts, make metrics bar compact", "status": "pr_open", "pr": "pending"}
+    {"issue": 244, "title": "Dashboard: remove doughnut charts, make metrics bar compact", "pr": 253, "status": "merged"},
+    {"issue": 245, "title": "Dashboard: add ticket feed section below metrics", "status": "pr_open", "pr": "pending_254"}
   ],
-  "open_issues": [244, 245, 246, 247, 248, 249, 250, 251],
+  "open_issues": [245, 246, 247, 248, 249, 250, 251, 252],
   "dependency_chain": {
-    "244": [],
     "245": [244],
     "246": [245],
     "247": [246],
     "248": [247],
     "249": [248],
     "250": [245],
-    "251": [250]
+    "251": [250],
+    "252": [251]
   },
-  "notes": "New wave of dashboard enhancement issues (244-251). #244 PR created this run. Next: wait for #244 to merge, then implement #245 (ticket feed) and #250 (status bar cleanup) in parallel."
+  "notes": "PR #253 for #244 merged. PR created for #245 (ticket feed). Next: wait for #245 to merge, then implement #246 (interactive submission form) and #250 (status bar cleanup) in parallel."
 }
