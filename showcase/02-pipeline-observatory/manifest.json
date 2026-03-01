@@ -1,0 +1,13 @@
+{
+  "run": {
+    "number": 2,
+    "name": "Pipeline Observatory",
+    "tag": "v2.0.0",
+    "tech_stack": "Next.js 14 + TypeScript",
+    "date": "2026-02",
+    "deployment": "https://prdtoprod.vercel.app",
+    "prd": "docs/prd/pipeline-observatory-prd.md"
+  },
+  "issues": [29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 41],
+  "pull_requests": [40, 42, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 58]
+}

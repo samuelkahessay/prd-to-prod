@@ -1,0 +1,13 @@
+{
+  "run": {
+    "number": 1,
+    "name": "Code Snippet Manager",
+    "tag": "v1.0.0",
+    "tech_stack": "Express + TypeScript",
+    "date": "2026-02",
+    "deployment": null,
+    "prd": "docs/prd/sample-prd.md"
+  },
+  "issues": [7, 8, 9, 10, 11, 12, 13, 14],
+  "pull_requests": [16, 17, 18, 20, 21, 26, 27]
+}
