@@ -184,13 +184,14 @@
                 Drop a PRD.<br />Get a deployed app.
             </h1>
             <p class="text-dim text-base mb-6">Zero human code.<span class="cursor-blink ml-1">█</span></p>
-            <p class="text-sm leading-relaxed max-w-2xl" style="color: var(--text)">
+            <p class="text-sm leading-relaxed max-w-2xl mb-8" style="color: var(--text)">
                 <a href="https://github.com/samuelkahessay/prd-to-prod" target="_blank" rel="noopener noreferrer" class="text-accent font-bold hover:underline">prd-to-prod</a> is an autonomous software pipeline powered by
                 <a href="https://github.com/github/gh-aw" target="_blank" rel="noopener noreferrer" class="text-accent font-bold hover:underline">gh-aw</a> (GitHub Agentic Workflows).
                 It reads a product requirements document, decomposes it into GitHub Issues,
                 writes code for each one, opens Pull Requests, reviews its own work, merges to main —
                 and self-heals when things break. No human writes a single line of code.
             </p>
+            <a href="https://github.com/samuelkahessay/prd-to-prod" target="_blank" rel="noopener noreferrer" class="exec-btn inline-block" style="text-decoration: none; display: inline-block;">[ View on GitHub ]</a>
         </section>
 
         <!-- Pipeline schematic -->
@@ -259,50 +260,6 @@
             </div>
             <div class="mt-3 text-xs text-dim">
                 <span class="text-accent">Self-healing:</span> pipeline-watchdog detects stalls, retries failures, cleans up superseded PRs. No human intervention required.
-            </div>
-        </section>
-
-        <!-- Specimen: what the pipeline built -->
-        <section class="mb-16">
-            <div class="text-xs text-dim mb-5 uppercase tracking-widest">// specimen — what the pipeline built</div>
-            <div class="panel p-6">
-                <div class="text-xs text-dim mb-4">BUILD_ARTIFACT: ticket-deflection-service · commit b511f76</div>
-
-                <h2 class="font-sans text-xl font-bold text-white mb-2">Ticket Deflection Service</h2>
-                <p class="text-dim text-xs mb-6 leading-relaxed max-w-xl">
-                    A complete C#/.NET application the pipeline built from a single PRD.
-                    Classifies, matches, and resolves support tickets through a multi-stage pipeline.
-                    This is the <em>proof</em> — not the point.
-                </p>
-
-                <!-- Stats as instrument panels -->
-                <div class="grid grid-cols-3 gap-4 mb-6">
-                    <div class="panel panel-top p-4">
-                        <div class="metric-val" id="statTickets">25</div>
-                        <div class="metric-lbl">tickets processed</div>
-                    </div>
-                    <div class="panel panel-top p-4">
-                        <div class="metric-val" id="statDeflection">--</div>
-                        <div class="metric-lbl">deflection rate</div>
-                    </div>
-                    <div class="panel panel-top p-4">
-                        <div class="metric-val">&lt;2s</div>
-                        <div class="metric-lbl">processing time</div>
-                    </div>
-                </div>
-
-                <!-- Ticket pipeline flow -->
-                <div class="divider mb-4"></div>
-                <div class="text-xs text-dim mb-3">TICKET_PIPELINE:</div>
-                <div class="flex flex-wrap items-center gap-2 text-xs">
-                    <span class="flow-tag">Intake</span>
-                    <span class="text-dim">──▶</span>
-                    <span class="flow-tag">Classify</span>
-                    <span class="text-dim">──▶</span>
-                    <span class="flow-tag">Match</span>
-                    <span class="text-dim">──▶</span>
-                    <span class="flow-tag flow-tag-green">Resolve/Escalate</span>
-                </div>
             </div>
         </section>
 
@@ -424,12 +381,73 @@
             </div>
         </section>
 
+        <!-- Provenance -->
+        <section class="mb-14">
+            <div class="text-xs text-dim mb-4 uppercase tracking-widest">// provenance — verify the work is real</div>
+            <div class="panel p-4 text-xs">
+                <div class="text-dim mb-1">
+                    REPO: <a href="https://github.com/samuelkahessay/prd-to-prod" class="text-accent hover:underline">github.com/samuelkahessay/prd-to-prod</a>
+                </div>
+                <div class="text-dim">Every issue, PR, review comment, and merge commit is public. The pipeline's git history is the source of truth.</div>
+            </div>
+        </section>
+
+        <!-- Visual boundary: pipeline story ends, specimen begins -->
+        <div class="mb-16" style="border-top: 2px solid var(--border); padding-top: 3rem; position: relative;">
+            <div class="text-xs font-bold mb-1 uppercase tracking-widest" style="color: var(--accent)">// specimen — the proof, not the point</div>
+            <p class="text-dim text-xs max-w-2xl" style="margin-top: 6px;">
+                What follows is the app the pipeline built. It runs. Explore it or ignore it — the pipeline story above is complete either way.
+            </p>
+        </div>
+
+        <!-- Specimen stats -->
+        <section class="mb-10">
+            <div class="text-xs text-dim mb-4 uppercase tracking-widest">// ticket deflection service — specimen output</div>
+            <div class="panel p-6">
+                <h2 class="font-sans text-xl font-bold text-white mb-2">Ticket Deflection Service</h2>
+                <p class="text-dim text-xs mb-6 leading-relaxed max-w-xl">
+                    A complete C#/.NET application the pipeline built from a single PRD.
+                    Classifies, matches, and resolves support tickets through a multi-stage pipeline.
+                </p>
+
+                <!-- Stats as instrument panels -->
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="panel panel-top p-4">
+                        <div class="metric-val" id="statTickets">25</div>
+                        <div class="metric-lbl">tickets processed</div>
+                    </div>
+                    <div class="panel panel-top p-4">
+                        <div class="metric-val" id="statDeflection">--</div>
+                        <div class="metric-lbl">deflection rate</div>
+                    </div>
+                    <div class="panel panel-top p-4">
+                        <div class="metric-val">&lt;2s</div>
+                        <div class="metric-lbl">processing time</div>
+                    </div>
+                </div>
+
+                <!-- Ticket pipeline flow -->
+                <div class="divider mb-4"></div>
+                <div class="text-xs text-dim mb-3">ticket pipeline:</div>
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="flow-tag">Intake</span>
+                    <span class="text-dim">──▶</span>
+                    <span class="flow-tag">Classify</span>
+                    <span class="text-dim">──▶</span>
+                    <span class="flow-tag">Match</span>
+                    <span class="text-dim">──▶</span>
+                    <span class="flow-tag flow-tag-green">Resolve/Escalate</span>
+                </div>
+            </div>
+        </section>
+
         <!-- Demo CTA -->
         <section class="mb-16">
-            <div class="text-xs text-dim mb-5 uppercase tracking-widest">// live demo — run the pipeline now</div>
+            <div class="text-xs text-dim mb-5 uppercase tracking-widest">// run the specimen app</div>
             <div class="panel p-8 text-center">
                 <div class="text-xs text-dim mb-2">$ exec demo --tickets 25 --redirect /dashboard</div>
-                <div class="text-green text-xs mb-8">Process 25 sample tickets through the deflection pipeline.</div>
+                <div class="text-green text-xs mb-2">Process 25 sample tickets through the deflection pipeline.</div>
+                <div class="text-dim text-xs mb-8">Generates test data, runs tickets through classify → match → resolve, then opens the specimen dashboard.</div>
 
                 <button id="runDemoBtn" onclick="runDemo()" class="exec-btn">
                     <span id="btnText">[ Run Demo ]</span>
@@ -447,20 +465,10 @@
             </div>
         </section>
 
-        <!-- Provenance -->
-        <section class="mb-14">
-            <div class="text-xs text-dim mb-4 uppercase tracking-widest">// provenance — verify the work is real</div>
-            <div class="panel p-4 text-xs">
-                <div class="text-dim mb-1">
-                    REPO: <a href="https://github.com/samuelkahessay/prd-to-prod" class="text-accent hover:underline">github.com/samuelkahessay/prd-to-prod</a>
-                </div>
-                <div class="text-dim">Every issue, PR, review comment, and merge commit is public. The pipeline's git history is the source of truth.</div>
-            </div>
-        </section>
-
-        <!-- Navigation -->
-        <nav>
-            <div class="text-xs text-dim mb-4">// explore what the pipeline built</div>
+        <!-- Specimen Navigation -->
+        <nav class="mb-16">
+            <div class="text-xs text-dim mb-1">// specimen app pages — part of the ticket deflection service</div>
+            <div class="text-xs text-dim mb-4">These links enter the specimen app, not the pipeline.</div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <a href="/dashboard" class="nav-link">
                     <div class="nav-path">/dashboard</div>
