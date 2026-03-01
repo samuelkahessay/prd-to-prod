@@ -1,19 +1,22 @@
 # Pipeline State — 2026-03-01
 
 ## Last Run
-- Workflow run: 22551930129
-- Date: 2026-03-01T20:29:12Z
+- Workflow run: 22554094179
+- Date: 2026-03-01T22:19:51Z
 
 ## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 8)
 
-### Status: **AT_RISK** ⚠️
+### Status: **ON_TRACK** ✅
 
-Drill #3 re-injected CS1002 syntax error into DrillCanary.cs via commit `ff2f187`. PR #284 created to fix issue #283.
+Issue #288 (matching algorithm bug): replaced symmetric Jaccard similarity
+with asymmetric coverage metric. Short tickets like "forgot password" now
+score near 100% instead of ~11%. PR created targeting branch
+`repo-assist/issue-288-asymmetric-matching`. All 69 tests pass.
 
 ### Open Items
-- Issue #283: Fix DrillCanary CS1002 (drill #3) — PR created (#284), awaiting CI and review
+- Issue #288: Matching algorithm penalizes short tickets — PR created, awaiting CI and review
 
 ### Next Actions
-1. Merge PR for issue #283 once CI passes.
+1. Merge PR for issue #288 once CI passes.
 2. Archive Run 04: `bash scripts/archive-run.sh`
 3. Drop the next PRD to start Run 05.
