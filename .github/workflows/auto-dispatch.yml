@@ -69,7 +69,7 @@ jobs:
               --event workflow_dispatch \
               --limit 20 \
               --json databaseId,createdAt,url,displayTitle \
-              --jq --arg dispatched_at "$DISPATCHED_AT" '[.[] | select(.displayTitle == "Pipeline Repo Assist" and .createdAt >= $dispatched_at)] | sort_by(.createdAt) | last // {}')
+              | jq --arg dispatched_at "$DISPATCHED_AT" '[.[] | select(.displayTitle == "Pipeline Repo Assist" and .createdAt >= $dispatched_at)] | sort_by(.createdAt) | last // {}')
             REPO_ASSIST_RUN_ID=$(printf '%s' "$RUN_JSON" | jq -r '.databaseId // ""')
             REPO_ASSIST_RUN_URL=$(printf '%s' "$RUN_JSON" | jq -r '.url // ""')
             if [ -n "$REPO_ASSIST_RUN_ID" ]; then
