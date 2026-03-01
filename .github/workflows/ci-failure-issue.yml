@@ -1,9 +1,10 @@
 #
-# CI Failure Router — Routes failing .NET CI runs on pipeline PRs back into the
-# existing repair loop instead of creating duplicate backlog issues.
+# CI Failure Router — Routes failing PR CI runs and failing main-branch deploy
+# runs back into the repair loop instead of creating duplicate backlog issues.
 #
 # Flow:
-#   1. .NET CI fails on a PR → workflow_run:completed fires with conclusion=failure
+#   1. .NET CI fails on a PR or Deploy to Azure fails on main →
+#      workflow_run:completed fires with conclusion=failure
 #   2. Router fetches failed-step logs and normalizes the failure signature
 #   3. For open [Pipeline] PRs with a linked source issue, router upserts PR state
 #      and posts a structured /repo-assist repair command to the linked issue
@@ -15,7 +16,7 @@ name: "CI Failure Router"
 
 on:
   workflow_run:
-    workflows: ["Deploy to Azure"]
+    workflows: [".NET CI", "Deploy to Azure"]
     types: [completed]
 
 permissions:
