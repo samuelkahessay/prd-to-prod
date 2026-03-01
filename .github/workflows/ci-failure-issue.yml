@@ -15,7 +15,7 @@ name: "CI Failure Router"
 
 on:
   workflow_run:
-    workflows: [".NET CI"]
+    workflows: ["Deploy to Azure"]
     types: [completed]
 
 permissions:
@@ -218,11 +218,38 @@ jobs:
 
           PR_NUMBER=$(printf '%s' "$PULL_REQUESTS_JSON" | jq -r '.[0].number // empty')
           if [ -z "$PR_NUMBER" ]; then
-            TITLE="[CI Incident] Branch ${HEAD_BRANCH} .NET CI Failure: ${SHORT_SUMMARY}"
-            BODY=$(render_incident_body \
-              "The failing .NET CI run is not attached to a pull request." \
-              "- **Branch**: \`${HEAD_BRANCH}\`")
-            create_or_update_incident_issue "$TITLE" "$BODY"
+            TITLE="[Pipeline] CI Build Failure on main: ${SHORT_SUMMARY}"
+            BODY=$(printf '%s\n' \
+              "## CI Build Failure on \`main\`" \
+              "" \
+              "- **Run**: ${RUN_URL}" \
+              "- **Branch**: \`${HEAD_BRANCH}\`" \
+              "- **Commit**: \`${HEAD_SHA}\`" \
+              "- **Failure Type**: ${FAILURE_TYPE}" \
+              "- **Failure Signature**: \`${FAILURE_SIGNATURE}\`" \
+              "" \
+              "### Failure Summary" \
+              "${FAILURE_SUMMARY}" \
+              "" \
+              "### Failed-Step Excerpt" \
+              '```text' \
+              "${FAILURE_EXCERPT}" \
+              '```' \
+              "" \
+              "> This issue was created automatically by the CI Failure Router workflow.")
+            ISSUE_ARGS=()
+            for label in pipeline bug automation; do
+              if has_label "$label"; then
+                ISSUE_ARGS+=(--label "$label")
+              fi
+            done
+            EXISTING=$(gh issue list --repo "$REPO" --state open --limit 200 --json number,title \
+              | jq -r --arg title "$TITLE" '.[] | select(.title == $title) | .number' | head -1)
+            if [ -n "$EXISTING" ]; then
+              gh issue comment "$EXISTING" --repo "$REPO" --body "$BODY" > /dev/null || true
+            else
+              gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY" "${ISSUE_ARGS[@]}" > /dev/null
+            fi
             exit 0
           fi
 
