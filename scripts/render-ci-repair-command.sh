@@ -17,6 +17,7 @@ Options:
   --attempt-count N
   --failure-summary TEXT
   --failure-excerpt TEXT
+  --pr-diff TEXT
 USAGE
   exit 1
 }
@@ -34,6 +35,7 @@ while [ "$#" -gt 0 ]; do
     --attempt-count) ATTEMPT_COUNT="$2"; shift 2 ;;
     --failure-summary) FAILURE_SUMMARY="$2"; shift 2 ;;
     --failure-excerpt) FAILURE_EXCERPT="$2"; shift 2 ;;
+    --pr-diff) PR_DIFF="$2"; shift 2 ;;
     -h|--help) usage ;;
     *) echo "Unknown option: $1" >&2; usage ;;
   esac
@@ -60,6 +62,7 @@ done
 
 FAILURE_SUMMARY=${FAILURE_SUMMARY:-Unknown failure}
 FAILURE_EXCERPT=${FAILURE_EXCERPT:-$FAILURE_SUMMARY}
+PR_DIFF=${PR_DIFF:-}
 
 printf '%s\n' \
   "/repo-assist Repair CI failure for PR #${PR_NUMBER}." \
@@ -85,3 +88,12 @@ printf '%s\n' \
   '```text' \
   "${FAILURE_EXCERPT}" \
   '```'
+
+if [ -n "$PR_DIFF" ]; then
+  printf '%s\n' \
+    "" \
+    "### PR Diff" \
+    '```diff' \
+    "${PR_DIFF}" \
+    '```'
+fi
