@@ -77,17 +77,6 @@
         .metric-item + .metric-item {
             border-left: 1px solid var(--border);
         }
-        .refresh-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--dim);
-            font-family: var(--mono);
-            font-size: 0.75rem;
-            padding: 6px 16px;
-            cursor: pointer;
-            transition: border-color 0.2s, color 0.2s;
-        }
-        .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
         .nav-link {
             color: rgba(0, 170, 255, 0.6);
             text-decoration: none;
@@ -260,10 +249,6 @@
             <div class="metric-item flex-1">
                 <div class="metric-lbl">escalated</div>
                 <div id="escalated" class="metric-val metric-val-red mt-1">—</div>
-            </div>
-            <div class="metric-item" style="border-left: 1px solid var(--border);">
-                <div class="metric-lbl">&nbsp;</div>
-                <button onclick="loadMetrics()" class="refresh-btn mt-1">[ refresh ]</button>
             </div>
         </div>
 
