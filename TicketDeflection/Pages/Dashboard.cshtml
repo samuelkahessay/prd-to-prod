@@ -9,7 +9,6 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg: #080c12;
@@ -51,7 +50,7 @@
         .metric-val {
             font-family: var(--mono);
             color: var(--accent);
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 700;
             line-height: 1;
         }
@@ -64,17 +63,19 @@
             letter-spacing: 0.12em;
             margin-top: 6px;
         }
-        .chart-panel {
+        .metrics-bar {
             background: rgba(4, 10, 20, 0.7);
             border: 1px solid var(--border);
-            padding: 1.25rem;
+            border-top: 2px solid var(--accent);
         }
-        .chart-label {
-            color: var(--dim);
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-            margin-bottom: 0.75rem;
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 28px;
+        }
+        .metric-item + .metric-item {
+            border-left: 1px solid var(--border);
         }
         .refresh-btn {
             background: transparent;
@@ -117,7 +118,6 @@
             <a href="/activity" class="nav-link">/activity</a>
         </div>
         <div class="flex items-center gap-4">
-            <button onclick="loadMetrics()" class="refresh-btn">[ refresh ]</button>
             <a href="/" class="text-dim hover:text-accent transition-colors">◀ prd-to-prod</a>
         </div>
     </div>
@@ -129,38 +129,23 @@
             <h1 class="font-sans text-3xl font-bold text-white">Mission Control</h1>
         </div>
 
-        <!-- Instrument panels row -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="panel panel-top p-5">
+        <!-- Compact metrics bar -->
+        <div class="metrics-bar flex items-stretch mb-8">
+            <div class="metric-item flex-1">
                 <div class="metric-lbl">total tickets</div>
-                <div id="totalTickets" class="metric-val mt-2">—</div>
-                <div class="text-xs text-dim mt-3">PROC_IN: all pipeline stages</div>
+                <div id="totalTickets" class="metric-val mt-1">—</div>
             </div>
-            <div class="panel panel-green p-5">
+            <div class="metric-item flex-1">
                 <div class="metric-lbl">deflection rate</div>
-                <div id="resolutionRate" class="metric-val metric-val-green mt-2">—</div>
-                <div class="text-xs text-dim mt-3">STATUS: auto-resolved</div>
+                <div id="resolutionRate" class="metric-val metric-val-green mt-1">—</div>
             </div>
-            <div class="panel panel-red p-5">
+            <div class="metric-item flex-1">
                 <div class="metric-lbl">escalated</div>
-                <div id="escalated" class="metric-val metric-val-red mt-2">—</div>
-                <div class="text-xs text-dim mt-3">ROUTE: human review queue</div>
+                <div id="escalated" class="metric-val metric-val-red mt-1">—</div>
             </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="chart-panel">
-                <div class="chart-label">// distribution by category</div>
-                <div style="position: relative; height: 240px;">
-                    <canvas id="categoryChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-panel">
-                <div class="chart-label">// distribution by severity</div>
-                <div style="position: relative; height: 240px;">
-                    <canvas id="severityChart"></canvas>
-                </div>
+            <div class="metric-item" style="border-left: 1px solid var(--border);">
+                <div class="metric-lbl">&nbsp;</div>
+                <button onclick="loadMetrics()" class="refresh-btn mt-1">[ refresh ]</button>
             </div>
         </div>
 
@@ -171,21 +156,6 @@
     </div>
 
     <script>
-        let categoryChart, severityChart;
-
-        const CHART_COLORS = ['#00aaff', '#3ddc84', '#f5a623', '#f85149', '#a78bfa', '#34d399', '#fbbf24', '#60a5fa'];
-
-        const chartDefaults = {
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#b8c4d4',
-                        font: { family: "'JetBrains Mono', monospace", size: 11 }
-                    }
-                }
-            }
-        };
-
         async function loadMetrics() {
             const res = await fetch('/api/metrics/overview');
             const data = await res.json();
@@ -194,48 +164,6 @@
             document.getElementById('resolutionRate').textContent =
                 (data.resolutionRate * 100).toFixed(1) + '%';
             document.getElementById('escalated').textContent = data.escalated;
-
-            const catLabels = Object.keys(data.byCategory);
-            const catValues = Object.values(data.byCategory);
-            const sevLabels = Object.keys(data.bySeverity);
-            const sevValues = Object.values(data.bySeverity);
-
-            const doughnutOpts = (labels, values) => ({
-                type: 'doughnut',
-                data: {
-                    labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: CHART_COLORS.slice(0, values.length),
-                        borderColor: '#080c12',
-                        borderWidth: 2,
-                        hoverBorderColor: 'rgba(0,170,255,0.4)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '60%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: '#b8c4d4',
-                                font: { family: "'JetBrains Mono', monospace", size: 10 },
-                                padding: 12,
-                                boxWidth: 10,
-                                boxHeight: 10
-                            }
-                        }
-                    }
-                }
-            });
-
-            if (categoryChart) categoryChart.destroy();
-            categoryChart = new Chart(document.getElementById('categoryChart'), doughnutOpts(catLabels, catValues));
-
-            if (severityChart) severityChart.destroy();
-            severityChart = new Chart(document.getElementById('severityChart'), doughnutOpts(sevLabels, sevValues));
         }
 
         loadMetrics();
