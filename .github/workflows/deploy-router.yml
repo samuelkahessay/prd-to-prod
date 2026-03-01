@@ -1,0 +1,69 @@
+#
+# Deploy Router — Reads the active deploy profile and dispatches to the
+# appropriate deployment workflow on every push to main.
+#
+# The .deploy-profile file in the repo root contains the profile name
+# (e.g., "dotnet-azure", "nextjs-vercel", "docker-generic").
+#
+# Safety:
+#   - Concurrency group ensures only one deploy runs at a time
+#   - Fails loudly if .deploy-profile is missing or unrecognized
+#
+
+name: Deploy Router
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write   # needed for Azure OIDC
+  packages: write   # needed for Docker GHCR
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  detect-profile:
+    runs-on: ubuntu-latest
+    outputs:
+      profile: ${{ steps.read.outputs.profile }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .deploy-profile
+          sparse-checkout-cone-mode: false
+
+      - id: read
+        run: |
+          if [ ! -f .deploy-profile ]; then
+            echo "::error::No .deploy-profile found in repo root. Create one with the profile name (e.g., 'dotnet-azure')."
+            exit 1
+          fi
+          PROFILE=$(cat .deploy-profile | tr -d '[:space:]')
+          if [ -z "$PROFILE" ]; then
+            echo "::error::.deploy-profile is empty."
+            exit 1
+          fi
+          echo "profile=${PROFILE}" >> $GITHUB_OUTPUT
+          echo "Deploy profile: ${PROFILE}"
+
+  deploy-azure:
+    needs: detect-profile
+    if: needs.detect-profile.outputs.profile == 'dotnet-azure'
+    uses: ./.github/workflows/deploy-azure.yml
+    secrets: inherit
+
+  deploy-vercel:
+    needs: detect-profile
+    if: needs.detect-profile.outputs.profile == 'nextjs-vercel'
+    uses: ./.github/workflows/deploy-vercel.yml
+    secrets: inherit
+
+  deploy-docker:
+    needs: detect-profile
+    if: needs.detect-profile.outputs.profile == 'docker-generic'
+    uses: ./.github/workflows/deploy-docker.yml
+    secrets: inherit
