@@ -167,7 +167,16 @@ jobs:
               "### Failed-Step Excerpt" \
               '```text' \
               "${FAILURE_EXCERPT}" \
-              '```' \
+              '```'
+            if [ -n "${PR_DIFF:-}" ]; then
+              printf '%s\n' \
+                "" \
+                "### PR Diff" \
+                '```diff' \
+                "${PR_DIFF}" \
+                '```'
+            fi
+            printf '%s\n' \
               "" \
               "> This incident was created automatically by the CI Failure Router workflow."
           }
@@ -235,6 +244,17 @@ jobs:
           fi
 
           HEAD_BRANCH=$CURRENT_HEAD_BRANCH
+
+          # Fetch the PR diff (truncated) so the agent has immediate context
+          FULL_DIFF=$(gh pr diff "$PR_NUMBER" --repo "$REPO" 2>/dev/null || true)
+          DIFF_LINES=$(printf '%s\n' "$FULL_DIFF" | wc -l | tr -d '[:space:]')
+          if [ "$DIFF_LINES" -gt 200 ]; then
+            PR_DIFF="$(printf '%s\n' "$FULL_DIFF" | head -200)
+... (truncated at 200/${DIFF_LINES} lines — run \`gh pr diff ${PR_NUMBER}\` for full diff)"
+          else
+            PR_DIFF="$FULL_DIFF"
+          fi
+          unset FULL_DIFF
 
           if ! printf '%s' "$PR_TITLE" | grep -q '^\[Pipeline\]'; then
             TITLE="[CI Incident] PR #${PR_NUMBER} .NET CI Failure: ${SHORT_SUMMARY}"
@@ -306,7 +326,8 @@ jobs:
             --failure-signature "$FAILURE_SIGNATURE" \
             --attempt-count 1 \
             --failure-summary "$FAILURE_SUMMARY" \
-            --failure-excerpt "$FAILURE_EXCERPT")
+            --failure-excerpt "$FAILURE_EXCERPT" \
+            --pr-diff "$PR_DIFF")
 
           if ! GH_TOKEN="$GH_AW_GITHUB_TOKEN" gh issue comment "$LINKED_ISSUE" --repo "$REPO" --body "$COMMAND_BODY" >/dev/null; then
             echo "::warning::Repair command dispatch failed for issue #${LINKED_ISSUE}"

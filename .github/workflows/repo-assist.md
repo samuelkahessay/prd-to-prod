@@ -100,7 +100,7 @@ In CI Repair Command Mode:
 - Fetch the current PR head SHA with `gh pr view <PR_NUMBER> --json headRefOid,headRefName`.
 - If the current PR head SHA does **not** match `head_sha`, post a short stale-command comment on the linked source issue and exit without code changes.
 - Checkout the existing PR branch from `head_branch`. Do **not** checkout `main`, create a new branch, or create a new PR.
-- Read the failing run logs with `gh run view <FAILURE_RUN_ID> --log-failed` and read the PR diff with `gh pr diff <PR_NUMBER>` before making changes.
+- Read the failing run logs with `gh run view <FAILURE_RUN_ID> --log-failed` before making changes. The PR diff is included in the repair command body below; for the full diff run `gh pr diff <PR_NUMBER>`.
 - Apply the **minimum** code change needed to fix the failing `.NET CI` check.
 - Run the build/test commands from `AGENTS.md`. If local environment blockers prevent validation, report the exact blocker in the PR comment.
 - Push fixes directly to the existing PR branch using `push_to_pull_request_branch` with both:
@@ -154,7 +154,7 @@ Each run, work on 2-4 tasks from the list below. Use round-robin scheduling base
 
 ### Task 1: Implement Issues as Pull Requests
 
-1. List open issues labeled `pipeline` + (`feature`, `test`, `infra`, or `docs`).
+1. List open issues labeled `pipeline` + (`feature`, `test`, `infra`, `docs`, or `bug`).
 2. Sort by dependency order — skip issues whose dependencies (referenced in issue body) are not yet closed.
 3. For each implementable issue (check memory — skip if already attempted):
    a. Read the issue carefully, including acceptance criteria and technical notes.
