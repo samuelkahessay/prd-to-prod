@@ -16,7 +16,7 @@ name: "CI Failure Router"
 
 on:
   workflow_run:
-    workflows: [".NET CI", "Deploy to Azure"]
+    workflows: [".NET CI", "Node CI", "Deploy Router", "Deploy to Azure"]
     types: [completed]
 
 permissions:

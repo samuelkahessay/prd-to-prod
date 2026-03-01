@@ -7,7 +7,7 @@ name: "CI Failure Resolver"
 
 on:
   workflow_run:
-    workflows: [".NET CI"]
+    workflows: [".NET CI", "Node CI"]
     types: [completed]
 
 permissions:
