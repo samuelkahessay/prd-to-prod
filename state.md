@@ -1,22 +1,22 @@
 # Pipeline State — 2026-03-01
 
 ## Last Run
-- Workflow run: 22532309057
-- Date: 2026-03-01T00:31:05Z
+- Workflow run: 22533079374
+- Date: 2026-03-01T01:19:55Z
 
 ## Current Run: Run 04 — Ticket Deflection Service (C#/.NET 10)
 
 ### Status: **IN PROGRESS** — 1 open issue
 
 ### Recent Activity
-- PR created for issue #238 (Landing page: separate pipeline narrative from specimen app)
-  - Branch: repo-assist/issue-238-landing-page-narrative
-  - Changes: Hero GitHub CTA, section reordering (Pipeline → Run History → Provenance → [boundary] → Specimen + Demo + Nav), visual boundary, reframed labels
+- PR created for issue #240 (Specimen pages: rebrand as Ticket Deflection Service)
+  - Branch: repo-assist/issue-240-specimen-rebrand
+  - Changes: Status bar rebrand on Dashboard, Activity, Tickets pages
   - All 62 tests pass
 
 ### Open Items
-- Issue #238: Landing page narrative separation (PR opened)
+- Issue #240: Specimen pages rebrand (PR opened)
 
 ### Next Steps
-1. PR for #238 awaits review/merge
+1. PR for #240 awaits review/merge
 2. After merge: archive Run 04 and prepare for Run 05
