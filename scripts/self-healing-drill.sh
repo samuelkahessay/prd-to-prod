@@ -75,6 +75,7 @@ REPORT_FILE=""
 DRILL_ID=""
 DRILL_START_EPOCH=""
 SOURCE_DRILL_ID=""
+INJECTED_COMMIT=""
 
 init_report() {
   local drill_type="$1"
@@ -779,7 +780,9 @@ preflight_run() {
 inject_fault() {
   log_stage "inject" "info" "Injecting deliberate build failure..." >&2
 
-  DRILL_ID="$(date -u +%Y%m%d-%H%M%S)"
+  if [ -z "$DRILL_ID" ]; then
+    DRILL_ID="$(date -u +%Y%m%d-%H%M%S)"
+  fi
 
   # Write broken canary (missing semicolon => CS1002)
   cat > "$CANARY_FILE" << 'CANARY_EOF'
@@ -799,7 +802,7 @@ CANARY_EOF
 
   # Commit and push
   git add "$CANARY_FILE"
-  git commit -m "drill(main_build_syntax): inject deliberate build failure [drill-id:${DRILL_ID}]"
+  git commit -m "drill(main_build_syntax): inject deliberate build failure [drill-id:${DRILL_ID}]" >/dev/null
 
   local commit_sha
   commit_sha=$(git rev-parse HEAD)
@@ -809,8 +812,9 @@ CANARY_EOF
     return 1
   fi
 
+  INJECTED_COMMIT="$commit_sha"
   log_stage "inject" "pass" "Pushed fault commit ${commit_sha:0:8}" >&2
-  echo "$commit_sha"
+  return 0
 }
 
 run_drill() {
@@ -822,8 +826,10 @@ run_drill() {
   fi
 
   # Inject the fault
-  local injected_commit
-  injected_commit=$(inject_fault)
+  DRILL_ID="$(date -u +%Y%m%d-%H%M%S)"
+
+  inject_fault
+  local injected_commit="$INJECTED_COMMIT"
   if [ -z "$injected_commit" ]; then
     log_stage "inject" "fail" "Fault injection failed"
     exit 2
