@@ -1,6 +1,6 @@
 name: Bug Report
 description: Report a bug in the deployed application
-labels: ["bug", "pipeline", "bug-intake"]
+labels: ["bug", "pipeline"]
 body:
   - type: markdown
     attributes:
