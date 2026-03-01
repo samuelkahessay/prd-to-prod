@@ -252,9 +252,8 @@ jobs:
             else
               ISSUE_TOKEN="$GH_TOKEN"
               echo "::warning::GH_AW_GITHUB_TOKEN is not set; falling back to GITHUB_TOKEN. Issues created with GITHUB_TOKEN do not trigger the issues:opened event (GitHub anti-cascade rule), so auto-dispatch.yml will NOT fire and the self-healing loop will not continue automatically."
-              BODY="${BODY}
-
-> ⚠️ **Self-healing loop disabled**: This issue was created with \`GITHUB_TOKEN\` because the \`GH_AW_GITHUB_TOKEN\` secret is not configured. GitHub's anti-cascade rule suppresses the \`issues:opened\` event for workflow-actor tokens, so \`auto-dispatch.yml\` will **not** trigger automatically. Configure \`GH_AW_GITHUB_TOKEN\` (a PAT with \`repo\` and \`workflow\` scopes) to restore the self-healing loop."
+              WARNING_LINE='> ⚠️ **Self-healing loop disabled**: This issue was created with `GITHUB_TOKEN` because the `GH_AW_GITHUB_TOKEN` secret is not configured. GitHub'"'"'s anti-cascade rule suppresses the `issues:opened` event for workflow-actor tokens, so `auto-dispatch.yml` will **not** trigger automatically. Configure `GH_AW_GITHUB_TOKEN` (a PAT with `repo` and `workflow` scopes) to restore the self-healing loop.'
+              BODY=$(printf '%s\n\n%s\n' "$BODY" "$WARNING_LINE")
             fi
             EXISTING=$(GH_TOKEN="$ISSUE_TOKEN" gh issue list --repo "$REPO" --state open --limit 200 --json number,title \
               | jq -r --arg title "$TITLE" '.[] | select(.title == $title) | .number' | head -1)
@@ -289,8 +288,8 @@ jobs:
           FULL_DIFF=$(gh pr diff "$PR_NUMBER" --repo "$REPO" 2>/dev/null || true)
           DIFF_LINES=$(printf '%s\n' "$FULL_DIFF" | wc -l | tr -d '[:space:]')
           if [ "$DIFF_LINES" -gt 200 ]; then
-            PR_DIFF="$(printf '%s\n' "$FULL_DIFF" | head -200)
-... (truncated at 200/${DIFF_LINES} lines — run \`gh pr diff ${PR_NUMBER}\` for full diff)"
+            PR_DIFF="$(printf '%s\n' "$FULL_DIFF" | head -200)"
+            PR_DIFF=$(printf '%s\n%s\n' "$PR_DIFF" "... (truncated at 200/${DIFF_LINES} lines — run \`gh pr diff ${PR_NUMBER}\` for full diff)")
           else
             PR_DIFF="$FULL_DIFF"
           fi
