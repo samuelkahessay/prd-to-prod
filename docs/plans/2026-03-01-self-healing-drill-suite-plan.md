@@ -4,9 +4,19 @@
 
 **Goal:** Build a local drill harness that injects a deterministic build failure, monitors the full self-healing pipeline via the GitHub API, and produces a structured JSON report with pass/fail verdicts against SLAs.
 
-**Architecture:** Single bash script with two modes (`run` and `audit`) sharing a common finder/report/verdict code path. The `run` mode adds fault injection and polling on top of the shared logic. JSON reports are written incrementally after every stage update.
+**Architecture:** Single bash script with two modes (`run` and `audit`) sharing a common finder/report/verdict code path. The `run` mode adds fault injection and polling on top of the shared logic. JSON reports are written incrementally after every stage update, and the collector continues gathering downstream evidence even after intermediate stage failures or timeouts.
 
 **Tech Stack:** Bash, `gh` CLI, `jq`, C# (canary file only)
+
+## Implementation Guardrails
+
+- `run` and `audit` must share the same finder, report assembly, and verdict logic. Only fault injection and live polling belong in `run`.
+- `run` mode must fail fast on preflight if any of these are false: current branch is `main`, worktree is clean, and `gh auth status` succeeds.
+- `issue_created` must be tied to the injected commit by matching the full commit SHA and/or failing run URL from stage 1. Do not select the newest build-failure issue by timestamp alone.
+- Dispatch attribution must be tied to the repair attempt, not to any unrelated workflow run after the issue was created. Record `repo_assist_run_id` and `repo_assist_run_url`, then derive the dispatch workflow from that repair run's provenance. Tier 1 only passes when the dispatch workflow is `Auto-Dispatch Pipeline Issues`.
+- Auto-merge evidence must not rely on `merged_by` alone. Capture whether auto-merge was armed while the PR was still open, or reconstruct that fact from durable evidence such as the PR timeline or `PR Review Submit` output. Treat `merged_by` as supporting evidence only.
+- If a stage fails or times out, record that result and continue collecting later stages until the overall timeout or until a later stage becomes logically impossible. Do not stop at the first miss.
+- A passing live drill does not require any new commit or push after the pipeline heals the canary. The only cleanup is syncing local `main` to the now-healed remote state.
 
 ---
 
@@ -87,10 +97,12 @@ This is the largest task. The script has three layers:
 2. **Finders** — GitHub API queries for each stage (shared by `run` and `audit`)
 3. **Modes** — `run` (inject + poll + find) and `audit` (find only)
 
+Important: the sample skeleton below is illustrative. If any line in the sample conflicts with the guardrails above, follow the guardrails.
+
 **Files:**
 - Create: `scripts/self-healing-drill.sh`
 
-**Step 1: Write the script with constants, usage, and core functions**
+**Step 1: Write the script with constants, usage, core functions, and preflight checks**
 
 ```bash
 #!/usr/bin/env bash
@@ -907,20 +919,29 @@ main() {
 main "$@"
 ```
 
-**Step 2: Make it executable**
+**Step 2: Apply the required corrections before treating the skeleton as implementation-ready**
+
+- Add `preflight_run()` and call it before `inject_fault()`. It should verify: `main` branch, clean worktree, and authenticated `gh`.
+- Replace the current `find_issue()` behavior with a version that matches the issue body against the exact failing commit SHA and/or the failing run URL returned by `find_ci_failure()`.
+- Record `repo_assist_run_id` and `repo_assist_run_url` from the repair PR body and/or the repair workflow metadata. Use that repair run to attribute the dispatch workflow. Do not accept arbitrary later `Auto-Dispatch` or `Pipeline Watchdog` runs.
+- Persist auto-merge evidence in a durable field such as `auto_merge_armed_observed`. Populate it while the PR is still open, or reconstruct it from durable evidence like timeline events or `PR Review Submit`. Do not rely on `merged_by` as the verdict condition.
+- Remove early `return 1` exits after intermediate `fail` or `timeout` results. Record the stage outcome, continue collecting later evidence, and let the final verdict decide pass or fail.
+- Keep the report file updated after each stage mutation so `audit` can resume from partial state if a live run is interrupted.
+
+**Step 3: Make it executable**
 
 ```bash
 chmod +x scripts/self-healing-drill.sh
 ```
 
-**Step 3: Verify the script parses without errors**
+**Step 4: Verify the script parses without errors**
 
 ```bash
 bash -n scripts/self-healing-drill.sh
 ```
 Expected: No output (clean parse).
 
-**Step 4: Commit**
+**Step 5: Commit**
 
 ```bash
 git add scripts/self-healing-drill.sh
@@ -939,7 +960,7 @@ Before running a live drill, validate the audit mode works by retroactively anal
 ./scripts/self-healing-drill.sh audit 4c0e4d8f062e75ff5c6bcfd512e671db29362697
 ```
 
-Expected: The script should find all 7 stages and produce a JSON report. The verdict will be FAIL (because the March 1 run had manual intervention), but the report structure should be valid.
+Expected: The script should find all 7 stages and produce a JSON report. The verdict should be `FAIL`, because the March 1 sequence did not close through the intended `Auto-Dispatch Pipeline Issues` path, but the report structure should still be valid.
 
 **Step 2: Inspect the JSON report**
 
@@ -969,9 +990,12 @@ git commit -m "fix: resolve audit smoke test issues in drill harness"
 
 This is the real test. The script injects a fault, pushes, and watches the pipeline heal itself.
 
-**Step 1: Pull latest main**
+**Step 1: Preflight and pull latest main**
 
 ```bash
+git status --short
+git branch --show-current
+gh auth status
 git pull --rebase origin main
 ```
 
@@ -992,15 +1016,14 @@ cat drills/reports/*.json | jq .
 Check:
 - All 7 stages have `status: "pass"`
 - `dispatch_path` is `Auto-Dispatch Pipeline Issues`
-- `auto_merge_enabled` is `true`
+- `auto_merge_armed_observed` is `true` (or the equivalent durable auto-merge evidence field you implement)
 - `verdict` is `PASS`
 - No stage exceeded its SLA
 
-**Step 4: If PASS — commit the canary file and push the drill script**
+**Step 4: If PASS — sync local main to the healed remote state**
 
 ```bash
-git pull --rebase origin main
-git push origin main
+git pull --ff-only origin main
 ```
 
 **Step 5: If FAIL — diagnose, fix the pipeline workflow that broke, re-run**
