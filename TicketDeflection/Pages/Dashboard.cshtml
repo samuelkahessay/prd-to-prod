@@ -287,6 +287,7 @@
                     </div>
                     <div class="flex items-center gap-3">
                         <button id="submit-btn" class="exec-btn" onclick="submitTicket()">[ submit ]</button>
+                        <button id="random-btn" class="exec-btn" onclick="fillRandom()">[ random ]</button>
                         <span id="submit-status" class="text-dim" style="font-size:0.75rem;"></span>
                     </div>
                 </div>
@@ -478,8 +479,43 @@
             document.getElementById('ticket-desc').value = '';
             document.getElementById('submit-status').textContent = '';
             document.getElementById('submit-btn').disabled = false;
+            document.getElementById('random-btn').disabled = false;
             document.getElementById('submit-result').style.display = 'none';
             document.getElementById('submit-form').style.display = '';
+        }
+
+        const SAMPLE_TICKETS = [
+            { title: 'Error 500 on the server', description: 'I keep getting an error 500 internal server error when loading the main page. The error appears on every request.' },
+            { title: 'Application crashes after restart', description: 'The application crashes immediately after restart. I checked the logs but could not find details about the crash recovery steps.' },
+            { title: 'How to reset my password', description: 'I forgot my password and clicked the reset link on the login page but the email was never sent to my inbox.' },
+            { title: 'How to export my data as CSV', description: 'I need to navigate to settings and export all my data in CSV or JSON format for compliance.' },
+            { title: 'How to enable two-factor authentication', description: 'I want to enable 2FA under my security settings using an authenticator app like Google Authenticator or Authy.' },
+            { title: 'Submit a feature request via feedback', description: 'How do I submit feature requests through the feedback portal? I want my vote to count in the quarterly review process.' },
+            { title: 'Add Slack integration for alerts', description: 'We use Slack for team communication and would love to get ticket alerts directly in our channels.' },
+            { title: 'Forgot password and reset email not arriving', description: 'I clicked forgot password on the login page and entered my email but the reset link was never sent to my inbox.' },
+            { title: 'Two-factor authentication code not working', description: 'The authenticator app code is not accepted. I enabled 2FA under security settings but it keeps failing.' },
+            { title: 'Account locked after failed logins', description: 'My account was locked after multiple failed login attempts. I need a reset link sent to my email.' },
+            { title: 'Check service status and uptime', description: 'Where can I check the service status page for real-time information about outages and scheduled maintenance windows?' },
+            { title: 'Search returns wrong results', description: 'When I search for recent orders the results show completely unrelated documents from other users.' },
+        ];
+
+        let _lastRandomIndex = -1;
+
+        function fillRandom() {
+            let idx;
+            do { idx = Math.floor(Math.random() * SAMPLE_TICKETS.length); }
+            while (idx === _lastRandomIndex && SAMPLE_TICKETS.length > 1);
+            _lastRandomIndex = idx;
+
+            const sample = SAMPLE_TICKETS[idx];
+            document.getElementById('ticket-title').value = sample.title;
+            document.getElementById('ticket-desc').value = sample.description;
+            document.getElementById('submit-status').textContent = '';
+
+            // Auto-submit after a brief pause so the visitor can read the filled content
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('random-btn').disabled = true;
+            setTimeout(submitTicket, 300);
         }
     </script>
 </body>
