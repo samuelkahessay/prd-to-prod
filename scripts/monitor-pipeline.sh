@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-REPO="samuelkahessay/agentic-pipeline"
+REPO="samuelkahessay/prd-to-prod"
 INTERVAL="${1:-180}"  # default 3 minutes
 PREV_STATE=""
 CYCLE=0
