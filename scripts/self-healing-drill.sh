@@ -21,9 +21,12 @@ set -uo pipefail
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 REPO="samuelkahessay/prd-to-prod"
-CANARY_FILE="TicketDeflection/Canary/DrillCanary.cs"
-REPORT_DIR="drills/reports"
+CANARY_FILE="$REPO_ROOT/TicketDeflection/Canary/DrillCanary.cs"
+REPORT_DIR="$REPO_ROOT/drills/reports"
 POLL_INTERVAL=15
 OVERALL_TIMEOUT_S=2700  # 45 minutes
 
@@ -115,12 +118,16 @@ update_stage() {
 }
 
 update_top_level() {
-  local key="$1"
-  local value="$2"
-
+  local key="$1" value="$2"
   local tmp
   tmp=$(mktemp)
-  jq --arg k "$key" --arg v "$value" '.[$k] = $v' "$REPORT_FILE" > "$tmp" && mv "$tmp" "$REPORT_FILE"
+  if [[ "$value" =~ ^[0-9]+$ ]]; then
+    jq --arg k "$key" --argjson v "$value" '.[$k] = $v' "$REPORT_FILE" > "$tmp" && mv "$tmp" "$REPORT_FILE"
+  elif [[ "$value" == "true" || "$value" == "false" ]]; then
+    jq --arg k "$key" --argjson v "$value" '.[$k] = $v' "$REPORT_FILE" > "$tmp" && mv "$tmp" "$REPORT_FILE"
+  else
+    jq --arg k "$key" --arg v "$value" '.[$k] = $v' "$REPORT_FILE" > "$tmp" && mv "$tmp" "$REPORT_FILE"
+  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -188,7 +195,7 @@ print_summary() {
 # ---------------------------------------------------------------------------
 compute_verdict() {
   local all_pass=true
-  local fail_reason=""
+  local fail_reasons=""
   local stages
   stages=$(jq -r '.stages | keys[]' "$REPORT_FILE" 2>/dev/null || true)
 
@@ -197,10 +204,11 @@ compute_verdict() {
     st=$(jq -r ".stages[\"$stage\"].status" "$REPORT_FILE")
     if [ "$st" != "pass" ]; then
       all_pass=false
-      fail_reason="stage ${stage} status is ${st}"
-      break
+      fail_reasons="${fail_reasons}${stage}=${st}, "
     fi
   done
+  # Trim trailing comma-space
+  fail_reasons="${fail_reasons%, }"
 
   # PASS also requires dispatch_workflow == "Auto-Dispatch Pipeline Issues"
   if $all_pass && [ -n "$stages" ]; then
@@ -208,7 +216,7 @@ compute_verdict() {
     dw=$(jq -r '.dispatch_workflow // ""' "$REPORT_FILE")
     if [ "$dw" != "Auto-Dispatch Pipeline Issues" ]; then
       all_pass=false
-      fail_reason="dispatch_workflow is '${dw}', expected 'Auto-Dispatch Pipeline Issues'"
+      fail_reasons="${fail_reasons:+${fail_reasons}, }dispatch_workflow='${dw}' expected 'Auto-Dispatch Pipeline Issues'"
     fi
   fi
 
@@ -218,7 +226,7 @@ compute_verdict() {
     amo=$(jq -r '.stages.auto_merge.auto_merge_armed_observed // "false"' "$REPORT_FILE")
     if [ "$amo" != "true" ]; then
       all_pass=false
-      fail_reason="auto_merge_armed_observed is '${amo}', expected 'true'"
+      fail_reasons="${fail_reasons:+${fail_reasons}, }auto_merge_armed_observed='${amo}' expected 'true'"
     fi
   fi
 
@@ -226,8 +234,8 @@ compute_verdict() {
     update_top_level "verdict" "PASS"
   else
     update_top_level "verdict" "FAIL"
-    if [ -n "$fail_reason" ]; then
-      update_top_level "verdict_reason" "$fail_reason"
+    if [ -n "$fail_reasons" ]; then
+      update_top_level "verdict_reason" "$fail_reasons"
     fi
   fi
 
@@ -497,17 +505,21 @@ find_merge() {
     fi
   fi
 
-  # If still not armed, check if PR Review Submit workflow succeeded on this PR
+  # If still not armed, check if PR Review Submit workflow succeeded on this PR's head SHA
   if [ "$AUTO_MERGE_ARMED" = "false" ]; then
-    local pr_review_runs
-    pr_review_runs=$(gh api "repos/${REPO}/actions/runs?per_page=50" \
-      --jq '.workflow_runs' 2>/dev/null || echo "[]")
-    local review_submit_success
-    review_submit_success=$(echo "$pr_review_runs" | jq -r --arg pr_num "$pr_number" '
-      [.[] | select(.name == "PR Review Submit" and .conclusion == "success")] | length' 2>/dev/null || echo "0")
-    if [ "$review_submit_success" -gt 0 ]; then
-      # PR Review Submit succeeded — it's the workflow that arms auto-merge for [Pipeline] PRs
-      AUTO_MERGE_ARMED=true
+    local pr_head_sha
+    pr_head_sha=$(echo "$pr_json" | jq -r '.head.sha // ""')
+    if [ -n "$pr_head_sha" ]; then
+      local pr_review_runs
+      pr_review_runs=$(gh api "repos/${REPO}/actions/runs?head_sha=${pr_head_sha}&per_page=50" \
+        --jq '.workflow_runs' 2>/dev/null || echo "[]")
+      local review_submit_success
+      review_submit_success=$(echo "$pr_review_runs" | jq -r '
+        [.[] | select(.name == "PR Review Submit" and .conclusion == "success")] | length' 2>/dev/null || echo "0")
+      if [ "$review_submit_success" -gt 0 ]; then
+        # PR Review Submit succeeded on this PR's head SHA — it's the workflow that arms auto-merge for [Pipeline] PRs
+        AUTO_MERGE_ARMED=true
+      fi
     fi
   fi
 
@@ -561,7 +573,7 @@ poll_until() {
     "$finder_func" "$@"
 
     local current_status
-    eval "current_status=\$$status_var"
+    current_status="${!status_var}"
 
     if [ "$current_status" = "pass" ]; then
       return 0
@@ -681,7 +693,7 @@ preflight_run() {
 }
 
 inject_fault() {
-  log_stage "inject" "info" "Injecting deliberate build failure..."
+  log_stage "inject" "info" "Injecting deliberate build failure..." >&2
 
   DRILL_ID="$(date -u +%Y%m%d-%H%M%S)"
 
@@ -709,11 +721,11 @@ CANARY_EOF
   commit_sha=$(git rev-parse HEAD)
 
   if ! git push origin main; then
-    log_stage "inject" "fail" "git push failed"
+    log_stage "inject" "fail" "git push failed" >&2
     return 1
   fi
 
-  log_stage "inject" "pass" "Pushed fault commit ${commit_sha:0:8}"
+  log_stage "inject" "pass" "Pushed fault commit ${commit_sha:0:8}" >&2
   echo "$commit_sha"
 }
 
@@ -1183,6 +1195,11 @@ usage() {
 }
 
 main() {
+  command -v gh >/dev/null 2>&1 || { echo "Error: gh CLI required" >&2; exit 2; }
+  command -v jq >/dev/null 2>&1 || { echo "Error: jq required" >&2; exit 2; }
+
+  cd "$REPO_ROOT"
+
   if [ $# -lt 2 ]; then
     usage
   fi
