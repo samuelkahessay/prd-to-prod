@@ -8,5 +8,5 @@ namespace TicketDeflection.Canary;
 /// </summary>
 public static class DrillCanary
 {
-    public static string Status() => "healthy";
+    public static string Status() => "broken"
 }
