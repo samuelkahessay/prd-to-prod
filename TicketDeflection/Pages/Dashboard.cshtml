@@ -287,6 +287,7 @@
                     </div>
                     <div class="flex items-center gap-3">
                         <button id="submit-btn" class="exec-btn" onclick="submitTicket()">[ submit ]</button>
+                        <button id="random-btn" class="exec-btn" onclick="randomTicket()">[ random ]</button>
                         <span id="submit-status" class="text-dim" style="font-size:0.75rem;"></span>
                     </div>
                 </div>
@@ -363,6 +364,45 @@
 
         const STAGE_DELAY_MS = 500;
 
+        const SAMPLE_TICKETS = [
+            { title: "Error 500 on the server", description: "I keep getting an error 500 internal server error when loading the main page. The error appears on every request to the server." },
+            { title: "Application crashes after restart", description: "The application crashes immediately after restart. I checked the logs in the service manager but could not find details about the crash recovery steps." },
+            { title: "Export button gives no response", description: "I navigate to settings and click the export button but the CSV format download never starts. Tried JSON format export too." },
+            { title: "Search returns wrong results", description: "When I search for recent orders the results show completely unrelated documents from other users." },
+            { title: "How to reset my password", description: "I forgot my password and clicked the reset link on the login page but the email was never sent to my inbox." },
+            { title: "How to export my data as CSV", description: "I need to navigate to settings and export all my data in CSV or JSON format for compliance." },
+            { title: "How to enable two-factor authentication", description: "I want to enable 2FA under my security settings using an authenticator app like Google Authenticator or Authy." },
+            { title: "How to configure notification alerts", description: "I want to go to my profile notifications and disable email alerts and in-app alerts for non-critical events." },
+            { title: "How to invite team members", description: "I want to add three colleagues to my workspace but cannot find the invite option anywhere in settings." },
+            { title: "Add Slack integration for alerts", description: "We use Slack for team communication and would love to get ticket alerts directly in our channels." },
+            { title: "Export metrics as PDF report", description: "Management needs monthly PDF summaries of resolution rates and ticket volumes for executive review." },
+            { title: "Forgot password and reset email not arriving", description: "I clicked forgot password on the login page and entered my email but the reset link was never sent to my inbox." },
+            { title: "Cancel my subscription and get a refund", description: "I want to cancel my subscription and need a refund. I went to billing but the cancel subscription option is not available within the 7 days window." },
+            { title: "Two-factor authentication code not working", description: "The authenticator app code is not accepted. I enabled 2FA under security settings using Google Authenticator but it keeps failing." },
+            { title: "Account locked after failed logins", description: "My account was locked after multiple failed login attempts. I need to click forgot password on the login page to get a reset link sent to my email." },
+            { title: "Billing address not updating", description: "Every time I save a new billing address the old one reappears and the update never persists." },
+            { title: "Check service status and uptime", description: "Where can I check the service status page for real-time information about outages and scheduled maintenance windows?" },
+            { title: "Contact the support team", description: "How do I reach the support team via email or through the in-app chat widget during weekdays?" },
+        ];
+
+        let _lastRandomIndex = -1;
+
+        function randomTicket() {
+            let idx;
+            do {
+                idx = Math.floor(Math.random() * SAMPLE_TICKETS.length);
+            } while (SAMPLE_TICKETS.length > 1 && idx === _lastRandomIndex);
+            _lastRandomIndex = idx;
+
+            const sample = SAMPLE_TICKETS[idx];
+            document.getElementById('ticket-title').value = sample.title;
+            document.getElementById('ticket-desc').value = sample.description;
+            document.getElementById('submit-status').textContent = '';
+
+            // Let the visitor see the filled content before auto-submitting
+            setTimeout(submitTicket, 300);
+        }
+
         function stageDelay(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
@@ -408,8 +448,10 @@
             }
             const description = document.getElementById('ticket-desc').value.trim();
             const btn = document.getElementById('submit-btn');
+            const randomBtn = document.getElementById('random-btn');
             const status = document.getElementById('submit-status');
             btn.disabled = true;
+            randomBtn.disabled = true;
             status.textContent = 'processing...';
 
             try {
@@ -470,6 +512,7 @@
             } catch (e) {
                 status.textContent = 'error: ' + e.message;
                 btn.disabled = false;
+                randomBtn.disabled = false;
             }
         }
 
@@ -478,6 +521,7 @@
             document.getElementById('ticket-desc').value = '';
             document.getElementById('submit-status').textContent = '';
             document.getElementById('submit-btn').disabled = false;
+            document.getElementById('random-btn').disabled = false;
             document.getElementById('submit-result').style.display = 'none';
             document.getElementById('submit-form').style.display = '';
         }
