@@ -1,12 +1,12 @@
 {
-  "last_run": "2026-03-01T15:31:48Z",
-  "workflow_run_id": "22546508259",
+  "last_run": "2026-03-01T16:38:07Z",
+  "workflow_run_id": "22547689723",
   "current_prd": {
     "issue": 123,
-    "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 10)",
-    "status": "at_risk"
+    "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
+    "status": "complete"
   },
-  "pipeline_status": "AT_RISK",
+  "pipeline_status": "COMPLETE",
   "attempts": [
     {"issue": 125, "pr": 138, "status": "merged"},
     {"issue": 126, "pr": 139, "status": "merged"},
@@ -60,9 +60,10 @@
     {"issue": 250, "pr": 255, "status": "merged"},
     {"issue": 251, "status": "closed_completed"},
     {"issue": 252, "status": "merged"},
-    {"issue": 269, "status": "in_progress", "pr_branch": "repo-assist/issue-269-fix-classification-service-syntax"}
+    {"issue": 269, "status": "closed", "notes": "CI fix merged via PR #270"},
+    {"issue": 270, "status": "merged", "notes": "GH_AW_GITHUB_TOKEN fix - merged by samuelkahessay"}
   ],
-  "open_issues": [269],
-  "open_prs": [270],
-  "notes": "CI broken on main. Fix PR submitted for ClassificationService syntax errors (issue #269). PR #270 fixes ci-failure-router token. Both pending merge before archive."
+  "open_issues": [],
+  "open_prs": [],
+  "notes": "Run 04 COMPLETE. All pipeline issues resolved, all PRs merged. Issue #269 (CI syntax fix) closed. PR #270 (token fix) merged 2026-03-01. Ready for archive with scripts/archive-run.sh."
 }
