@@ -6,7 +6,7 @@ on:
 
 # Collapse rapid issue creation (e.g., decomposer burst) to one dispatch.
 concurrency:
-  group: auto-dispatch-pipeline
+  group: auto-dispatch-pipeline-${{ github.event.issue.number }}
   cancel-in-progress: true
 
 jobs:
@@ -17,10 +17,7 @@ jobs:
         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) ||
         github.event.issue.user.login == 'github-actions[bot]'
       ) &&
-      (
-        (github.event.action == 'labeled' && github.event.label.name == 'pipeline') ||
-        (github.event.action != 'labeled' && contains(github.event.issue.labels.*.name, 'pipeline'))
-      )
+      contains(github.event.issue.labels.*.name, 'pipeline')
     runs-on: ubuntu-latest
     steps:
       - name: Debounce (let issue burst settle)
