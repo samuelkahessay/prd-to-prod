@@ -30,7 +30,6 @@ RUN_NUMBER=$1
 RUN_DIR=$(find showcase -maxdepth 1 -type d -name "$(printf '%02d' "$RUN_NUMBER")-*" | head -1)
 if [ -z "$RUN_DIR" ]; then
   echo "Error: No showcase directory found for run ${RUN_NUMBER}"
-  echo "Expected: showcase/$(printf '%02d' "$RUN_NUMBER")-*/"
   exit 1
 fi
 
@@ -39,44 +38,49 @@ OUTPUT="${RUN_DIR}/run-data.json"
 
 if [ ! -f "$MANIFEST" ]; then
   echo "Error: No manifest.json found at ${MANIFEST}"
-  echo "Create one with run metadata, issue numbers, and PR numbers."
   exit 1
 fi
+
+# Create temp directory for intermediate files
+TMPDIR=$(mktemp -d)
+trap 'rm -rf "$TMPDIR"' EXIT
 
 echo "Capturing run data for Run ${RUN_NUMBER} from ${RUN_DIR}..."
 
 # Read manifest
-RUN_META=$(jq -c '.run' "$MANIFEST")
 ISSUE_NUMBERS=$(jq -r '.issues[]' "$MANIFEST" 2>/dev/null || true)
 PR_NUMBERS=$(jq -r '.pull_requests[]' "$MANIFEST" 2>/dev/null || true)
 
-# Fetch issues
+# Fetch issues into temp file
 echo "Fetching issues..."
-ISSUES="[]"
+echo '[]' > "$TMPDIR/issues.json"
 for NUM in $ISSUE_NUMBERS; do
   echo "  Issue #${NUM}"
-  ISSUE_JSON=$(gh api "repos/${REPO}/issues/${NUM}" --jq '{
+  gh api "repos/${REPO}/issues/${NUM}" > "$TMPDIR/issue_raw.json" 2>/dev/null || echo '{}' > "$TMPDIR/issue_raw.json"
+  jq '{
     number: .number,
     title: .title,
     body: .body,
     state: .state,
-    labels: [.labels[].name],
+    labels: [.labels[]?.name],
     created_at: .created_at,
     closed_at: .closed_at,
     user: .user.login
-  }' 2>/dev/null || echo "{\"number\": ${NUM}, \"error\": \"not found\"}")
-  ISSUES=$(printf '%s' "$ISSUES" | jq --argjson item "$ISSUE_JSON" '. + [$item]')
-  sleep 0.2  # Rate limit courtesy
+  }' "$TMPDIR/issue_raw.json" > "$TMPDIR/issue_clean.json" 2>/dev/null || echo "{\"number\": ${NUM}, \"error\": \"parse failed\"}" > "$TMPDIR/issue_clean.json"
+  jq --slurpfile item "$TMPDIR/issue_clean.json" '. + $item' "$TMPDIR/issues.json" > "$TMPDIR/issues_new.json"
+  mv "$TMPDIR/issues_new.json" "$TMPDIR/issues.json"
+  sleep 0.2
 done
 
-# Fetch PRs with reviews and file stats
+# Fetch PRs with reviews and file stats into temp file
 echo "Fetching pull requests..."
-PRS="[]"
+echo '[]' > "$TMPDIR/prs.json"
 for NUM in $PR_NUMBERS; do
   echo "  PR #${NUM}"
 
   # PR metadata
-  PR_JSON=$(gh api "repos/${REPO}/pulls/${NUM}" --jq '{
+  gh api "repos/${REPO}/pulls/${NUM}" > "$TMPDIR/pr_raw.json" 2>/dev/null || echo '{}' > "$TMPDIR/pr_raw.json"
+  jq '{
     number: .number,
     title: .title,
     body: .body,
@@ -89,123 +93,106 @@ for NUM in $PR_NUMBERS; do
     user: .user.login,
     head_branch: .head.ref,
     base_branch: .base.ref
-  }' 2>/dev/null || echo "{\"number\": ${NUM}, \"error\": \"not found\"}")
+  }' "$TMPDIR/pr_raw.json" > "$TMPDIR/pr_clean.json" 2>/dev/null || echo "{\"number\": ${NUM}, \"error\": \"parse failed\"}" > "$TMPDIR/pr_clean.json"
 
   # Reviews
-  REVIEWS=$(gh api "repos/${REPO}/pulls/${NUM}/reviews" --jq '[.[] | {
+  gh api "repos/${REPO}/pulls/${NUM}/reviews" > "$TMPDIR/reviews_raw.json" 2>/dev/null || echo '[]' > "$TMPDIR/reviews_raw.json"
+  jq '[.[] | {
     user: .user.login,
     state: .state,
-    body: (.body // "" | .[0:500]),
+    body: ((.body // "")[0:500]),
     submitted_at: .submitted_at
-  }]' 2>/dev/null || echo '[]')
+  }]' "$TMPDIR/reviews_raw.json" > "$TMPDIR/reviews_clean.json" 2>/dev/null || echo '[]' > "$TMPDIR/reviews_clean.json"
 
   # Changed files
-  FILES=$(gh api "repos/${REPO}/pulls/${NUM}/files" --jq '[.[] | {
+  gh api "repos/${REPO}/pulls/${NUM}/files" > "$TMPDIR/files_raw.json" 2>/dev/null || echo '[]' > "$TMPDIR/files_raw.json"
+  jq '[.[] | {
     filename: .filename,
     status: .status,
     additions: .additions,
     deletions: .deletions
-  }]' 2>/dev/null || echo '[]')
+  }]' "$TMPDIR/files_raw.json" > "$TMPDIR/files_clean.json" 2>/dev/null || echo '[]' > "$TMPDIR/files_clean.json"
 
-  # Combine
-  COMBINED=$(printf '%s' "$PR_JSON" | jq \
-    --argjson reviews "$REVIEWS" \
-    --argjson files "$FILES" \
-    '. + {reviews: $reviews, files: $files}')
+  # Combine PR + reviews + files
+  jq --slurpfile reviews "$TMPDIR/reviews_clean.json" --slurpfile files "$TMPDIR/files_clean.json" \
+    '. + {reviews: $reviews[0], files: $files[0]}' "$TMPDIR/pr_clean.json" > "$TMPDIR/pr_combined.json"
 
-  PRS=$(printf '%s' "$PRS" | jq --argjson item "$COMBINED" '. + [$item]')
-  sleep 0.3  # Rate limit courtesy
+  # Append to PRs array
+  jq --slurpfile item "$TMPDIR/pr_combined.json" '. + $item' "$TMPDIR/prs.json" > "$TMPDIR/prs_new.json"
+  mv "$TMPDIR/prs_new.json" "$TMPDIR/prs.json"
+  sleep 0.3
 done
 
-# Build timeline from issues and PRs
+# Build timeline entirely in jq (no bash iteration over JSON)
 echo "Building timeline..."
-TIMELINE="[]"
-
-# Issue creation events
-for ROW in $(printf '%s' "$ISSUES" | jq -c '.[]'); do
-  NUM=$(printf '%s' "$ROW" | jq -r '.number')
-  TITLE=$(printf '%s' "$ROW" | jq -r '.title')
-  CREATED=$(printf '%s' "$ROW" | jq -r '.created_at')
-  if [ "$CREATED" != "null" ] && [ -n "$CREATED" ]; then
-    EVENT=$(jq -n --arg ts "$CREATED" --arg title "$TITLE" --argjson num "$NUM" \
-      '{timestamp: $ts, event: "issue_created", item: $num, title: $title}')
-    TIMELINE=$(printf '%s' "$TIMELINE" | jq --argjson e "$EVENT" '. + [$e]')
-  fi
-done
-
-# PR creation, review, and merge events
-for ROW in $(printf '%s' "$PRS" | jq -c '.[]'); do
-  NUM=$(printf '%s' "$ROW" | jq -r '.number')
-  TITLE=$(printf '%s' "$ROW" | jq -r '.title')
-  CREATED=$(printf '%s' "$ROW" | jq -r '.created_at')
-  MERGED=$(printf '%s' "$ROW" | jq -r '.merged_at')
-
-  if [ "$CREATED" != "null" ] && [ -n "$CREATED" ]; then
-    EVENT=$(jq -n --arg ts "$CREATED" --arg title "$TITLE" --argjson num "$NUM" \
-      '{timestamp: $ts, event: "pr_opened", item: $num, title: $title}')
-    TIMELINE=$(printf '%s' "$TIMELINE" | jq --argjson e "$EVENT" '. + [$e]')
-  fi
-
-  # Review events
-  for REVIEW in $(printf '%s' "$ROW" | jq -c '.reviews[]? // empty'); do
-    REVIEW_TS=$(printf '%s' "$REVIEW" | jq -r '.submitted_at')
-    REVIEW_STATE=$(printf '%s' "$REVIEW" | jq -r '.state')
-    if [ "$REVIEW_TS" != "null" ] && [ -n "$REVIEW_TS" ]; then
-      EVENT=$(jq -n --arg ts "$REVIEW_TS" --arg state "$REVIEW_STATE" --argjson num "$NUM" --arg title "$TITLE" \
-        '{timestamp: $ts, event: ("review_" + ($state | ascii_downcase)), item: $num, title: $title}')
-      TIMELINE=$(printf '%s' "$TIMELINE" | jq --argjson e "$EVENT" '. + [$e]')
-    fi
-  done
-
-  if [ "$MERGED" != "null" ] && [ -n "$MERGED" ]; then
-    EVENT=$(jq -n --arg ts "$MERGED" --arg title "$TITLE" --argjson num "$NUM" \
-      '{timestamp: $ts, event: "pr_merged", item: $num, title: $title}')
-    TIMELINE=$(printf '%s' "$TIMELINE" | jq --argjson e "$EVENT" '. + [$e]')
-  fi
-done
-
-# Sort timeline by timestamp
-TIMELINE=$(printf '%s' "$TIMELINE" | jq 'sort_by(.timestamp)')
+jq -n \
+  --slurpfile issues "$TMPDIR/issues.json" \
+  --slurpfile prs "$TMPDIR/prs.json" \
+  '
+  [
+    # Issue creation events
+    ($issues[0][] | select(.created_at != null) | {
+      timestamp: .created_at,
+      event: "issue_created",
+      item: .number,
+      title: .title
+    }),
+    # PR opened events
+    ($prs[0][] | select(.created_at != null) | {
+      timestamp: .created_at,
+      event: "pr_opened",
+      item: .number,
+      title: .title
+    }),
+    # PR review events
+    ($prs[0][] | . as $pr | .reviews[]? | select(.submitted_at != null) | {
+      timestamp: .submitted_at,
+      event: ("review_" + (.state | ascii_downcase)),
+      item: $pr.number,
+      title: $pr.title
+    }),
+    # PR merged events
+    ($prs[0][] | select(.merged_at != null) | {
+      timestamp: .merged_at,
+      event: "pr_merged",
+      item: .number,
+      title: .title
+    })
+  ] | sort_by(.timestamp)
+  ' > "$TMPDIR/timeline.json"
 
 # Compute stats
-ISSUES_COUNT=$(printf '%s' "$ISSUES" | jq 'length')
-PRS_COUNT=$(printf '%s' "$PRS" | jq 'length')
-PRS_MERGED=$(printf '%s' "$PRS" | jq '[.[] | select(.merged_at != null)] | length')
-TOTAL_ADDITIONS=$(printf '%s' "$PRS" | jq '[.[].additions // 0] | add // 0')
-TOTAL_DELETIONS=$(printf '%s' "$PRS" | jq '[.[].deletions // 0] | add // 0')
-TOTAL_FILES=$(printf '%s' "$PRS" | jq '[.[].changed_files // 0] | add // 0')
-
-STATS=$(jq -n \
-  --argjson issues "$ISSUES_COUNT" \
-  --argjson prs "$PRS_COUNT" \
-  --argjson merged "$PRS_MERGED" \
-  --argjson additions "$TOTAL_ADDITIONS" \
-  --argjson deletions "$TOTAL_DELETIONS" \
-  --argjson files "$TOTAL_FILES" \
+echo "Computing stats..."
+jq -n \
+  --slurpfile issues "$TMPDIR/issues.json" \
+  --slurpfile prs "$TMPDIR/prs.json" \
   '{
-    issues_created: $issues,
-    prs_total: $prs,
-    prs_merged: $merged,
-    lines_added: $additions,
-    lines_removed: $deletions,
-    files_changed: $files
-  }')
+    issues_created: ($issues[0] | length),
+    prs_total: ($prs[0] | length),
+    prs_merged: ([$prs[0][] | select(.merged_at != null)] | length),
+    lines_added: ([$prs[0][].additions // 0] | add // 0),
+    lines_removed: ([$prs[0][].deletions // 0] | add // 0),
+    files_changed: ([$prs[0][].changed_files // 0] | add // 0)
+  }' > "$TMPDIR/stats.json"
 
 # Assemble final output
 echo "Writing ${OUTPUT}..."
 jq -n \
-  --argjson run "$RUN_META" \
-  --argjson stats "$STATS" \
-  --argjson issues "$ISSUES" \
-  --argjson prs "$PRS" \
-  --argjson timeline "$TIMELINE" \
+  --slurpfile run <(jq '.run' "$MANIFEST") \
+  --slurpfile stats "$TMPDIR/stats.json" \
+  --slurpfile issues "$TMPDIR/issues.json" \
+  --slurpfile prs "$TMPDIR/prs.json" \
+  --slurpfile timeline "$TMPDIR/timeline.json" \
   '{
-    run: $run,
-    stats: $stats,
-    issues: $issues,
-    pull_requests: $prs,
-    timeline: $timeline
+    run: $run[0],
+    stats: $stats[0],
+    issues: $issues[0],
+    pull_requests: $prs[0],
+    timeline: $timeline[0]
   }' > "$OUTPUT"
 
-echo "Done. Captured $(printf '%s' "$ISSUES" | jq 'length') issues, $(printf '%s' "$PRS" | jq 'length') PRs, $(printf '%s' "$TIMELINE" | jq 'length') timeline events."
+ISSUE_COUNT=$(jq '.issues | length' "$OUTPUT")
+PR_COUNT=$(jq '.pull_requests | length' "$OUTPUT")
+TIMELINE_COUNT=$(jq '.timeline | length' "$OUTPUT")
+echo "Done. Captured ${ISSUE_COUNT} issues, ${PR_COUNT} PRs, ${TIMELINE_COUNT} timeline events."
 echo "Output: ${OUTPUT}"
