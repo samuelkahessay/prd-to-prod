@@ -1,0 +1,48 @@
+name: Bug Report
+description: Report a bug in the deployed application
+labels: ["bug", "pipeline", "bug-intake"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please fill out the sections below so the pipeline can reproduce and fix the issue.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the bug. What did you see?
+      placeholder: "When I clicked X, Y happened instead of Z."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: What should have happened?
+      description: Describe the correct behavior you expected.
+      placeholder: "Clicking X should have done Z."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps to trigger the bug. The agent needs these to reproduce it.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment (optional)
+      description: Browser, OS, or any other relevant context.
+      placeholder: "Chrome 120, macOS 14.2"
+    validations:
+      required: false

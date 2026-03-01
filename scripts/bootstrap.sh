@@ -20,7 +20,8 @@ for label in "pipeline:0075ca:Pipeline-managed issue" \
              "blocked:b60205:Blocked by dependency" \
              "ready:0e8a16:Ready for implementation" \
              "completed:0e8a16:Completed and merged" \
-             "report:c5def5:Status report"; do
+             "report:c5def5:Status report" \
+             "bug-intake:e4e669:Filed via bug-report template"; do
   IFS=: read -r name color desc <<< "$label"
   gh label create "$name" --color "$color" --description "$desc" --force 2>/dev/null || true
 done
