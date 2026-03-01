@@ -232,3 +232,9 @@ Use status:
 - `COMPLETE` when no open pipeline issues/PRs remain
 
 Do NOT create or update a `[Pipeline] Status` issue for this task. Create exactly one project status update every run.
+
+## No-Work Fallback (ALWAYS DO THIS LAST)
+
+After completing all tasks above, if **no outputs were produced** during this run (no PRs created, no comments posted, no issues created, no labels changed, no pushes, and no project status update succeeded), call `noop` with a brief summary explaining why there was nothing to do. This ensures the workflow completes successfully rather than failing with no output.
+
+Example: "Pipeline is idle — no open implementable issues, no open Pipeline PRs requiring maintenance, and no review feedback to address. Run 04 appears complete."
