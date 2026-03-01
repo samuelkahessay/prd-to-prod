@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-01T09:24:42Z",
-  "workflow_run_id": "22540401317",
+  "last_run": "2026-03-01T09:36:28Z",
+  "workflow_run_id": "22540587477",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 10)",
@@ -54,17 +54,15 @@
     {"issue": 244, "pr": 253, "status": "merged"},
     {"issue": 245, "pr": 254, "status": "merged"},
     {"issue": 246, "pr": 256, "status": "merged"},
-    {"issue": 247, "status": "pr_open"},
+    {"issue": 247, "status": "closed_completed"},
+    {"issue": 248, "status": "pr_open"},
     {"issue": 250, "pr": 255, "status": "merged"},
-    {"issue": 251, "status": "pr_open"}
+    {"issue": 251, "status": "closed_completed"},
+    {"issue": 252, "status": "pr_open"}
   ],
-  "open_issues": [247, 248, 249, 251, 252],
+  "open_issues": [248, 249, 252],
   "dependency_chain": {
-    "247": [246],
-    "248": [247],
-    "249": [248],
-    "251": [250],
-    "252": [251]
+    "249": [248]
   },
-  "notes": "PRs opened for #247 (Promise.all refresh) and #251 (301 redirects). Next: #248 after #247 merges; #252 after #251 merges."
+  "notes": "PRs opened for #248 (staged animation) and #252 (landing page specimen). Next: #249 after #248 merges."
 }
