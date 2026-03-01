@@ -2,14 +2,14 @@ using TicketDeflection.Models;
 
 namespace TicketDeflection.Services;
 
-public class ClassificationServic
+public class ClassificationService
 {
     private static readonly (string[] Keywords, TicketCategory Category)[] Rules =
     [
-        ("crash", "error", "broken", "bug", "exception"), TicketCategory.Bug),
-        ("how do i", "how to", "help with", "guide"), TicketCategory.HowTo),
-        ("add feature", "request", "wish", "would be nice"), TicketCategory.FeatureRequest),
-        ("login", "password", "account", "billing", "subscription"), TicketCategory.AccountIssue),
+        (["crash", "error", "broken", "bug", "exception"], TicketCategory.Bug),
+        (["how do i", "how to", "help with", "guide"], TicketCategory.HowTo),
+        (["add feature", "request", "wish", "would be nice"], TicketCategory.FeatureRequest),
+        (["login", "password", "account", "billing", "subscription"], TicketCategory.AccountIssue),
     ];
 
     private static readonly Dictionary<TicketCategory, TicketSeverity> SeverityMap = new()
