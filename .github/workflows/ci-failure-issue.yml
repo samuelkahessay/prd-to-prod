@@ -243,12 +243,24 @@ jobs:
                 ISSUE_ARGS+=(--label "$label")
               fi
             done
-            EXISTING=$(gh issue list --repo "$REPO" --state open --limit 200 --json number,title \
+            # Use GH_AW_GITHUB_TOKEN so the issue creation triggers auto-dispatch.yml.
+            # GITHUB_TOKEN events are suppressed by GitHub's anti-cascade rule and
+            # would silently prevent the self-healing loop from continuing.
+            if [ -n "$GH_AW_GITHUB_TOKEN" ]; then
+              ISSUE_TOKEN="$GH_AW_GITHUB_TOKEN"
+            else
+              ISSUE_TOKEN="$GH_TOKEN"
+              echo "::warning::GH_AW_GITHUB_TOKEN is not set; falling back to GITHUB_TOKEN. Issues created with GITHUB_TOKEN do not trigger the issues:opened event (GitHub anti-cascade rule), so auto-dispatch.yml will NOT fire and the self-healing loop will not continue automatically."
+              BODY="${BODY}
+
+> ⚠️ **Self-healing loop disabled**: This issue was created with \`GITHUB_TOKEN\` because the \`GH_AW_GITHUB_TOKEN\` secret is not configured. GitHub's anti-cascade rule suppresses the \`issues:opened\` event for workflow-actor tokens, so \`auto-dispatch.yml\` will **not** trigger automatically. Configure \`GH_AW_GITHUB_TOKEN\` (a PAT with \`repo\` and \`workflow\` scopes) to restore the self-healing loop."
+            fi
+            EXISTING=$(GH_TOKEN="$ISSUE_TOKEN" gh issue list --repo "$REPO" --state open --limit 200 --json number,title \
               | jq -r --arg title "$TITLE" '.[] | select(.title == $title) | .number' | head -1)
             if [ -n "$EXISTING" ]; then
-              gh issue comment "$EXISTING" --repo "$REPO" --body "$BODY" > /dev/null || true
+              GH_TOKEN="$ISSUE_TOKEN" gh issue comment "$EXISTING" --repo "$REPO" --body "$BODY" > /dev/null || true
             else
-              gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY" "${ISSUE_ARGS[@]}" > /dev/null
+              GH_TOKEN="$ISSUE_TOKEN" gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY" "${ISSUE_ARGS[@]}" > /dev/null
             fi
             exit 0
           fi
