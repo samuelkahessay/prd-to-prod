@@ -1,12 +1,12 @@
 {
-  "last_run": "2026-02-28T23:50:26Z",
-  "workflow_run_id": "22531659025",
+  "last_run": "2026-03-01T00:31:05Z",
+  "workflow_run_id": "22532309057",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
-    "status": "complete"
+    "status": "in_progress"
   },
-  "pipeline_status": "COMPLETE",
+  "pipeline_status": "IN_PROGRESS",
   "attempts": [
     {"issue": 125, "title": "Scaffold ASP.NET Core 8 Solution Structure", "pr": 138, "status": "merged"},
     {"issue": 126, "title": "Ticket Data Model & EF Core InMemory DbContext", "pr": 139, "status": "merged"},
@@ -47,7 +47,8 @@
     {"issue": 225, "title": "Add OpenGraph image for social sharing", "status": "merged"},
     {"issue": 229, "title": "Fix demo button stuck after browser back navigation", "pr": 230, "status": "merged"},
     {"issue": 231, "title": "Static files not served — og-image.png returns 404", "pr": 232, "status": "merged"},
-    {"issue": 236, "title": "Consolidate Dashboard into single-page command center", "pr": 237, "status": "merged"}
+    {"issue": 236, "title": "Consolidate Dashboard into single-page command center", "pr": 237, "status": "merged"},
+    {"issue": 238, "title": "Landing page: separate pipeline narrative from specimen app", "branch": "repo-assist/issue-238-landing-page-narrative", "status": "pr_opened"}
   ],
-  "notes": "Run 67. Run 04 COMPLETE. All pipeline issues closed. PR #237 (issue #236 — dashboard consolidation) merged. No open pipeline issues or PRs remain. Ready for archive (scripts/archive-run.sh) and next PRD."
+  "notes": "Run 68. Issue #238 (landing page narrative separation) implemented. PR created on branch repo-assist/issue-238-landing-page-narrative. Changes: GitHub CTA in hero, reordered sections (Pipeline → Run History → Provenance → boundary → Specimen + Demo + Nav), visual boundary added. All 62 tests pass. Awaiting PR review/merge."
 }
