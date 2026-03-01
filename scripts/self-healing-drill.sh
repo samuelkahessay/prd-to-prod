@@ -51,9 +51,9 @@ NC='\033[0m'
 # ---------------------------------------------------------------------------
 iso_to_epoch() {
   local iso="$1"
-  # Strip trailing Z for macOS compatibility
+  # Strip trailing Z for macOS compatibility, use -u for UTC
   local cleaned="${iso%Z}"
-  if date -jf "%Y-%m-%dT%H:%M:%S" "$cleaned" +%s 2>/dev/null; then
+  if date -juf "%Y-%m-%dT%H:%M:%S" "$cleaned" +%s 2>/dev/null; then
     return
   fi
   # Linux fallback
@@ -292,17 +292,34 @@ find_issue() {
   issues_json=$(gh issue list --repo "$REPO" --state all --label pipeline --label bug \
     --limit 50 --json number,title,body,url,createdAt 2>/dev/null || echo "[]")
 
-  # Filter: title starts with "[Pipeline] CI Build Failure" AND body contains commit SHA or run URL
-  # Note: jq contains("") matches everything, so only check run_url when non-empty
-  local matched
-  matched=$(echo "$issues_json" | jq -r --arg commit "$commit" --arg run_url "$run_url" '
-    [.[] | select(
-      (.title | startswith("[Pipeline] CI Build Failure")) and
-      (
-        ($commit != "" and (.body | contains($commit))) or
-        ($run_url != "" and (.body | contains($run_url)))
-      )
-    )] | first // empty' 2>/dev/null || true)
+  # Primary: match body against commit SHA or run URL
+  local matched=""
+  if [ -n "$commit" ] || [ -n "$run_url" ]; then
+    matched=$(echo "$issues_json" | jq -r --arg commit "$commit" --arg run_url "$run_url" '
+      [.[] | select(
+        (.title | startswith("[Pipeline] CI Build Failure")) and
+        (
+          ($commit != "" and (.body | contains($commit))) or
+          ($run_url != "" and (.body | contains($run_url)))
+        )
+      )] | first // empty' 2>/dev/null || true)
+  fi
+
+  # Fallback: if SHA/URL match found nothing, use time-window match.
+  # The CI Failure Router may fire on a subsequent run with a different commit/URL,
+  # so the issue body won't contain the original drill commit. Match by:
+  # title prefix + created within 30 minutes after the CI failure timestamp.
+  if { [ -z "$matched" ] || [ "$matched" = "null" ]; } && [ -n "$CI_FAIL_TIMESTAMP" ]; then
+    local ci_fail_epoch window_end_epoch
+    ci_fail_epoch=$(iso_to_epoch "$CI_FAIL_TIMESTAMP")
+    window_end_epoch=$((ci_fail_epoch + 1800))  # 30-minute window
+    matched=$(echo "$issues_json" | jq -r --arg ci_epoch "$ci_fail_epoch" --arg window_epoch "$window_end_epoch" '
+      [.[] | select(
+        (.title | startswith("[Pipeline] CI Build Failure")) and
+        ((.createdAt | fromdate) >= ($ci_epoch | tonumber)) and
+        ((.createdAt | fromdate) <= ($window_epoch | tonumber))
+      )] | sort_by(.createdAt) | first // empty' 2>/dev/null || true)
+  fi
 
   if [ -n "$matched" ] && [ "$matched" != "null" ]; then
     ISSUE_NUMBER=$(echo "$matched" | jq -r '.number')
