@@ -1,0 +1,21 @@
+# Deploy Profile: Docker (Generic Container)
+# Read by prd-decomposer and repo-assist to configure CI/CD for this stack.
+stack: docker
+name: "Docker + Container Registry"
+
+detect:
+  files: ["Dockerfile"]
+
+build:
+  runtime: docker
+  build: "docker build -t ${image_name}:${tag} ."
+  test: "docker run --rm ${image_name}:${tag} test"
+
+deploy:
+  workflow: deploy-docker.yml
+  method: "GitHub Container Registry (ghcr.io)"
+  secrets: []
+
+ci:
+  workflow: ci-docker.yml
+  name: "Docker CI"

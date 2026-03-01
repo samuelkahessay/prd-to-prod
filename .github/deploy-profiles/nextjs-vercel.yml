@@ -1,0 +1,26 @@
+# Deploy Profile: Next.js on Vercel
+# Read by prd-decomposer and repo-assist to configure CI/CD for this stack.
+stack: nextjs
+name: "Next.js + Vercel"
+
+detect:
+  files: ["package.json", "next.config.*"]
+
+build:
+  runtime: node
+  runtime_version: "20"
+  install: "npm ci"
+  build: "npm run build"
+  test: "npm test"
+
+deploy:
+  workflow: deploy-vercel.yml
+  method: "Vercel CLI"
+  secrets:
+    - VERCEL_TOKEN
+    - VERCEL_ORG_ID
+    - VERCEL_PROJECT_ID
+
+ci:
+  workflow: ci-node.yml
+  name: "Node CI"
