@@ -131,27 +131,6 @@
             animation: cursor-blink 1s step-end infinite;
             color: var(--accent);
         }
-        @@keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .spin { display: inline-block; animation: spin 1s linear infinite; }
-        .nav-link {
-            display: block;
-            text-align: center;
-            padding: 14px 16px;
-            background: rgba(4, 10, 20, 0.7);
-            border: 1px solid var(--border);
-            transition: background 0.2s, border-color 0.2s;
-            text-decoration: none;
-        }
-        .nav-link:hover {
-            background: var(--accent-dim);
-            border-color: var(--accent);
-        }
-        .nav-link:hover .nav-path { color: var(--accent); }
-        .nav-path { color: rgba(0, 170, 255, 0.7); font-weight: 700; margin-bottom: 4px; }
-        .nav-desc { color: var(--dim); font-size: 0.65rem; }
         .divider { border-top: 1px solid var(--border); margin: 0; }
         .text-accent { color: var(--accent); }
         .text-green { color: var(--green); }
@@ -441,49 +420,14 @@
             </div>
         </section>
 
-        <!-- Demo CTA -->
+        <!-- Specimen entry -->
         <section class="mb-16">
-            <div class="text-xs text-dim mb-5 uppercase tracking-widest">// run the specimen app</div>
+            <div class="text-xs text-dim mb-5 uppercase tracking-widest">// enter the specimen</div>
             <div class="panel p-8 text-center">
-                <div class="text-xs text-dim mb-2">$ exec demo --tickets 25 --redirect /dashboard</div>
-                <div class="text-green text-xs mb-2">Process 25 sample tickets through the deflection pipeline.</div>
-                <div class="text-dim text-xs mb-8">Generates test data, runs tickets through classify → match → resolve, then opens the specimen dashboard.</div>
-
-                <button id="runDemoBtn" onclick="runDemo()" class="exec-btn">
-                    <span id="btnText">[ Run Demo ]</span>
-                    <span id="btnLoading" class="hidden">
-                        <span class="spin">&#x21BB;</span> executing...
-                    </span>
-                </button>
-
-                <p class="text-dim text-xs mt-5">Generates 25 tickets → redirects to /dashboard on completion</p>
-
-                <div id="demoError" class="hidden mt-5 panel text-left p-4" style="border-color: var(--red)">
-                    <div class="text-xs font-bold mb-1" style="color: var(--red)">EXEC_ERROR:</div>
-                    <div class="text-xs" style="color: var(--red)" id="demoErrorContent"></div>
-                </div>
+                <div class="text-xs text-dim mb-6">The dashboard is the specimen. Submit a ticket and watch the pipeline process it in real time.</div>
+                <a href="/dashboard" class="exec-btn inline-block" style="text-decoration: none;">[ open dashboard ]</a>
             </div>
         </section>
-
-        <!-- Specimen Navigation -->
-        <nav class="mb-16">
-            <div class="text-xs text-dim mb-1">// specimen app pages — part of the ticket deflection service</div>
-            <div class="text-xs text-dim mb-4">These links enter the specimen app, not the pipeline.</div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <a href="/dashboard" class="nav-link">
-                    <div class="nav-path">/dashboard</div>
-                    <div class="nav-desc">metrics &amp; resolution rates</div>
-                </a>
-                <a href="/activity" class="nav-link">
-                    <div class="nav-path">/activity</div>
-                    <div class="nav-desc">pipeline event log</div>
-                </a>
-                <a href="/tickets" class="nav-link">
-                    <div class="nav-path">/tickets</div>
-                    <div class="nav-desc">ticket feed</div>
-                </a>
-            </div>
-        </nav>
 
         <div class="text-center text-dim text-xs mt-12 pb-4">
             Built end-to-end by an autonomous AI pipeline ·
@@ -493,64 +437,6 @@
     </div>
 
     <script>
-        const DEMO_TIMEOUT_MS = 30000;
-
-        async function runDemo() {
-            const btn = document.getElementById('runDemoBtn');
-            const btnText = document.getElementById('btnText');
-            const btnLoading = document.getElementById('btnLoading');
-            const errorDiv = document.getElementById('demoError');
-            const errorContent = document.getElementById('demoErrorContent');
-
-            btn.disabled = true;
-            btnText.classList.add('hidden');
-            btnLoading.classList.remove('hidden');
-            errorDiv.classList.add('hidden');
-
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), DEMO_TIMEOUT_MS);
-
-            function recover(msg) {
-                clearTimeout(timeoutId);
-                errorContent.textContent = msg;
-                errorDiv.classList.remove('hidden');
-                btn.disabled = false;
-                btnText.classList.remove('hidden');
-                btnLoading.classList.add('hidden');
-            }
-
-            try {
-                const response = await fetch('/api/simulate?count=25', {
-                    method: 'POST',
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (response.ok) {
-                    window.location.href = '/dashboard';
-                } else {
-                    recover('Simulation failed (HTTP ' + response.status + '). Please try again.');
-                }
-            } catch (err) {
-                if (err.name === 'AbortError') {
-                    recover('Request timed out after 30 s. The server may be cold-starting — please try again.');
-                } else {
-                    recover(err.message || 'Network error. Please try again.');
-                }
-            }
-        }
-
-        // Reset demo button on bfcache restore (browser back navigation)
-        window.addEventListener('pageshow', function(event) {
-            if (event.persisted) {
-                const btn = document.getElementById('runDemoBtn');
-                const btnText = document.getElementById('btnText');
-                const btnLoading = document.getElementById('btnLoading');
-                btn.disabled = false;
-                btnText.classList.remove('hidden');
-                btnLoading.classList.add('hidden');
-            }
-        });
-
         // Load live stats from the metrics API
         (async function loadStats() {
             try {
