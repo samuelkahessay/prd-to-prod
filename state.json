@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-01T09:49:54Z",
-  "workflow_run_id": "22540815777",
+  "last_run": "2026-03-01T09:51:32Z",
+  "workflow_run_id": "22540848033",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 10)",
@@ -56,12 +56,12 @@
     {"issue": 246, "pr": 256, "status": "merged"},
     {"issue": 247, "status": "closed_completed"},
     {"issue": 248, "pr": 259, "status": "merged"},
-    {"issue": 249, "status": "pr_open"},
     {"issue": 250, "pr": 255, "status": "merged"},
     {"issue": 251, "status": "closed_completed"},
-    {"issue": 252, "pr": 260, "status": "merged"}
+    {"issue": 252, "status": "merged"},
+    {"issue": 249, "status": "pr_open"}
   ],
   "open_issues": [249],
   "dependency_chain": {},
-  "notes": "PR opened for #249 (Random button). Merge #249 to complete the dashboard enhancement wave."
+  "notes": "PR opened for #249 (Random button). After merge, Run 04 wave is complete."
 }
