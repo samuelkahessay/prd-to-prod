@@ -22,7 +22,7 @@ jobs:
       (
         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) ||
         github.event.issue.user.login == 'github-actions[bot]' ||
-        contains(github.event.issue.body, '<!-- bug-intake-template -->')
+        contains(github.event.issue.labels.*.name, 'bug-intake')
       ) &&
       contains(github.event.issue.labels.*.name, 'pipeline') &&
       (
