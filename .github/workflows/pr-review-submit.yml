@@ -210,6 +210,29 @@ jobs:
             echo "PR #${PR_NUMBER} approved. Non-pipeline PR — skipping auto-merge."
           fi
 
+      - name: Record auto-merge evidence (APPROVE only)
+        if: steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict == 'APPROVE'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ steps.idempotency.outputs.head_sha }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          PR_TITLE: ${{ steps.review.outputs.pr_title }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [[ "$PR_TITLE" != "[Pipeline]"* ]]; then
+            echo "Non-pipeline PR — skipping auto-merge evidence status."
+            exit 0
+          fi
+          if [ -z "$HEAD_SHA" ]; then
+            echo "::warning::HEAD_SHA unavailable — cannot record auto-merge evidence."
+            exit 0
+          fi
+          gh api --method POST "/repos/${REPO}/statuses/${HEAD_SHA}" \
+            -f state="success" \
+            -f context="auto-merge-armed" \
+            -f description="Auto-merge enabled by PR Review Submit"
+          echo "Recorded auto-merge evidence on ${HEAD_SHA}"
+
       - name: Close linked issues after merge (APPROVE only)
         if: steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict == 'APPROVE'
         env:
@@ -470,6 +493,29 @@ jobs:
           else
             echo "PR #${PR_NUMBER} approved. Non-pipeline PR — skipping auto-merge."
           fi
+
+      - name: Record auto-merge evidence (APPROVE only)
+        if: always() && github.event.inputs.verdict == 'APPROVE'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ steps.idempotency.outputs.head_sha }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number }}
+          PR_TITLE: ${{ steps.review.outputs.pr_title }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [[ "$PR_TITLE" != "[Pipeline]"* ]]; then
+            echo "Non-pipeline PR — skipping auto-merge evidence status."
+            exit 0
+          fi
+          if [ -z "$HEAD_SHA" ]; then
+            echo "::warning::HEAD_SHA unavailable — cannot record auto-merge evidence."
+            exit 0
+          fi
+          gh api --method POST "/repos/${REPO}/statuses/${HEAD_SHA}" \
+            -f state="success" \
+            -f context="auto-merge-armed" \
+            -f description="Auto-merge enabled by PR Review Submit"
+          echo "Recorded auto-merge evidence on ${HEAD_SHA}"
 
       - name: Close linked issues after merge (APPROVE only)
         if: always() && github.event.inputs.verdict == 'APPROVE'

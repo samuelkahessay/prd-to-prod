@@ -36,6 +36,9 @@ jobs:
     steps:
       - name: Checkout repository helpers
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 50
 
       - name: Route failing CI run
         env:
@@ -105,6 +108,37 @@ jobs:
               GH_TOKEN="$token" gh api --method POST "/repos/${REPO}/issues/${item_number}/comments" --input "$payload" >/dev/null
             fi
             rm -f "$payload"
+          }
+
+          extract_drill_id() {
+            local commit_message drill_id
+            commit_message=$(gh api "/repos/${REPO}/commits/${HEAD_SHA}" --jq '.commit.message' 2>/dev/null || echo "")
+            drill_id=$(printf '%s\n' "$commit_message" | sed -n 's/.*\[drill-id:\([^]]*\)\].*/\1/p' | head -1)
+            if [ -n "$drill_id" ]; then
+              printf '%s' "$drill_id"
+              return 0
+            fi
+
+            git log --format=%B -- TicketDeflection/Canary/DrillCanary.cs 2>/dev/null \
+              | sed -n 's/.*\[drill-id:\([^]]*\)\].*/\1/p' | head -1
+          }
+
+          append_drill_metadata() {
+            local body=$1
+            local drill_id=$2
+            if [ -z "$drill_id" ]; then
+              printf '%s' "$body"
+              return 0
+            fi
+
+            printf '%s\n\n%s\n%s\n%s\n%s\n%s\n' \
+              "$body" \
+              "<!-- self-healing-drill:v1" \
+              "drill_id=${drill_id}" \
+              "observed_commit=${HEAD_SHA}" \
+              "observed_failure_run_id=${RUN_ID}" \
+              "observed_failure_run_url=${RUN_URL}" \
+              "-->"
           }
 
           render_state_body() {
@@ -255,6 +289,8 @@ jobs:
               WARNING_LINE='> ⚠️ **Self-healing loop disabled**: This issue was created with `GITHUB_TOKEN` because the `GH_AW_GITHUB_TOKEN` secret is not configured. GitHub'"'"'s anti-cascade rule suppresses the `issues:opened` event for workflow-actor tokens, so `auto-dispatch.yml` will **not** trigger automatically. Configure `GH_AW_GITHUB_TOKEN` (a PAT with `repo` and `workflow` scopes) to restore the self-healing loop.'
               BODY=$(printf '%s\n\n%s\n' "$BODY" "$WARNING_LINE")
             fi
+            DRILL_ID=$(extract_drill_id)
+            BODY=$(append_drill_metadata "$BODY" "$DRILL_ID")
             EXISTING=$(GH_TOKEN="$ISSUE_TOKEN" gh issue list --repo "$REPO" --state open --limit 200 --json number,title \
               | jq -r --arg title "$TITLE" '.[] | select(.title == $title) | .number' | head -1)
             if [ -n "$EXISTING" ]; then

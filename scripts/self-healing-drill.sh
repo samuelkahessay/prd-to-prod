@@ -74,6 +74,7 @@ now_iso() {
 REPORT_FILE=""
 DRILL_ID=""
 DRILL_START_EPOCH=""
+SOURCE_DRILL_ID=""
 
 init_report() {
   local drill_type="$1"
@@ -91,6 +92,7 @@ init_report() {
     --arg drill_id "$DRILL_ID" \
     --arg drill_type "$drill_type" \
     --arg injected_commit "$injected_commit" \
+    --arg source_drill_id "$SOURCE_DRILL_ID" \
     --arg failure_signature "" \
     --arg dispatch_workflow "" \
     --arg started_at "$(now_iso)" \
@@ -99,6 +101,7 @@ init_report() {
       drill_id: $drill_id,
       drill_type: $drill_type,
       injected_commit: $injected_commit,
+      source_drill_id: $source_drill_id,
       failure_signature: $failure_signature,
       dispatch_workflow: $dispatch_workflow,
       started_at: $started_at,
@@ -130,6 +133,27 @@ update_top_level() {
   fi
 }
 
+read_marker_field() {
+  local body="$1"
+  local field="$2"
+  printf '%s\n' "$body" | sed -n "s/^${field}=//p" | head -1
+}
+
+find_marker_comment() {
+  local item_number="$1"
+  local marker="$2"
+  local comments_json
+  comments_json=$(gh api "repos/${REPO}/issues/${item_number}/comments?per_page=100" 2>/dev/null || echo "[]")
+  printf '%s' "$comments_json" | jq -c --arg marker "$marker" '[.[] | select(.body | contains($marker))] | last // {}'
+}
+
+extract_drill_id_for_commit() {
+  local commit="$1"
+  local commit_message
+  commit_message=$(gh api "repos/${REPO}/commits/${commit}" --jq '.commit.message' 2>/dev/null || echo "")
+  printf '%s\n' "$commit_message" | sed -n 's/.*\[drill-id:\([^]]*\)\].*/\1/p' | head -1
+}
+
 # ---------------------------------------------------------------------------
 # Layer 1: Core — Display
 # ---------------------------------------------------------------------------
@@ -159,11 +183,17 @@ print_summary() {
   verdict=$(jq -r '.verdict' "$REPORT_FILE")
 
   local verdict_color="$RED"
-  if [ "$verdict" = "PASS" ]; then
-    verdict_color="$GREEN"
-  fi
+  case "$verdict" in
+    PASS) verdict_color="$GREEN" ;;
+    PASS_WITH_MANUAL_RESUME|UNPROVABLE) verdict_color="$YELLOW" ;;
+  esac
 
   echo -e "  Verdict: ${verdict_color}${BOLD}${verdict}${NC}"
+  local verdict_reason
+  verdict_reason=$(jq -r '.verdict_reason // ""' "$REPORT_FILE")
+  if [ -n "$verdict_reason" ]; then
+    echo "  Reason: $verdict_reason"
+  fi
   echo ""
 
   # Print each stage
@@ -180,7 +210,7 @@ print_summary() {
     if [ "$st" = "pass" ]; then sc="$GREEN"; fi
 
     echo -e "  ${BOLD}${stage}${NC}: ${sc}${st}${NC}  (elapsed: ${elapsed}s / SLA: ${sla}s)"
-    if [ "$url" != "-" ] && [ "$url" != "null" ]; then
+    if [ -n "$url" ] && [ "$url" != "-" ] && [ "$url" != "null" ]; then
       echo "    URL: $url"
     fi
   done
@@ -194,49 +224,39 @@ print_summary() {
 # Layer 1: Core — Verdict logic
 # ---------------------------------------------------------------------------
 compute_verdict() {
-  local all_pass=true
   local fail_reasons=""
-  local stages
-  stages=$(jq -r '.stages | keys[]' "$REPORT_FILE" 2>/dev/null || true)
+  local blocking_failure=false
+  local stage
 
-  for stage in $stages; do
+  for stage in ci_failure issue_created repair_pr ci_green auto_merge main_recovered; do
     local st
-    st=$(jq -r ".stages[\"$stage\"].status" "$REPORT_FILE")
+    st=$(jq -r ".stages[\"$stage\"].status // \"missing\"" "$REPORT_FILE")
     if [ "$st" != "pass" ]; then
-      all_pass=false
-      fail_reasons="${fail_reasons}${stage}=${st}, "
+      blocking_failure=true
+      fail_reasons="${fail_reasons:+${fail_reasons}, }${stage}=${st}"
     fi
   done
-  # Trim trailing comma-space
-  fail_reasons="${fail_reasons%, }"
 
-  # PASS also requires dispatch_workflow == "Auto-Dispatch Pipeline Issues"
-  if $all_pass && [ -n "$stages" ]; then
-    local dw
-    dw=$(jq -r '.dispatch_workflow // ""' "$REPORT_FILE")
-    if [ "$dw" != "Auto-Dispatch Pipeline Issues" ]; then
-      all_pass=false
-      fail_reasons="${fail_reasons:+${fail_reasons}, }dispatch_workflow='${dw}' expected 'Auto-Dispatch Pipeline Issues'"
-    fi
-  fi
+  local auto_dispatch_status
+  auto_dispatch_status=$(jq -r '.stages.auto_dispatch.status // "missing"' "$REPORT_FILE")
+  local dispatch_workflow
+  dispatch_workflow=$(jq -r '.dispatch_workflow // ""' "$REPORT_FILE")
+  local auto_merge_armed
+  auto_merge_armed=$(jq -r '.stages.auto_merge.auto_merge_armed_observed // "false"' "$REPORT_FILE")
 
-  # PASS also requires auto_merge_armed_observed == true
-  if $all_pass && [ -n "$stages" ]; then
-    local amo
-    amo=$(jq -r '.stages.auto_merge.auto_merge_armed_observed // "false"' "$REPORT_FILE")
-    if [ "$amo" != "true" ]; then
-      all_pass=false
-      fail_reasons="${fail_reasons:+${fail_reasons}, }auto_merge_armed_observed='${amo}' expected 'true'"
-    fi
-  fi
-
-  if $all_pass && [ -n "$stages" ]; then
-    update_top_level "verdict" "PASS"
-  else
+  if $blocking_failure; then
     update_top_level "verdict" "FAIL"
     if [ -n "$fail_reasons" ]; then
       update_top_level "verdict_reason" "$fail_reasons"
     fi
+  elif [ "$auto_dispatch_status" != "pass" ] || [ "$dispatch_workflow" != "Auto-Dispatch Pipeline Issues" ]; then
+    update_top_level "verdict" "PASS_WITH_MANUAL_RESUME"
+    update_top_level "verdict_reason" "Dispatch required manual resume or non-standard path (${dispatch_workflow:-unknown})"
+  elif [ "$auto_merge_armed" != "true" ]; then
+    update_top_level "verdict" "UNPROVABLE"
+    update_top_level "verdict_reason" "PR merged and main recovered, but durable auto-merge evidence was not observed"
+  else
+    update_top_level "verdict" "PASS"
   fi
 
   update_top_level "completed_at" "$(now_iso)"
@@ -292,17 +312,28 @@ find_issue() {
   issues_json=$(gh issue list --repo "$REPO" --state all --label pipeline --label bug \
     --limit 50 --json number,title,body,url,createdAt 2>/dev/null || echo "[]")
 
-  # Primary: match body against commit SHA or run URL
+  # Primary: exact drill marker match when the router stamped drill metadata
   local matched=""
-  if [ -n "$commit" ] || [ -n "$run_url" ]; then
-    matched=$(echo "$issues_json" | jq -r --arg commit "$commit" --arg run_url "$run_url" '
+  if [ -n "$SOURCE_DRILL_ID" ]; then
+    matched=$(echo "$issues_json" | jq -r --arg drill_id "$SOURCE_DRILL_ID" '
       [.[] | select(
         (.title | startswith("[Pipeline] CI Build Failure")) and
-        (
-          ($commit != "" and (.body | contains($commit))) or
-          ($run_url != "" and (.body | contains($run_url)))
-        )
-      )] | first // empty' 2>/dev/null || true)
+        (.body | contains("drill_id=" + $drill_id))
+      )] | sort_by(.createdAt) | last // empty' 2>/dev/null || true)
+  fi
+
+  # Secondary: match body against commit SHA or run URL
+  if [ -n "$commit" ] || [ -n "$run_url" ]; then
+    if [ -z "$matched" ] || [ "$matched" = "null" ]; then
+      matched=$(echo "$issues_json" | jq -r --arg commit "$commit" --arg run_url "$run_url" '
+        [.[] | select(
+          (.title | startswith("[Pipeline] CI Build Failure")) and
+          (
+            ($commit != "" and (.body | contains($commit))) or
+            ($run_url != "" and (.body | contains($run_url)))
+          )
+        )] | first // empty' 2>/dev/null || true)
+    fi
   fi
 
   # Fallback: if SHA/URL match found nothing, use time-window match.
@@ -339,6 +370,26 @@ find_dispatch() {
   REPO_ASSIST_RUN_URL=""
   DISPATCH_TIMESTAMP=""
   DISPATCH_STATUS="not_found"
+  DISPATCH_EVIDENCE_SOURCE=""
+
+  local marker_json
+  marker_json=$(find_marker_comment "$issue_number" '<!-- self-healing-dispatch:v1')
+  local marker_body
+  marker_body=$(printf '%s' "$marker_json" | jq -r '.body // ""')
+  if [ -n "$marker_body" ]; then
+    DISPATCH_WORKFLOW=$(read_marker_field "$marker_body" "dispatch_workflow")
+    REPO_ASSIST_RUN_ID=$(read_marker_field "$marker_body" "repo_assist_run_id")
+    REPO_ASSIST_RUN_URL=$(read_marker_field "$marker_body" "repo_assist_run_url")
+    DISPATCH_TIMESTAMP=$(read_marker_field "$marker_body" "dispatched_at")
+    if [ -z "$DISPATCH_TIMESTAMP" ]; then
+      DISPATCH_TIMESTAMP=$(printf '%s' "$marker_json" | jq -r '.created_at // ""')
+    fi
+    if [ -n "$DISPATCH_WORKFLOW" ] || [ -n "$REPO_ASSIST_RUN_ID" ]; then
+      DISPATCH_STATUS="pass"
+      DISPATCH_EVIDENCE_SOURCE="issue_comment_marker"
+      return
+    fi
+  fi
 
   # Find Pipeline Repo Assist runs created after the issue
   local runs_json
@@ -399,6 +450,7 @@ find_dispatch() {
         DISPATCH_WORKFLOW="manual-or-other (triggered by: ${triggering_actor})"
         DISPATCH_STATUS="pass"
       fi
+      DISPATCH_EVIDENCE_SOURCE="heuristic:first_repo_assist_after_issue"
       break
     fi
 
@@ -495,6 +547,7 @@ find_merge() {
   MERGE_TIMESTAMP=""
   MERGED_BY=""
   AUTO_MERGE_ARMED=false
+  AUTO_MERGE_EVIDENCE_SOURCE=""
   MERGE_STATUS="not_found"
 
   local pr_json
@@ -504,12 +557,26 @@ find_merge() {
   state=$(echo "$pr_json" | jq -r '.state // ""')
   local merged
   merged=$(echo "$pr_json" | jq -r '.merged // false')
+  local pr_head_sha
+  pr_head_sha=$(echo "$pr_json" | jq -r '.head.sha // ""')
 
   # Check auto_merge field while PR is still open
   local auto_merge_field
   auto_merge_field=$(echo "$pr_json" | jq -r '.auto_merge // null')
   if [ "$auto_merge_field" != "null" ] && [ -n "$auto_merge_field" ]; then
     AUTO_MERGE_ARMED=true
+    AUTO_MERGE_EVIDENCE_SOURCE="pulls_api:auto_merge"
+  fi
+
+  # Durable evidence: explicit commit status written when auto-merge was armed
+  if [ "$AUTO_MERGE_ARMED" = "false" ] && [ -n "$pr_head_sha" ]; then
+    local auto_merge_status_count
+    auto_merge_status_count=$(gh api "repos/${REPO}/commits/${pr_head_sha}/statuses?per_page=100" \
+      --jq '[.[] | select(.context == "auto-merge-armed" and .state == "success")] | length' 2>/dev/null || echo "0")
+    if [ "$auto_merge_status_count" -gt 0 ]; then
+      AUTO_MERGE_ARMED=true
+      AUTO_MERGE_EVIDENCE_SOURCE="commit_status:auto-merge-armed"
+    fi
   fi
 
   # If not armed via field, check durable evidence from PR timeline
@@ -519,13 +586,12 @@ find_merge() {
       --jq '[.[] | select(.event == "auto_merge_enabled")] | length' 2>/dev/null || echo "0")
     if [ "$timeline_events" -gt 0 ]; then
       AUTO_MERGE_ARMED=true
+      AUTO_MERGE_EVIDENCE_SOURCE="timeline:auto_merge_enabled"
     fi
   fi
 
   # If still not armed, check if PR Review Submit workflow succeeded on this PR's head SHA
   if [ "$AUTO_MERGE_ARMED" = "false" ]; then
-    local pr_head_sha
-    pr_head_sha=$(echo "$pr_json" | jq -r '.head.sha // ""')
     if [ -n "$pr_head_sha" ]; then
       local pr_review_runs
       pr_review_runs=$(gh api "repos/${REPO}/actions/runs?head_sha=${pr_head_sha}&per_page=50" \
@@ -536,6 +602,7 @@ find_merge() {
       if [ "$review_submit_success" -gt 0 ]; then
         # PR Review Submit succeeded on this PR's head SHA — it's the workflow that arms auto-merge for [Pipeline] PRs
         AUTO_MERGE_ARMED=true
+        AUTO_MERGE_EVIDENCE_SOURCE="actions_run:PR Review Submit"
       fi
     fi
   fi
@@ -762,8 +829,11 @@ run_drill() {
     exit 2
   fi
 
+  SOURCE_DRILL_ID="$DRILL_ID"
+
   # Initialize report
   init_report "$drill_type" "$injected_commit"
+  update_top_level "source_drill_id" "$SOURCE_DRILL_ID"
   update_top_level "failure_signature" "cs1002-missing-semicolon"
 
   local prev_timestamp
@@ -845,6 +915,7 @@ run_drill() {
       local stage_json
       stage_json=$(make_stage "$dispatch_stage_status" "$DISPATCH_TIMESTAMP" "$REPO_ASSIST_RUN_URL" "$elapsed" "$SLA_ISSUE_TO_DISPATCH" \
         "dispatch_workflow=${DISPATCH_WORKFLOW}" \
+        "dispatch_evidence_source=${DISPATCH_EVIDENCE_SOURCE}" \
         "repo_assist_run_id=${REPO_ASSIST_RUN_ID}" \
         "repo_assist_run_url=${REPO_ASSIST_RUN_URL}")
       update_stage "auto_dispatch" "$stage_json"
@@ -932,14 +1003,16 @@ run_drill() {
       stage_json=$(make_stage "pass" "$MERGE_TIMESTAMP" "" "$elapsed" "$SLA_GREEN_TO_MERGE" \
         "merge_sha=${MERGE_SHA}" \
         "merged_by=${MERGED_BY}" \
-        "auto_merge_armed_observed=${AUTO_MERGE_ARMED}")
+        "auto_merge_armed_observed=${AUTO_MERGE_ARMED}" \
+        "auto_merge_evidence_source=${AUTO_MERGE_EVIDENCE_SOURCE}")
       update_stage "auto_merge" "$stage_json"
       log_stage "auto_merge" "pass" "Merged by ${MERGED_BY}, auto-merge armed: ${AUTO_MERGE_ARMED}"
       prev_timestamp="$MERGE_TIMESTAMP"
     else
       local stage_json
       stage_json=$(make_stage "timeout" "" "" "null" "$SLA_GREEN_TO_MERGE" \
-        "auto_merge_armed_observed=${AUTO_MERGE_ARMED}")
+        "auto_merge_armed_observed=${AUTO_MERGE_ARMED}" \
+        "auto_merge_evidence_source=${AUTO_MERGE_EVIDENCE_SOURCE}")
       update_stage "auto_merge" "$stage_json"
       log_stage "auto_merge" "timeout" "PR not merged within ${max_wait}s"
     fi
@@ -983,10 +1056,12 @@ run_drill() {
   # --- Cleanup: sync local main to healed remote state ---
   local verdict
   verdict=$(jq -r '.verdict' "$REPORT_FILE")
-  if [ "$verdict" = "PASS" ]; then
+  local recovered_status
+  recovered_status=$(jq -r '.stages.main_recovered.status // ""' "$REPORT_FILE")
+  if [ "$recovered_status" = "pass" ]; then
     log_stage "cleanup" "info" "Syncing local main to healed remote state..."
     git fetch origin main
-    git reset --hard origin/main
+    git merge --ff-only origin/main
     log_stage "cleanup" "pass" "Local main synced"
   fi
 
@@ -1006,9 +1081,12 @@ run_drill() {
 run_audit() {
   local commit="$1"
 
+  SOURCE_DRILL_ID=$(extract_drill_id_for_commit "$commit")
+
   # Initialize report
   DRILL_ID="audit-$(date -u +%Y%m%d-%H%M%S)"
   init_report "audit" "$commit"
+  update_top_level "source_drill_id" "$SOURCE_DRILL_ID"
 
   log_stage "audit" "info" "Auditing drill for commit ${commit:0:8}..."
 
@@ -1062,6 +1140,7 @@ run_audit() {
       local stage_json
       stage_json=$(make_stage "$dispatch_stage_status" "$DISPATCH_TIMESTAMP" "$REPO_ASSIST_RUN_URL" "$elapsed" "$SLA_ISSUE_TO_DISPATCH" \
         "dispatch_workflow=${DISPATCH_WORKFLOW}" \
+        "dispatch_evidence_source=${DISPATCH_EVIDENCE_SOURCE}" \
         "repo_assist_run_id=${REPO_ASSIST_RUN_ID}" \
         "repo_assist_run_url=${REPO_ASSIST_RUN_URL}")
       update_stage "auto_dispatch" "$stage_json"
@@ -1143,14 +1222,16 @@ run_audit() {
       stage_json=$(make_stage "pass" "$MERGE_TIMESTAMP" "" "$elapsed" "$SLA_GREEN_TO_MERGE" \
         "merge_sha=${MERGE_SHA}" \
         "merged_by=${MERGED_BY}" \
-        "auto_merge_armed_observed=${AUTO_MERGE_ARMED}")
+        "auto_merge_armed_observed=${AUTO_MERGE_ARMED}" \
+        "auto_merge_evidence_source=${AUTO_MERGE_EVIDENCE_SOURCE}")
       update_stage "auto_merge" "$stage_json"
       log_stage "auto_merge" "pass" "Merged by ${MERGED_BY}, auto-merge armed: ${AUTO_MERGE_ARMED}"
       prev_timestamp="$MERGE_TIMESTAMP"
     else
       local stage_json
       stage_json=$(make_stage "fail" "" "" "null" "$SLA_GREEN_TO_MERGE" \
-        "auto_merge_armed_observed=${AUTO_MERGE_ARMED}")
+        "auto_merge_armed_observed=${AUTO_MERGE_ARMED}" \
+        "auto_merge_evidence_source=${AUTO_MERGE_EVIDENCE_SOURCE}")
       update_stage "auto_merge" "$stage_json"
       log_stage "auto_merge" "fail" "PR not merged"
     fi

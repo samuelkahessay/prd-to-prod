@@ -4,6 +4,10 @@ on:
   issues:
     types: [opened, reopened, labeled]
 
+permissions:
+  actions: write
+  issues: write
+
 # Collapse rapid issue creation (e.g., decomposer burst) to one dispatch.
 concurrency:
   group: auto-dispatch-pipeline-${{ github.event.issue.number }}
@@ -48,8 +52,57 @@ jobs:
 
       - name: Dispatch repo-assist scheduled mode
         if: steps.guard.outputs.skip != 'true'
+        id: dispatch_repo_assist
         env:
           GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
+          DISPATCHED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           gh workflow run repo-assist.lock.yml \
-            --repo ${{ github.repository }}
+            --repo "$REPO"
+
+          REPO_ASSIST_RUN_ID=""
+          REPO_ASSIST_RUN_URL=""
+          for attempt in $(seq 1 12); do
+            RUN_JSON=$(gh run list --repo "$REPO" \
+              --workflow repo-assist.lock.yml \
+              --event workflow_dispatch \
+              --limit 20 \
+              --json databaseId,createdAt,url,displayTitle \
+              --jq --arg dispatched_at "$DISPATCHED_AT" '[.[] | select(.displayTitle == "Pipeline Repo Assist" and .createdAt >= $dispatched_at)] | sort_by(.createdAt) | last // {}')
+            REPO_ASSIST_RUN_ID=$(printf '%s' "$RUN_JSON" | jq -r '.databaseId // ""')
+            REPO_ASSIST_RUN_URL=$(printf '%s' "$RUN_JSON" | jq -r '.url // ""')
+            if [ -n "$REPO_ASSIST_RUN_ID" ]; then
+              break
+            fi
+            sleep 5
+          done
+
+          echo "dispatched_at=${DISPATCHED_AT}" >> "$GITHUB_OUTPUT"
+          echo "repo_assist_run_id=${REPO_ASSIST_RUN_ID}" >> "$GITHUB_OUTPUT"
+          echo "repo_assist_run_url=${REPO_ASSIST_RUN_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Record dispatch marker
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          DISPATCH_WORKFLOW_RUN_ID: ${{ github.run_id }}
+          REPO_ASSIST_RUN_ID: ${{ steps.dispatch_repo_assist.outputs.repo_assist_run_id }}
+          REPO_ASSIST_RUN_URL: ${{ steps.dispatch_repo_assist.outputs.repo_assist_run_url }}
+          DISPATCHED_AT: ${{ steps.dispatch_repo_assist.outputs.dispatched_at }}
+        run: |
+          BODY=$(printf '%s\n' \
+            '<!-- self-healing-dispatch:v1' \
+            'dispatch_workflow=Auto-Dispatch Pipeline Issues' \
+            "dispatch_workflow_run_id=${DISPATCH_WORKFLOW_RUN_ID}" \
+            "dispatch_workflow_run_url=https://github.com/${REPO}/actions/runs/${DISPATCH_WORKFLOW_RUN_ID}" \
+            "repo_assist_run_id=${REPO_ASSIST_RUN_ID}" \
+            "repo_assist_run_url=${REPO_ASSIST_RUN_URL}" \
+            "dispatched_at=${DISPATCHED_AT}" \
+            '-->' \
+            '' \
+            'Self-healing audit marker: repo-assist dispatched.')
+          gh issue comment "$ISSUE_NUMBER" --repo "$REPO" --body "$BODY" >/dev/null || \
+            echo "::warning::Could not record dispatch marker on issue #${ISSUE_NUMBER}"
