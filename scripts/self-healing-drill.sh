@@ -1087,6 +1087,9 @@ run_drill() {
 run_audit() {
   local commit="$1"
 
+  # GitHub API head_sha requires full 40-char SHA; resolve short refs early
+  commit=$(gh api "repos/${REPO}/commits/${commit}" --jq '.sha' 2>/dev/null || echo "$commit")
+
   SOURCE_DRILL_ID=$(extract_drill_id_for_commit "$commit")
 
   # Initialize report
