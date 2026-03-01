@@ -1,0 +1,171 @@
+name: Auto-Dispatch Requeue
+
+on:
+  workflow_run:
+    workflows: ["Pipeline Repo Assist"]
+    types: [completed]
+  workflow_dispatch: {}
+
+permissions:
+  actions: read
+  issues: write
+
+concurrency:
+  group: auto-dispatch-requeue
+  cancel-in-progress: false
+
+jobs:
+  requeue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository helpers
+        uses: actions/checkout@v4
+
+      - name: Re-dispatch deferred actionable issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_AW_GITHUB_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          DEFERRED_MARKER='<!-- self-healing-dispatch-deferred:v1'
+          DISPATCH_MARKER='<!-- self-healing-dispatch:v1'
+
+          read_marker_field() {
+            local body=$1
+            local field=$2
+            printf '%s\n' "$body" | sed -n "s/^${field}=//p" | head -1
+          }
+
+          find_marker_comment() {
+            local issue_number=$1
+            local marker=$2
+            local comments_json
+            comments_json=$(gh api "/repos/${REPO}/issues/${issue_number}/comments?per_page=100" 2>/dev/null || echo '[]')
+            printf '%s' "$comments_json" | jq -c --arg marker "$marker" '[.[] | select(.body | contains($marker))] | last // {}'
+          }
+
+          to_epoch() {
+            local iso_value=$1
+            date -u -d "$iso_value" +%s 2>/dev/null || date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$iso_value" +%s 2>/dev/null || echo 0
+          }
+
+          ACTIVE_RUNS=$(gh run list --repo "$REPO" \
+            --workflow repo-assist.lock.yml \
+            --limit 20 \
+            --json databaseId,status,url,createdAt \
+            | jq '[.[] | select(.status == "in_progress" or .status == "queued")]')
+          ACTIVE_COUNT=$(printf '%s' "$ACTIVE_RUNS" | jq 'length')
+          if [ "$ACTIVE_COUNT" -gt 0 ]; then
+            echo "repo-assist is already active (${ACTIVE_COUNT} run(s)); nothing to requeue."
+            exit 0
+          fi
+
+          if [ -z "${GH_AW_GITHUB_TOKEN:-}" ]; then
+            echo "::warning::GH_AW_GITHUB_TOKEN is unavailable; cannot re-dispatch via /repo-assist comment."
+            exit 0
+          fi
+
+          OPEN_PRS=$(gh pr list --repo "$REPO" --state open --limit 100 --json body 2>/dev/null || echo '[]')
+          LINKED_ISSUES=$(printf '%s' "$OPEN_PRS" | jq -r '[.[] | (.body // "") | scan("(?i)(?:close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#(\\d+)")] | .[][]? ' 2>/dev/null || true)
+          PIPELINE_ISSUES=$(gh issue list --repo "$REPO" --label pipeline --state open --limit 200 \
+            --json number,title,createdAt,labels 2>/dev/null || echo '[]')
+
+          SELECTED_ISSUE=""
+          SELECTED_DEFERRED_AT=""
+
+          while IFS= read -r ISSUE_ROW; do
+            [ -z "$ISSUE_ROW" ] && continue
+            ISSUE_NUM=$(printf '%s' "$ISSUE_ROW" | jq -r '.number')
+
+            ISSUE_CLASSIFICATION=$(printf '%s' "$ISSUE_ROW" | scripts/classify-pipeline-issue.sh)
+            ISSUE_ACTIONABLE=$(printf '%s' "$ISSUE_CLASSIFICATION" | jq -r '.actionable')
+            if [ "$ISSUE_ACTIONABLE" != "true" ]; then
+              ISSUE_REASON=$(printf '%s' "$ISSUE_CLASSIFICATION" | jq -r '.reason')
+              echo "Issue #${ISSUE_NUM}: skipping non-actionable issue (${ISSUE_REASON})."
+              continue
+            fi
+
+            if printf '%s\n' "$LINKED_ISSUES" | grep -q "^${ISSUE_NUM}$"; then
+              echo "Issue #${ISSUE_NUM}: already has an open linked PR."
+              continue
+            fi
+
+            DEFERRED_JSON=$(find_marker_comment "$ISSUE_NUM" "$DEFERRED_MARKER")
+            DEFERRED_ID=$(printf '%s' "$DEFERRED_JSON" | jq -r '.id // empty')
+            if [ -z "$DEFERRED_ID" ]; then
+              continue
+            fi
+
+            DEFERRED_AT=$(printf '%s' "$DEFERRED_JSON" | jq -r '.created_at // empty')
+            if [ -z "$DEFERRED_AT" ]; then
+              DEFERRED_BODY=$(printf '%s' "$DEFERRED_JSON" | jq -r '.body // ""')
+              DEFERRED_AT=$(read_marker_field "$DEFERRED_BODY" "deferred_at")
+            fi
+
+            DISPATCH_JSON=$(find_marker_comment "$ISSUE_NUM" "$DISPATCH_MARKER")
+            DISPATCH_BODY=$(printf '%s' "$DISPATCH_JSON" | jq -r '.body // ""')
+            DISPATCHED_AT=$(read_marker_field "$DISPATCH_BODY" "dispatched_at")
+            if [ -z "$DISPATCHED_AT" ]; then
+              DISPATCHED_AT=$(printf '%s' "$DISPATCH_JSON" | jq -r '.created_at // empty')
+            fi
+
+            if [ -n "$DISPATCHED_AT" ] && [ "$(to_epoch "$DISPATCHED_AT")" -ge "$(to_epoch "$DEFERRED_AT")" ]; then
+              echo "Issue #${ISSUE_NUM}: already dispatched after the most recent deferred marker."
+              continue
+            fi
+
+            SELECTED_ISSUE="$ISSUE_NUM"
+            SELECTED_DEFERRED_AT="$DEFERRED_AT"
+            break
+          done < <(printf '%s' "$PIPELINE_ISSUES" | jq -c 'sort_by(.createdAt)[]')
+
+          if [ -z "$SELECTED_ISSUE" ]; then
+            echo "No deferred actionable issues require re-dispatch."
+            exit 0
+          fi
+
+          echo "Re-dispatching issue #${SELECTED_ISSUE}."
+          DISPATCHED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          COMMAND_BODY=$(printf '%s\n' \
+            '/repo-assist Resolve this open pipeline issue. This automatic re-dispatch was queued because the original auto-dispatch attempt was deferred while another repo-assist run was active. Read the issue body, implement the minimum safe fix, run the required validation from AGENTS.md, and comment with results.' \
+            '' \
+            '<!-- self-healing-dispatch-requeue:v1' \
+            "source_workflow_run_id=${GITHUB_RUN_ID}" \
+            "deferred_at=${SELECTED_DEFERRED_AT}" \
+            '-->')
+          GH_TOKEN="$GH_AW_GITHUB_TOKEN" gh issue comment "$SELECTED_ISSUE" --repo "$REPO" --body "$COMMAND_BODY" >/dev/null
+
+          REPO_ASSIST_RUN_ID=""
+          REPO_ASSIST_RUN_URL=""
+          for attempt in $(seq 1 12); do
+            RUN_JSON=$(gh run list --repo "$REPO" \
+              --workflow repo-assist.lock.yml \
+              --event issue_comment \
+              --limit 20 \
+              --json databaseId,createdAt,url,displayTitle \
+              | jq --arg dispatched_at "$DISPATCHED_AT" '[.[] | select(.displayTitle == "Pipeline Repo Assist" and .createdAt >= $dispatched_at)] | sort_by(.createdAt) | last // {}')
+            REPO_ASSIST_RUN_ID=$(printf '%s' "$RUN_JSON" | jq -r '.databaseId // ""')
+            REPO_ASSIST_RUN_URL=$(printf '%s' "$RUN_JSON" | jq -r '.url // ""')
+            if [ -n "$REPO_ASSIST_RUN_ID" ]; then
+              break
+            fi
+            sleep 5
+          done
+
+          MARKER_BODY=$(printf '%s\n' \
+            '<!-- self-healing-dispatch:v1' \
+            'dispatch_workflow=Auto-Dispatch Pipeline Issues' \
+            'dispatch_origin_workflow=Auto-Dispatch Requeue' \
+            'dispatch_reason=requeue_after_guard_skip' \
+            "dispatch_workflow_run_id=${GITHUB_RUN_ID}" \
+            "dispatch_workflow_run_url=https://github.com/${REPO}/actions/runs/${GITHUB_RUN_ID}" \
+            "repo_assist_run_id=${REPO_ASSIST_RUN_ID}" \
+            "repo_assist_run_url=${REPO_ASSIST_RUN_URL}" \
+            "dispatched_at=${DISPATCHED_AT}" \
+            '-->' \
+            '' \
+            'Self-healing audit marker: repo-assist re-dispatched after a prior guard deferral.')
+          gh issue comment "$SELECTED_ISSUE" --repo "$REPO" --body "$MARKER_BODY" >/dev/null || \
+            echo "::warning::Could not record re-dispatch marker on issue #${SELECTED_ISSUE}"

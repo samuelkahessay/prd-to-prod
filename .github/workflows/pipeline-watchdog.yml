@@ -393,7 +393,7 @@ jobs:
 
           echo ""
           echo "=== Checking for orphaned issues ==="
-          PIPELINE_ISSUES=$(gh issue list --repo "$REPO" --label pipeline --state open --json number,title,updatedAt)
+          PIPELINE_ISSUES=$(gh issue list --repo "$REPO" --label pipeline --state open --json number,title,updatedAt,labels)
           LINKED_ISSUES=$(printf '%s' "$PIPELINE_PRS" | jq -r '.[].number' | while read -r PR_N; do
             [ -z "$PR_N" ] && continue
             gh pr view "$PR_N" --repo "$REPO" --json body \
@@ -403,6 +403,13 @@ jobs:
           while IFS= read -r ISSUE_ROW; do
             [ -z "$ISSUE_ROW" ] && continue
             ISSUE_NUM=$(printf '%s' "$ISSUE_ROW" | jq -r '.number')
+            ISSUE_CLASSIFICATION=$(printf '%s' "$ISSUE_ROW" | scripts/classify-pipeline-issue.sh)
+            ISSUE_ACTIONABLE=$(printf '%s' "$ISSUE_CLASSIFICATION" | jq -r '.actionable')
+            if [ "$ISSUE_ACTIONABLE" != "true" ]; then
+              ISSUE_REASON=$(printf '%s' "$ISSUE_CLASSIFICATION" | jq -r '.reason')
+              echo "Issue #${ISSUE_NUM}: skipping non-actionable issue (${ISSUE_REASON})."
+              continue
+            fi
             ISSUE_UPDATED=$(printf '%s' "$ISSUE_ROW" | jq -r '.updatedAt')
             ISSUE_EPOCH=$(to_epoch "$ISSUE_UPDATED")
             AGE=$((NOW - ISSUE_EPOCH))

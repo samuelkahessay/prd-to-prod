@@ -21,7 +21,7 @@ set -uo pipefail
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 REPO="samuelkahessay/prd-to-prod"
@@ -96,6 +96,7 @@ init_report() {
     --arg source_drill_id "$SOURCE_DRILL_ID" \
     --arg failure_signature "" \
     --arg dispatch_workflow "" \
+    --arg dispatch_substate "" \
     --arg started_at "$(now_iso)" \
     --arg verdict "pending" \
     '{
@@ -105,6 +106,7 @@ init_report() {
       source_drill_id: $source_drill_id,
       failure_signature: $failure_signature,
       dispatch_workflow: $dispatch_workflow,
+      dispatch_substate: $dispatch_substate,
       started_at: $started_at,
       verdict: $verdict,
       stages: {}
@@ -197,6 +199,19 @@ print_summary() {
   fi
   echo ""
 
+  local dispatch_workflow
+  dispatch_workflow=$(jq -r '.dispatch_workflow // ""' "$REPORT_FILE")
+  local dispatch_substate
+  dispatch_substate=$(jq -r '.dispatch_substate // ""' "$REPORT_FILE")
+  if [ -n "$dispatch_workflow" ]; then
+    if [ -n "$dispatch_substate" ]; then
+      echo "  Dispatch Path: ${dispatch_workflow} [${dispatch_substate}]"
+    else
+      echo "  Dispatch Path: ${dispatch_workflow}"
+    fi
+    echo ""
+  fi
+
   # Print each stage
   local stages
   stages=$(jq -r '.stages | keys[]' "$REPORT_FILE" 2>/dev/null || true)
@@ -210,7 +225,16 @@ print_summary() {
     local sc="$RED"
     if [ "$st" = "pass" ]; then sc="$GREEN"; fi
 
-    echo -e "  ${BOLD}${stage}${NC}: ${sc}${st}${NC}  (elapsed: ${elapsed}s / SLA: ${sla}s)"
+    local stage_detail=""
+    if [ "$stage" = "auto_dispatch" ]; then
+      local stage_substate
+      stage_substate=$(jq -r ".stages[\"$stage\"].dispatch_substate // \"\"" "$REPORT_FILE")
+      if [ -n "$stage_substate" ]; then
+        stage_detail=" [${stage_substate}]"
+      fi
+    fi
+
+    echo -e "  ${BOLD}${stage}${NC}: ${sc}${st}${NC}${stage_detail}  (elapsed: ${elapsed}s / SLA: ${sla}s)"
     if [ -n "$url" ] && [ "$url" != "-" ] && [ "$url" != "null" ]; then
       echo "    URL: $url"
     fi
@@ -364,6 +388,23 @@ find_issue() {
 # find_dispatch(issue_number) — find repo-assist run linked to this issue
 # Derives dispatch workflow from the triggering provenance.
 # Sets: DISPATCH_WORKFLOW, REPO_ASSIST_RUN_ID, REPO_ASSIST_RUN_URL, DISPATCH_TIMESTAMP, DISPATCH_STATUS
+derive_dispatch_substate() {
+  local deferred_at="$1"
+  local dispatch_origin_workflow="$2"
+  local dispatch_reason="$3"
+  local evidence_source="$4"
+
+  if [ "$dispatch_origin_workflow" = "Auto-Dispatch Requeue" ] || [ "$dispatch_reason" = "requeue_after_guard_skip" ]; then
+    echo "deferred->requeued"
+  elif [ -n "$deferred_at" ]; then
+    echo "deferred"
+  elif [ "$evidence_source" = "heuristic:first_repo_assist_after_issue" ]; then
+    echo "heuristic"
+  else
+    echo "direct"
+  fi
+}
+
 find_dispatch() {
   local issue_number="$1"
   DISPATCH_WORKFLOW=""
@@ -372,6 +413,25 @@ find_dispatch() {
   DISPATCH_TIMESTAMP=""
   DISPATCH_STATUS="not_found"
   DISPATCH_EVIDENCE_SOURCE=""
+  DISPATCH_SUBSTATE=""
+  DISPATCH_ORIGIN_WORKFLOW=""
+  DISPATCH_REASON=""
+  DISPATCH_DEFERRED_AT=""
+  DISPATCH_BLOCKING_RUN_ID=""
+  DISPATCH_BLOCKING_RUN_URL=""
+
+  local deferred_json
+  deferred_json=$(find_marker_comment "$issue_number" '<!-- self-healing-dispatch-deferred:v1')
+  local deferred_body
+  deferred_body=$(printf '%s' "$deferred_json" | jq -r '.body // ""')
+  if [ -n "$deferred_body" ]; then
+    DISPATCH_DEFERRED_AT=$(read_marker_field "$deferred_body" "deferred_at")
+    if [ -z "$DISPATCH_DEFERRED_AT" ]; then
+      DISPATCH_DEFERRED_AT=$(printf '%s' "$deferred_json" | jq -r '.created_at // ""')
+    fi
+    DISPATCH_BLOCKING_RUN_ID=$(read_marker_field "$deferred_body" "blocking_repo_assist_run_id")
+    DISPATCH_BLOCKING_RUN_URL=$(read_marker_field "$deferred_body" "blocking_repo_assist_run_url")
+  fi
 
   local marker_json
   marker_json=$(find_marker_comment "$issue_number" '<!-- self-healing-dispatch:v1')
@@ -382,12 +442,15 @@ find_dispatch() {
     REPO_ASSIST_RUN_ID=$(read_marker_field "$marker_body" "repo_assist_run_id")
     REPO_ASSIST_RUN_URL=$(read_marker_field "$marker_body" "repo_assist_run_url")
     DISPATCH_TIMESTAMP=$(read_marker_field "$marker_body" "dispatched_at")
+    DISPATCH_ORIGIN_WORKFLOW=$(read_marker_field "$marker_body" "dispatch_origin_workflow")
+    DISPATCH_REASON=$(read_marker_field "$marker_body" "dispatch_reason")
     if [ -z "$DISPATCH_TIMESTAMP" ]; then
       DISPATCH_TIMESTAMP=$(printf '%s' "$marker_json" | jq -r '.created_at // ""')
     fi
     if [ -n "$DISPATCH_WORKFLOW" ] || [ -n "$REPO_ASSIST_RUN_ID" ]; then
       DISPATCH_STATUS="pass"
       DISPATCH_EVIDENCE_SOURCE="issue_comment_marker"
+      DISPATCH_SUBSTATE=$(derive_dispatch_substate "$DISPATCH_DEFERRED_AT" "$DISPATCH_ORIGIN_WORKFLOW" "$DISPATCH_REASON" "$DISPATCH_EVIDENCE_SOURCE")
       return
     fi
   fi
@@ -452,11 +515,16 @@ find_dispatch() {
         DISPATCH_STATUS="pass"
       fi
       DISPATCH_EVIDENCE_SOURCE="heuristic:first_repo_assist_after_issue"
+      DISPATCH_SUBSTATE=$(derive_dispatch_substate "$DISPATCH_DEFERRED_AT" "$DISPATCH_ORIGIN_WORKFLOW" "$DISPATCH_REASON" "$DISPATCH_EVIDENCE_SOURCE")
       break
     fi
 
     i=$((i + 1))
   done
+
+  if [ "$DISPATCH_STATUS" != "pass" ]; then
+    DISPATCH_SUBSTATE=$(derive_dispatch_substate "$DISPATCH_DEFERRED_AT" "$DISPATCH_ORIGIN_WORKFLOW" "$DISPATCH_REASON" "$DISPATCH_EVIDENCE_SOURCE")
+  fi
 }
 
 # find_repair_pr(issue_number) — find PR that closes the issue
@@ -921,18 +989,34 @@ run_drill() {
       local stage_json
       stage_json=$(make_stage "$dispatch_stage_status" "$DISPATCH_TIMESTAMP" "$REPO_ASSIST_RUN_URL" "$elapsed" "$SLA_ISSUE_TO_DISPATCH" \
         "dispatch_workflow=${DISPATCH_WORKFLOW}" \
+        "dispatch_substate=${DISPATCH_SUBSTATE}" \
         "dispatch_evidence_source=${DISPATCH_EVIDENCE_SOURCE}" \
+        "dispatch_origin_workflow=${DISPATCH_ORIGIN_WORKFLOW}" \
+        "dispatch_reason=${DISPATCH_REASON}" \
+        "deferred_at=${DISPATCH_DEFERRED_AT}" \
+        "blocking_repo_assist_run_id=${DISPATCH_BLOCKING_RUN_ID}" \
+        "blocking_repo_assist_run_url=${DISPATCH_BLOCKING_RUN_URL}" \
         "repo_assist_run_id=${REPO_ASSIST_RUN_ID}" \
         "repo_assist_run_url=${REPO_ASSIST_RUN_URL}")
       update_stage "auto_dispatch" "$stage_json"
       update_top_level "dispatch_workflow" "$DISPATCH_WORKFLOW"
-      log_stage "auto_dispatch" "$dispatch_stage_status" "Dispatch: ${DISPATCH_WORKFLOW} -> run ${REPO_ASSIST_RUN_ID}"
+      update_top_level "dispatch_substate" "$DISPATCH_SUBSTATE"
+      log_stage "auto_dispatch" "$dispatch_stage_status" "Dispatch: ${DISPATCH_WORKFLOW} [${DISPATCH_SUBSTATE}] -> run ${REPO_ASSIST_RUN_ID}"
       prev_timestamp="$DISPATCH_TIMESTAMP"
     else
       local stage_json
-      stage_json=$(make_stage "timeout" "" "" "null" "$SLA_ISSUE_TO_DISPATCH")
+      stage_json=$(make_stage "timeout" "" "" "null" "$SLA_ISSUE_TO_DISPATCH" \
+        "dispatch_substate=${DISPATCH_SUBSTATE}" \
+        "deferred_at=${DISPATCH_DEFERRED_AT}" \
+        "blocking_repo_assist_run_id=${DISPATCH_BLOCKING_RUN_ID}" \
+        "blocking_repo_assist_run_url=${DISPATCH_BLOCKING_RUN_URL}")
       update_stage "auto_dispatch" "$stage_json"
-      log_stage "auto_dispatch" "timeout" "No dispatch found within ${max_wait}s"
+      update_top_level "dispatch_substate" "$DISPATCH_SUBSTATE"
+      if [ "$DISPATCH_SUBSTATE" = "deferred" ]; then
+        log_stage "auto_dispatch" "timeout" "Dispatch deferred; no requeue observed within ${max_wait}s"
+      else
+        log_stage "auto_dispatch" "timeout" "No dispatch found within ${max_wait}s"
+      fi
     fi
   else
     local stage_json
@@ -1149,18 +1233,34 @@ run_audit() {
       local stage_json
       stage_json=$(make_stage "$dispatch_stage_status" "$DISPATCH_TIMESTAMP" "$REPO_ASSIST_RUN_URL" "$elapsed" "$SLA_ISSUE_TO_DISPATCH" \
         "dispatch_workflow=${DISPATCH_WORKFLOW}" \
+        "dispatch_substate=${DISPATCH_SUBSTATE}" \
         "dispatch_evidence_source=${DISPATCH_EVIDENCE_SOURCE}" \
+        "dispatch_origin_workflow=${DISPATCH_ORIGIN_WORKFLOW}" \
+        "dispatch_reason=${DISPATCH_REASON}" \
+        "deferred_at=${DISPATCH_DEFERRED_AT}" \
+        "blocking_repo_assist_run_id=${DISPATCH_BLOCKING_RUN_ID}" \
+        "blocking_repo_assist_run_url=${DISPATCH_BLOCKING_RUN_URL}" \
         "repo_assist_run_id=${REPO_ASSIST_RUN_ID}" \
         "repo_assist_run_url=${REPO_ASSIST_RUN_URL}")
       update_stage "auto_dispatch" "$stage_json"
       update_top_level "dispatch_workflow" "$DISPATCH_WORKFLOW"
-      log_stage "auto_dispatch" "$dispatch_stage_status" "Dispatch: ${DISPATCH_WORKFLOW} -> run ${REPO_ASSIST_RUN_ID}"
+      update_top_level "dispatch_substate" "$DISPATCH_SUBSTATE"
+      log_stage "auto_dispatch" "$dispatch_stage_status" "Dispatch: ${DISPATCH_WORKFLOW} [${DISPATCH_SUBSTATE}] -> run ${REPO_ASSIST_RUN_ID}"
       prev_timestamp="$DISPATCH_TIMESTAMP"
     else
       local stage_json
-      stage_json=$(make_stage "fail" "" "" "null" "$SLA_ISSUE_TO_DISPATCH")
+      stage_json=$(make_stage "fail" "" "" "null" "$SLA_ISSUE_TO_DISPATCH" \
+        "dispatch_substate=${DISPATCH_SUBSTATE}" \
+        "deferred_at=${DISPATCH_DEFERRED_AT}" \
+        "blocking_repo_assist_run_id=${DISPATCH_BLOCKING_RUN_ID}" \
+        "blocking_repo_assist_run_url=${DISPATCH_BLOCKING_RUN_URL}")
       update_stage "auto_dispatch" "$stage_json"
-      log_stage "auto_dispatch" "fail" "No dispatch found"
+      update_top_level "dispatch_substate" "$DISPATCH_SUBSTATE"
+      if [ "$DISPATCH_SUBSTATE" = "deferred" ]; then
+        log_stage "auto_dispatch" "fail" "Dispatch was deferred and never requeued"
+      else
+        log_stage "auto_dispatch" "fail" "No dispatch found"
+      fi
     fi
   else
     local stage_json
@@ -1335,4 +1435,6 @@ main() {
   esac
 }
 
-main "$@"
+if [ "${SELF_HEALING_DRILL_SOURCE_ONLY:-0}" != "1" ]; then
+  main "$@"
+fi

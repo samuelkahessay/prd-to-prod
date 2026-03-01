@@ -17,11 +17,20 @@ jobs:
   dispatch:
     if: |
       !startsWith(github.event.issue.title, '[CI Incident]') &&
+      github.event.issue.title != '[Pipeline] Status' &&
+      !contains(github.event.issue.labels.*.name, 'report') &&
       (
         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) ||
         github.event.issue.user.login == 'github-actions[bot]'
       ) &&
-      contains(github.event.issue.labels.*.name, 'pipeline')
+      contains(github.event.issue.labels.*.name, 'pipeline') &&
+      (
+        contains(github.event.issue.labels.*.name, 'bug') ||
+        contains(github.event.issue.labels.*.name, 'docs') ||
+        contains(github.event.issue.labels.*.name, 'feature') ||
+        contains(github.event.issue.labels.*.name, 'infra') ||
+        contains(github.event.issue.labels.*.name, 'test')
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Debounce (let issue burst settle)
@@ -33,22 +42,47 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
-          IN_PROGRESS=$(gh run list --repo "$REPO" \
+          ACTIVE_RUNS=$(gh run list --repo "$REPO" \
             --workflow repo-assist.lock.yml \
-            --status in_progress \
-            --json databaseId \
-            --jq 'length')
-          QUEUED=$(gh run list --repo "$REPO" \
-            --workflow repo-assist.lock.yml \
-            --status queued \
-            --json databaseId \
-            --jq 'length')
-          if [ "$IN_PROGRESS" -gt 0 ] || [ "$QUEUED" -gt 0 ]; then
+            --limit 20 \
+            --json databaseId,status,url,createdAt \
+            | jq '[.[] | select(.status == "in_progress" or .status == "queued")] | sort_by(.createdAt)')
+          ACTIVE_COUNT=$(printf '%s' "$ACTIVE_RUNS" | jq 'length')
+          BLOCKING_RUN_ID=$(printf '%s' "$ACTIVE_RUNS" | jq -r '.[0].databaseId // ""')
+          BLOCKING_RUN_URL=$(printf '%s' "$ACTIVE_RUNS" | jq -r '.[0].url // ""')
+          echo "blocking_run_id=${BLOCKING_RUN_ID}" >> "$GITHUB_OUTPUT"
+          echo "blocking_run_url=${BLOCKING_RUN_URL}" >> "$GITHUB_OUTPUT"
+          if [ "$ACTIVE_COUNT" -gt 0 ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "repo-assist already queued/running; skipping dispatch."
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Record deferred dispatch marker
+        if: steps.guard.outputs.skip == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          DISPATCH_WORKFLOW_RUN_ID: ${{ github.run_id }}
+          BLOCKING_RUN_ID: ${{ steps.guard.outputs.blocking_run_id }}
+          BLOCKING_RUN_URL: ${{ steps.guard.outputs.blocking_run_url }}
+        run: |
+          DEFERRED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          BODY=$(printf '%s\n' \
+            '<!-- self-healing-dispatch-deferred:v1' \
+            'dispatch_workflow=Auto-Dispatch Pipeline Issues' \
+            "dispatch_workflow_run_id=${DISPATCH_WORKFLOW_RUN_ID}" \
+            "dispatch_workflow_run_url=https://github.com/${REPO}/actions/runs/${DISPATCH_WORKFLOW_RUN_ID}" \
+            "blocking_repo_assist_run_id=${BLOCKING_RUN_ID}" \
+            "blocking_repo_assist_run_url=${BLOCKING_RUN_URL}" \
+            "deferred_at=${DEFERRED_AT}" \
+            '-->' \
+            '' \
+            'Self-healing audit marker: dispatch deferred while repo-assist was already active.')
+          gh issue comment "$ISSUE_NUMBER" --repo "$REPO" --body "$BODY" >/dev/null || \
+            echo "::warning::Could not record deferred dispatch marker on issue #${ISSUE_NUMBER}"
 
       - name: Dispatch repo-assist scheduled mode
         if: steps.guard.outputs.skip != 'true'
