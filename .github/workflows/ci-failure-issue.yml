@@ -3,7 +3,7 @@
 # runs back into the repair loop instead of creating duplicate backlog issues.
 #
 # Flow:
-#   1. .NET CI fails on a PR or Deploy to Azure fails on main →
+#   1. .NET CI / Node CI / Docker CI fails on a PR or the main deploy run fails →
 #      workflow_run:completed fires with conclusion=failure
 #   2. Router fetches failed-step logs and normalizes the failure signature
 #   3. For open [Pipeline] PRs with a linked source issue, router upserts PR state
@@ -16,7 +16,7 @@ name: "CI Failure Router"
 
 on:
   workflow_run:
-    workflows: [".NET CI", "Node CI", "Deploy Router", "Deploy to Azure"]
+    workflows: [".NET CI", "Node CI", "Docker CI", "Deploy Router", "Deploy to Azure"]
     types: [completed]
 
 permissions:
@@ -332,7 +332,7 @@ jobs:
           unset FULL_DIFF
 
           if ! printf '%s' "$PR_TITLE" | grep -q '^\[Pipeline\]'; then
-            TITLE="[CI Incident] PR #${PR_NUMBER} .NET CI Failure: ${SHORT_SUMMARY}"
+            TITLE="[CI Incident] PR #${PR_NUMBER} CI Failure: ${SHORT_SUMMARY}"
             BODY=$(render_incident_body \
               "The failing PR is not a [Pipeline] PR, so it is not eligible for automatic repair." \
               "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`")
@@ -342,7 +342,7 @@ jobs:
 
           LINKED_ISSUE=$(printf '%s' "$PR_JSON" | jq -r '[.body | scan("(?i)(?:close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#(\\d+)")] | first | .[]? // empty' | head -1)
           if [ -z "$LINKED_ISSUE" ]; then
-            TITLE="[CI Incident] PR #${PR_NUMBER} .NET CI Failure: ${SHORT_SUMMARY}"
+            TITLE="[CI Incident] PR #${PR_NUMBER} CI Failure: ${SHORT_SUMMARY}"
             BODY=$(render_incident_body \
               "The failing [Pipeline] PR has no linked source issue in its PR body." \
               "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`")
@@ -382,7 +382,7 @@ jobs:
             upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
             remove_pr_label "repair-in-progress"
             add_pr_label "repair-escalated"
-            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} repeated .NET CI failure"
+            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} repeated CI failure"
             BODY=$(render_incident_body \
               "GH_AW_GITHUB_TOKEN is unavailable, so the router could not post the repair command that triggers repo-assist." \
               "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`\n- **Linked Issue**: #${LINKED_ISSUE}")
@@ -410,7 +410,7 @@ jobs:
             upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
             remove_pr_label "repair-in-progress"
             add_pr_label "repair-escalated"
-            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} repeated .NET CI failure"
+            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} repeated CI failure"
             BODY=$(render_incident_body \
               "Router could not post the repair command that triggers repo-assist on the linked source issue." \
               "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`\n- **Linked Issue**: #${LINKED_ISSUE}")

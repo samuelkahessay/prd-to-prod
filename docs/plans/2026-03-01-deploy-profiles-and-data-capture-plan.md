@@ -8,7 +8,7 @@
 
 **Tech Stack:** GitHub Actions (YAML workflows), Bash (capture script), gh CLI (GitHub API)
 
-**IMPORTANT — Do NOT compile agentic workflows.** After updating `prd-decomposer.md` and `repo-assist.md`, leave `gh aw compile` for the user to run manually and verify the `.lock.yml` diffs.
+**IMPORTANT — Compile agentic workflows after updating `prd-decomposer.md` and `repo-assist.md`, then verify the `.lock.yml` diffs before commit.**
 
 ---
 
@@ -613,7 +613,7 @@ Before creating issues, determine the target tech stack and deploy profile:
 
 No change needed — the decomposer doesn't write files, it creates issues.
 
-**Step 3: Commit (do NOT run `gh aw compile`)**
+**Step 3: Commit and recompile workflow locks**
 
 ```bash
 git add .github/workflows/prd-decomposer.md
@@ -641,7 +641,7 @@ Before implementing issues, read the active deploy profile:
 4. When implementing a bootstrap issue, update `.deploy-profile` to the profile specified in the issue's Technical Notes
 ```
 
-**Step 2: Commit (do NOT run `gh aw compile`)**
+**Step 2: Commit and recompile workflow locks**
 
 ```bash
 git add .github/workflows/repo-assist.md

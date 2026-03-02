@@ -1,0 +1,36 @@
+name: Docker CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check-profile:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .deploy-profile
+          sparse-checkout-cone-mode: false
+      - id: check
+        run: |
+          PROFILE=$(cat .deploy-profile 2>/dev/null || echo "dotnet-azure")
+          if [[ "$PROFILE" == "docker-generic" ]]; then
+            echo "should-run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should-run=false" >> $GITHUB_OUTPUT
+            echo "Skipping Docker CI — active profile is '${PROFILE}'"
+          fi
+
+  build-image:
+    needs: check-profile
+    if: needs.check-profile.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t prd-to-prod-ci:${{ github.sha }} .

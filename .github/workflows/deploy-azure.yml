@@ -1,10 +1,10 @@
 #
-# Deploy to Azure — Builds and deploys the app to Azure App Service on every
-# push to main (i.e., after a PR merges).
+# Deploy to Azure — Reusable Azure deployment workflow invoked by Deploy Router
+# after a push lands on main, or manually via workflow_dispatch for debugging.
 #
 # Flow:
-#   1. Push lands on main (direct or via merged PR)
-#   2. Restore, build, and publish the .NET app in Release configuration
+#   1. Deploy Router selects the dotnet-azure profile for the current main commit
+#   2. Restore, build, test, and publish the .NET app in Release configuration
 #   3. Log in to Azure via service principal, then deploy the published output
 #
 # Prerequisites:

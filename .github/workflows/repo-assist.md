@@ -101,7 +101,7 @@ In CI Repair Command Mode:
 - If the current PR head SHA does **not** match `head_sha`, post a short stale-command comment on the linked source issue and exit without code changes.
 - Checkout the existing PR branch from `head_branch`. Do **not** checkout `main`, create a new branch, or create a new PR.
 - Read the failing run logs with `gh run view <FAILURE_RUN_ID> --log-failed` before making changes. The PR diff is included in the repair command body below; for the full diff run `gh pr diff <PR_NUMBER>`.
-- Apply the **minimum** code change needed to fix the failing `.NET CI` check.
+- Apply the **minimum** code change needed to fix the failing CI check for the active stack.
 - Run the build/test commands from `AGENTS.md`. If local environment blockers prevent validation, report the exact blocker in the PR comment.
 - Push fixes directly to the existing PR branch using `push_to_pull_request_branch` with both:
   - `pull_request_number: <PR_NUMBER>`
