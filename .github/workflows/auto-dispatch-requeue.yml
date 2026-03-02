@@ -7,7 +7,7 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  actions: read
+  actions: write
   issues: write
 
 concurrency:
@@ -63,7 +63,7 @@ jobs:
           fi
 
           if [ -z "${GH_AW_GITHUB_TOKEN:-}" ]; then
-            echo "::warning::GH_AW_GITHUB_TOKEN is unavailable; cannot re-dispatch via /repo-assist comment."
+            echo "::warning::GH_AW_GITHUB_TOKEN is unavailable; cannot re-dispatch via workflow_dispatch."
             exit 0
           fi
 
@@ -73,7 +73,6 @@ jobs:
             --json number,title,createdAt,labels 2>/dev/null || echo '[]')
 
           SELECTED_ISSUE=""
-          SELECTED_DEFERRED_AT=""
 
           while IFS= read -r ISSUE_ROW; do
             [ -z "$ISSUE_ROW" ] && continue
@@ -117,7 +116,6 @@ jobs:
             fi
 
             SELECTED_ISSUE="$ISSUE_NUM"
-            SELECTED_DEFERRED_AT="$DEFERRED_AT"
             break
           done < <(printf '%s' "$PIPELINE_ISSUES" | jq -c 'sort_by(.createdAt)[]')
 
@@ -128,21 +126,15 @@ jobs:
 
           echo "Re-dispatching issue #${SELECTED_ISSUE}."
           DISPATCHED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          COMMAND_BODY=$(printf '%s\n' \
-            '/repo-assist Resolve this open pipeline issue. This automatic re-dispatch was queued because the original auto-dispatch attempt was deferred while another repo-assist run was active. Read the issue body, implement the minimum safe fix, run the required validation from AGENTS.md, and comment with results.' \
-            '' \
-            '<!-- self-healing-dispatch-requeue:v1' \
-            "source_workflow_run_id=${GITHUB_RUN_ID}" \
-            "deferred_at=${SELECTED_DEFERRED_AT}" \
-            '-->')
-          GH_TOKEN="$GH_AW_GITHUB_TOKEN" gh issue comment "$SELECTED_ISSUE" --repo "$REPO" --body "$COMMAND_BODY" >/dev/null
+          GH_TOKEN="$GH_AW_GITHUB_TOKEN" gh workflow run repo-assist.lock.yml \
+            --repo "$REPO"
 
           REPO_ASSIST_RUN_ID=""
           REPO_ASSIST_RUN_URL=""
           for attempt in $(seq 1 12); do
             RUN_JSON=$(gh run list --repo "$REPO" \
               --workflow repo-assist.lock.yml \
-              --event issue_comment \
+              --event workflow_dispatch \
               --limit 20 \
               --json databaseId,createdAt,url,displayTitle \
               | jq --arg dispatched_at "$DISPATCHED_AT" '[.[] | select(.displayTitle == "Pipeline Repo Assist" and .createdAt >= $dispatched_at)] | sort_by(.createdAt) | last // {}')
@@ -164,8 +156,6 @@ jobs:
             "repo_assist_run_id=${REPO_ASSIST_RUN_ID}" \
             "repo_assist_run_url=${REPO_ASSIST_RUN_URL}" \
             "dispatched_at=${DISPATCHED_AT}" \
-            '-->' \
-            '' \
-            'Self-healing audit marker: repo-assist re-dispatched after a prior guard deferral.')
+            '-->')
           gh issue comment "$SELECTED_ISSUE" --repo "$REPO" --body "$MARKER_BODY" >/dev/null || \
             echo "::warning::Could not record re-dispatch marker on issue #${SELECTED_ISSUE}"

@@ -123,7 +123,7 @@ In CI Repair Command Mode:
 
 ### General Command Mode
 
-If the instructions are non-empty and do **not** contain `ci-repair-command:v1`, follow the user's instructions instead of the normal workflow. Apply all the same guidelines (read AGENTS.md, run tests, use AI disclosure). Skip the scheduled workflow and directly do what was requested. Then exit.
+If the instructions are non-empty and do **not** contain `ci-repair-command:v1`, follow the user's instructions instead of the normal workflow. Apply all the same guidelines (read AGENTS.md, run tests, use AI disclosure). If the issue's requirements are already satisfied by merged code, close the issue with a comment referencing the PR that resolved it — do not create a new PR. Skip the scheduled workflow and directly do what was requested. Then exit.
 
 ## Scheduled Mode
 
@@ -160,7 +160,7 @@ Each run, work on 2-5 tasks from the list below. Use round-robin scheduling base
 2. Sort by dependency order — skip issues whose dependencies (referenced in issue body) are not yet closed.
 3. For each implementable issue (check memory — skip if already attempted):
    a. Read the issue carefully, including acceptance criteria and technical notes.
-   b. **Dedup check (required)**: Before starting work, check if a `[Pipeline]` PR already exists for this issue. Run: `gh pr list --repo $REPO --state all --json number,state,title,body`. Parse each PR's body for close keywords (`closes`, `close`, `fix`, `fixes`, `resolve`, `resolves`) followed by `#N`. Filter to PRs whose title starts with `[Pipeline]`. If any matching result has state `open` or `merged`, skip this issue silently — update memory that issue #N is already covered and move to the next issue. PRs that are `closed` (without merge) do NOT count as covered — those are failed attempts and the issue still needs work.
+   b. **Dedup check (required)**: Before starting work, check if a `[Pipeline]` PR already exists for this issue. Run: `gh pr list --repo $REPO --state all --json number,state,title,body`. Parse each PR's body for close keywords (`closes`, `close`, `fix`, `fixes`, `resolve`, `resolves`) followed by `#N`. Filter to PRs whose title starts with `[Pipeline]`. If any matching result has state `open`, skip this issue silently — update memory that issue #N is already covered and move to the next issue. If a matching result has state `merged`, the issue should already be closed — close it with a comment ("Already resolved by PR #M") and move on. PRs that are `closed` (without merge) do NOT count as covered — those are failed attempts and the issue still needs work.
    c. **CRITICAL**: Always `git checkout main && git pull origin main` before creating each new branch. Create a fresh branch off the latest `main`: `repo-assist/issue-<N>-<short-desc>`. NEVER branch off another feature branch — each PR must be independently mergeable.
    d. Set up the development environment as described in AGENTS.md (run `npm install` if package.json exists).
    e. Implement the feature/task described in the issue. Follow acceptance criteria exactly.
