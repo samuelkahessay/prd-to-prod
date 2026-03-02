@@ -10,6 +10,7 @@ builder.Services.AddDbContext<TicketDbContext>(o => o.UseInMemoryDatabase("Ticke
 builder.Services.AddScoped<ClassificationService>();
 builder.Services.AddScoped<MatchingService>();
 builder.Services.AddScoped<PipelineService>();
+builder.Services.AddSingleton<IShowcaseService, ShowcaseService>();
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
