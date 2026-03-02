@@ -1,0 +1,347 @@
+@page "/operator"
+@model TicketDeflection.Pages.OperatorModel
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Operator Queue — prd-to-prod</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #080c12;
+            --grid-line: rgba(0, 160, 255, 0.04);
+            --border: rgba(0, 160, 255, 0.15);
+            --accent: #00aaff;
+            --accent-dim: rgba(0, 170, 255, 0.08);
+            --green: #3ddc84;
+            --amber: #f5a623;
+            --red: #f85149;
+            --text: #b8c4d4;
+            --dim: #7a8fa8;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Space Grotesk', sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 48px 48px;
+            font-family: var(--mono);
+            color: var(--text);
+            font-size: 14px;
+        }
+        h1, h2, h3, .font-sans { font-family: var(--sans); }
+        .status-bar {
+            background: rgba(0, 170, 255, 0.04);
+            border-bottom: 1px solid var(--border);
+        }
+        .panel {
+            background: rgba(4, 10, 20, 0.72);
+            border: 1px solid var(--border);
+        }
+        .panel-top { border-top: 2px solid var(--accent); }
+        .panel-red { border-top: 2px solid var(--red); }
+        .panel-amber { border-top: 2px solid var(--amber); }
+        .panel-green { border-top: 2px solid var(--green); }
+        .metric-val {
+            font-family: var(--mono);
+            color: var(--accent);
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .metric-lbl {
+            color: var(--dim);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 8px;
+        }
+        .text-accent { color: var(--accent); }
+        .text-green { color: var(--green); }
+        .text-amber { color: var(--amber); }
+        .text-red { color: var(--red); }
+        .text-dim { color: var(--dim); }
+        .text-white { color: #e8edf5; }
+        .divider { border-top: 1px solid var(--border); margin: 0; }
+        .nav-link {
+            color: rgba(0, 170, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .nav-link:hover { border-color: var(--border); color: var(--accent); }
+        .nav-link.active { border-color: var(--border); color: var(--accent); }
+        .record {
+            border-top: 1px solid rgba(0, 160, 255, 0.08);
+            padding: 12px 0;
+        }
+        .record:first-child { border-top: none; padding-top: 0; }
+        .badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border: 1px solid var(--border);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .badge-red {
+            color: var(--red);
+            border-color: rgba(248, 81, 73, 0.3);
+            background: rgba(248, 81, 73, 0.08);
+        }
+        .badge-amber {
+            color: var(--amber);
+            border-color: rgba(245, 166, 35, 0.3);
+            background: rgba(245, 166, 35, 0.08);
+        }
+        .badge-green {
+            color: var(--green);
+            border-color: rgba(61, 220, 132, 0.3);
+            background: rgba(61, 220, 132, 0.08);
+        }
+        .badge-blue {
+            color: var(--accent);
+            border-color: var(--border);
+            background: rgba(0, 170, 255, 0.08);
+        }
+        .code-pill {
+            color: var(--accent);
+            background: rgba(0, 170, 255, 0.08);
+            border: 1px solid var(--border);
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 0.7rem;
+        }
+        .summary-line {
+            color: #d5dfeb;
+            font-size: 0.85rem;
+            line-height: 1.45;
+        }
+        .meta-line {
+            color: var(--dim);
+            font-size: 0.72rem;
+            line-height: 1.45;
+        }
+        .evidence-list {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .empty-state {
+            color: var(--dim);
+            font-size: 0.78rem;
+            padding: 10px 0 2px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="status-bar px-6 py-2 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-4">
+            <span class="text-accent font-bold tracking-widest">OPERATOR QUEUE</span>
+            <span class="text-dim">//</span>
+            <span class="text-dim">policy-bounded execution surface</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="/" class="nav-link">overview</a>
+            <a href="/dashboard" class="nav-link">dashboard</a>
+            <a href="/operator" class="nav-link active">operator</a>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 py-10">
+        <div class="mb-8">
+            <div class="text-xs text-dim mb-2 uppercase tracking-widest">// oversight layer — visible decisions, not hidden automation</div>
+            <h1 class="font-sans text-3xl font-bold text-white mb-3">Operator Queue</h1>
+            <p class="max-w-3xl text-sm leading-relaxed" style="color: var(--text)">
+                This view exposes what the system did autonomously, what it blocked,
+                and what it handed back to a human. The point is not to pretend the
+                AI can do everything. The point is to make the authority boundary
+                explicit and auditable.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+            <div class="panel panel-top p-4">
+                <div class="metric-lbl">total events</div>
+                <div class="metric-val">@Model.Metrics.TotalEvents</div>
+            </div>
+            <div class="panel panel-green p-4">
+                <div class="metric-lbl">autonomous acted</div>
+                <div class="metric-val text-green">@Model.Metrics.AutonomousActed</div>
+            </div>
+            <div class="panel panel-red p-4">
+                <div class="metric-lbl">blocked</div>
+                <div class="metric-val text-red">@Model.Metrics.Blocked</div>
+            </div>
+            <div class="panel panel-amber p-4">
+                <div class="metric-lbl">queued for human</div>
+                <div class="metric-val text-amber">@Model.Metrics.QueuedForHuman</div>
+            </div>
+            <div class="panel p-4">
+                <div class="metric-lbl">escalated</div>
+                <div class="metric-val">@Model.Metrics.Escalated</div>
+            </div>
+            <div class="panel p-4">
+                <div class="metric-lbl">last update</div>
+                <div class="text-white text-sm">
+                    @(Model.Metrics.LastUpdatedUtc ?? "no events")
+                </div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-[1.25fr_1fr] gap-6 mb-8">
+            <section class="panel panel-red p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="text-xs text-dim uppercase tracking-widest mb-1">blocked actions</div>
+                        <h2 class="font-sans text-xl font-bold text-white">Human-required refusals</h2>
+                    </div>
+                    <span class="badge badge-red">@Model.Queue.Blocked.Count blocked</span>
+                </div>
+                @if (Model.Queue.Blocked.Count == 0)
+                {
+                    <div class="empty-state">No blocked actions recorded.</div>
+                }
+                else
+                {
+                    @foreach (var decision in Model.Queue.Blocked)
+                    {
+                        <article class="record">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <span class="badge badge-red">@decision.Outcome</span>
+                                <span class="code-pill">@decision.RequestedAction</span>
+                            </div>
+                            <div class="summary-line">@decision.Summary</div>
+                            <div class="meta-line mt-2">
+                                target: @(decision.Target.Display ?? decision.Target.Path ?? decision.Target.Type)
+                            </div>
+                            <div class="meta-line">
+                                reason: @(decision.PolicyResult.Reason ?? "human review required")
+                            </div>
+                            <div class="meta-line">
+                                owner: @(decision.HumanOwner ?? "unassigned")
+                            </div>
+                            <div class="evidence-list">
+                                @foreach (var evidence in decision.Evidence)
+                                {
+                                    <span class="badge badge-blue">@evidence</span>
+                                }
+                            </div>
+                        </article>
+                    }
+                }
+            </section>
+
+            <section class="panel panel-amber p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="text-xs text-dim uppercase tracking-widest mb-1">human queue</div>
+                        <h2 class="font-sans text-xl font-bold text-white">Waiting on an operator</h2>
+                    </div>
+                    <span class="badge badge-amber">@Model.Queue.QueuedForHuman.Count queued</span>
+                </div>
+                @if (Model.Queue.QueuedForHuman.Count == 0)
+                {
+                    <div class="empty-state">No queued-for-human actions recorded.</div>
+                }
+                else
+                {
+                    @foreach (var decision in Model.Queue.QueuedForHuman)
+                    {
+                        <article class="record">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <span class="badge badge-amber">@decision.Outcome</span>
+                                <span class="code-pill">@decision.RequestedAction</span>
+                            </div>
+                            <div class="summary-line">@decision.Summary</div>
+                            <div class="meta-line mt-2">
+                                target: @(decision.Target.Display ?? decision.Target.Path ?? decision.Target.Type)
+                            </div>
+                            <div class="meta-line">
+                                owner: @(decision.HumanOwner ?? "unassigned")
+                            </div>
+                            <div class="evidence-list">
+                                @foreach (var evidence in decision.Evidence)
+                                {
+                                    <span class="badge badge-blue">@evidence</span>
+                                }
+                            </div>
+                        </article>
+                    }
+                }
+            </section>
+        </div>
+
+        <div class="grid lg:grid-cols-[1fr_1.25fr] gap-6">
+            <section class="panel panel-green p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="text-xs text-dim uppercase tracking-widest mb-1">autonomous lane</div>
+                        <h2 class="font-sans text-xl font-bold text-white">Recent autonomous actions</h2>
+                    </div>
+                    <span class="badge badge-green">@Model.Queue.RecentAutonomous.Count acted</span>
+                </div>
+                @if (Model.Queue.RecentAutonomous.Count == 0)
+                {
+                    <div class="empty-state">No autonomous actions recorded.</div>
+                }
+                else
+                {
+                    @foreach (var decision in Model.Queue.RecentAutonomous)
+                    {
+                        <article class="record">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <span class="badge badge-green">@decision.Outcome</span>
+                                <span class="code-pill">@decision.RequestedAction</span>
+                            </div>
+                            <div class="summary-line">@decision.Summary</div>
+                            <div class="meta-line mt-2">
+                                workflow: @decision.Workflow
+                            </div>
+                            <div class="meta-line">
+                                target: @(decision.Target.Display ?? decision.Target.Path ?? decision.Target.Type)
+                            </div>
+                        </article>
+                    }
+                }
+            </section>
+
+            <section class="panel panel-top p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="text-xs text-dim uppercase tracking-widest mb-1">decision ledger</div>
+                        <h2 class="font-sans text-xl font-bold text-white">Recent entries</h2>
+                    </div>
+                    <span class="badge badge-blue">@Model.Decisions.Count shown</span>
+                </div>
+                @foreach (var decision in Model.Decisions)
+                {
+                    <article class="record">
+                        <div class="flex flex-wrap items-center gap-2 mb-2">
+                            <span class="badge @(decision.Outcome == "blocked" ? "badge-red" : decision.Outcome == "queued_for_human" ? "badge-amber" : "badge-green")">@decision.Outcome</span>
+                            <span class="code-pill">@decision.RequestedAction</span>
+                            <span class="text-dim text-xs">@decision.Timestamp</span>
+                        </div>
+                        <div class="summary-line">@decision.Summary</div>
+                        <div class="meta-line mt-2">
+                            actor: @decision.Actor.Name · policy: @decision.PolicyResult.Mode
+                        </div>
+                        <div class="meta-line">
+                            target: @(decision.Target.Display ?? decision.Target.Path ?? decision.Target.Type)
+                        </div>
+                    </article>
+                }
+            </section>
+        </div>
+    </div>
+</body>
+</html>
