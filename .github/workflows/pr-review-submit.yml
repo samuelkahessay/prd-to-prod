@@ -59,6 +59,7 @@ permissions:
 jobs:
   submit-review-comment:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: |
       github.event_name == 'issue_comment' &&
       github.event.issue.pull_request != null &&
@@ -70,7 +71,26 @@ jobs:
       group: "pr-review-submit-${{ github.event.issue.number }}"
       cancel-in-progress: false
 
+    env:
+      PIPELINE_HEALING_ENABLED: ${{ vars.PIPELINE_HEALING_ENABLED }}
+
     steps:
+      - name: Checkout workflow helpers
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/healing-control.sh
+          sparse-checkout-cone-mode: false
+
+      - name: Check healing pause switch
+        id: healing
+        run: |
+          if scripts/healing-control.sh is-enabled; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Autonomous healing is paused via PIPELINE_HEALING_ENABLED."
+          fi
+
       - name: Check idempotency (skip if same verdict already reviewed at current HEAD)
         id: idempotency
         env:
@@ -183,22 +203,28 @@ jobs:
             -f description="Review completed: ${VERDICT}"
           echo "Set 'review' status check to success on ${HEAD_SHA} (verdict: ${VERDICT})"
 
-      - name: Mark draft PR ready and enable auto-merge (APPROVE only)
+      - name: Mark draft PR ready (APPROVE only)
         if: steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict == 'APPROVE'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          PR_DRAFT=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json isDraft -q '.isDraft')
+          if [ "$PR_DRAFT" = "true" ]; then
+            gh pr ready "$PR_NUMBER" --repo "$REPO" || echo "::warning::Could not mark PR as ready"
+          else
+            echo "PR #${PR_NUMBER} is already ready for review."
+          fi
+
+      - name: Enable auto-merge (APPROVE only)
+        if: steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict == 'APPROVE' && steps.healing.outputs.enabled == 'true'
+        env:
           MERGE_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.issue.number }}
           PR_TITLE: ${{ steps.review.outputs.pr_title }}
           REPO: ${{ github.repository }}
         run: |
-          # If the PR is still a draft, mark it ready for review
-          PR_DRAFT=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json isDraft -q '.isDraft')
-          if [ "$PR_DRAFT" = "true" ]; then
-            gh pr ready "$PR_NUMBER" --repo "$REPO" || echo "::warning::Could not mark PR as ready"
-          fi
-
-          # Enable auto-merge only for [Pipeline] PRs (human PRs should be merged manually)
           if [[ "$PR_TITLE" == "[Pipeline]"* ]]; then
             if [ -z "$MERGE_TOKEN" ]; then
               echo "::error::GH_AW_GITHUB_TOKEN is required for pipeline auto-merge so downstream push workflows can run."
@@ -211,7 +237,7 @@ jobs:
           fi
 
       - name: Record auto-merge evidence (APPROVE only)
-        if: steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict == 'APPROVE'
+        if: steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict == 'APPROVE' && steps.healing.outputs.enabled == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEAD_SHA: ${{ steps.idempotency.outputs.head_sha }}
@@ -323,7 +349,7 @@ jobs:
           done
 
       - name: Dispatch repo-assist for next cycle
-        if: always() && steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict != ''
+        if: always() && steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict != '' && steps.healing.outputs.enabled == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REVIEW_VERDICT: ${{ steps.review.outputs.verdict }}
@@ -372,13 +398,33 @@ jobs:
   # ---------------------------------------------------------------------------
   submit-review-dispatch:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: github.event_name == 'workflow_dispatch'
 
     concurrency:
       group: "pr-review-submit-${{ github.event.inputs.pr_number }}"
       cancel-in-progress: false
 
+    env:
+      PIPELINE_HEALING_ENABLED: ${{ vars.PIPELINE_HEALING_ENABLED }}
+
     steps:
+      - name: Checkout workflow helpers
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/healing-control.sh
+          sparse-checkout-cone-mode: false
+
+      - name: Check healing pause switch
+        id: healing
+        run: |
+          if scripts/healing-control.sh is-enabled; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Autonomous healing is paused via PIPELINE_HEALING_ENABLED."
+          fi
+
       - name: Check idempotency (skip if same verdict already reviewed at current HEAD)
         id: idempotency
         env:
@@ -468,20 +514,28 @@ jobs:
             -f description="Review completed: ${VERDICT}"
           echo "Set 'review' status check to success on ${HEAD_SHA} (verdict: ${VERDICT})"
 
-      - name: Mark draft PR ready and enable auto-merge (APPROVE only)
+      - name: Mark draft PR ready (APPROVE only)
         if: always() && github.event.inputs.verdict == 'APPROVE'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number }}
+          REPO: ${{ github.repository }}
+        run: |
+          PR_DRAFT=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json isDraft -q '.isDraft')
+          if [ "$PR_DRAFT" = "true" ]; then
+            gh pr ready "$PR_NUMBER" --repo "$REPO" || echo "::warning::Could not mark PR as ready"
+          else
+            echo "PR #${PR_NUMBER} is already ready for review."
+          fi
+
+      - name: Enable auto-merge (APPROVE only)
+        if: always() && github.event.inputs.verdict == 'APPROVE' && steps.healing.outputs.enabled == 'true'
+        env:
           MERGE_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.inputs.pr_number }}
           REPO: ${{ github.repository }}
         run: |
           PR_TITLE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title --jq '.title')
-
-          PR_DRAFT=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json isDraft -q '.isDraft')
-          if [ "$PR_DRAFT" = "true" ]; then
-            gh pr ready "$PR_NUMBER" --repo "$REPO" || echo "::warning::Could not mark PR as ready"
-          fi
 
           if [[ "$PR_TITLE" == "[Pipeline]"* ]]; then
             if [ -z "$MERGE_TOKEN" ]; then
@@ -495,7 +549,7 @@ jobs:
           fi
 
       - name: Record auto-merge evidence (APPROVE only)
-        if: always() && github.event.inputs.verdict == 'APPROVE'
+        if: always() && github.event.inputs.verdict == 'APPROVE' && steps.healing.outputs.enabled == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEAD_SHA: ${{ steps.idempotency.outputs.head_sha }}
@@ -619,7 +673,7 @@ jobs:
           done
 
       - name: Dispatch repo-assist for next cycle
-        if: always()
+        if: always() && steps.healing.outputs.enabled == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REVIEW_VERDICT: ${{ steps.review.outputs.verdict }}
@@ -660,3 +714,11 @@ jobs:
               echo "::warning::No linked issue found for PR #${PR_NUMBER} — cannot post /repo-assist"
             fi
           fi
+
+      - name: Log paused autonomous follow-up skip
+        if: always() && steps.healing.outputs.enabled != 'true'
+        run: echo "Review completed, but autonomous follow-up is paused via PIPELINE_HEALING_ENABLED."
+
+      - name: Log paused autonomous follow-up skip
+        if: always() && steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict != '' && steps.healing.outputs.enabled != 'true'
+        run: echo "Review completed, but autonomous follow-up is paused via PIPELINE_HEALING_ENABLED."

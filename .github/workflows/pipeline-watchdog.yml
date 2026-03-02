@@ -28,11 +28,28 @@ concurrency:
 jobs:
   watchdog:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PIPELINE_HEALING_ENABLED: ${{ vars.PIPELINE_HEALING_ENABLED }}
     steps:
       - name: Checkout repository helpers
         uses: actions/checkout@v4
 
+      - name: Check healing pause switch
+        id: healing
+        run: |
+          if scripts/healing-control.sh is-enabled; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "skip_reason=healing_paused" >> "$GITHUB_OUTPUT"
+            echo "Autonomous healing is paused via PIPELINE_HEALING_ENABLED."
+          fi
+
       - name: Check for stalled pipeline items
+        if: steps.healing.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_AW_GITHUB_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}

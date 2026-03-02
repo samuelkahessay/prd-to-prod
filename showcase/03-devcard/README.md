@@ -11,8 +11,8 @@ A developer identity card generator that fetches GitHub profile data and renders
 shareable, themed cards with language breakdowns, top repositories, and export
 options. Features a gallery of notable developers including Linus Torvalds, Dan
 Abramov, and Peter Steinberger (OpenClaw). 10 features decomposed from the PRD,
-all autonomously implemented, reviewed, and merged — plus 7 bug fixes filed and
-resolved in a follow-up session.
+all autonomously implemented, reviewed, and merged on the pipeline-generated
+path — plus 7 bug fixes filed and resolved in a follow-up session.
 
 ## Tech Stack
 

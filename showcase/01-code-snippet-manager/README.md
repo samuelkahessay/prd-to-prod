@@ -8,8 +8,8 @@
 
 First end-to-end test of the agentic pipeline. A single `/decompose` command
 turned a Code Snippet Manager PRD into 8 atomic issues. The pipeline
-autonomously implemented all 8 as PRs, reviewed them with GPT-5, and
-squash-merged each one — zero human code written.
+autonomously implemented all 8 as pipeline PRs, reviewed them with GPT-5, and
+squash-merged each one — zero human implementation code written.
 
 ## Tech Stack
 

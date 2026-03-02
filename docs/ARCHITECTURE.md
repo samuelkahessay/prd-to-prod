@@ -3,7 +3,8 @@
 ## Pipeline Overview
 
 The agentic pipeline turns Product Requirements Documents (PRDs) into shipped code
-with minimal human intervention. Ten workflows cooperate in a loop:
+with minimal human intervention on the pipeline-generated path. Ten workflows
+cooperate in a loop:
 
 ```
  You write a PRD
@@ -24,7 +25,7 @@ with minimal human intervention. Ten workflows cooperate in a loop:
        | opens PR
        v
  +-----------------+  posts verdict   +--------------------+
- | pr-review-agent | ──────────────> | pr-review-submit | ──> Squash merge (auto)
+ | pr-review-agent | ──────────────> | pr-review-submit | ──> Squash merge (auto for [Pipeline] PRs)
  | (agentic, gpt-5)|  (comment)       | (GHA, bot)         |
  +-----------------+                  +--------------------+
        |                                      |
@@ -125,14 +126,15 @@ Decision rules:
 | **File** | `.github/workflows/pr-review-submit.yml` |
 | **Engine** | Standard GitHub Actions (`github-actions[bot]`) |
 | **Trigger** | `issue_comment: created` — fires when pr-review-agent posts its verdict |
-| **Output** | Formal APPROVE or REQUEST_CHANGES GitHub review; auto-merge; repo-assist dispatch |
+| **Output** | Formal APPROVE or REQUEST_CHANGES GitHub review; auto-merge for approved `[Pipeline]` PRs; repo-assist dispatch |
 
 Standard workflow that runs as `github-actions[bot]`. Watches for comments containing
 `[PIPELINE-VERDICT]` on PRs, parses the verdict, and submits the formal GitHub
 review. This is the identity that satisfies GitHub's self-approval restriction.
 For approved `[Pipeline]` PRs, the workflow then enables auto-merge with
 `GH_AW_GITHUB_TOKEN` so the merge commit to `main` still triggers downstream
-push-based workflows such as Azure deploy.
+push-based workflows such as Azure deploy. Human-authored PRs can still be
+reviewed by this workflow, but they are intentionally left for manual merge.
 
 Submit process:
 1. Detects verdict comment via `[PIPELINE-VERDICT]` marker
@@ -141,6 +143,12 @@ Submit process:
 4. Submits formal GitHub review as `github-actions[bot]`
 5. On APPROVE of `[Pipeline]` PRs: marks draft ready, enables auto-merge (squash)
 6. After review: checks for remaining pipeline issues, dispatches `repo-assist` (APPROVE) or posts `/repo-assist` on linked issue (REQUEST_CHANGES)
+
+Autonomy boundary:
+
+- `[Pipeline]` PRs are the autonomous merge path.
+- Human-authored PRs reuse the same review machinery, but do not get auto-merge
+  armed by `pr-review-submit`.
 
 ### pipeline-status
 
@@ -179,19 +187,26 @@ to avoid script injection vulnerabilities.
 | **File** | `.github/workflows/pipeline-watchdog.yml` |
 | **Engine** | Standard GitHub Actions |
 | **Trigger** | Cron (every 30 minutes), manual dispatch |
-| **Output** | `/repo-assist` comments or `repo-assist` dispatches |
+| **Output** | `/repo-assist` comments, repo-assist dispatches, and escalation/cleanup actions |
 
-Cron-based stall detector that replaces the human supervisor. Detects two failure modes:
+Cron-based stall detector that replaces the human supervisor. The current
+implementation scans four classes of problems each cycle:
 
-1. **Stalled PRs** — Open `[Pipeline]` PRs with a `CHANGES_REQUESTED` review and no
-   activity for 30+ minutes. Posts `/repo-assist` on the linked issue with fix instructions.
-2. **Orphaned issues** — Open pipeline issues with no linked open PR and no activity
-   for 30+ minutes. Dispatches `repo-assist.lock.yml` in Scheduled Mode.
+1. **Active CI repair incidents** — retries or escalates unresolved CI repair loops
+   on open `[Pipeline]` PRs that still carry an active incident marker.
+2. **Stalled PRs** — Open `[Pipeline]` PRs with a `CHANGES_REQUESTED` review and no
+   activity for 30+ minutes, excluding PRs already covered by an active CI incident.
+3. **Orphaned issues** — Open actionable pipeline issues with no linked open PR and
+   no recent activity.
+4. **Stale notifications and cleanup** — closes superseded duplicate PRs and stale
+   `[aw]` workflow failure issues after dispatching a fresh retry.
 
 Safety mechanisms:
 - Skips all dispatches if repo-assist is already running (prevents flooding)
 - One action per cycle (stalled PR takes priority over orphaned issue)
 - Concurrency group `pipeline-watchdog` with `cancel-in-progress: false`
+- Honors repository variable `PIPELINE_HEALING_ENABLED=false` and exits without
+  taking write actions
 - Posts completion notice on status issue when all pipeline items are resolved
 
 ### ci-failure-issue
@@ -200,16 +215,38 @@ Safety mechanisms:
 |---|---|
 | **File** | `.github/workflows/ci-failure-issue.yml` |
 | **Engine** | Standard GitHub Actions |
-| **Trigger** | `workflow_run: completed` (fires when `.NET CI` finishes with `conclusion == 'failure'`) |
-| **Output** | Creates a `[Pipeline] CI Build Failure` issue with `pipeline` + `bug` labels |
+| **Trigger** | `workflow_run: completed` for `.NET CI`, `Node CI`, `Docker CI`, `Deploy Router`, and `Deploy to Azure` when `conclusion == 'failure'` |
+| **Output** | Routes PR-linked failures back into the repair loop; creates standalone incident issues for fallback and escalation cases |
 
-Self-healing workflow. When CI fails on a PR, this workflow extracts the failed-step
-logs via `gh run view --log-failed`, parses .NET error codes (CS/FS/BC), and creates
-a bug issue. The `pipeline` label triggers `auto-dispatch`, which dispatches
-`repo-assist` to fix the build — closing the self-healing loop.
+Self-healing workflow router. When CI or deploy fails, this workflow extracts the
+failed-step logs via `gh run view --log-failed`, normalizes the failure signature,
+and decides which remediation path applies.
 
-Dedup: skips creation if an open `pipeline` + `bug` issue already starts with
-`[Pipeline] CI Build Failure`.
+Primary path:
+
+- If the failure belongs to an open `[Pipeline]` PR with a linked source issue, the
+  router writes a PR incident state comment, labels the PR, and posts a structured
+  `ci-repair-command:v1` comment on the linked issue so `repo-assist` repairs the
+  existing PR branch in place.
+
+Fallback and escalation paths:
+
+- If the failure is on `main`, the PR is not a `[Pipeline]` PR, the PR has no linked
+  issue, or repair dispatch fails, the workflow creates or updates a standalone
+  `[CI Incident]` issue instead of silently dropping the event.
+- If `PIPELINE_HEALING_ENABLED=false`, failure detection still runs and incident
+  state is still recorded, but the router escalates instead of posting a repair
+  command or creating an auto-dispatchable pipeline bug issue.
+
+## Healing Pause Switch
+
+The repository-level variable `PIPELINE_HEALING_ENABLED` acts as the stop-the-
+bleeding control for the autonomous loop:
+
+- Reviews still happen, and the `review` status check is still written.
+- Failure detection still happens, and CI incidents are still recorded.
+- Autonomous remediation, repo-assist dispatch, repair-command reposts, and
+  pipeline PR auto-merge are paused when the variable is set to `false`.
 
 ### dotnet-ci
 
@@ -226,20 +263,28 @@ Feeds into `ci-failure-issue` on failure.
 ## Self-Healing Loops
 
 The pipeline has three feedback loops that allow it to recover from failures without
-human intervention:
+human intervention inside the pipeline-generated path:
 
 1. **Watchdog stall recovery** — `pipeline-watchdog` runs every 30 minutes. If a PR
    has a `CHANGES_REQUESTED` review and no activity for 30+ min, it posts `/repo-assist`
    on the linked issue. If an issue has no linked PR for 30+ min, it dispatches
    `repo-assist` directly.
 
-2. **CI failure auto-fix** — When `.NET CI` fails, `ci-failure-issue` creates a bug
-   issue from the error logs. `auto-dispatch` picks it up and sends `repo-assist` to
-   fix the build. The cycle: CI failure → bug issue → auto-dispatch → repo-assist → PR → CI pass.
+2. **CI failure auto-fix** — When `.NET CI`, `Node CI`, `Docker CI`, `Deploy Router`,
+   or `Deploy to Azure` fails, `ci-failure-issue` either routes the failure back to
+   the linked source issue/PR repair loop or creates a standalone incident issue for
+   fallback and escalation. The primary repair cycle is: CI failure → repair command
+   on linked issue → repo-assist → PR update → CI pass.
 
 3. **Superseded PR cleanup** — Both `pr-review-submit` (on merge) and `pipeline-watchdog`
    (on cron) detect open PRs whose linked issue was already closed by another merged PR,
    and close them with `--delete-branch`.
+
+Self-healing does not mean:
+
+- automatic merge of arbitrary approved PRs
+- rollback automation for bad deploys
+- generalized diagnosis of every workflow or infrastructure failure
 
 ## PRD Lifecycle
 
@@ -265,6 +310,11 @@ auto-merged with `GH_AW_GITHUB_TOKEN` rather than `GITHUB_TOKEN` so the merge
 to `main` can trigger downstream workflows. The dedicated `close-issues`
 workflow remains as deterministic issue cleanup after each merge.
 
+**Pipeline PR boundary** — Auto-merge is intentionally restricted to PRs whose
+title starts with `[Pipeline]`. That is the autonomous implementation path
+created by the agentic loop. Human-authored PRs may still use the same review
+workflows and status checks, but they are manually merged by default.
+
 **Orphan branch memory** — repo-assist stores state in a JSON file on the
 `memory/repo-assist` orphan branch. This persists across workflow runs without
 polluting the main branch history.
@@ -289,7 +339,7 @@ until all issues from the PRD are implemented.
 
 | Secret | Purpose |
 |--------|---------|
-| `GH_AW_GITHUB_TOKEN` | Token for gh-aw agentic workflows and pipeline auto-merge |
+| `GH_AW_GITHUB_TOKEN` | Token for gh-aw agentic workflows and auto-merge of approved `[Pipeline]` PRs |
 | `COPILOT_GITHUB_TOKEN` | Copilot agent token |
 
 Note: `MODELS_TOKEN` is no longer required — pr-review-agent uses the Copilot engine
