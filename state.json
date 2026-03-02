@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-02T03:40:09Z",
-  "workflow_run_id": "22560364644",
+  "last_run": "2026-03-02T03:51:27Z",
+  "workflow_run_id": "22560601474",
   "current_prd": {
     "issue": 297,
     "title": "PRD: Run 05 Landing Page Demo",
@@ -48,15 +48,14 @@
     {"issue": 295, "pr": 296, "status": "merged"},
     {"issue": 298, "pr": 303, "status": "merged"},
     {"issue": 301, "pr": 304, "status": "merged"},
-    {"issue": 299, "status": "in-review", "notes": "Dynamic run history section — PR open"},
-    {"issue": 300, "status": "in-review", "notes": "Replay UI section and timeline API — PR open"}
+    {"issue": 299, "pr": 305, "status": "merged"},
+    {"issue": 300, "pr": 307, "status": "merged"},
+    {"issue": 302, "status": "in-review", "notes": "Landing Page Hardening — PR open (awaiting review)"}
   ],
-  "open_issues": [299, 300, 302],
-  "open_prs": ["issue-299", "issue-300"],
+  "open_issues": [302],
+  "open_prs": ["issue-302"],
   "dependency_graph": {
-    "299": [],
-    "300": [],
     "302": [298, 299, 300, 301]
   },
-  "notes": "Run 05 in progress. #298 and #301 merged. #299 and #300 PRs now open. #302 still blocked on #299 and #300."
+  "notes": "Run 05 near complete. All dependencies merged. #302 PR opened this run."
 }

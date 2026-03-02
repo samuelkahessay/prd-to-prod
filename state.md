@@ -1,21 +1,18 @@
 # Pipeline State — 2026-03-02
 
 ## Last Run
-- Workflow run: 22560364644
-- Date: 2026-03-02T03:40:09Z
+- Workflow run: 22560601474
+- Date: 2026-03-02T03:51:27Z
 
 ## Current Run: Run 05 — Landing Page Demo
 
 ### Status: **ON_TRACK** ✅
 
-Issues #298 and #301 merged. PRs opened for #299 (Dynamic Run History) and #300 (Replay UI + Timeline API). Issue #302 still blocked on #299 and #300 merging.
+All issues implemented. #298, #299, #300, #301 are merged. PR opened for #302 (Landing Page Hardening). Run 05 is nearly complete — awaiting review and merge of #302.
 
 ### Open Items
-- Issue #299: Dynamic Run History — PR open (awaiting CI and review)
-- Issue #300: Replay UI + Timeline API — PR open (awaiting CI and review)
-- Issue #302: Landing Page Hardening — blocked on #299, #300
+- Issue #302: Landing Page Hardening — PR open (awaiting CI and review)
 
 ### Next Actions
-1. Wait for CI on #299 and #300 PRs to pass.
-2. Human review and merge both PRs.
-3. Implement #302 once #299 and #300 are merged.
+1. Human review and merge PR for #302.
+2. Archive Run 05 and start Run 06.
