@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-02T03:51:27Z",
-  "workflow_run_id": "22560601474",
+  "last_run": "2026-03-02T04:52:56Z",
+  "workflow_run_id": "22561928661",
   "current_prd": {
     "issue": 297,
     "title": "PRD: Run 05 Landing Page Demo",
@@ -8,54 +8,229 @@
   },
   "pipeline_status": "ON_TRACK",
   "attempts": [
-    {"issue": 125, "pr": 138, "status": "merged"},
-    {"issue": 126, "pr": 139, "status": "merged"},
-    {"issue": 137, "pr": 142, "status": "merged"},
-    {"issue": 128, "pr": 145, "status": "merged"},
-    {"issue": 127, "pr": 150, "status": "merged"},
-    {"issue": 129, "pr": 151, "status": "merged"},
-    {"issue": 130, "pr": 154, "status": "merged"},
-    {"issue": 131, "pr": 155, "status": "merged"},
-    {"issue": 132, "pr": 159, "status": "merged"},
-    {"issue": 133, "pr": 161, "status": "merged"},
-    {"issue": 134, "pr": 164, "status": "merged"},
-    {"issue": 135, "pr": 167, "status": "merged"},
-    {"issue": 136, "pr": 170, "status": "merged"},
-    {"issue": 165, "pr": 166, "status": "merged"},
-    {"issue": 172, "pr": 173, "status": "merged"},
-    {"issue": 176, "status": "merged"},
-    {"issue": 199, "status": "merged"},
-    {"issue": 225, "status": "merged"},
-    {"issue": 229, "pr": 230, "status": "merged"},
-    {"issue": 231, "pr": 232, "status": "merged"},
-    {"issue": 236, "pr": 237, "status": "merged"},
-    {"issue": 238, "pr": 239, "status": "merged"},
-    {"issue": 240, "pr": 241, "status": "merged"},
-    {"issue": 244, "pr": 253, "status": "merged"},
-    {"issue": 245, "pr": 254, "status": "merged"},
-    {"issue": 246, "pr": 256, "status": "merged"},
-    {"issue": 248, "pr": 259, "status": "merged"},
-    {"issue": 250, "pr": 255, "status": "merged"},
-    {"issue": 269, "status": "closed"},
-    {"issue": 273, "status": "closed"},
-    {"issue": 275, "pr": 276, "status": "merged"},
-    {"issue": 277, "pr": 278, "status": "merged"},
-    {"issue": 279, "pr": 280, "status": "merged"},
-    {"issue": 281, "pr": 282, "status": "merged"},
-    {"issue": 283, "pr": 284, "status": "merged"},
-    {"issue": 288, "status": "closed"},
-    {"issue": 291, "status": "merged"},
-    {"issue": 295, "pr": 296, "status": "merged"},
-    {"issue": 298, "pr": 303, "status": "merged"},
-    {"issue": 301, "pr": 304, "status": "merged"},
-    {"issue": 299, "pr": 305, "status": "merged"},
-    {"issue": 300, "pr": 307, "status": "merged"},
-    {"issue": 302, "status": "in-review", "notes": "Landing Page Hardening — PR open (awaiting review)"}
+    {
+      "issue": 125,
+      "pr": 138,
+      "status": "merged"
+    },
+    {
+      "issue": 126,
+      "pr": 139,
+      "status": "merged"
+    },
+    {
+      "issue": 137,
+      "pr": 142,
+      "status": "merged"
+    },
+    {
+      "issue": 128,
+      "pr": 145,
+      "status": "merged"
+    },
+    {
+      "issue": 127,
+      "pr": 150,
+      "status": "merged"
+    },
+    {
+      "issue": 129,
+      "pr": 151,
+      "status": "merged"
+    },
+    {
+      "issue": 130,
+      "pr": 154,
+      "status": "merged"
+    },
+    {
+      "issue": 131,
+      "pr": 155,
+      "status": "merged"
+    },
+    {
+      "issue": 132,
+      "pr": 159,
+      "status": "merged"
+    },
+    {
+      "issue": 133,
+      "pr": 161,
+      "status": "merged"
+    },
+    {
+      "issue": 134,
+      "pr": 164,
+      "status": "merged"
+    },
+    {
+      "issue": 135,
+      "pr": 167,
+      "status": "merged"
+    },
+    {
+      "issue": 136,
+      "pr": 170,
+      "status": "merged"
+    },
+    {
+      "issue": 165,
+      "pr": 166,
+      "status": "merged"
+    },
+    {
+      "issue": 172,
+      "pr": 173,
+      "status": "merged"
+    },
+    {
+      "issue": 176,
+      "status": "merged"
+    },
+    {
+      "issue": 199,
+      "status": "merged"
+    },
+    {
+      "issue": 225,
+      "status": "merged"
+    },
+    {
+      "issue": 229,
+      "pr": 230,
+      "status": "merged"
+    },
+    {
+      "issue": 231,
+      "pr": 232,
+      "status": "merged"
+    },
+    {
+      "issue": 236,
+      "pr": 237,
+      "status": "merged"
+    },
+    {
+      "issue": 238,
+      "pr": 239,
+      "status": "merged"
+    },
+    {
+      "issue": 240,
+      "pr": 241,
+      "status": "merged"
+    },
+    {
+      "issue": 244,
+      "pr": 253,
+      "status": "merged"
+    },
+    {
+      "issue": 245,
+      "pr": 254,
+      "status": "merged"
+    },
+    {
+      "issue": 246,
+      "pr": 256,
+      "status": "merged"
+    },
+    {
+      "issue": 248,
+      "pr": 259,
+      "status": "merged"
+    },
+    {
+      "issue": 250,
+      "pr": 255,
+      "status": "merged"
+    },
+    {
+      "issue": 269,
+      "status": "closed"
+    },
+    {
+      "issue": 273,
+      "status": "closed"
+    },
+    {
+      "issue": 275,
+      "pr": 276,
+      "status": "merged"
+    },
+    {
+      "issue": 277,
+      "pr": 278,
+      "status": "merged"
+    },
+    {
+      "issue": 279,
+      "pr": 280,
+      "status": "merged"
+    },
+    {
+      "issue": 281,
+      "pr": 282,
+      "status": "merged"
+    },
+    {
+      "issue": 283,
+      "pr": 284,
+      "status": "merged"
+    },
+    {
+      "issue": 288,
+      "status": "closed"
+    },
+    {
+      "issue": 291,
+      "status": "merged"
+    },
+    {
+      "issue": 295,
+      "pr": 296,
+      "status": "merged"
+    },
+    {
+      "issue": 298,
+      "pr": 303,
+      "status": "merged",
+      "notes": "Merged via PR #303; re-verified on re-dispatch 2026-03-02T04:52Z \u2014 all acceptance criteria met on main"
+    },
+    {
+      "issue": 301,
+      "pr": 304,
+      "status": "merged"
+    },
+    {
+      "issue": 299,
+      "pr": 305,
+      "status": "merged"
+    },
+    {
+      "issue": 300,
+      "pr": 307,
+      "status": "merged"
+    },
+    {
+      "issue": 302,
+      "status": "in-review",
+      "notes": "Landing Page Hardening \u2014 PR open (awaiting review)"
+    }
   ],
-  "open_issues": [302],
-  "open_prs": ["issue-302"],
+  "open_issues": [
+    302
+  ],
+  "open_prs": [
+    "issue-302"
+  ],
   "dependency_graph": {
-    "302": [298, 299, 300, 301]
+    "302": [
+      298,
+      299,
+      300,
+      301
+    ]
   },
   "notes": "Run 05 near complete. All dependencies merged. #302 PR opened this run."
 }
