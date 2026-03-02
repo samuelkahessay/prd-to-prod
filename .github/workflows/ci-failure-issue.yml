@@ -33,12 +33,34 @@ jobs:
   route-failure:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'failure'
+    timeout-minutes: 15
+    env:
+      PIPELINE_HEALING_ENABLED: ${{ vars.PIPELINE_HEALING_ENABLED }}
     steps:
       - name: Checkout repository helpers
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 50
+
+      - name: Checkout workflow helpers
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/healing-control.sh
+          sparse-checkout-cone-mode: false
+          path: .workflow-helpers
+
+      - name: Check healing pause switch
+        id: healing
+        run: |
+          if .workflow-helpers/scripts/healing-control.sh is-enabled; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "paused=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "paused=true" >> "$GITHUB_OUTPUT"
+            echo "Autonomous healing is paused via PIPELINE_HEALING_ENABLED."
+          fi
 
       - name: Route failing CI run
         env:
@@ -49,6 +71,7 @@ jobs:
           RUN_URL: ${{ github.event.workflow_run.html_url }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEALING_PAUSED: ${{ steps.healing.outputs.paused }}
           PULL_REQUESTS_JSON: ${{ toJson(github.event.workflow_run.pull_requests) }}
         run: |
           set -euo pipefail
@@ -253,6 +276,17 @@ jobs:
 
           PR_NUMBER=$(printf '%s' "$PULL_REQUESTS_JSON" | jq -r '.[0].number // empty')
           if [ -z "$PR_NUMBER" ]; then
+            if [ "${HEALING_PAUSED:-false}" = "true" ]; then
+              TITLE="[CI Incident] ${HEAD_BRANCH} failure: ${SHORT_SUMMARY}"
+              BODY=$(render_incident_body \
+                "Autonomous healing is paused via PIPELINE_HEALING_ENABLED, so no auto-dispatchable pipeline repair issue was created." \
+                "- **Branch**: \`${HEAD_BRANCH}\`")
+              DRILL_ID=$(extract_drill_id)
+              BODY=$(append_drill_metadata "$BODY" "$DRILL_ID")
+              create_or_update_incident_issue "$TITLE" "$BODY"
+              exit 0
+            fi
+
             TITLE="[Pipeline] CI Build Failure on main: ${SHORT_SUMMARY}"
             BODY=$(printf '%s\n' \
               "## CI Build Failure on \`main\`" \
@@ -364,6 +398,20 @@ jobs:
           DETECTED_STATE=$(render_state_body detected "$LINKED_ISSUE" 1 "$FAILURE_TYPE" "$FAILURE_SIGNATURE" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
           upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$DETECTED_STATE"
           add_pr_label "ci-failure"
+
+          if [ "${HEALING_PAUSED:-false}" = "true" ]; then
+            ESCALATED_STATE=$(render_state_body escalated "$LINKED_ISSUE" 1 "$FAILURE_TYPE" "$FAILURE_SIGNATURE" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
+            upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
+            remove_pr_label "repair-in-progress"
+            add_pr_label "repair-escalated"
+            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} healing paused"
+            BODY=$(render_incident_body \
+              "Autonomous healing is paused via PIPELINE_HEALING_ENABLED, so the router recorded the incident but did not post a repair command." \
+              "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`\n- **Linked Issue**: #${LINKED_ISSUE}")
+            create_or_update_incident_issue "$TITLE" "$BODY"
+            exit 0
+          fi
+
           add_pr_label "repair-in-progress"
           remove_pr_label "repair-escalated"
 
