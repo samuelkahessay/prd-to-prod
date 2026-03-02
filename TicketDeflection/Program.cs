@@ -11,6 +11,7 @@ builder.Services.AddScoped<ClassificationService>();
 builder.Services.AddScoped<MatchingService>();
 builder.Services.AddScoped<PipelineService>();
 builder.Services.AddSingleton<IShowcaseService, ShowcaseService>();
+builder.Services.AddSingleton<AutonomyLedgerService>();
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
@@ -45,6 +46,7 @@ app.MapTicketEndpoints();
 app.MapKnowledgeEndpoints();
 app.MapClassifyEndpoints();
 app.MapResolveEndpoints();
+app.MapAutonomyEndpoints();
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "1.0.0" }));
 
