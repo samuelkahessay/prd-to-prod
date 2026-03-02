@@ -12,6 +12,7 @@ builder.Services.AddScoped<MatchingService>();
 builder.Services.AddScoped<PipelineService>();
 builder.Services.AddSingleton<IDecisionLedgerService, DecisionLedgerService>();
 builder.Services.AddSingleton<IShowcaseService, ShowcaseService>();
+builder.Services.AddHttpClient<IGitHubPipelineSnapshotService, GitHubPipelineSnapshotService>();
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
@@ -38,6 +39,7 @@ app.UseStaticFiles();
 
 // --- Endpoint Mappings ---
 app.MapPipelineEndpoints();
+app.MapPipelineLiveEndpoints();
 app.MapSimulateEndpoints();
 app.MapAutonomyEndpoints();
 app.MapMetricsEndpoints();

@@ -1,0 +1,392 @@
+@page "/pipeline"
+@model TicketDeflection.Pages.PipelineModel
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pipeline Live — prd-to-prod</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #080c12;
+            --grid-line: rgba(0, 160, 255, 0.04);
+            --border: rgba(0, 160, 255, 0.15);
+            --accent: #00aaff;
+            --green: #3ddc84;
+            --amber: #f5a623;
+            --red: #f85149;
+            --text: #b8c4d4;
+            --dim: #7a8fa8;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Space Grotesk', sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 48px 48px;
+            font-family: var(--mono);
+            color: var(--text);
+            font-size: 14px;
+        }
+        h1, h2, h3, .font-sans { font-family: var(--sans); }
+        .status-bar {
+            background: rgba(0, 170, 255, 0.04);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-link {
+            color: rgba(0, 170, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .nav-link:hover { border-color: var(--border); color: var(--accent); }
+        .nav-link.active { border-color: var(--border); color: var(--accent); }
+        .panel {
+            background: rgba(4, 10, 20, 0.72);
+            border: 1px solid var(--border);
+        }
+        .panel-top { border-top: 2px solid var(--accent); }
+        .panel-green { border-top: 2px solid var(--green); }
+        .panel-amber { border-top: 2px solid var(--amber); }
+        .panel-red { border-top: 2px solid var(--red); }
+        .metric-lbl {
+            color: var(--dim);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 8px;
+        }
+        .metric-val {
+            font-family: var(--mono);
+            color: var(--accent);
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .text-dim { color: var(--dim); }
+        .text-white { color: #e8edf5; }
+        .text-accent { color: var(--accent); }
+        .text-green { color: var(--green); }
+        .text-amber { color: var(--amber); }
+        .text-red { color: var(--red); }
+        .warning {
+            border: 1px solid rgba(245, 166, 35, 0.3);
+            background: rgba(245, 166, 35, 0.08);
+            color: var(--amber);
+        }
+        .stage-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .stage-node {
+            position: relative;
+            min-height: 118px;
+            padding: 16px;
+        }
+        .stage-node::after {
+            content: "";
+            position: absolute;
+            top: 28px;
+            right: -14px;
+            width: 14px;
+            border-top: 1px dashed rgba(0, 170, 255, 0.25);
+        }
+        .stage-node:last-child::after { display: none; }
+        .stage-count {
+            font-size: 2rem;
+            line-height: 1;
+            color: #e8edf5;
+            margin-bottom: 8px;
+        }
+        .status-pill {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 3px 8px;
+            border: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .status-pill.active {
+            color: var(--green);
+            border-color: rgba(61, 220, 132, 0.3);
+            background: rgba(61, 220, 132, 0.08);
+        }
+        .status-pill.idle {
+            color: var(--dim);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .record {
+            border-top: 1px solid rgba(0, 160, 255, 0.08);
+            padding: 12px 0;
+        }
+        .record:first-child { border-top: none; padding-top: 0; }
+        .chip {
+            display: inline-block;
+            margin-right: 8px;
+            margin-bottom: 6px;
+            padding: 2px 8px;
+            border: 1px solid var(--border);
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .chip-queue { color: var(--amber); }
+        .chip-implementation { color: var(--accent); }
+        .chip-review { color: #d4d8ff; }
+        .chip-deploy { color: var(--green); }
+        .chip-ops { color: #ff9bd7; }
+        @@media (max-width: 900px) {
+            .stage-grid { grid-template-columns: 1fr 1fr; }
+            .stage-node::after { display: none; }
+        }
+        @@media (max-width: 640px) {
+            .stage-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="status-bar px-6 py-2 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-4">
+            <span class="text-accent font-bold tracking-widest">PIPELINE LIVE</span>
+            <span class="text-dim">//</span>
+            <span class="text-dim">live GitHub state, refreshes every 15 seconds</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="/" class="nav-link">overview</a>
+            <a href="/dashboard" class="nav-link">dashboard</a>
+            <a href="/operator" class="nav-link">operator</a>
+            <a href="/pipeline" class="nav-link active">pipeline</a>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 py-10">
+        <div class="mb-8">
+            <div class="text-xs text-dim mb-2 uppercase tracking-widest">// current repo state — issues, prs, runs, deploys</div>
+            <h1 class="font-sans text-3xl font-bold text-white mb-3">Live Pipeline Snapshot</h1>
+            <p class="max-w-3xl text-sm leading-relaxed text-dim">
+                This page polls the current GitHub control plane and renders the active software delivery loop as it exists now,
+                not as a canned replay. It is read-only and falls back cleanly when only unauthenticated GitHub API access is available.
+            </p>
+        </div>
+
+        <div id="warningBox" class="warning p-4 mb-6 hidden"></div>
+
+        <div class="grid grid-cols-2 md:grid-cols-7 gap-4 mb-8">
+            <div class="panel panel-top p-4">
+                <div class="metric-lbl">open issues</div>
+                <div id="metricIssues" class="metric-val">0</div>
+            </div>
+            <div class="panel panel-top p-4">
+                <div class="metric-lbl">open prs</div>
+                <div id="metricPrs" class="metric-val">0</div>
+            </div>
+            <div class="panel panel-top p-4">
+                <div class="metric-lbl">active runs</div>
+                <div id="metricRuns" class="metric-val">0</div>
+            </div>
+            <div class="panel panel-amber p-4">
+                <div class="metric-lbl">deferred</div>
+                <div id="metricDeferred" class="metric-val text-amber">0</div>
+            </div>
+            <div class="panel panel-red p-4">
+                <div class="metric-lbl">repairs</div>
+                <div id="metricRepairs" class="metric-val text-red">0</div>
+            </div>
+            <div class="panel panel-green p-4">
+                <div class="metric-lbl">merge armed</div>
+                <div id="metricMerge" class="metric-val text-green">0</div>
+            </div>
+            <div class="panel p-4">
+                <div class="metric-lbl">mode</div>
+                <div id="metricMode" class="text-white text-sm">loading</div>
+            </div>
+        </div>
+
+        <section class="panel p-5 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <div class="text-xs text-dim uppercase tracking-widest mb-1">stage map</div>
+                    <h2 class="font-sans text-2xl font-bold text-white">Current pipeline flow</h2>
+                </div>
+                <div id="updatedAt" class="text-xs text-dim">updated: pending</div>
+            </div>
+            <div id="stageGrid" class="stage-grid"></div>
+        </section>
+
+        <div class="grid lg:grid-cols-3 gap-6">
+            <section class="panel p-5">
+                <div class="text-xs text-dim uppercase tracking-widest mb-2">open pipeline issues</div>
+                <h2 class="font-sans text-xl font-bold text-white mb-4">Issue queue</h2>
+                <div id="issueList" class="text-sm text-dim">Loading issues...</div>
+            </section>
+
+            <section class="panel p-5">
+                <div class="text-xs text-dim uppercase tracking-widest mb-2">open pipeline prs</div>
+                <h2 class="font-sans text-xl font-bold text-white mb-4">Pull requests</h2>
+                <div id="prList" class="text-sm text-dim">Loading pull requests...</div>
+            </section>
+
+            <section class="panel p-5">
+                <div class="text-xs text-dim uppercase tracking-widest mb-2">actions in progress</div>
+                <h2 class="font-sans text-xl font-bold text-white mb-4">Workflow runs</h2>
+                <div id="runList" class="text-sm text-dim">Loading workflow runs...</div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const stageChipClass = {
+            queue: 'chip chip-queue',
+            implementation: 'chip chip-implementation',
+            review: 'chip chip-review',
+            deploy: 'chip chip-deploy',
+            operations: 'chip chip-ops'
+        };
+
+        async function loadSnapshot() {
+            const response = await fetch('/api/pipeline/live', { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error(`pipeline snapshot request failed: ${response.status}`);
+            }
+
+            return response.json();
+        }
+
+        function renderStages(stages) {
+            const grid = document.getElementById('stageGrid');
+            grid.innerHTML = stages.map(stage => `
+                <div class="panel stage-node">
+                    <div class="metric-lbl">${escapeHtml(stage.label)}</div>
+                    <div class="stage-count">${stage.count}</div>
+                    <span class="status-pill ${stage.status === 'active' ? 'active' : 'idle'}">${escapeHtml(stage.status)}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderIssues(issues) {
+            const list = document.getElementById('issueList');
+            if (!issues.length) {
+                list.innerHTML = '<div class="text-dim">No active actionable pipeline issues.</div>';
+                return;
+            }
+
+            list.innerHTML = issues.map(issue => `
+                <div class="record">
+                    <div class="flex items-center justify-between gap-3">
+                        <a class="text-accent hover:underline" href="${issue.url}" target="_blank" rel="noopener noreferrer">#${issue.number}</a>
+                        <span class="chip chip-queue">${escapeHtml(issue.stageLabel)}</span>
+                    </div>
+                    <div class="text-white mt-2">${escapeHtml(issue.title)}</div>
+                    <div class="text-dim text-xs mt-2">labels: ${escapeHtml(issue.labels.join(', '))}</div>
+                    ${issue.linkedPullRequestUrl ? `<div class="text-dim text-xs mt-1">linked pr: <a class="text-accent hover:underline" href="${issue.linkedPullRequestUrl}" target="_blank" rel="noopener noreferrer">#${issue.linkedPullRequestNumber}</a></div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderPullRequests(prs) {
+            const list = document.getElementById('prList');
+            if (!prs.length) {
+                list.innerHTML = '<div class="text-dim">No open pipeline pull requests.</div>';
+                return;
+            }
+
+            list.innerHTML = prs.map(pr => `
+                <div class="record">
+                    <div class="flex items-center justify-between gap-3">
+                        <a class="text-accent hover:underline" href="${pr.url}" target="_blank" rel="noopener noreferrer">#${pr.number}</a>
+                        <span class="chip chip-review">${escapeHtml(pr.stageLabel)}</span>
+                    </div>
+                    <div class="text-white mt-2">${escapeHtml(pr.title)}</div>
+                    <div class="text-dim text-xs mt-2">ci: ${escapeHtml(pr.ciState)} · review: ${escapeHtml(pr.reviewState)} · branch: ${escapeHtml(pr.headBranch)}</div>
+                    ${pr.linkedIssueNumber ? `<div class="text-dim text-xs mt-1">linked issue: #${pr.linkedIssueNumber}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderRuns(runs) {
+            const list = document.getElementById('runList');
+            if (!runs.length) {
+                list.innerHTML = '<div class="text-dim">No workflow runs in progress.</div>';
+                return;
+            }
+
+            list.innerHTML = runs.map(run => `
+                <div class="record">
+                    <div class="flex items-center justify-between gap-3">
+                        <a class="text-accent hover:underline" href="${run.url}" target="_blank" rel="noopener noreferrer">${escapeHtml(run.name)}</a>
+                        <span class="${stageChipClass[run.stage] || 'chip'}">${escapeHtml(run.stageLabel)}</span>
+                    </div>
+                    <div class="text-dim text-xs mt-2">event: ${escapeHtml(run.event)} · branch: ${escapeHtml(run.headBranch || 'n/a')} · actor: ${escapeHtml(run.triggeringActor || 'n/a')}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderWarnings(warnings, mode) {
+            const box = document.getElementById('warningBox');
+            const messages = [];
+
+            if (mode === 'unauthenticated') {
+                messages.push('GitHub access is unauthenticated. Live polling works for a demo, but rate limits are much lower.');
+            }
+
+            messages.push(...warnings);
+
+            if (!messages.length) {
+                box.classList.add('hidden');
+                box.innerHTML = '';
+                return;
+            }
+
+            box.classList.remove('hidden');
+            box.innerHTML = messages.map(message => `<div>${escapeHtml(message)}</div>`).join('');
+        }
+
+        function renderSnapshot(snapshot) {
+            document.getElementById('metricIssues').textContent = snapshot.summary.openIssues;
+            document.getElementById('metricPrs').textContent = snapshot.summary.openPullRequests;
+            document.getElementById('metricRuns').textContent = snapshot.summary.activeRuns;
+            document.getElementById('metricDeferred').textContent = snapshot.summary.deferredIssues;
+            document.getElementById('metricRepairs').textContent = snapshot.summary.repairLoops;
+            document.getElementById('metricMerge').textContent = snapshot.summary.autoMergeArmed;
+            document.getElementById('metricMode').textContent = `${snapshot.mode} · ${snapshot.repository}`;
+            document.getElementById('updatedAt').textContent = `updated: ${snapshot.updatedAtUtc}`;
+
+            renderWarnings(snapshot.warnings, snapshot.mode);
+            renderStages(snapshot.stages);
+            renderIssues(snapshot.issues);
+            renderPullRequests(snapshot.pullRequests);
+            renderRuns(snapshot.activeRuns);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        async function refresh() {
+            try {
+                const snapshot = await loadSnapshot();
+                renderSnapshot(snapshot);
+            } catch (error) {
+                renderWarnings([error.message || 'Failed to load live pipeline snapshot.'], 'unauthenticated');
+            }
+        }
+
+        refresh();
+        window.setInterval(refresh, 15000);
+    </script>
+</body>
+</html>
