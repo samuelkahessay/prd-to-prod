@@ -11,21 +11,40 @@ old CI/CD, but as an operating loop with explicit authority limits, real failure
 conditions, and visible operator controls.
 
 ```mermaid
-flowchart LR
-  H["Human Intent"] --> D["PRD Decomposer"]
-  P["Autonomy Policy"] --> R["Review + Merge Gate"]
-  D --> I["Pipeline Issues"]
-  I --> A["Repo Assist"]
-  A --> PR["Pipeline PR"]
-  PR --> RV["Review Agent"]
-  RV --> R
-  R --> M["Auto-merge or Manual Stop"]
-  M --> S["Deploy"]
-  S --> F["Failure Detection"]
-  F --> X["Repair or Escalate"]
-  X --> A
-  L["Decision Ledger + /operator + /pipeline"] --- R
-  L --- F
+flowchart TD
+  subgraph C["Human-Owned Control Plane"]
+    H["Human Intent"]
+    P["Autonomy Policy"]
+  end
+
+  subgraph E["AI Execution Lane"]
+    D["PRD Decomposer"] --> I["Pipeline Issues"]
+    I --> A["Repo Assist Agent"]
+    A --> PR["Pipeline PR"]
+    PR --> RV["Review Agent"]
+    RV --> R["Review + Merge Gate"]
+  end
+
+  subgraph O["Delivery and Recovery"]
+    M{"Auto-merge or Manual Stop?"}
+    S["Deploy"]
+    F["Failure Detection"]
+    X{"Repair or Escalate?"}
+    HD["Human Decision"]
+  end
+
+  H --> D
+  P --> R
+  R --> M
+  M -->|Auto| S
+  M -->|Stop| HD
+  S --> F
+  F --> X
+  X -->|Repair| A
+  X -->|Escalate| HD
+
+  L["Decision Ledger /operator /pipeline"] -. observes .-> R
+  L -. observes .-> F
 ```
 
 ## Human and AI Boundary
