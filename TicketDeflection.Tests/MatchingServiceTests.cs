@@ -160,4 +160,47 @@ public class MatchingServiceTests
         Assert.Equal(TicketStatus.AutoResolved, ticket.Status);
         Assert.Contains("Password", ticket.Resolution!);
     }
+
+    [Fact]
+    public void ResolveTicket_AutoResolved_ReturnedScoreAboveThreshold()
+    {
+        // The returned score must be consistent with the resolution decision (>= threshold)
+        using var context = CreateContext();
+        SeedPasswordArticle(context);
+
+        var ticket = new Ticket
+        {
+            Title = "forgot password",
+            Description = "",
+            Status = TicketStatus.New
+        };
+
+        var service = CreateService(threshold: 0.3);
+        var (score, article) = service.ResolveTicket(ticket, context);
+
+        Assert.Equal(TicketStatus.AutoResolved, ticket.Status);
+        Assert.True(score >= 0.3, $"Expected score >= 0.3 for auto-resolved ticket, got {score}");
+        Assert.NotNull(article);
+    }
+
+    [Fact]
+    public void ResolveTicket_Escalated_ReturnedScoreBelowThreshold()
+    {
+        // Escalated tickets must have a score that is below the threshold
+        using var context = CreateContext();
+        SeedPasswordArticle(context);
+
+        var ticket = new Ticket
+        {
+            Title = "zxqvbnm asdfgh",
+            Description = "",
+            Status = TicketStatus.New
+        };
+
+        var service = CreateService(threshold: 0.3);
+        var (score, _) = service.ResolveTicket(ticket, context);
+
+        Assert.Equal(TicketStatus.Escalated, ticket.Status);
+        Assert.True(score < 0.3, $"Expected score < 0.3 for escalated ticket, got {score}");
+    }
 }

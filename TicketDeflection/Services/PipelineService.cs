@@ -43,23 +43,8 @@ public class PipelineService
         _classifier.ClassifyTicket(ticket);
         logs.Add(CreateLog(ticket.Id, $"Ticket Classified as {ticket.Category}/{ticket.Severity}", ""));
 
-        // Stage 3: Find best match score before resolving (for log entry)
-        var articles = context.KnowledgeArticles.ToList();
-        var ticketTokens = Tokenize($"{ticket.Title} {ticket.Description}");
-        double bestScore = 0;
-        KnowledgeArticle? bestArticle = null;
-        foreach (var article in articles)
-        {
-            var articleTokens = Tokenize($"{article.Content} {article.Tags}");
-            var score = Jaccard(ticketTokens, articleTokens);
-            if (score > bestScore)
-            {
-                bestScore = score;
-                bestArticle = article;
-            }
-        }
-
-        _matcher.ResolveTicket(ticket, context);
+        // Stage 3: Match and resolve — use the score from MatchingService (single source of truth)
+        var (bestScore, bestArticle) = _matcher.ResolveTicket(ticket, context);
 
         if (ticket.Status == TicketStatus.AutoResolved)
         {
@@ -85,21 +70,4 @@ public class PipelineService
         Action = action,
         Details = details
     };
-
-    private static readonly char[] _punctuation =
-        ['.', '!', '?', ';', ':', '\'', '"', '(', ')', '[', ']', '{', '}', '<', '>', '/'];
-
-    private static HashSet<string> Tokenize(string text) =>
-        text.Split([' ', '\t', ',', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries)
-            .Select(t => t.Trim(_punctuation).ToLowerInvariant())
-            .Where(t => t.Length > 0)
-            .ToHashSet();
-
-    private static double Jaccard(HashSet<string> a, HashSet<string> b)
-    {
-        if (a.Count == 0 && b.Count == 0) return 0;
-        var intersection = a.Intersect(b).Count();
-        var union = a.Union(b).Count();
-        return intersection / (double)union;
-    }
 }
