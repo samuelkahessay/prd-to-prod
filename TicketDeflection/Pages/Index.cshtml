@@ -505,6 +505,10 @@
                         });
                 });
             });
+
+            // Auto-select the latest run (first button, sorted descending) on page load
+            var defaultBtn = document.querySelector('.run-select-btn');
+            if (defaultBtn) defaultBtn.click();
         })();
         </script>
 
