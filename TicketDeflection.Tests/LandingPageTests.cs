@@ -67,4 +67,20 @@ public class LandingPageTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.DoesNotContain("Run Demo", html);
         Assert.DoesNotContain("api/simulate", html);
     }
+
+    [Fact]
+    public async Task LandingPage_ContainsGetStartedSection()
+    {
+        var client = _factory.CreateClient();
+        var html = await client.GetStringAsync("/");
+        Assert.Contains("get started", html);
+    }
+
+    [Fact]
+    public async Task LandingPage_ContainsFooterWithGhAwLink()
+    {
+        var client = _factory.CreateClient();
+        var html = await client.GetStringAsync("/");
+        Assert.Contains("github.com/github/gh-aw", html);
+    }
 }
