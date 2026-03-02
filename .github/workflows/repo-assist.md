@@ -54,7 +54,7 @@ safe-outputs:
     max: 1
     github-token: ${{ secrets.GH_AW_PROJECT_GITHUB_TOKEN }}
   add-labels:
-    allowed: [feature, test, infra, docs, bug, pipeline, blocked, ready, in-progress, completed]
+    allowed: [feature, test, infra, docs, bug, pipeline, blocked, ready, in-progress, completed, agentic-workflows]
     max: 20
     target: "*"
   remove-labels:
@@ -152,7 +152,7 @@ Memory may be stale — always verify against current repo state.
 
 ## Workflow
 
-Each run, work on 2-4 tasks from the list below. Use round-robin scheduling based on memory. Always do Task 5 (status update).
+Each run, work on 2-5 tasks from the list below. Use round-robin scheduling based on memory. Always do Task 5 (status update) and Task 6 (agentic workflow failure triage).
 
 ### Task 1: Implement Issues as Pull Requests
 
@@ -234,6 +234,28 @@ Use status:
 - `COMPLETE` when no open pipeline issues/PRs remain
 
 Do NOT create or update a `[Pipeline] Status` issue for this task. Create exactly one project status update every run.
+
+### Task 6: Triage Agentic Workflow Failures (ALWAYS DO THIS)
+
+1. List open issues labeled `agentic-workflows` (titles start with `[aw]`).
+2. For each `[aw]` issue, read the issue body and extract:
+   - The failed workflow name
+   - The failed run URL and run ID
+   - The error details (e.g., code push failures, branch fetch failures, transient errors)
+3. Debug the failure:
+   - Fetch the failed run logs: `gh run view <RUN_ID> --log-failed`
+   - Identify the root cause (stale branch, merge conflict, missing secret, transient error, etc.)
+4. Attempt to fix if actionable:
+   - **Stale/missing branch**: clean up the reference and retry, or comment with remediation steps
+   - **Code push failure**: inspect the target PR branch state and attempt to resolve
+   - **Transient error**: comment that a retry is recommended
+5. If the failure cannot be auto-fixed, add a comment on the `[aw]` issue explaining:
+   - What was investigated
+   - Root cause analysis
+   - Recommended manual steps
+   - Then add the `blocked` label to indicate human intervention is needed
+6. Close the `[aw]` issue if the underlying problem has already been resolved (e.g., the target PR was merged, the branch was cleaned up, etc.).
+7. Update memory with `[aw]` issue triage outcomes.
 
 ## No-Work Fallback (ALWAYS DO THIS LAST)
 
