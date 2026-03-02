@@ -13,7 +13,7 @@ public class MatchingService
         _threshold = configuration.GetValue<double>("MatchingThreshold", 0.3);
     }
 
-    public void ResolveTicket(Ticket ticket, TicketDbContext context)
+    public (double BestScore, KnowledgeArticle? BestArticle) ResolveTicket(Ticket ticket, TicketDbContext context)
     {
         var articles = context.KnowledgeArticles.ToList();
 
@@ -47,6 +47,8 @@ public class MatchingService
         {
             ticket.Status = TicketStatus.Escalated;
         }
+
+        return (bestScore, bestArticle);
     }
 
     private static readonly char[] _punctuation =
