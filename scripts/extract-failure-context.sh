@@ -2,16 +2,35 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $0 [log-file]" >&2
+  echo "Usage: $0 [--changed-files FILE_LIST] [log-file]" >&2
   exit 1
 }
 
-if [ "$#" -gt 1 ]; then
+CHANGED_FILES=""
+POSITIONAL=()
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --changed-files)
+      CHANGED_FILES="$2"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      POSITIONAL+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [ "${#POSITIONAL[@]}" -gt 1 ]; then
   usage
 fi
 
-if [ "$#" -eq 1 ]; then
-  RAW_LOGS=$(cat "$1")
+if [ "${#POSITIONAL[@]}" -eq 1 ]; then
+  RAW_LOGS=$(cat "${POSITIONAL[0]}")
 else
   RAW_LOGS=$(cat)
 fi
@@ -106,9 +125,61 @@ fi
 
 SUMMARY=$(printf '%.140s' "$SUMMARY")
 
+# --- Hypothesis generation (only when --changed-files provided) ---
+HYPOTHESIS=""
+CORRELATED_FILES="[]"
+
+if [ -n "$CHANGED_FILES" ]; then
+  # Extract file paths from error lines
+  ERROR_FILES=$(printf '%s\n' "$RAW_LOGS" \
+    | grep -oE '[A-Za-z0-9_./-]+\.(cs|ts|js|jsx|tsx|py|go|rs|java)' \
+    | sort -u || true)
+
+  if [ -n "$ERROR_FILES" ]; then
+    MATCHED=()
+    UNMATCHED=()
+
+    while IFS= read -r efile; do
+      [ -n "$efile" ] || continue
+      FOUND=false
+      while IFS= read -r cfile; do
+        [ -n "$cfile" ] || continue
+        if printf '%s' "$cfile" | grep -qF "$(basename "$efile")"; then
+          MATCHED+=("$cfile")
+          FOUND=true
+          break
+        fi
+      done <<< "$CHANGED_FILES"
+
+      if [ "$FOUND" = "false" ]; then
+        UNMATCHED+=("$efile")
+      fi
+    done <<< "$ERROR_FILES"
+
+    if [ "${#MATCHED[@]}" -gt 0 ]; then
+      MATCHED_LIST=$(printf '%s, ' "${MATCHED[@]}" | sed 's/, $//')
+      HYPOTHESIS="Error references ${MATCHED_LIST} which was modified in this PR. The failure likely stems from these changes."
+      CORRELATED_FILES=$(printf '%s\n' "${MATCHED[@]}" | jq -R . | jq -s .)
+    elif [ "${#UNMATCHED[@]}" -gt 0 ]; then
+      UNMATCHED_LIST=$(printf '%s, ' "${UNMATCHED[@]}" | sed 's/, $//')
+      HYPOTHESIS="Error references ${UNMATCHED_LIST} which was NOT directly modified in this PR — possible downstream dependency breakage."
+      CORRELATED_FILES="[]"
+    fi
+  fi
+fi
+
 jq -n \
   --arg failure_type "$FAILURE_TYPE" \
   --arg failure_signature "$FAILURE_SIGNATURE" \
   --arg summary "$SUMMARY" \
   --arg excerpt "$EXCERPT" \
-  '{failure_type: $failure_type, failure_signature: $failure_signature, summary: $summary, excerpt: $excerpt}'
+  --arg hypothesis "$HYPOTHESIS" \
+  --argjson correlated_files "$CORRELATED_FILES" \
+  '{
+    failure_type: $failure_type,
+    failure_signature: $failure_signature,
+    summary: $summary,
+    excerpt: $excerpt,
+    hypothesis: (if $hypothesis == "" then null else $hypothesis end),
+    correlated_files: $correlated_files
+  }'
