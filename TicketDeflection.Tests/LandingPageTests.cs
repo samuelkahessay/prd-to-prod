@@ -101,4 +101,13 @@ public class LandingPageTests : IClassFixture<WebApplicationFactory<Program>>
         var response = await client.GetAsync("/api/showcase/nonexistent/timeline");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task LandingPage_RunHistoryRendersWithData()
+    {
+        var client = _factory.CreateClient();
+        var html = await client.GetStringAsync("/");
+        // Verify at least one run name from real showcase files appears
+        Assert.Contains("Code Snippet Manager", html);
+    }
 }
