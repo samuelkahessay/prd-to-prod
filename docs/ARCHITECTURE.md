@@ -179,14 +179,19 @@ to avoid script injection vulnerabilities.
 | **File** | `.github/workflows/pipeline-watchdog.yml` |
 | **Engine** | Standard GitHub Actions |
 | **Trigger** | Cron (every 30 minutes), manual dispatch |
-| **Output** | `/repo-assist` comments or `repo-assist` dispatches |
+| **Output** | `/repo-assist` comments, repo-assist dispatches, and escalation/cleanup actions |
 
-Cron-based stall detector that replaces the human supervisor. Detects two failure modes:
+Cron-based stall detector that replaces the human supervisor. The current
+implementation scans four classes of problems each cycle:
 
-1. **Stalled PRs** — Open `[Pipeline]` PRs with a `CHANGES_REQUESTED` review and no
-   activity for 30+ minutes. Posts `/repo-assist` on the linked issue with fix instructions.
-2. **Orphaned issues** — Open pipeline issues with no linked open PR and no activity
-   for 30+ minutes. Dispatches `repo-assist.lock.yml` in Scheduled Mode.
+1. **Active CI repair incidents** — retries or escalates unresolved CI repair loops
+   on open `[Pipeline]` PRs that still carry an active incident marker.
+2. **Stalled PRs** — Open `[Pipeline]` PRs with a `CHANGES_REQUESTED` review and no
+   activity for 30+ minutes, excluding PRs already covered by an active CI incident.
+3. **Orphaned issues** — Open actionable pipeline issues with no linked open PR and
+   no recent activity.
+4. **Stale notifications and cleanup** — closes superseded duplicate PRs and stale
+   `[aw]` workflow failure issues after dispatching a fresh retry.
 
 Safety mechanisms:
 - Skips all dispatches if repo-assist is already running (prevents flooding)
@@ -200,16 +205,25 @@ Safety mechanisms:
 |---|---|
 | **File** | `.github/workflows/ci-failure-issue.yml` |
 | **Engine** | Standard GitHub Actions |
-| **Trigger** | `workflow_run: completed` (fires when `.NET CI` finishes with `conclusion == 'failure'`) |
-| **Output** | Creates a `[Pipeline] CI Build Failure` issue with `pipeline` + `bug` labels |
+| **Trigger** | `workflow_run: completed` for `.NET CI`, `Node CI`, `Docker CI`, `Deploy Router`, and `Deploy to Azure` when `conclusion == 'failure'` |
+| **Output** | Routes PR-linked failures back into the repair loop; creates standalone incident issues for fallback and escalation cases |
 
-Self-healing workflow. When CI fails on a PR, this workflow extracts the failed-step
-logs via `gh run view --log-failed`, parses .NET error codes (CS/FS/BC), and creates
-a bug issue. The `pipeline` label triggers `auto-dispatch`, which dispatches
-`repo-assist` to fix the build — closing the self-healing loop.
+Self-healing workflow router. When CI or deploy fails, this workflow extracts the
+failed-step logs via `gh run view --log-failed`, normalizes the failure signature,
+and decides which remediation path applies.
 
-Dedup: skips creation if an open `pipeline` + `bug` issue already starts with
-`[Pipeline] CI Build Failure`.
+Primary path:
+
+- If the failure belongs to an open `[Pipeline]` PR with a linked source issue, the
+  router writes a PR incident state comment, labels the PR, and posts a structured
+  `ci-repair-command:v1` comment on the linked issue so `repo-assist` repairs the
+  existing PR branch in place.
+
+Fallback and escalation paths:
+
+- If the failure is on `main`, the PR is not a `[Pipeline]` PR, the PR has no linked
+  issue, or repair dispatch fails, the workflow creates or updates a standalone
+  `[CI Incident]` issue instead of silently dropping the event.
 
 ### dotnet-ci
 
@@ -233,9 +247,11 @@ human intervention:
    on the linked issue. If an issue has no linked PR for 30+ min, it dispatches
    `repo-assist` directly.
 
-2. **CI failure auto-fix** — When `.NET CI` fails, `ci-failure-issue` creates a bug
-   issue from the error logs. `auto-dispatch` picks it up and sends `repo-assist` to
-   fix the build. The cycle: CI failure → bug issue → auto-dispatch → repo-assist → PR → CI pass.
+2. **CI failure auto-fix** — When `.NET CI`, `Node CI`, `Docker CI`, `Deploy Router`,
+   or `Deploy to Azure` fails, `ci-failure-issue` either routes the failure back to
+   the linked source issue/PR repair loop or creates a standalone incident issue for
+   fallback and escalation. The primary repair cycle is: CI failure → repair command
+   on linked issue → repo-assist → PR update → CI pass.
 
 3. **Superseded PR cleanup** — Both `pr-review-submit` (on merge) and `pipeline-watchdog`
    (on cron) detect open PRs whose linked issue was already closed by another merged PR,
