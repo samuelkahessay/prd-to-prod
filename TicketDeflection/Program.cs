@@ -10,6 +10,7 @@ builder.Services.AddDbContext<TicketDbContext>(o => o.UseInMemoryDatabase("Ticke
 builder.Services.AddScoped<ClassificationService>();
 builder.Services.AddScoped<MatchingService>();
 builder.Services.AddScoped<PipelineService>();
+builder.Services.AddSingleton<IDecisionLedgerService, DecisionLedgerService>();
 builder.Services.AddSingleton<IShowcaseService, ShowcaseService>();
 builder.Services.AddRazorPages();
 
@@ -38,6 +39,7 @@ app.UseStaticFiles();
 // --- Endpoint Mappings ---
 app.MapPipelineEndpoints();
 app.MapSimulateEndpoints();
+app.MapAutonomyEndpoints();
 app.MapMetricsEndpoints();
 app.MapShowcaseEndpoints();
 app.MapRazorPages();
