@@ -1,0 +1,1360 @@
+{
+  "run": {
+    "number": 2,
+    "name": "Pipeline Observatory",
+    "tag": "v2.0.0",
+    "tech_stack": "Next.js 14 + TypeScript",
+    "date": "2026-02",
+    "deployment": "https://prdtoprod.vercel.app",
+    "prd": "docs/prd/pipeline-observatory-prd.md"
+  },
+  "stats": {
+    "issues_created": 12,
+    "prs_total": 14,
+    "prs_merged": 14,
+    "lines_added": 8196,
+    "lines_removed": 130,
+    "files_changed": 67
+  },
+  "issues": [
+    {
+      "number": 29,
+      "title": "PRD: Pipeline Observatory",
+      "body": "# PRD: Pipeline Observatory\n\n## Overview\nBuild a Pipeline Observatory — a web app that visualizes, replays, and inspects\nthe agentic pipeline's behavior. Three views: an interactive Simulator showing\nhow the pipeline works, a Replay timeline of the Code Snippet Manager run, and\na Forensics inspector for agent decisions and review outputs.\n\nThis is the second project for the agentic pipeline, and the first using\nNext.js + React.\n\n## Tech Stack\n- Runtime: Node.js 20+\n- Framework: Next.js 14 (App Router)\n- Language: TypeScript (strict mode)\n- Styling: Tailwind CSS\n- Animation: Framer Motion\n- Data Fetching: @octokit/rest (build-time only)\n- Testing: Vitest + @testing-library/react\n- Hosting: Vercel (vercel.json config included)\n\n## Features\n\n### Feature 1: Project Scaffold\nSet up the Next.js 14 project with TypeScript, Tailwind CSS, Framer Motion, and\nVitest. Include a root layout with dark theme and a placeholder home page.\n\n**Acceptance Criteria:**\n- [ ] package.json with next, react, react-dom, tailwindcss, framer-motion, @octokit/rest, vitest, @testing-library/react, @testing-library/jest-dom\n- [ ] tsconfig.json extending next/core-js with strict mode, paths alias \"@/*\" mapping to \"src/*\"\n- [ ] tailwind.config.ts configured for src/ directory with dark mode \"class\"\n- [ ] src/app/layout.tsx with HTML root, dark class on body, Inter font from next/font, metadata title \"Pipeline Observatory\"\n- [ ] src/app/page.tsx with placeholder heading \"Pipeline Observatory\"\n- [ ] src/app/globals.css with Tailwind directives and dark theme CSS variables (bg-gray-950, text-gray-100)\n- [ ] next.config.js with output \"standalone\" for Vercel\n- [ ] vercel.json with framework \"nextjs\"\n- [ ] npm scripts: \"dev\" (next dev), \"build\" (next build), \"start\" (next start), \"test\" (vitest)\n- [ ] Test that verifies the home page renders \"Pipeline Observatory\"\n\n### Feature 2: Static Fixture Data & Data Loading Layer\nBundle real pipeline run data as static JSON fixtures and create a data loading\nlayer that tries the GitHub API at build time with fallback to fixtures.\n\n**Acceptance Criteria:**\n- [ ] src/data/fixtures/issues.json — array of objects with fields: number, title, state, createdAt, closedAt, labels (array of {name, color}). Include all 17 issues from the Code Snippet Manager run (issues #1-#15, #19, #22, #24). Pipeline issues (#7-#14) must have labels \"pipeline\" and \"feature\" or \"infra\".\n- [ ] src/data/fixtures/pull-requests.json — array of objects with fields: number, title, state, createdAt, mergedAt, additions, deletions, changedFiles, reviews (array of {author, state, body, submittedAt}). Include all 11 PRs (#5, #16-#18, #20-#21, #23, #25-#28).\n- [ ] src/data/fixtures/workflow-runs.json — array of objects with fields: id, name, status, conclusion, createdAt, headBranch, event. Include at least 15 representative runs.\n- [ ] src/data/types.ts — TypeScript interfaces: PipelineIssue, PipelinePR, PipelineReview, WorkflowRun, PipelineData (containing all arrays)\n- [ ] src/data/github.ts — async function fetchFromGitHub(): Promise<PipelineData> that uses @octokit/rest to fetch issues, PRs (with reviews), and workflow runs from samuelkahessay/agentic-pipeline. Uses GITHUB_TOKEN env var if available (public repo, so unauthenticated works too). Returns structured PipelineData.\n- [ ] src/data/index.ts — async function getPipelineData(): Promise<PipelineData> that calls fetchFromGitHub(), catches any error, and falls back to fixture data. Logs which source was used to console.\n- [ ] Unit tests: test that getPipelineData() returns fixture data when GitHub fetch throws, test that fixture JSON files parse correctly and contain expected record counts\n\n### Feature 3: Navigation and Landing Page\nShared navigation bar and a landing page with project overview and links to\nthe three views.\n\n**Acceptance Criteria:**\n- [ ] src/components/nav-bar.tsx — horizontal navigation bar with: \"Pipeline Observatory\" logo/text on left, links to \"/simulator\", \"/replay\", \"/forensics\" on right. Active link highlighted. Sticky top, dark background (bg-gray-900), height 16 (h-16). Uses next/link.\n- [ ] src/app/layout.tsx updated to include NavBar component above all page content\n- [ ] src/app/page.tsx — landing page with:\n  - Hero section: large title \"Pipeline Observatory\", subtitle \"Visualize, replay, and inspect an autonomous AI development pipeline\", dark gradient background\n  - Three card links in a grid: Simulator (\"Explore how the pipeline works\"), Replay (\"Watch the Code Snippet Manager run\"), Forensics (\"Inspect agent decisions and reviews\"). Each card links to its page.\n  - Brief stats pulled from fixture data at build time: \"8 features shipped\", \"11 PRs merged\", \"~2 hours end-to-end\"\n- [ ] Responsive: cards stack vertically on mobile, 3-column grid on desktop\n- [ ] Test that landing page renders three view cards with correct links\n\n### Feature 4: Simulator — Interactive Node Graph\nAn interactive SVG-based diagram of the 4 pipeline stages. Users click nodes\nto activate them and see how data flows between stages.\n\n**Acceptance Criteria:**\n- [ ] src/app/simulator/page.tsx — page component that renders the simulator\n- [ ] src/components/simulator/pipeline-graph.tsx — SVG-based node graph with 4 nodes arranged left-to-right: \"PRD Decomposer\", \"Repo Assist\", \"PR Reviewer\", \"Auto-Merge\". Each node is a rounded rectangle (rx=12) with an icon and label.\n- [ ] Curved SVG path connections between nodes: Decomposer→Assist, Assist→Reviewer, Reviewer→Merge. A dashed return path from Merge back to Assist for the re-dispatch loop.\n- [ ] Nodes have three visual states: idle (gray border, dim), active (blue border, glow), completed (green border, check). Track state in React useState.\n- [ ] Clicking a node sets it to \"active\" state, then after 1.5s transitions to \"completed\" and activates the next node in sequence (auto-chain). Clicking \"PRD Decomposer\" starts the full chain.\n- [ ] Framer Motion animate on node state changes: scale pulse on activate (1.0→1.05→1.0), border color transition, opacity for glow effect.\n- [ ] Reset button below the graph that returns all nodes to idle state.\n- [ ] Speed control slider (0.5x, 1x, 2x) that adjusts the 1.5s activation delay.\n- [ ] Responsive: graph scales down on smaller screens using viewBox.\n- [ ] Test that clicking the first node eventually activates all 4 nodes in sequence.\n\n### Feature 5: Simulator — Node Detail Panels\nWhen a node is active or completed, show an expandable panel below the graph\nwith details about what that workflow does.\n\n**Acceptance Criteria:**\n- [ ] src/components/simulator/node-detail.tsx — animated panel that slides down below the graph when a node is selected (Framer Motion AnimatePresence with height animation)\n- [ ] Content for each of the 4 nodes stored in src/data/simulator-content.ts as an array of objects: { id, name, description (2-3 sentences), triggers (string[]), outputs (string[]), techDetail (1 sentence about engine/model) }\n- [ ] Panel displays: node name as heading, description paragraph, \"Triggers\" list, \"Outputs\" list, tech detail in a muted caption\n- [ ] Panel updates when a different node is clicked. AnimatePresence handles exit/enter transitions.\n- [ ] Close button (X) on the panel to dismiss it\n- [ ] Dark card styling: bg-gray-800, rounded-xl, border border-gray-700\n- [ ] Test that clicking a node shows the correct panel content\n\n### Feature 6: Simulator — Animated Message Particles\nWhen the pipeline chain runs, animated particles travel along the SVG paths\nbetween nodes showing the data being produced.\n\n**Acceptance Criteria:**\n- [ ] src/components/simulator/message-particle.tsx — a small animated circle (r=6) that travels along an SVG path from one node to another using Framer Motion's motion.circle with animateMotion or manual path interpolation\n- [ ] Particles labeled with the data type: \"Issues\" (Decomposer→Assist), \"PRs\" (Assist→Reviewer), \"Review\" (Reviewer→Merge), \"Dispatch\" (Merge→Assist return path)\n- [ ] Particle appears when source node becomes active, travels to target node over 1 second, disappears on arrival\n- [ ] Particle color matches event type: blue for issues, green for PRs, yellow for reviews, purple for dispatch\n- [ ] Multiple particles can be in flight simultaneously (during fast speed)\n- [ ] Particles respect the speed control slider from Feature 4\n- [ ] Test that activating the first node creates a particle between the first two nodes\n\n### Feature 7: Replay — Timeline Component\nA horizontal scrollable timeline showing all events from the Code Snippet Manager\npipeline run, plotted chronologically.\n\n**Acceptance Criteria:**\n- [ ] src/app/replay/page.tsx — page component that loads pipeline data at build time via getPipelineData() and renders the timeline\n- [ ] src/components/replay/timeline.tsx — horizontal scrollable container with events plotted on a time axis from 05:29 UTC to 07:24 UTC (the full run duration)\n- [ ] Events derived from pipeline data: \"Issue Created\" (from issues with createdAt), \"PR Opened\" (from PRs with createdAt), \"Review Submitted\" (from PR reviews with submittedAt), \"PR Merged\" (from PRs with mergedAt). Each event has a timestamp, type, and title.\n- [ ] Events rendered as colored dots on the timeline: blue for issues, green for PRs, yellow for reviews, purple for merges. Dot size 12px.\n- [ ] Hover on a dot shows a tooltip with event title and timestamp\n- [ ] Time axis shows tick marks every 15 minutes with HH:MM labels\n- [ ] Currently selected event highlighted with a ring. Click a dot to select it.\n- [ ] Horizontal scroll via mouse wheel or drag. Timeline wider than viewport.\n- [ ] Summary bar above timeline: \"8 issues → 7 PRs → 7 reviews → 7 merges | 1h 55m total\"\n- [ ] Test that the timeline renders the correct number of event dots from fixture data\n\n### Feature 8: Replay — Event Detail Panel & Controls\nClick a timeline event to see full details. Auto-play mode steps through events.\nFilters let users show/hide event types.\n\n**Acceptance Criteria:**\n- [ ] src/components/replay/event-detail.tsx — panel below timeline that shows details for the selected event. Slides in with Framer Motion.\n  - For issues: title, labels (as colored badges), full body text (first 500 chars)\n  - For PRs: title, additions/deletions stats (green/red), changed file count, linked issue number\n  - For reviews: reviewer name, decision (APPROVE in green / REQUEST_CHANGES in red), review body text\n  - For merges: PR title, merge timestamp, \"Auto-merged via squash\" label\n- [ ] src/components/replay/timeline-controls.tsx — control bar between summary and timeline with:\n  - Play/Pause button (toggles auto-play). Auto-play selects the next event every 2 seconds (adjusted by speed).\n  - Speed selector: 1x, 2x, 4x\n  - Previous/Next buttons to step through events manually\n  - Filter toggles: \"Issues\", \"PRs\", \"Reviews\", \"Merges\" — each toggleable, hides/shows dots on timeline\n- [ ] When filters hide events, auto-play skips hidden events\n- [ ] Keyboard shortcuts: Space for play/pause, Left/Right arrow for prev/next\n- [ ] Test that toggling a filter hides the corresponding event dots\n\n### Feature 9: Forensics — Cycle Cards & Review Inspector\nCards showing each repo-assist cycle and a review inspector for AI decisions.\n\n**Acceptance Criteria:**\n- [ ] src/app/forensics/page.tsx — page that loads pipeline data at build time and renders forensics view with two sections: \"Pipeline Cycles\" and \"AI Reviews\"\n- [ ] src/components/forensics/cycle-card.tsx — a card representing one repo-assist invocation. Data derived by grouping PRs by their creation timestamp proximity (PRs created within 5 minutes of each other = same cycle). Each card shows:\n  - Cycle number and timestamp range\n  - \"Issues Available\" count (open pipeline issues at that point in time, computed from issue createdAt/closedAt)\n  - \"PRs Created\" list with PR numbers and titles\n  - \"Lines Changed\" total (sum of additions + deletions for that cycle's PRs)\n- [ ] Cards displayed in a vertical stack, newest at top, with alternating subtle background (bg-gray-800 / bg-gray-850)\n- [ ] src/components/forensics/review-inspector.tsx — for each merged PR, shows:\n  - PR title and number\n  - Reviewer identity (github-actions[bot])\n  - Decision badge: \"APPROVED\" in green or \"CHANGES REQUESTED\" in red\n  - Full review body text in a scrollable code-style block (font-mono, bg-gray-900)\n  - If review contains \"AI review was unavailable\": show a warning badge \"Fallback Review\"\n- [ ] Review inspector is a scrollable list of all PR reviews, sorted by submittedAt\n- [ ] Test that cycle cards correctly group PRs into cycles\n\n### Feature 10: Forensics — Failure Timeline\nVisual timeline of the 11 fixes applied during the first pipeline run, showing\nwhat broke, root cause, and resolution.\n\n**Acceptance Criteria:**\n- [ ] src/data/failures.ts — array of 11 failure objects, each with: id, timestamp (string), title (short), rootCause (1-2 sentences), resolution (1-2 sentences), category (one of: \"workflow\", \"config\", \"api\", \"race-condition\"). Data (hardcoded from actual run):\n  1. PRD Decomposer first-run failure — wrong trigger config — fixed trigger syntax\n  2. safe_outputs limit exceeded — too many issues created — increased limits\n  3. repo-assist branching from feature branch — stale checkout — forced checkout from main\n  4. PR reviewer temperature parameter — API rejected 0.2 — removed temperature\n  5. MODELS_TOKEN not set — secret missing — added PAT with models:read\n  6. Auto-merge not enabled — repo setting missing — enabled allow_auto_merge\n  7. Squash merge losing Closes #N — commit message setting — set PR_BODY\n  8. Memory branch not seeded — first-run artifact error — bootstrap seeds memory\n  9. Re-dispatch loop missing — no next cycle trigger — added dispatch step\n  10. Ruleset blocking direct push — no admin bypass — updated ruleset\n  11. Race condition in safe_outputs patch — concurrent workflow edits — added retry logic\n- [ ] src/components/forensics/failure-timeline.tsx — vertical timeline of failures. Each entry is a card with:\n  - Colored dot by category: red for workflow, yellow for config, blue for api, purple for race-condition\n  - Title as heading, timestamp in muted text\n  - \"Root Cause\" section with description\n  - \"Resolution\" section with description\n  - Category badge\n- [ ] Timeline section has a heading \"11 Fixes Applied During Run 1\" with a subtitle \"Every failure made the pipeline more robust\"\n- [ ] Vertical connecting line between failure cards (border-left on a wrapper div)\n- [ ] Test that all 11 failure entries render\n\n## Non-Functional Requirements\n- All data-dependent pages use Next.js static generation (generateStaticParams or getStaticProps equivalent in App Router) — no client-side data fetching from external APIs\n- Dark theme throughout: bg-gray-950 base, gray-100 text, accent colors for interactive elements\n- Responsive: works on mobile viewports (min 375px), optimized for desktop (1280px+)\n- Accessible: all interactive elements keyboard-navigable, semantic HTML (nav, main, section, article), ARIA labels on buttons and interactive SVG elements\n- Framer Motion animations respect prefers-reduced-motion media query\n- All components in src/components/ organized by view: simulator/, replay/, forensics/\n- TypeScript strict mode with no any types\n\n## Out of Scope\n- Live WebSocket updates from GitHub\n- User authentication or login\n- Database or persistent storage beyond static fixtures\n- Editing or triggering pipeline actions from the UI\n- Support for multiple pipeline runs (v1 shows only the Code Snippet Manager run)\n- Server-side API routes (this is a static/SSG site)\n- Deployment automation (Vercel auto-deploys from main, no CI/CD config needed beyond vercel.json)\n",
+      "state": "closed",
+      "labels": [
+        "pipeline"
+      ],
+      "created_at": "2026-02-25T07:46:26Z",
+      "closed_at": "2026-02-25T22:46:25Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 30,
+      "title": "[Pipeline] Project Scaffold — Next.js 14, TypeScript, Tailwind, Vitest",
+      "body": "## Description\nBootstrap the Next.js 14 App Router project with all required dependencies: TypeScript strict mode, Tailwind CSS dark theme, Framer Motion, and Vitest. This is the foundation for the Pipeline Observatory web app.\n\n## Acceptance Criteria\n- [ ] `package.json` includes: `next`, `react`, `react-dom`, `tailwindcss`, `framer-motion`, `@octokit/rest`, `vitest`, `@testing-library/react`, `@testing-library/jest-dom`\n- [ ] `tsconfig.json` extends `next/core-js` with `strict: true` and path alias `\"@/*\"` → `\"src/*\"`\n- [ ] `tailwind.config.ts` scans `src/` with `darkMode: \"class\"`\n- [ ] `src/app/layout.tsx` — HTML root, `dark` class on `(body)`, Inter font via `next/font`, metadata title `\"Pipeline Observatory\"`\n- [ ] `src/app/page.tsx` — placeholder heading `\"Pipeline Observatory\"`\n- [ ] `src/app/globals.css` — Tailwind directives, dark theme CSS variables (`bg-gray-950`, `text-gray-100`)\n- [ ] `next.config.js` — `output: \"standalone\"`\n- [ ] `vercel.json` — `{ \"framework\": \"nextjs\" }`\n- [ ] npm scripts: `\"dev\"` (`next dev`), `\"build\"` (`next build`), `\"start\"` (`next start`), `\"test\"` (`vitest`)\n- [ ] Test verifying home page renders `\"Pipeline Observatory\"`\n\n## Dependencies\nNone\n\n## Technical Notes\n- Use `create-next-app` or scaffold manually; App Router convention: files in `src/app/`\n- All components go in `src/components/` organized by view: `simulator/`, `replay/`, `forensics/`\n- Vitest config should be in `vitest.config.ts` using `@vitejs/plugin-react`\n- Run `npm run build` to verify no TypeScript errors before closing\nRelated to #29\n\n\n\n\n> Generated by [PRD Decomposer](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389) for issue #29\n\n<!-- gh-aw-agentic-workflow: PRD Decomposer, engine: copilot, model: gpt-5, id: 22387262389, workflow_id: prd-decomposer, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389 -->\n\n<!-- gh-aw-workflow-id: prd-decomposer -->",
+      "state": "closed",
+      "labels": [
+        "pipeline",
+        "infra",
+        "in-progress"
+      ],
+      "created_at": "2026-02-25T07:52:25Z",
+      "closed_at": "2026-02-25T13:17:52Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 31,
+      "title": "[Pipeline] Static Fixture Data & Data Loading Layer",
+      "body": "## Description\nBundle real pipeline run data as static JSON fixtures and create a data loading layer that tries the GitHub API at build time with a fallback to local fixtures. This provides the data foundation for all three views.\n\n## Acceptance Criteria\n- [ ] `src/data/fixtures/issues.json` — array with all 17 issues from the Code Snippet Manager run (issues #1–#15, #19, #22, #24). Fields: `number`, `title`, `state`, `createdAt`, `closedAt`, `labels` (`{name, color}[]`). Pipeline issues (#7–#14) must have labels `\"pipeline\"` and `\"feature\"` or `\"infra\"`.\n- [ ] `src/data/fixtures/pull-requests.json` — array of 11 PRs (#5, #16–#18, #20–#21, #23, #25–#28). Fields: `number`, `title`, `state`, `createdAt`, `mergedAt`, `additions`, `deletions`, `changedFiles`, `reviews` (`{author, state, body, submittedAt}[]`)\n- [ ] `src/data/fixtures/workflow-runs.json` — array of ≥15 representative runs. Fields: `id`, `name`, `status`, `conclusion`, `createdAt`, `headBranch`, `event`\n- [ ] `src/data/types.ts` — TypeScript interfaces: `PipelineIssue`, `PipelinePR`, `PipelineReview`, `WorkflowRun`, `PipelineData`\n- [ ] `src/data/github.ts` — `fetchFromGitHub(): Promise(PipelineData)` using `@octokit/rest`, reads `GITHUB_TOKEN` env var (optional, repo is public). Fetches issues, PRs with reviews, workflow runs from `samuelkahessay/agentic-pipeline`.\n- [ ] `src/data/index.ts` — `getPipelineData(): Promise(PipelineData)` calls `fetchFromGitHub()`, falls back to fixture JSON on any error, logs which source was used.\n- [ ] Unit test: `getPipelineData()` returns fixture data when GitHub fetch throws\n- [ ] Unit test: fixture JSON files parse correctly and contain expected record counts\n\n## Dependencies\nDepends on #30\n\n## Technical Notes\n- Fixtures are plain JSON files; import them with `import data from './fixtures/issues.json' assert { type: 'json' }` or via `fs.readFileSync` in Node server context\n- `fetchFromGitHub` should only be called at build time (inside `generateStaticParams` or equivalent), never client-side\n- Use TypeScript strict mode — no `any` types; map Octokit response fields to `PipelineData` types explicitly\n- For fixture data, use realistic timestamps matching the actual run (e.g., 2025-xx-xx 05:29–07:24 UTC range)\nRelated to #30\n\n\n\n\n> Generated by [PRD Decomposer](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389) for issue #29\n\n<!-- gh-aw-agentic-workflow: PRD Decomposer, engine: copilot, model: gpt-5, id: 22387262389, workflow_id: prd-decomposer, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389 -->\n\n<!-- gh-aw-workflow-id: prd-decomposer -->",
+      "state": "closed",
+      "labels": [
+        "pipeline",
+        "infra",
+        "in-progress"
+      ],
+      "created_at": "2026-02-25T07:52:26Z",
+      "closed_at": "2026-02-25T13:17:52Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 32,
+      "title": "[Pipeline] Navigation Bar and Landing Page with View Cards",
+      "body": "## Description\nAdd a shared sticky navigation bar and update the landing page with a hero section, three view cards, and live stats pulled from fixture data at build time.\n\n## Acceptance Criteria\n- [ ] `src/components/nav-bar.tsx` — sticky horizontal nav, `bg-gray-900`, height `h-16`. Logo text `\"Pipeline Observatory\"` on left. Links to `/simulator`, `/replay`, `/forensics` on right using `next/link`. Active link highlighted (check current pathname with `usePathname`).\n- [ ] `src/app/layout.tsx` updated to render `(NavBar /)` above all page content in a `(main)` wrapper\n- [ ] `src/app/page.tsx` updated with:\n  - Hero section: large heading `\"Pipeline Observatory\"`, subtitle `\"Visualize, replay, and inspect an autonomous AI development pipeline\"`, dark gradient background\n  - Three card links in a responsive grid (1-col mobile → 3-col desktop): Simulator (`/simulator`, \"Explore how the pipeline works\"), Replay (`/replay`, \"Watch the Code Snippet Manager run\"), Forensics (`/forensics`, \"Inspect agent decisions and reviews\")\n  - Stats bar (from fixture data at build time): `\"8 features shipped\"`, `\"11 PRs merged\"`, `\"~2 hours end-to-end\"`\n- [ ] Cards are responsive: `grid-cols-1 md:grid-cols-3`\n- [ ] Test: landing page renders three cards with correct `href` links\n\n## Dependencies\nDepends on #30, #31\n\n## Technical Notes\n- `NavBar` is a Client Component (`'use client'`) only for the `usePathname` hook; the rest of layout/page can remain Server Components\n- Stats on landing page are computed from fixture data via `getPipelineData()` at build time — keep the page a React Server Component (no `'use client'`)\n- Card hover styles: `hover:bg-gray-800 transition-colors`\nRelated to #30\n\n\n\n\n> Generated by [PRD Decomposer](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389) for issue #29\n\n<!-- gh-aw-agentic-workflow: PRD Decomposer, engine: copilot, model: gpt-5, id: 22387262389, workflow_id: prd-decomposer, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389 -->\n\n<!-- gh-aw-workflow-id: prd-decomposer -->",
+      "state": "closed",
+      "labels": [
+        "pipeline",
+        "feature",
+        "in-progress"
+      ],
+      "created_at": "2026-02-25T07:52:28Z",
+      "closed_at": "2026-02-25T13:17:52Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 33,
+      "title": "[Pipeline] Simulator — Interactive SVG Node Graph with Chain Animation",
+      "body": "## Description\nBuild the Simulator page with an interactive SVG node graph showing the 4 pipeline stages. Users click nodes to trigger an animated chain reaction visualizing how the pipeline flows.\n\n## Acceptance Criteria\n- [ ] `src/app/simulator/page.tsx` — page component rendering the simulator\n- [ ] `src/components/simulator/pipeline-graph.tsx` — SVG node graph with 4 nodes left-to-right: `\"PRD Decomposer\"`, `\"Repo Assist\"`, `\"PR Reviewer\"`, `\"Auto-Merge\"`. Each node is a rounded rect (`rx=12`) with icon and label.\n- [ ] Curved SVG `(path)` connections: Decomposer→Assist, Assist→Reviewer, Reviewer→Merge. Plus a dashed return path Merge→Assist (the re-dispatch loop).\n- [ ] Three node visual states: `idle` (gray border, dim), `active` (blue border + glow), `completed` (green border + check mark). State tracked in `useState`.\n- [ ] Clicking a node sets it `active`; after the delay it becomes `completed` and activates the next node (auto-chain). Clicking `\"PRD Decomposer\"` starts the full chain.\n- [ ] Framer Motion animations on state change: scale pulse on activate (`1.0 → 1.05 → 1.0`), border color transition, opacity glow.\n- [ ] Reset button below the graph — returns all nodes to `idle`.\n- [ ] Speed slider: `0.5x`, `1x`, `2x` — adjusts the base delay of 1500ms.\n- [ ] Graph responsive via SVG `viewBox`; scales on small screens.\n- [ ] `aria-label` on SVG and each interactive node for accessibility.\n- [ ] Test: clicking the first node eventually activates all 4 nodes in sequence (use fake timers).\n\n## Dependencies\nDepends on #32\n\n## Technical Notes\n- Use a `NODES` constant array for node data (id, label, icon) — makes adding nodes easy\n- Node positions can be fixed coordinates within a `viewBox=\"0 0 900 200\"` SVG\n- Curved paths: use cubic Bezier `C` commands; path `d` attribute computed from node center coordinates\n- Dashed return path: `strokeDasharray=\"6 4\"` on the `(path)`\n- Speed slider value should be stored in state and passed down as a prop to control all timing\nRelated to #32\n\n\n\n\n> Generated by [PRD Decomposer](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389) for issue #29\n\n<!-- gh-aw-agentic-workflow: PRD Decomposer, engine: copilot, model: gpt-5, id: 22387262389, workflow_id: prd-decomposer, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389 -->\n\n<!-- gh-aw-workflow-id: prd-decomposer -->",
+      "state": "closed",
+      "labels": [
+        "pipeline",
+        "feature",
+        "in-progress"
+      ],
+      "created_at": "2026-02-25T07:52:29Z",
+      "closed_at": "2026-02-25T13:41:54Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 34,
+      "title": "[Pipeline] Simulator — Node Detail Panels with Slide-Down Animation",
+      "body": "## Description\nWhen a Simulator node is active or completed, show a slide-down detail panel describing what that pipeline stage does — its triggers, outputs, and tech detail.\n\n## Acceptance Criteria\n- [ ] `src/data/simulator-content.ts` — array of 4 objects `{ id, name, description, triggers: string[], outputs: string[], techDetail }` covering each node: PRD Decomposer, Repo Assist, PR Reviewer, Auto-Merge.\n- [ ] `src/components/simulator/node-detail.tsx` — animated panel that slides down below the graph using `Framer Motion` `AnimatePresence` with a height animation (`initial: { height: 0 }`, `animate: { height: 'auto' }`).\n- [ ] Panel content: node name as `<h2>`, description `<p>`, \"Triggers\" `<ul>`, \"Outputs\" `<ul>`, tech detail in a muted `<p>` caption.\n- [ ] Panel updates (exit → enter transition) when a different node is clicked.\n- [ ] Close button (×) dismisses the panel without affecting node state.\n- [ ] Styling: `bg-gray-800 rounded-xl border border-gray-700` dark card.\n- [ ] Respects `prefers-reduced-motion`: if reduced motion, skip animation.\n- [ ] Test: clicking a node shows the correct panel content for that node.\n\n## Dependencies\nDepends on #33\n\n## Technical Notes\n- `simulator-content.ts` content can be hardcoded prose (not fetched from API)\n- `AnimatePresence` key should be the node `id` so React unmounts/remounts on node change, triggering exit/enter\n- Import `useReducedMotion` from Framer Motion to check `prefers-reduced-motion`\n- Panel is conditionally rendered only when `selectedNode !== null`\nRelated to #33\n\n\n\n\n> Generated by [PRD Decomposer](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389) for issue #29\n\n<!-- gh-aw-agentic-workflow: PRD Decomposer, engine: copilot, model: gpt-5, id: 22387262389, workflow_id: prd-decomposer, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389 -->\n\n<!-- gh-aw-workflow-id: prd-decomposer -->",
+      "state": "closed",
+      "labels": [
+        "pipeline",
+        "feature",
+        "in-progress"
+      ],
+      "created_at": "2026-02-25T07:52:31Z",
+      "closed_at": "2026-02-25T14:22:51Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 35,
+      "title": "[Pipeline] Simulator — Animated Message Particles Along SVG Paths",
+      "body": "## Description\nAnimate small labeled particles traveling along the SVG connection paths between nodes as the pipeline chain runs, giving a visual sense of data flowing through the system.\n\n## Acceptance Criteria\n- [ ] `src/components/simulator/message-particle.tsx` — animated `(circle r=6)` that travels along an SVG path using Framer Motion `motion` with path offset animation (or manual interpolation via `offsetDistance`/`offsetPath`).\n- [ ] Particle labels with data type: `\"Issues\"` (Decomposer→Assist), `\"PRs\"` (Assist→Reviewer), `\"Review\"` (Reviewer→Merge), `\"Dispatch\"` (Merge→Assist return path).\n- [ ] Particle appears when source node becomes `active`, travels to target node over ~1s, then disappears (`AnimatePresence` exit).\n- [ ] Particle colors by type: blue (`Issues`), green (`PRs`), yellow (`Review`), purple (`Dispatch`).\n- [ ] Multiple particles can be in-flight simultaneously (at `0.5x` speed especially).\n- [ ] Particle animation duration respects the speed slider from the graph component.\n- [ ] Test: activating the first node causes a particle to appear and travel between the first two nodes.\n\n## Dependencies\nDepends on #33, #34\n\n## Technical Notes\n- Particles are absolutely positioned or rendered inside the same SVG as the graph; share the SVG `viewBox` coordinate space\n- Use `useMotionValue` or `animate()` from Framer Motion to drive `cx`/`cy` along a cubic-bezier path (same path `d` used by the edge `(path)`)\n- Track active particles in state as an array `{ id, pathIndex, startTime }` — add on activation, remove on animation complete via `onAnimationComplete`\n- Keep `message-particle.tsx` a pure presentational component; manage particle state in `pipeline-graph.tsx`\nRelated to #34\n\n\n\n\n> Generated by [PRD Decomposer](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389) for issue #29\n\n<!-- gh-aw-agentic-workflow: PRD Decomposer, engine: copilot, model: gpt-5, id: 22387262389, workflow_id: prd-decomposer, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389 -->\n\n<!-- gh-aw-workflow-id: prd-decomposer -->",
+      "state": "closed",
+      "labels": [
+        "pipeline",
+        "feature",
+        "in-progress"
+      ],
+      "created_at": "2026-02-25T07:52:32Z",
+      "closed_at": "2026-02-25T15:09:22Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 36,
+      "title": "[Pipeline] Replay — Horizontal Scrollable Timeline Component",
+      "body": "## Description\nBuild the Replay page with a horizontally scrollable timeline showing all events (issues created, PRs opened, reviews submitted, PRs merged) from the Code Snippet Manager pipeline run, plotted on a real-time axis.\n\n## Acceptance Criteria\n- [ ] `src/app/replay/page.tsx` — Server Component; loads pipeline data via `getPipelineData()` at build time and passes event array to client components.\n- [ ] `src/components/replay/timeline.tsx` — horizontally scrollable container. Time axis from `05:29` to `07:24` UTC with tick marks every 15 min labeled `HH:MM`.\n- [ ] Events derived from fixture data: `\"Issue Created\"` (issue `createdAt`), `\"PR Opened\"` (PR `createdAt`), `\"Review Submitted\"` (review `submittedAt`), `\"PR Merged\"` (PR `mergedAt`).\n- [ ] Events rendered as colored dots (`w-3 h-3` circle): blue=issues, green=PRs, yellow=reviews, purple=merges. Dots positioned at their timestamp on the axis.\n- [ ] Hover tooltip on each dot showing event title and `HH:MM` timestamp.\n- [ ] Time axis wider than viewport; scrollable via mouse wheel and touch drag.\n- [ ] Currently selected event has a ring highlight. Click a dot to select it.\n- [ ] Summary bar above timeline: `\"8 issues → 7 PRs → 7 reviews → 7 merges | 1h 55m total\"`.\n- [ ] Test: timeline renders the correct number of event dots from fixture data.\n\n## Dependencies\nDepends on #31, #32\n\n## Technical Notes\n- The timeline component is a Client Component (`'use client'`) for scroll/click interaction\n- Position dots using CSS `left: {pct}%` where `pct = (eventMs - startMs) / durationMs * 100` within a `position: relative` container of fixed width (e.g., `min-w-[2400px]`)\n- Tooltip: use a simple `title` attribute or a custom floating `(div)` toggled on hover state\n- Use `overflow-x-auto` with `scroll-snap` or plain scrollable div\n- Event array type: `{ id: string, type: 'issue'|'pr'|'review'|'merge', title: string, timestamp: string }`\nRelated to #32\n\n\n\n\n> Generated by [PRD Decomposer](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389) for issue #29\n\n<!-- gh-aw-agentic-workflow: PRD Decomposer, engine: copilot, model: gpt-5, id: 22387262389, workflow_id: prd-decomposer, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389 -->\n\n<!-- gh-aw-workflow-id: prd-decomposer -->",
+      "state": "closed",
+      "labels": [
+        "pipeline",
+        "feature",
+        "in-progress"
+      ],
+      "created_at": "2026-02-25T07:52:34Z",
+      "closed_at": "2026-02-25T13:17:53Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 37,
+      "title": "[Pipeline] Replay — Event Detail Panel and Playback Controls with Filters",
+      "body": "## Description\nAdd event detail cards that slide in when a timeline event is clicked, plus playback controls (play/pause, speed, previous/next) and filter toggles to show/hide event types.\n\n## Acceptance Criteria\n- [ ] `src/components/replay/event-detail.tsx` — Framer Motion slide-in panel below the timeline showing:\n  - **Issues**: title, colored label badges, first 500 chars of body\n  - **PRs**: title, `+{additions}/-{deletions}` stats (green/red), changed file count, linked issue number\n  - **Reviews**: reviewer name, decision badge (`APPROVED` in green / `REQUEST_CHANGES` in red), review body text\n  - **Merges**: PR title, merge timestamp, `\"Auto-merged via squash\"` label\n- [ ] `src/components/replay/timeline-controls.tsx` — control bar with:\n  - Play/Pause toggle button (auto-selects next event every 2s × speed factor)\n  - Speed selector: `1x`, `2x`, `4x`\n  - Previous/Next step buttons\n  - Filter toggles: `\"Issues\"`, `\"PRs\"`, `\"Reviews\"`, `\"Merges\"` — hides/shows corresponding dots\n- [ ] Auto-play skips events hidden by active filters.\n- [ ] Keyboard shortcuts: `Space` → play/pause; `ArrowLeft`/`ArrowRight` → prev/next.\n- [ ] Test: toggling the \"Issues\" filter hides issue dots from the timeline.\n\n## Dependencies\nDepends on #36\n\n## Technical Notes\n- Controls and detail panel are Client Components; state lives in `replay/page.tsx` (or a shared context)\n- Use `useEffect` + `setInterval` for auto-play; clear interval on pause or unmount\n- Keyboard shortcuts via `useEffect` adding `keydown` event listener on `window`\n- Detail panel uses `AnimatePresence` with `key={selectedEvent.id}` for exit/enter on event change\n- Filter state: `Record<'issue'|'pr'|'review'|'merge', boolean>` initialized to all `true`\nRelated to #36\n\n\n\n\n> Generated by [PRD Decomposer](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389) for issue #29\n\n<!-- gh-aw-agentic-workflow: PRD Decomposer, engine: copilot, model: gpt-5, id: 22387262389, workflow_id: prd-decomposer, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389 -->\n\n<!-- gh-aw-workflow-id: prd-decomposer -->",
+      "state": "closed",
+      "labels": [
+        "pipeline",
+        "feature",
+        "in-progress"
+      ],
+      "created_at": "2026-02-25T07:52:35Z",
+      "closed_at": "2026-02-25T14:22:51Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 38,
+      "title": "[Pipeline] Forensics — Pipeline Cycle Cards and AI Review Inspector",
+      "body": "## Description\nBuild the Forensics page with two sections: Pipeline Cycles (grouping PRs by creation time into repo-assist invocations) and AI Reviews (showing each PR's automated review decision and body text).\n\n## Acceptance Criteria\n- [ ] `src/app/forensics/page.tsx` — Server Component; loads pipeline data via `getPipelineData()` at build time. Renders \"Pipeline Cycles\" and \"AI Reviews\" sections.\n- [ ] `src/components/forensics/cycle-card.tsx` — card for one repo-assist cycle. Group PRs by creation timestamp proximity (PRs within 5 minutes of each other = same cycle). Each card shows:\n  - Cycle number and timestamp range\n  - \"Issues Available\" count (open pipeline issues at that point, computed from `createdAt`/`closedAt`)\n  - \"PRs Created\" list with PR numbers and titles\n  - \"Lines Changed\" total (`additions + deletions` for the cycle's PRs)\n- [ ] Cards stacked vertically, newest-first, alternating `bg-gray-800` / `bg-gray-850` (use `bg-gray-800` / `bg-gray-900` if `bg-gray-850` isn't in Tailwind)\n- [ ] `src/components/forensics/review-inspector.tsx` — scrollable list of all PR reviews, sorted by `submittedAt`. Each entry shows:\n  - PR title and number\n  - Reviewer identity (`github-actions[bot]`)\n  - Decision badge: `\"APPROVED\"` green / `\"CHANGES REQUESTED\"` red\n  - Full review body in a scrollable `font-mono bg-gray-900` block\n  - If body contains `\"AI review was unavailable\"`: show a `\"Fallback Review\"` warning badge\n- [ ] Test: cycle cards correctly group PRs — PRs within 5 min of each other are in the same cycle.\n\n## Dependencies\nDepends on #31, #32\n\n## Technical Notes\n- Cycle grouping algorithm: sort PRs by `createdAt`, iterate and start a new cycle when gap > 5 minutes\n- \"Issues Available\" at a cycle's time `t`: count issues where `createdAt <= t` and (`closedAt === null` or `closedAt > t`) and `labels` includes `\"pipeline\"`\n- Review inspector is a Server Component (static data); no client interaction needed\n- `bg-gray-850` doesn't exist in default Tailwind — use `bg-gray-800` and `bg-gray-900` as the alternating pair, or extend Tailwind config with `850: '#1a1f2e'`\nRelated to #32\n\n\n\n\n> Generated by [PRD Decomposer](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389) for issue #29\n\n<!-- gh-aw-agentic-workflow: PRD Decomposer, engine: copilot, model: gpt-5, id: 22387262389, workflow_id: prd-decomposer, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389 -->\n\n<!-- gh-aw-workflow-id: prd-decomposer -->",
+      "state": "closed",
+      "labels": [
+        "pipeline",
+        "feature",
+        "in-progress"
+      ],
+      "created_at": "2026-02-25T07:52:37Z",
+      "closed_at": "2026-02-25T13:17:52Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 39,
+      "title": "[Pipeline] Forensics — Failure Timeline with 11 Fix Entries",
+      "body": "## Description\nAdd a vertical failure timeline to the Forensics page showing the 11 fixes applied during the first pipeline run, with category color-coding, root cause, and resolution for each.\n\n## Acceptance Criteria\n- [ ] `src/data/failures.ts` — array of exactly 11 failure objects `{ id, timestamp, title, rootCause, resolution, category }`. Category must be one of: `\"workflow\"`, `\"config\"`, `\"api\"`, `\"race-condition\"`. The 11 entries (in order):\n  1. PRD Decomposer first-run failure — wrong trigger config — fixed trigger syntax\n  2. safe_outputs limit exceeded — too many issues created — increased limits\n  3. repo-assist branching from feature branch — stale checkout — forced checkout from main\n  4. PR reviewer temperature parameter — API rejected 0.2 — removed temperature\n  5. MODELS_TOKEN not set — secret missing — added PAT with models:read\n  6. Auto-merge not enabled — repo setting missing — enabled allow_auto_merge\n  7. Squash merge losing Closes #N — commit message setting — set PR_BODY\n  8. Memory branch not seeded — first-run artifact error — bootstrap seeds memory\n  9. Re-dispatch loop missing — no next cycle trigger — added dispatch step\n  10. Ruleset blocking direct push — no admin bypass — updated ruleset\n  11. Race condition in safe_outputs patch — concurrent workflow edits — added retry logic\n- [ ] `src/components/forensics/failure-timeline.tsx` — vertical timeline with a left connecting border (`border-l-2 border-gray-700`). Each entry is a card with:\n  - Colored category dot: red=`workflow`, yellow=`config`, blue=`api`, purple=`race-condition`\n  - Title as `<h3>`, timestamp in muted text\n  - \"Root Cause\" paragraph\n  - \"Resolution\" paragraph\n  - Category badge pill\n- [ ] Section heading: `\"11 Fixes Applied During Run 1\"`, subtitle: `\"Every failure made the pipeline more robust\"`\n- [ ] `FailureTimeline` component renders in `forensics/page.tsx` below the AI Reviews section\n- [ ] Test: all 11 failure entries render (check for 11 items in the DOM).\n\n## Dependencies\nDepends on #38\n\n## Technical Notes\n- `failures.ts` is static hardcoded data — no API call needed\n- Timeline layout: each item is a `(div)` with `relative pl-8` and a `::before` pseudo-element (or an absolutely-positioned dot `<span>` at `left: -0.5rem`) for the colored dot on the left border\n- Tailwind color map for category badges: `workflow` → `bg-red-900 text-red-300`, `config` → `bg-yellow-900 text-yellow-300`, `api` → `bg-blue-900 text-blue-300`, `race-condition` → `bg-purple-900 text-purple-300`\n- This is a Server Component (no interactivity needed)\nRelated to #38\n\n\n\n\n> Generated by [PRD Decomposer](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389) for issue #29\n\n<!-- gh-aw-agentic-workflow: PRD Decomposer, engine: copilot, model: gpt-5, id: 22387262389, workflow_id: prd-decomposer, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387262389 -->\n\n<!-- gh-aw-workflow-id: prd-decomposer -->",
+      "state": "closed",
+      "labels": [
+        "pipeline",
+        "feature",
+        "in-progress"
+      ],
+      "created_at": "2026-02-25T07:52:38Z",
+      "closed_at": "2026-02-25T14:22:51Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 41,
+      "title": "[Pipeline] Status",
+      "body": "## Pipeline Status — 2026-02-25\n\n### Summary\n- Total tasks: 20\n- Completed: 10 (50%)\n- In progress: 3\n- Blocked: 7\n\n### Task Board\n\n| Issue | Title | Status | PR |\n|-------|-------|--------|----|\n| #30 | Project Scaffold — Next.js 14, TypeScript, Tailwind, Vitest | In Progress | — |\n| #31 | Static Fixture Data & Data Loading Layer | In Progress | — |\n| #32 | Navigation Bar and Landing Page with View Cards | In Progress | #43 |\n| #33 | Simulator — Interactive SVG Node Graph with Chain Animation | Blocked (#32) | — |\n| #34 | Simulator — Node Detail Panels with Slide-Down Animation | Blocked (#33) | — |\n| #35 | Simulator — Animated Message Particles Along SVG Paths | Blocked (#34) | — |\n| #36 | Replay — Horizontal Scrollable Timeline Component | Blocked (#32) | — |\n| #37 | Replay — Event Detail Panel and Playback Controls with Filters | Blocked (#36) | — |\n| #38 | Forensics — Pipeline Cycle Cards and AI Review Inspector | Blocked (#32) | — |\n| #39 | Forensics — Failure Timeline with 11 Fix Entries | Blocked (#38) | — |\n| #14 | Implement Full-Text Search API for Snippets | Completed | — |\n| #13 | Create CRUD API Endpoints for Snippets | Completed | — |\n| #12 | Seed Example Snippets & Landing Experience | Completed | — |\n| #11 | Add Tag Management API Endpoints | Completed | — |\n| #10 | Implement Snippet Data Model & In-Memory Store | Completed | — |\n| #9 | Build Web UI: Snippet Detail, Create & Edit Pages | Completed | — |\n| #8 | Build Web UI: Snippet List & Dashboard | Completed | — |\n| #7 | Scaffold Express + TypeScript Project | Completed | — |\n| #4 | Add .editorconfig for consistent formatting | Completed | — |\n| #3 | Scaffold Express + TypeScript project with health check | Completed | — |\n\n### Blocked Issues\n\n| Issue | Title | Waiting On |\n|-------|-------|-----------|\n| #33 | Simulator — Interactive SVG Node Graph | #32 (open PR #43) |\n| #34 | Simulator — Node Detail Panels | #33 (blocked) |\n| #35 | Simulator — Animated Message Particles | #34 (blocked) |\n| #36 | Replay — Horizontal Scrollable Timeline | #32 (open PR #43) |\n| #37 | Replay — Event Detail Panel and Playback Controls | #36 (blocked) |\n| #38 | Forensics — Pipeline Cycle Cards and AI Review Inspector | #32 (open PR #43) |\n| #39 | Forensics — Failure Timeline | #38 (blocked) |\n\n### Next Actions\n\nNo issues are immediately ready to implement. The critical path is:\n\n1. **Merge PR #43** → closes #32 → unblocks #33, #36, #38\n2. Once #32 is merged, `repo-assist` can implement #33, #36, #38 in parallel\n3. #31 (Static Fixture Data) is in-progress — once merged, nothing new is directly unblocked (already accounted for in #32's PR)\n4. #30 (Project Scaffold) is in-progress — merge to unblock downstream\n\n> _Updated by pipeline-status on 2026-02-25_\n\n> Generated by [Pipeline Status Report](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22395280672)\n\n<!-- gh-aw-agentic-workflow: Pipeline Status Report, engine: copilot, model: gpt-5, id: 22395280672, workflow_id: pipeline-status, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22395280672 -->",
+      "state": "closed",
+      "labels": [
+        "pipeline",
+        "automation"
+      ],
+      "created_at": "2026-02-25T07:59:26Z",
+      "closed_at": "2026-02-25T22:46:23Z",
+      "user": "samuelkahessay"
+    }
+  ],
+  "pull_requests": [
+    {
+      "number": 40,
+      "title": "[Pipeline] Project Scaffold — Next.js 14, TypeScript, Tailwind, Vitest",
+      "body": "Closes #30\n\n## Changes\n\nBootstraps the Pipeline Observatory web app with the full Next.js 14 App Router foundation:\n\n- **`package.json`** — `next`, `react`, `react-dom`, `tailwindcss`, `framer-motion`, `@octokit/rest`, `vitest`, `@testing-library/react`, `@testing-library/jest-dom`\n- **`tsconfig.json`** — strict mode, `@/*` → `src/*` path alias\n- **`tailwind.config.ts`** — scans `src/`, `darkMode: \"class\"`\n- **`next.config.js`** — `output: \"standalone\"` for Vercel\n- **`vercel.json`** — `{ \"framework\": \"nextjs\" }`\n- **`vitest.config.ts`** — jsdom environment, `@vitejs/plugin-react`, `@` alias\n- **`src/app/layout.tsx`** — root layout, dark theme, metadata title \"Pipeline Observatory\"\n- **`src/app/page.tsx`** — placeholder heading\n- **`src/app/globals.css`** — Tailwind directives, dark theme CSS variables\n- **`src/test/home.test.tsx`** — verifies home page renders \"Pipeline Observatory\"\n- **`src/test/setup.ts`** — `@testing-library/jest-dom` setup\n\n> **Note:** Google Fonts (Inter) is not used due to sandbox network restrictions. System font stack (`font-sans`) is used instead. This can be replaced with `next/font/google` in a networked environment.\n\n## Test Results\n\n```\n✓ src/test/home.test.tsx (1 test) 62ms\nTest Files  1 passed (1)\n    Tests  1 passed (1)\n```\n\nBuild: ✅ `npm run build` succeeded with no TypeScript errors.\n\n---\n\n*This PR was created by Pipeline Assistant.*\n\n\n\n\n> Generated by [Pipeline Repo Assist](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387442374)\n\n> [!WARNING]\n> <details>\n> <summary>⚠️ Firewall blocked 1 domain</summary>\n>\n> The following domain was blocked by the firewall during workflow execution:\n>\n> - `fonts.googleapis.com`\n>\n> </details>\n\n\n<!-- gh-aw-agentic-workflow: Pipeline Repo Assist, engine: copilot, model: gpt-5, id: 22387442374, workflow_id: repo-assist, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387442374 -->\n\n<!-- gh-aw-workflow-id: repo-assist -->",
+      "state": "closed",
+      "merged_at": "2026-02-25T07:59:46Z",
+      "created_at": "2026-02-25T07:59:24Z",
+      "additions": 5210,
+      "deletions": 0,
+      "changed_files": 15,
+      "user": "samuelkahessay",
+      "head_branch": "repo-assist/issue-30-project-scaffold-72fd19419badc44c",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVESUMMARY: Automated review — CI checks are passing. AI review was unavailable.\nISSUES:\nNone\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T07:59:35Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": ".gitignore",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 0
+        },
+        {
+          "filename": "next-env.d.ts",
+          "status": "added",
+          "additions": 5,
+          "deletions": 0
+        },
+        {
+          "filename": "next.config.js",
+          "status": "added",
+          "additions": 6,
+          "deletions": 0
+        },
+        {
+          "filename": "package-lock.json",
+          "status": "added",
+          "additions": 5046,
+          "deletions": 0
+        },
+        {
+          "filename": "package.json",
+          "status": "added",
+          "additions": 32,
+          "deletions": 0
+        },
+        {
+          "filename": "postcss.config.js",
+          "status": "added",
+          "additions": 6,
+          "deletions": 0
+        },
+        {
+          "filename": "src/app/globals.css",
+          "status": "added",
+          "additions": 13,
+          "deletions": 0
+        },
+        {
+          "filename": "src/app/layout.tsx",
+          "status": "added",
+          "additions": 21,
+          "deletions": 0
+        },
+        {
+          "filename": "src/app/page.tsx",
+          "status": "added",
+          "additions": 7,
+          "deletions": 0
+        },
+        {
+          "filename": "src/test/home.test.tsx",
+          "status": "added",
+          "additions": 10,
+          "deletions": 0
+        },
+        {
+          "filename": "src/test/setup.ts",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "filename": "tailwind.config.ts",
+          "status": "added",
+          "additions": 15,
+          "deletions": 0
+        },
+        {
+          "filename": "tsconfig.json",
+          "status": "added",
+          "additions": 26,
+          "deletions": 0
+        },
+        {
+          "filename": "vercel.json",
+          "status": "added",
+          "additions": 3,
+          "deletions": 0
+        },
+        {
+          "filename": "vitest.config.ts",
+          "status": "added",
+          "additions": 17,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "number": 42,
+      "title": "[Pipeline] Static Fixture Data & Data Loading Layer",
+      "body": "Closes #31\n\n## Changes\n\nImplements the static fixture data and data loading layer for the Pipeline Observatory.\n\n### New Files\n- **`src/data/types.ts`** — TypeScript interfaces: `PipelineIssue`, `PipelinePR`, `PipelineReview`, `WorkflowRun`, `PipelineData`\n- **`src/data/fixtures/issues.json`** — 17 issues from the Code Snippet Manager run (#1–#15, #19, #22, #24) with correct labels, timestamps, and state\n- **`src/data/fixtures/pull-requests.json`** — 11 PRs (#5, #16–#18, #20–#21, #23, #25–#28) with reviews, additions/deletions, and merge timestamps\n- **`src/data/fixtures/workflow-runs.json`** — 17 representative workflow runs (prd-decomposer, repo-assist, pr-reviewer, pipeline-status) covering the full Code Snippet Manager run\n- **`src/data/github.ts`** — `fetchFromGitHub()` using `@octokit/rest`, reads optional `GITHUB_TOKEN`, fetches issues + PRs with reviews + workflow runs\n- **`src/data/index.ts`** — `getPipelineData()` calls GitHub API at build time, falls back to fixture JSON on any error, logs which source was used\n- **`src/test/data.test.ts`** — 6 tests covering fallback behavior, GitHub path, fixture counts, and required fields\n\n### Test Results\n```\n✓ src/test/data.test.ts  (6 tests)\n✓ src/test/home.test.tsx (1 test)\nTests: 7 passed (7)\n```\n\nThis PR was created by Pipeline Assistant.\n\n\n\n\n> Generated by [Pipeline Repo Assist](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387644543)\n\n<!-- gh-aw-agentic-workflow: Pipeline Repo Assist, engine: copilot, model: gpt-5, id: 22387644543, workflow_id: repo-assist, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22387644543 -->\n\n<!-- gh-aw-workflow-id: repo-assist -->",
+      "state": "closed",
+      "merged_at": "2026-02-25T08:08:38Z",
+      "created_at": "2026-02-25T08:08:19Z",
+      "additions": 738,
+      "deletions": 0,
+      "changed_files": 7,
+      "user": "samuelkahessay",
+      "head_branch": "repo-assist/issue-31-static-fixture-data-0cd5ccb640c87720",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVESUMMARY: Automated review — CI checks are passing. AI review was unavailable.\nISSUES:\nNone\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T08:08:29Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": "src/data/fixtures/issues.json",
+          "status": "added",
+          "additions": 171,
+          "deletions": 0
+        },
+        {
+          "filename": "src/data/fixtures/pull-requests.json",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "filename": "src/data/fixtures/workflow-runs.json",
+          "status": "added",
+          "additions": 155,
+          "deletions": 0
+        },
+        {
+          "filename": "src/data/github.ts",
+          "status": "added",
+          "additions": 83,
+          "deletions": 0
+        },
+        {
+          "filename": "src/data/index.ts",
+          "status": "added",
+          "additions": 20,
+          "deletions": 0
+        },
+        {
+          "filename": "src/data/types.ts",
+          "status": "added",
+          "additions": 48,
+          "deletions": 0
+        },
+        {
+          "filename": "src/test/data.test.ts",
+          "status": "added",
+          "additions": 61,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "number": 46,
+      "title": "[Pipeline] Navigation Bar and Landing Page with View Cards",
+      "body": "Closes #32\n\n## Changes\n\n### `src/components/nav-bar.tsx` (new)\nClient Component using `usePathname` for active-link highlighting. Sticky `h-16 bg-gray-900` nav with \"Pipeline Observatory\" logo on the left and links to `/simulator`, `/replay`, `/forensics` on the right.\n\n### `src/app/layout.tsx`\nAdded `(NavBar /)` above all page content inside a `(main)` wrapper.\n\n### `src/app/page.tsx`\nUpdated to an async Server Component that calls `getPipelineData()` at build time:\n- **Hero section**: large heading + subtitle on a dark gradient background\n- **Three view cards** in `grid-cols-1 md:grid-cols-3`: Simulator, Replay, Forensics with correct `href` links and `hover:bg-gray-800 transition-colors`\n- **Stats bar**: features shipped + PRs merged computed from fixture data, plus \"~2 hours end-to-end\"\n\n### `src/test/home.test.tsx`\nUpdated to mock `getPipelineData` and added assertions for the three card links with correct `href` attributes.\n\n## Test Results\nAll 8 tests pass:\n```\n✓ src/test/data.test.ts  (6 tests)\n✓ src/test/home.test.tsx  (2 tests)\n```\n\n> **Note**: There is a pre-existing TypeScript build error in `src/data/github.ts` (Octokit list endpoint missing `additions`/`deletions` fields). This is unrelated to this PR.\n\n---\n*This PR was created by Pipeline Assistant.*\n\n\n\n\n> Generated by [Pipeline Repo Assist](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22397198795)\n\n<!-- gh-aw-agentic-workflow: Pipeline Repo Assist, engine: copilot, model: gpt-5, id: 22397198795, workflow_id: repo-assist, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22397198795 -->\n\n<!-- gh-aw-workflow-id: repo-assist -->",
+      "state": "closed",
+      "merged_at": "2026-02-25T12:45:57Z",
+      "created_at": "2026-02-25T12:45:06Z",
+      "additions": 149,
+      "deletions": 9,
+      "changed_files": 4,
+      "user": "samuelkahessay",
+      "head_branch": "repo-assist/issue-32-nav-landing-page-05a09ec3b3971f47",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVESUMMARY: The PR implements the sticky navigation bar, updates the layout to include it, and builds the landing page with hero, responsive view cards, and a stats bar sourced from fixture data. Tests verify the presence and correct hrefs of the three cards as required.\n\nISSUES:\n- None\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T12:45:43Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": "src/app/layout.tsx",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 1
+        },
+        {
+          "filename": "src/app/page.tsx",
+          "status": "modified",
+          "additions": 62,
+          "deletions": 4
+        },
+        {
+          "filename": "src/components/nav-bar.tsx",
+          "status": "added",
+          "additions": 37,
+          "deletions": 0
+        },
+        {
+          "filename": "src/test/home.test.tsx",
+          "status": "modified",
+          "additions": 47,
+          "deletions": 4
+        }
+      ]
+    },
+    {
+      "number": 47,
+      "title": "[Pipeline] Simulator — Interactive SVG Node Graph with Chain Animation",
+      "body": "Closes #33\n\n## Changes\n\n### `src/app/simulator/page.tsx` (new)\nServer Component page for the Simulator view. Renders a heading/description and mounts `SimulatorControls`.\n\n### `src/components/simulator/pipeline-graph.tsx` (new)\nInteractive SVG node graph with:\n- 4 nodes left-to-right: `PRD Decomposer`, `Repo Assist`, `PR Reviewer`, `Auto-Merge`\n- Rounded-rect nodes (`rx=12`) with emoji icon and label\n- Cubic Bezier `C` path connections between consecutive nodes\n- Dashed return path (`strokeDasharray=\"6 4\"`) from Merge → Assist\n- Three visual states: `idle` (gray), `active` (blue glow), `completed` (green + ✓ badge)\n- Framer Motion scale pulse on activate, color transition on border\n- Click any node to trigger chain from that stage; click PRD Decomposer for full chain\n- `aria-label` on SVG and each interactive node\n\n### `src/components/simulator/simulator-controls.tsx` (new)\nClient Component wrapping `PipelineGraph` with:\n- Speed buttons: `0.5x`, `1x`, `2x` (adjusts 1500ms base delay)\n- Reset button (re-mounts graph via `key` prop)\n\n### `src/test/simulator.test.tsx` (new)\n3 tests with fake timers:\n- 4 nodes render\n- Clicking PRD Decomposer activates all 4 nodes in sequence\n- Nodes start in idle state\n\n## Test Results\n```\n✓ src/test/simulator.test.tsx  (3 tests)\n✓ src/test/data.test.ts        (6 tests)\n✓ src/test/home.test.tsx       (2 tests)\n  11 tests passed\n```\n\n---\n*This PR was created by Pipeline Assistant.*\n\n\n\n\n> Generated by [Pipeline Repo Assist](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22397461814)\n\n<!-- gh-aw-agentic-workflow: Pipeline Repo Assist, engine: copilot, model: gpt-5, id: 22397461814, workflow_id: repo-assist, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22397461814 -->\n\n<!-- gh-aw-workflow-id: repo-assist -->",
+      "state": "closed",
+      "merged_at": "2026-02-25T13:35:15Z",
+      "created_at": "2026-02-25T12:55:55Z",
+      "additions": 300,
+      "deletions": 0,
+      "changed_files": 4,
+      "user": "samuelkahessay",
+      "head_branch": "repo-assist/issue-33-simulator-node-graph-397c1fbc46ac09d4",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "CHANGES_REQUESTED",
+          "body": "## Pipeline Review — Changes Requested\n\n**Decision**: REQUEST_CHANGESSUMMARY: The new simulator graph component mostly implements the visual nodes, paths, state machine, and animations, but the page does not actually render the graph (PipelineGraph is imported but unused), the glow implementation is invalid, there is no visible reset/button implementation in the provided code, timers are scheduled without cleanup, and I do not see the required test that verifies the full-chain activation with fa",
+          "submitted_at": "2026-02-25T12:56:33Z"
+        },
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVESUMMARY: The PR adds a usable interactive SVG pipeline graph with 4 nodes, stateful activation (idle/active/completed), curved connections, motion animations, accessibility attributes, and wiring for a simulator page. It aligns with the acceptance criteria and stays within scope.\n\nISSUES:\n- None\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T13:35:05Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": "src/app/simulator/page.tsx",
+          "status": "added",
+          "additions": 16,
+          "deletions": 0
+        },
+        {
+          "filename": "src/components/simulator/pipeline-graph.tsx",
+          "status": "added",
+          "additions": 180,
+          "deletions": 0
+        },
+        {
+          "filename": "src/components/simulator/simulator-controls.tsx",
+          "status": "added",
+          "additions": 44,
+          "deletions": 0
+        },
+        {
+          "filename": "src/test/simulator.test.tsx",
+          "status": "added",
+          "additions": 60,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "number": 48,
+      "title": "[Pipeline] Replay — Horizontal Scrollable Timeline Component",
+      "body": "Closes #36\n\n## Changes\n\n### `src/app/replay/page.tsx` (new)\nServer Component that loads pipeline data via `getPipelineData()` and renders the `Timeline` client component.\n\n### `src/components/replay/timeline.tsx` (new)\nHorizontally scrollable timeline component:\n- Time axis from `05:29` to `07:24` UTC with tick marks every 15 minutes labeled `HH:MM`\n- Events derived from fixture data: Issue Created, PR Opened, Review Submitted, PR Merged\n- Colored dots (`w-3 h-3` circle): blue=issues, green=PRs, yellow=reviews, purple=merges\n- Dots positioned at their timestamp on the axis using CSS `left: {pct}%`\n- Hover tooltip on each dot showing event title and `HH:MM` timestamp\n- `overflow-x-auto` with `min-w-[2400px]` inner container for horizontal scrolling\n- Click to select a dot — shows ring highlight + detail bar below\n- Summary bar: `\"N issues → N PRs → N reviews → N merges | Xh Ym total\"`\n- `aria-label` on scrollable region and each event dot button\n\n### `src/test/replay.test.tsx` (new)\n3 tests:\n- Correct number of event dots rendered from fixture data\n- Summary bar shows correct counts\n- Timeline region has aria-label\n\n## Test Results\n```\n✓ src/test/replay.test.tsx   (3 tests)\n✓ src/test/data.test.ts      (6 tests)\n✓ src/test/home.test.tsx     (2 tests)\n  11 tests passed\n```\n\n---\n*This PR was created by Pipeline Assistant.*\n\n\n\n\n> Generated by [Pipeline Repo Assist](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22397461814)\n\n<!-- gh-aw-agentic-workflow: Pipeline Repo Assist, engine: copilot, model: gpt-5, id: 22397461814, workflow_id: repo-assist, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22397461814 -->\n\n<!-- gh-aw-workflow-id: repo-assist -->",
+      "state": "closed",
+      "merged_at": "2026-02-25T12:56:56Z",
+      "created_at": "2026-02-25T12:55:58Z",
+      "additions": 307,
+      "deletions": 0,
+      "changed_files": 3,
+      "user": "samuelkahessay",
+      "head_branch": "repo-assist/issue-36-replay-timeline-58803a487ec999ca",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVESUMMARY: The PR adds a server-rendered page loading pipeline data and a client Timeline component that renders a horizontally scrollable axis with event dots, tooltips, selection, and a summary bar. The implementation aligns with the acceptance criteria and stays within scope.\n\nISSUES:\n- Tests for the timeline rendering are not present. Consider adding tests to verify the correct number of event dots and tick marks based on fixture data.\n- Tick",
+          "submitted_at": "2026-02-25T12:56:47Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": "src/app/replay/page.tsx",
+          "status": "added",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "filename": "src/components/replay/timeline.tsx",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "filename": "src/test/replay.test.tsx",
+          "status": "added",
+          "additions": 89,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "number": 49,
+      "title": "[Pipeline] Forensics — Pipeline Cycle Cards and AI Review Inspector",
+      "body": "Closes #38\n\n## Changes\n\n### `src/app/forensics/page.tsx` (new)\nServer Component loading pipeline data via `getPipelineData()`. Renders two sections: \"Pipeline Cycles\" and \"AI Review Inspector\".\n\n### `src/components/forensics/cycle-card.tsx` (new)\n- `groupIntoCycles(prs, issues)` — exported grouping algorithm: sorts PRs by `createdAt`, starts a new cycle when gap > 5 minutes\n- `CycleCard` component showing: cycle number, timestamp range, Issues Available (pipeline issues open at cycle time), PRs Created list, Lines Changed total\n- Cards alternate `bg-gray-800` / `bg-gray-900`\n- Issues Available algorithm: count issues where `createdAt <= t` and (`closedAt === null` or `closedAt > t`) and has `\"pipeline\"` label\n\n### `src/components/forensics/review-inspector.tsx` (new)\n- All PR reviews sorted by `submittedAt` (newest last)\n- Each entry: PR title + number, reviewer identity, decision badge (APPROVED=green / CHANGES REQUESTED=red)\n- `\"Fallback Review\"` warning badge when body contains `\"ai review was unavailable\"`\n- Scrollable `font-mono bg-gray-900` block for full review body\n\n### `src/test/forensics.test.ts` (new)\n5 tests for cycle grouping:\n- Empty array for no PRs\n- PRs within 5 min → same cycle\n- PRs > 5 min apart → different cycles\n- Issues available count (closed-before and not-yet-created excluded)\n- Cycle numbers start at 1\n\n## Test Results\n```\n✓ src/test/forensics.test.ts   (5 tests)\n✓ src/test/data.test.ts        (6 tests)\n✓ src/test/home.test.tsx       (2 tests)\n  13 tests passed\n```\n\n---\n*This PR was created by Pipeline Assistant.*\n\n\n\n\n> Generated by [Pipeline Repo Assist](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22397461814)\n\n<!-- gh-aw-agentic-workflow: Pipeline Repo Assist, engine: copilot, model: gpt-5, id: 22397461814, workflow_id: repo-assist, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22397461814 -->\n\n<!-- gh-aw-workflow-id: repo-assist -->",
+      "state": "closed",
+      "merged_at": "2026-02-25T12:56:31Z",
+      "created_at": "2026-02-25T12:56:02Z",
+      "additions": 348,
+      "deletions": 0,
+      "changed_files": 4,
+      "user": "samuelkahessay",
+      "head_branch": "repo-assist/issue-38-forensics-cycles-869d4845a77ca0e2",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVESUMMARY: Automated review — CI checks are passing. AI review was unavailable.\nISSUES:\nNone\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T12:56:19Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": "src/app/forensics/page.tsx",
+          "status": "added",
+          "additions": 34,
+          "deletions": 0
+        },
+        {
+          "filename": "src/components/forensics/cycle-card.tsx",
+          "status": "added",
+          "additions": 121,
+          "deletions": 0
+        },
+        {
+          "filename": "src/components/forensics/review-inspector.tsx",
+          "status": "added",
+          "additions": 99,
+          "deletions": 0
+        },
+        {
+          "filename": "src/test/forensics.test.ts",
+          "status": "added",
+          "additions": 94,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "number": 50,
+      "title": "[Pipeline] Forensics — Failure Timeline with 11 Fix Entries",
+      "body": "Closes #39\n\n## Changes\n\n### `src/data/failures.ts` (new)\nStatic array of exactly 11 `Failure` objects `{ id, timestamp, title, rootCause, resolution, category }` documenting every fix applied during the first pipeline run. Categories: `workflow`, `config`, `api`, `race-condition`.\n\n### `src/components/forensics/failure-timeline.tsx` (new)\nVertical timeline with `border-l-2 border-gray-700` left border. Each entry is a card with:\n- Colored category dot (red=workflow, yellow=config, blue=api, purple=race-condition)\n- Title as `<h3>`, timestamp in muted monospace text\n- \"Root Cause\" and \"Resolution\" paragraphs\n- Category badge pill with Tailwind color coding\n\n### `src/app/forensics/page.tsx` (updated)\nImports and renders `(FailureTimeline /)` below the AI Reviews section.\n\n### `src/test/forensics.test.ts` (updated)\n3 new tests for the failures data:\n- Contains exactly 11 entries\n- All entries have required fields with valid categories\n- IDs are 1 through 11\n\n## Test Results\n```\n✓ src/test/forensics.test.ts  (8 tests)\n✓ src/test/data.test.ts       (6 tests)\n✓ src/test/home.test.tsx      (2 tests)\n✓ src/test/replay.test.tsx    (3 tests)\n  19 tests passed\n```\n\n---\n*This PR was created by Pipeline Assistant.*\n\n\n\n\n> Generated by [Pipeline Repo Assist](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22397820837)\n\n<!-- gh-aw-agentic-workflow: Pipeline Repo Assist, engine: copilot, model: gpt-5, id: 22397820837, workflow_id: repo-assist, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22397820837 -->\n\n<!-- gh-aw-workflow-id: repo-assist -->",
+      "state": "closed",
+      "merged_at": "2026-02-25T14:20:50Z",
+      "created_at": "2026-02-25T13:06:50Z",
+      "additions": 213,
+      "deletions": 0,
+      "changed_files": 5,
+      "user": "samuelkahessay",
+      "head_branch": "repo-assist/issue-39-forensics-failure-timeline-06696a51a2125697",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "CHANGES_REQUESTED",
+          "body": "## Pipeline Review — Changes Requested\n\n**Decision**: REQUEST_CHANGESSUMMARY: The new FailureTimeline component and failures data mostly implement the requested UI and data, but the PR does not meet the acceptance criteria: the failures array is incomplete (only 10 entries in the diff) and there is no test to assert that all 11 items render.\n\nISSUES:\n- The failures array in src/data/failures.ts only contains 10 entries in the provided diff; acceptance criteria require exactly 11 entries in the s",
+          "submitted_at": "2026-02-25T13:07:15Z"
+        },
+        {
+          "user": "github-actions[bot]",
+          "state": "CHANGES_REQUESTED",
+          "body": "## Pipeline Review — Changes Requested\n\n**Decision**: REQUEST_CHANGESSUMMARY: The UI and data files largely implement the timeline component and styling requirements, and the component is mounted on the forensics page; however the PR is missing the required test that asserts all 11 failures render and it's not verifiable from the diff that there are exactly 11 entries in the data file in the requested order.\n\nISSUES:\n- Missing test: There is no test added that asserts 11 failure entries render (",
+          "submitted_at": "2026-02-25T13:34:46Z"
+        },
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVE\n\nSUMMARY: Automated review — CI checks are passing. AI review was unavailable.\nISSUES:\nNone\n\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T14:14:44Z"
+        },
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVE\n\nSUMMARY: The diff adds a complete 11-entry failures data set, a vertically styled FailureTimeline UI that matches the acceptance criteria (section heading, subtitle, left border, color-coded categories, and details), renders it on the forensics page, and includes tests verifying all 11 entries are present and correctly structured.\n\nISSUES:\n- None\n\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T14:20:34Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": "src/app/forensics/page.tsx",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 0
+        },
+        {
+          "filename": "src/components/forensics/failure-timeline.tsx",
+          "status": "added",
+          "additions": 74,
+          "deletions": 0
+        },
+        {
+          "filename": "src/data/failures.ts",
+          "status": "added",
+          "additions": 101,
+          "deletions": 0
+        },
+        {
+          "filename": "src/test/failure-timeline.test.tsx",
+          "status": "added",
+          "additions": 11,
+          "deletions": 0
+        },
+        {
+          "filename": "src/test/forensics.test.ts",
+          "status": "modified",
+          "additions": 23,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "number": 51,
+      "title": "[Pipeline] Replay — Event Detail Panel and Playback Controls with Filters",
+      "body": "Closes #37\n\n## Changes\n\n### `src/components/replay/event-detail.tsx` (new)\nFramer Motion slide-in panel (opacity + y translate) shown below the timeline when an event is selected. Uses `AnimatePresence` with `key={event.id}` for enter/exit on event change. Renders rich detail per event type:\n- **Issues**: title + colored label badges (hex color from fixture)\n- **PRs**: title, `+{additions}` (green) / `-{deletions}` (red), changed file count\n- **Reviews**: reviewer name, decision badge (`APPROVED` in green / `REQUEST_CHANGES` in red), review body\n- **Merges**: PR title, merge timestamp, \"Auto-merged via squash\" badge\n\n### `src/components/replay/timeline-controls.tsx` (new)\nControl bar with:\n- Play/Pause toggle button\n- Speed selector: `1x`, `2x`, `4x` (adjusts 2000ms base interval)\n- Previous/Next step buttons\n- Filter toggles: `Issues`, `PRs`, `Reviews`, `Merges` with per-type color coding and `aria-pressed`\n\n### `src/components/replay/timeline.tsx` (updated)\n- Added `playing`, `speed`, `filters` state\n- `useEffect` auto-play loop clears on pause/unmount; skips filtered-out events\n- `useEffect` keyboard shortcuts: `Space` → play/pause, `ArrowLeft`/`ArrowRight` → prev/next\n- Renders `(TimelineControls /)` above the scrollable area\n- Renders `(AnimatePresence)(EventDetail /)(/AnimatePresence)` below the timeline\n- Event dots only show events whose type passes the active filter\n\n### `src/test/replay.test.tsx` (updated)\n- Scoped event-dot count query to the `region` element to exclude control buttons\n- Added test: toggling \"Issues\" filter removes 2 issue dots from timeline region\n\n## Test Results\n```\n✓ src/test/replay.test.tsx    (4 tests)\n✓ src/test/data.test.ts       (6 tests)\n✓ src/test/forensics.test.ts  (5 tests)\n✓ src/test/home.test.tsx      (2 tests)\n  17 tests passed\n```\n\n---\n*This PR was created by Pipeline Assistant.*\n\n\n\n\n> Generated by [Pipeline Repo Assist](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22397820837)\n\n<!-- gh-aw-agentic-workflow: Pipeline Repo Assist, engine: copilot, model: gpt-5, id: 22397820837, workflow_id: repo-assist, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22397820837 -->\n\n<!-- gh-aw-workflow-id: repo-assist -->",
+      "state": "closed",
+      "merged_at": "2026-02-25T14:20:29Z",
+      "created_at": "2026-02-25T13:06:53Z",
+      "additions": 533,
+      "deletions": 69,
+      "changed_files": 8,
+      "user": "samuelkahessay",
+      "head_branch": "repo-assist/issue-37-replay-event-detail-21006d23cd6dc61b",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "CHANGES_REQUESTED",
+          "body": "## Pipeline Review — Changes Requested\n\n**Decision**: REQUEST_CHANGESSUMMARY: The changes introduce the EventDetail and TimelineControls components, but several acceptance criteria are not fully met (notably issue body excerpt, linked issue number display for PRs, and behavior around auto-play with filtering), and there’s no visible test coverage addressing the specified scenarios.\n\nISSUES:\n- Issue content missing body excerpt: In src/components/replay/event-detail.tsx, the Issue branch renders ",
+          "submitted_at": "2026-02-25T13:07:28Z"
+        },
+        {
+          "user": "github-actions[bot]",
+          "state": "CHANGES_REQUESTED",
+          "body": "## Pipeline Review — Changes Requested\n\n**Decision**: REQUEST_CHANGESSUMMARY: The new Event Detail and Timeline Controls components implement many required UI pieces (issue/PR/review/merge displays, control bar with filters and playback UI). However several acceptance criteria are not evidently implemented in the diff (keyboard shortcuts, autoplay skipping filtered events) and there is no visible test for the required filter behavior; those must be present and verified.\n\nISSUES:\n- Missing/unclea",
+          "submitted_at": "2026-02-25T13:35:06Z"
+        },
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVE\n\nSUMMARY: Automated review — CI checks are passing. AI review was unavailable.\nISSUES:\nNone\n\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T14:14:45Z"
+        },
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVE\n\nSUMMARY: Automated review — CI checks are passing. AI review was unavailable.\nISSUES:\nNone\n\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T14:20:14Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": "src/components/replay/event-detail.tsx",
+          "status": "added",
+          "additions": 138,
+          "deletions": 0
+        },
+        {
+          "filename": "src/components/replay/timeline-controls.tsx",
+          "status": "added",
+          "additions": 108,
+          "deletions": 0
+        },
+        {
+          "filename": "src/components/replay/timeline.tsx",
+          "status": "modified",
+          "additions": 91,
+          "deletions": 22
+        },
+        {
+          "filename": "src/data/fixtures/issues.json",
+          "status": "modified",
+          "additions": 134,
+          "deletions": 36
+        },
+        {
+          "filename": "src/data/fixtures/pull-requests.json",
+          "status": "modified",
+          "additions": 16,
+          "deletions": 9
+        },
+        {
+          "filename": "src/data/github.ts",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 0
+        },
+        {
+          "filename": "src/data/types.ts",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 0
+        },
+        {
+          "filename": "src/test/replay.test.tsx",
+          "status": "modified",
+          "additions": 42,
+          "deletions": 2
+        }
+      ]
+    },
+    {
+      "number": 52,
+      "title": "[Pipeline] Simulator — Node Detail Panels with Slide-Down Animation",
+      "body": "Closes #34\n\n## Changes\n\n### `src/data/simulator-content.ts` (new)\nArray of 4 `NodeContent` objects — `{ id, name, description, triggers[], outputs[], techDetail }` — covering each pipeline stage: PRD Decomposer, Repo Assist, PR Reviewer, Auto-Merge. Hardcoded prose, no API calls.\n\n### `src/components/simulator/node-detail.tsx` (new)\nAnimated slide-down panel using Framer Motion `AnimatePresence`:\n- `height: 0 → auto` + `opacity: 0 → 1` enter/exit transition\n- `key={content.id}` triggers exit→enter on node change\n- Close button (×) with `aria-label=\"Close panel\"` — dismisses panel without affecting node state\n- Respects `prefers-reduced-motion`: falls back to opacity-only animation via `useReducedMotion()`\n- Dark card styling: `bg-gray-800 rounded-xl border border-gray-700`\n- Two-column layout for Triggers / Outputs lists, tech detail caption at bottom\n\n### `src/components/simulator/pipeline-graph.tsx` (modified)\nAdded optional `onNodeSelect?: (id: string) => void` prop. Called on every node click before the chain animation, so the parent can track which node was last selected.\n\n### `src/components/simulator/simulator-controls.tsx` (modified)\n- Added `selectedNode` state (`string | null`)\n- Passes `onNodeSelect={setSelectedNode}` to `PipelineGraph`\n- Renders `(NodeDetail nodeId={selectedNode} onClose={() =) setSelectedNode(null)} />` below the graph\n- Reset button also clears `selectedNode`\n\n## Tests\n5 new tests added to `src/test/simulator.test.tsx`:\n- `NodeDetail` renders correct content for a given `nodeId`\n- `NodeDetail` updates content when `nodeId` changes\n- Close button calls `onClose`\n- `null` `nodeId` renders nothing\n- `PipelineGraph` calls `onNodeSelect` with correct id on node click\n\n```\n✓ src/test/simulator.test.tsx  (8 tests)\n✓ src/test/forensics.test.ts   (5 tests)\n✓ src/test/replay.test.tsx     (3 tests)\n✓ src/test/data.test.ts        (6 tests)\n✓ src/test/home.test.tsx       (2 tests)\n  24 tests passed\n```\n\n---\n*This PR was created by Pipeline Assistant.*\n\n\n\n\n> Generated by [Pipeline Repo Assist](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22399177670)\n\n<!-- gh-aw-agentic-workflow: Pipeline Repo Assist, engine: copilot, model: gpt-5, id: 22399177670, workflow_id: repo-assist, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22399177670 -->\n\n<!-- gh-aw-workflow-id: repo-assist -->",
+      "state": "closed",
+      "merged_at": "2026-02-25T14:20:53Z",
+      "created_at": "2026-02-25T13:43:22Z",
+      "additions": 215,
+      "deletions": 4,
+      "changed_files": 5,
+      "user": "samuelkahessay",
+      "head_branch": "repo-assist/issue-34-simulator-node-detail-e5457f5ef129f895",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "CHANGES_REQUESTED",
+          "body": "## Pipeline Review — Changes Requested\n\n**Decision**: REQUEST_CHANGESSUMMARY: The UI implementation for the node detail panel largely satisfies the visual and interaction acceptance criteria (animated slide-down, content layout, styling, reduced-motion support, close button, and wiring from the graph), but the PR is missing the required automated test and I cannot confirm the data file contains all 4 required node objects.\n\nISSUES:\n- Missing test: There is no test added to assert \"clicking a nod",
+          "submitted_at": "2026-02-25T13:43:55Z"
+        },
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVE\n\nSUMMARY: Automated review — CI checks are passing. AI review was unavailable.\nISSUES:\nNone\n\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T14:14:51Z"
+        },
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVE\n\nSUMMARY: The PR implements the node content data, adds an animated NodeDetail panel that respects reduced-motion, wires up node selection in the graph, updates the controls to render the panel, and includes tests covering the component behavior. Changes satisfy the linked acceptance criteria and CI passes.\n\nISSUES:\n- None\n\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T14:20:37Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": "src/components/simulator/node-detail.tsx",
+          "status": "added",
+          "additions": 78,
+          "deletions": 0
+        },
+        {
+          "filename": "src/components/simulator/pipeline-graph.tsx",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 2
+        },
+        {
+          "filename": "src/components/simulator/simulator-controls.tsx",
+          "status": "modified",
+          "additions": 9,
+          "deletions": 2
+        },
+        {
+          "filename": "src/data/simulator-content.ts",
+          "status": "added",
+          "additions": 81,
+          "deletions": 0
+        },
+        {
+          "filename": "src/test/simulator.test.tsx",
+          "status": "modified",
+          "additions": 43,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "number": 53,
+      "title": "[Pipeline] Simulator — Animated Message Particles Along SVG Paths",
+      "body": "Closes #35\n\n## Summary\n\nImplements animated message particles that travel along the SVG connection paths between pipeline nodes, giving a visual sense of data flowing through the system.\n\n## Changes\n\n### New: `src/components/simulator/message-particle.tsx`\n- Pure presentational component rendering an animated `(circle r=6)` + text label\n- Travels along a cubic bezier path by sampling 20 keyframe points and animating `cx`/`cy` via Framer Motion arrays\n- Particle types with distinct colors:\n  - **Issues** — blue (`#3b82f6`) — Decomposer → Assist\n  - **PRs** — green (`#22c55e`) — Assist → Reviewer\n  - **Review** — yellow (`#eab308`) — Reviewer → Merge\n  - **Dispatch** — purple (`#a855f7`) — Merge → Assist (return path)\n- Calls `onComplete(id)` via `onAnimationComplete` so the parent can remove the particle\n\n### Updated: `src/components/simulator/pipeline-graph.tsx`\n- Added `particles: Particle[]` state array\n- `activateChain` spawns a particle each time a node becomes `active`\n- `removeParticle` callback filters the completed particle from state\n- Renders `(AnimatePresence)` + `(MessageParticle)` elements inside the SVG\n- Particle duration is `1 / speed` seconds — respects the speed slider\n- Multiple particles can be in-flight simultaneously\n\n### Updated: `src/test/simulator.test.tsx`\n- Added `motion.circle` to the framer-motion mock\n- Added test: clicking PRD Decomposer causes an Issues particle to appear (`aria-label=\"particle-Issues\"`)\n\n## Test Results\n\n```\nTest Files  6 passed (6)\n     Tests  32 passed (32)\n```\n\n> This PR was created by Pipeline Assistant.\n\n\n\n\n> Generated by [Pipeline Repo Assist](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22400889459)\n\n<!-- gh-aw-agentic-workflow: Pipeline Repo Assist, engine: copilot, model: gpt-5, id: 22400889459, workflow_id: repo-assist, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22400889459 -->\n\n<!-- gh-aw-workflow-id: repo-assist -->",
+      "state": "closed",
+      "merged_at": "2026-02-25T14:31:33Z",
+      "created_at": "2026-02-25T14:30:28Z",
+      "additions": 120,
+      "deletions": 0,
+      "changed_files": 3,
+      "user": "samuelkahessay",
+      "head_branch": "repo-assist/issue-35-animated-message-particles-fed6249176ca7fa8",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVE\n\nSUMMARY: The PR implements the animated SVG message particles, wiring them into the pipeline graph, adds coloring/labels/duration tied to the speed prop, supports multiple in-flight particles, and includes a unit test that checks a particle appears when activating the first node. Overall the changes meet the linked acceptance criteria.\n\nISSUES:\n- The sampleBezier() parser is brittle: it relies on a regex to extract the first 8 numbers from th",
+          "submitted_at": "2026-02-25T14:31:24Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": "src/components/simulator/message-particle.tsx",
+          "status": "added",
+          "additions": 71,
+          "deletions": 0
+        },
+        {
+          "filename": "src/components/simulator/pipeline-graph.tsx",
+          "status": "modified",
+          "additions": 37,
+          "deletions": 0
+        },
+        {
+          "filename": "src/test/simulator.test.tsx",
+          "status": "modified",
+          "additions": 12,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "number": 54,
+      "title": "Fix watchdog orphaned-issue parsing by removing unsafe shell word-splitting",
+      "body": "The Pipeline Watchdog workflow was failing during orphaned issue scanning with `jq: parse error: Unfinished string at EOF`. The failure was caused by splitting JSON rows with shell word-splitting, which breaks when issue titles contain spaces or quotes.\n\n- **Root cause: unsafe iteration over JSON rows**\n  - The orphaned-issue loop used `for ISSUE_ROW in $(...)`, which tokenizes JSON on whitespace and can truncate/fragment objects before passing them to `jq`.\n\n- **Change: robust JSON row iteration**\n  - Replaced `for ... in $(jq -c '.[]')` with a line-safe `while IFS= read -r` loop using process substitution.\n  - This preserves each JSON object as a complete line, regardless of title content.\n\n- **Scope**\n  - Updated only the orphaned-issue iteration block in `.github/workflows/pipeline-watchdog.yml`.\n\n```bash\nwhile IFS= read -r ISSUE_ROW; do\n  ISSUE_NUM=$(echo \"$ISSUE_ROW\" | jq -r '.number')\n  ISSUE_UPDATED=$(echo \"$ISSUE_ROW\" | jq -r '.updatedAt')\n  ...\ndone < <(echo \"$PIPELINE_ISSUES\" | jq -c '.[]')\n```\n\n<!-- START COPILOT CODING AGENT TIPS -->\n---\n\n🔒 GitHub Advanced Security automatically protects Copilot coding agent pull requests. You can protect all pull requests by enabling Advanced Security for your repositories. [Learn more about Advanced Security.](https://gh.io/cca-advanced-security)",
+      "state": "closed",
+      "merged_at": "2026-02-25T18:30:37Z",
+      "created_at": "2026-02-25T18:16:24Z",
+      "additions": 2,
+      "deletions": 2,
+      "changed_files": 1,
+      "user": "Copilot",
+      "head_branch": "copilot/investigate-watchdog-workflow-failure",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVE\n\nSUMMARY: The change correctly replaces unsafe word-splitting via for ... in $(...) with a while IFS= read -r loop and process substitution, which fixes JSON line-splitting issues without introducing obvious bugs or security problems. CI is pending but the change is small, in-scope, and follows expected shell usage.\n\nISSUES:\n- None\n\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T18:21:30Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": ".github/workflows/pipeline-watchdog.yml",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 2
+        }
+      ]
+    },
+    {
+      "number": 55,
+      "title": "Harden PR reviewer dispatch by safely passing AI summary into shell",
+      "body": "The PR Reviewer workflow could fail during repo-assist dispatch with `command not found` (exit 127) when review summary content was injected directly into shell script context. This broke follow-up automation after review decisions.\n\n- **Workflow fix: isolate dynamic review summary from inline shell parsing**\n  - In `.github/workflows/pr-reviewer.yml`, added `REVIEW_SUMMARY` to the step environment.\n  - Replaced direct expression interpolation in `run:` with environment-variable assignment to prevent shell parse breakage from quotes/special characters in model output.\n\n- **Scope**\n  - Change is limited to the `Dispatch repo-assist for next cycle` step.\n  - No behavior changes to approval/request-changes decision logic, dispatch targets, or review content.\n\n```yaml\nenv:\n  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n  REVIEW_SUMMARY: ${{ steps.review.outputs.summary }}\nrun: |\n  DECISION=\"${{ steps.review.outputs.decision }}\"\n  PR_NUMBER=\"${{ steps.pr.outputs.number }}\"\n  ISSUE_NUMBER=\"${{ steps.pr.outputs.issue_number }}\"\n  SUMMARY=\"$REVIEW_SUMMARY\"\n```\n\n<!-- START COPILOT CODING AGENT TIPS -->\n---\n\n🔒 GitHub Advanced Security automatically protects Copilot coding agent pull requests. You can protect all pull requests by enabling Advanced Security for your repositories. [Learn more about Advanced Security.](https://gh.io/cca-advanced-security)",
+      "state": "closed",
+      "merged_at": "2026-02-25T18:29:06Z",
+      "created_at": "2026-02-25T18:22:47Z",
+      "additions": 2,
+      "deletions": 1,
+      "changed_files": 1,
+      "user": "Copilot",
+      "head_branch": "copilot/fix-review-dispatch-error",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVE\n\nSUMMARY: The change safely passes the AI review summary via an environment variable in the PR reviewer workflow, avoiding inline shell escaping pitfalls. It is a focused, low-risk hardening with no apparent logic or security issues, and stays within scope.\n\nISSUES:\n- None\n\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T18:28:21Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": ".github/workflows/pr-reviewer.yml",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "number": 56,
+      "title": "Fix workflow shell injection vulnerabilities and build type error",
+      "body": "Pipeline workflows break mid-cycle due to shell injection from unsanitized `${{ }}` expressions and unsafe JSON iteration. The Next.js build also fails due to an Octokit type mismatch.\n\n### Workflow hardening\n\n- **close-issues.yml**: `${{ github.event.pull_request.body }}` in a shell *comment* is still evaluated by Actions, injecting the full PR body into the script. Proved by [run 22410403397](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22410403397): `line 6: -: command not found` (exit 127). Removed the expression from the comment.\n\n- **pipeline-watchdog.yml**: Stalled PRs loop used `for PR_ROW in $(... | jq -c '.[]')` — word-splitting on whitespace fragments JSON when titles contain spaces. Same bug class as the already-fixed orphaned issues loop. Replaced with:\n  ```bash\n  while IFS= read -r PR_ROW; do\n    ...\n  done < <(echo \"$PIPELINE_PRS\" | jq -c '.[]')\n  ```\n\n- **pr-reviewer.yml**: PR title, CI summary, and review decision were interpolated directly into `run:` blocks via `${{ }}`. Moved all user-controlled values to `env:` blocks where Actions handles escaping:\n  ```yaml\n  env:\n    PR_TITLE: ${{ steps.pr.outputs.title }}\n    CI_SUMMARY: ${{ steps.ci.outputs.summary }}\n  run: |\n    echo \"## PR: $PR_TITLE\" >> review_prompt.txt\n  ```\n\n### Build fix\n\n- **src/data/github.ts**: `octokit.pulls.list()` response type doesn't include `additions`/`deletions`/`changed_files`. Switched to `octokit.pulls.get()` per PR (parallelized with the existing `listReviews` call) which includes these fields.\n\n> [!WARNING]\n>\n> <details>\n> <summary>Firewall rules blocked me from connecting to one or more addresses (expand for details)</summary>\n>\n> #### I tried to connect to the following addresses, but was blocked by firewall rules:\n>\n> - `https://api.github.com/repos/samuelkahessay/agentic-pipeline/actions/runs`\n>   - Triggering command: `/opt/hostedtoolcache/node/24.13.1/x64/bin/node /opt/hostedtoolcache/node/24.13.1/x64/bin/node /home/REDACTED/work/agentic-pipeline/agentic-pipeline/node_modules/next/dist/compiled/jest-worker/processChild.js` (http block)\n> - `https://api.github.com/repos/samuelkahessay/agentic-pipeline/issues`\n>   - Triggering command: `/opt/hostedtoolcache/node/24.13.1/x64/bin/node /opt/hostedtoolcache/node/24.13.1/x64/bin/node /home/REDACTED/work/agentic-pipeline/agentic-pipeline/node_modules/next/dist/compiled/jest-worker/processChild.js` (http block)\n> - `https://api.github.com/repos/samuelkahessay/agentic-pipeline/pulls`\n>   - Triggering command: `/opt/hostedtoolcache/node/24.13.1/x64/bin/node /opt/hostedtoolcache/node/24.13.1/x64/bin/node /home/REDACTED/work/agentic-pipeline/agentic-pipeline/node_modules/next/dist/compiled/jest-worker/processChild.js` (http block)\n>\n> If you need me to access, download, or install something from one of these locations, you can either:\n>\n> - Configure [Actions setup steps](https://gh.io/copilot/actions-setup-steps) to set up my environment, which run before the firewall is enabled\n> - Add the appropriate URLs or hosts to the custom allowlist in this repository's [Copilot coding agent settings](https://github.com/samuelkahessay/agentic-pipeline/settings/copilot/coding_agent) (admins only)\n>\n> </details>\n\n<!-- START COPILOT CODING AGENT SUFFIX -->\n\n\n\n<!-- START COPILOT ORIGINAL PROMPT -->\n\n\n\n<details>\n\n<summary>Original prompt</summary>\n\n> Context for Claude Code: I'm working with another Claude instance (Claude.ai) that has been helping me strategize around this repo. I have a meeting with an AI Architect at Volaris Group in the 2nd week of March who wants to see this pipeline working end-to-end. The current blocker is the pipeline breaking mid-cycle in various ways. I need this reliable before that meeting.\n> \n> ## What I Need You To Do\n> \n> ### Step 1: Diagnose from real evidence\n> - Read every workflow file, every log file, every run output you can find in this repo\n> - Look at actual failed runs — show me the exact error output, which step failed, and what the input was when it failed\n> - Don't hypothesize — only report failures you can actually see in the logs\n> - List every distinct failure mode you find with the log evidence\n> \n> ### Step 2: Find all fragile points in the architecture\n> - Trace the full data flow end-to-end: PRD in → issues created → agent implements → PR opened → review → merge\n> - Find every place where AI-generated or user-generated content flows into a subsequent prompt, workflow input, shell command, or API call without sanitization\n> - Flag anywhere that special characters, quotes, backticks, newlines, or JSON could corrupt downstream steps\n> - Flag anywhere one workflow triggers another and could pass malformed data\n> \n> ### Step 3: Propose concrete fixes\n> - For each failure mode you found in Step 1, give me the exact fix\n> - For each fragile point in Step 2, give me the defensive change\n> - Show me the before and after — actual lines of code, not descriptions\n> - Prioritize fixes that unblock end-to-end runs first\n> \n> ### Step 4: Rebuild vs harden\n> - Given everything you see in the actual codebase and logs, give me an honest recommendation: is it faster to harden what exists, or is the architecture broken enough to warrant a targeted rebuild of specific components?\n> - Base this on what you actually see, not general principles\n> \n> ### Step 5: 10-day fix plan\n> - Give me a prioritized plan ordered by what unblocks a clean end-to-end run fastest\n> - Be realistic about effort — I need working demos, not perfect code\n> \n> ## Ground Rules\n> - Reference actual log output, actual line numbers, actual file names throughout\n> - Don't summarize failures — quote the actual error\n> - Don't recommend fixes you can't trace to a specific observed problem\n> - If you can't find logs for something, say so explicitly rather than guessing\n> \n\n\n</details>\n\n\n\n<!-- START COPILOT CODING AGENT TIPS -->\n---\n\n💬 We'd love your input! Share your thoughts on Copilot coding agent in our [2 minute survey](https://gh.io/copilot-coding-agent-survey).\n",
+      "state": "closed",
+      "merged_at": "2026-02-25T20:50:03Z",
+      "created_at": "2026-02-25T20:35:06Z",
+      "additions": 34,
+      "deletions": 20,
+      "changed_files": 4,
+      "user": "Copilot",
+      "head_branch": "copilot/diagnose-pipeline-failures",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVE\n\nSUMMARY: The changes address shell-injection risks in workflows (safer loop construction and avoiding interpolating dynamic content in shell) and fix a potential build/type issue by deriving PR statistics from a detailed PR fetch instead of the list payload. The TypeScript changes appear correct and the workflow updates align with the security goals.\n\nISSUES:\n- None\n\n---\n*This review was performed by Pipeline Reviewer (github-actions[bot]).*",
+          "submitted_at": "2026-02-25T20:49:42Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": ".github/workflows/close-issues.yml",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "filename": ".github/workflows/pipeline-watchdog.yml",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 2
+        },
+        {
+          "filename": ".github/workflows/pr-reviewer.yml",
+          "status": "modified",
+          "additions": 15,
+          "deletions": 9
+        },
+        {
+          "filename": "src/data/github.ts",
+          "status": "modified",
+          "additions": 16,
+          "deletions": 8
+        }
+      ]
+    },
+    {
+      "number": 58,
+      "title": "[Pipeline] Scale simulator pipeline graph and nodes to fill the screen",
+      "body": "Closes #57\n\n## Changes\n\nScales the interactive SVG pipeline graph on `/simulator` to fill the available screen width and be significantly more readable.\n\n### What changed\n\n**`src/components/simulator/pipeline-graph.tsx`**\n- Expanded SVG `viewBox` from `900×200` → `1200×300` for more vertical and horizontal space\n- Redistributed node centres to `cx: 150, 450, 750, 1050` (even 300 px spacing, 50 px margins)\n- Enlarged node rectangles from `150×80` → `200×110` (rx 12→14)\n- Increased icon `fontSize` 22→30 and label `fontSize` 11→14 for legibility\n- Updated `forwardPath` half-width offset 75→100 and `RETURN_PATH` to match new geometry\n- Removed `max-w-3xl` constraint from the SVG element; now `w-full`\n- Added `w-full` to the wrapper `(div)`\n\n**`src/app/simulator/page.tsx`**\n- Widened page container from `max-w-4xl` → `max-w-screen-2xl` so the graph can fill large screens\n\n**`src/components/simulator/simulator-controls.tsx`**\n- Added `w-full` to the outer wrapper div so the graph receives full container width\n\n### Test results\n\nAll 32 existing Vitest tests pass. Production build succeeds with no TypeScript errors.\n\n---\n*This PR was created by Pipeline Assistant.*\n\n\n\n\n> Generated by [Pipeline Repo Assist](https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22415823933) for issue #57\n\n<!-- gh-aw-agentic-workflow: Pipeline Repo Assist, engine: copilot, model: gpt-5, id: 22415823933, workflow_id: repo-assist, run: https://github.com/samuelkahessay/agentic-pipeline/actions/runs/22415823933 -->\n\n<!-- gh-aw-workflow-id: repo-assist -->",
+      "state": "closed",
+      "merged_at": "2026-02-25T21:10:03Z",
+      "created_at": "2026-02-25T21:09:17Z",
+      "additions": 25,
+      "deletions": 25,
+      "changed_files": 3,
+      "user": "samuelkahessay",
+      "head_branch": "repo-assist/issue-57-scale-graph-95b8d5d50d00529d",
+      "base_branch": "main",
+      "reviews": [
+        {
+          "user": "github-actions[bot]",
+          "state": "APPROVED",
+          "body": "## Pipeline Review — Approved\n\n**Decision**: APPROVE\n\nSUMMARY: The PR scales the pipeline graph to fill width, enlarges nodes and text for readability, and keeps the controls visible and functional. Changes are scoped to the simulator page, graph, and controls, aligning with the acceptance criteria.\n\nISSUES:\n- Tests relying on exact SVG geometry (positions, viewBox, and node sizes) may fail and will likely require snapshot/test updates.\n- CI checks are pending; confirm all tests pass once CI fin",
+          "submitted_at": "2026-02-25T21:09:51Z"
+        }
+      ],
+      "files": [
+        {
+          "filename": "src/app/simulator/page.tsx",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "filename": "src/components/simulator/pipeline-graph.tsx",
+          "status": "modified",
+          "additions": 23,
+          "deletions": 23
+        },
+        {
+          "filename": "src/components/simulator/simulator-controls.tsx",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "timestamp": "2026-02-25T07:46:26Z",
+      "event": "issue_created",
+      "item": 29,
+      "title": "PRD: Pipeline Observatory"
+    },
+    {
+      "timestamp": "2026-02-25T07:52:25Z",
+      "event": "issue_created",
+      "item": 30,
+      "title": "[Pipeline] Project Scaffold — Next.js 14, TypeScript, Tailwind, Vitest"
+    },
+    {
+      "timestamp": "2026-02-25T07:52:26Z",
+      "event": "issue_created",
+      "item": 31,
+      "title": "[Pipeline] Static Fixture Data & Data Loading Layer"
+    },
+    {
+      "timestamp": "2026-02-25T07:52:28Z",
+      "event": "issue_created",
+      "item": 32,
+      "title": "[Pipeline] Navigation Bar and Landing Page with View Cards"
+    },
+    {
+      "timestamp": "2026-02-25T07:52:29Z",
+      "event": "issue_created",
+      "item": 33,
+      "title": "[Pipeline] Simulator — Interactive SVG Node Graph with Chain Animation"
+    },
+    {
+      "timestamp": "2026-02-25T07:52:31Z",
+      "event": "issue_created",
+      "item": 34,
+      "title": "[Pipeline] Simulator — Node Detail Panels with Slide-Down Animation"
+    },
+    {
+      "timestamp": "2026-02-25T07:52:32Z",
+      "event": "issue_created",
+      "item": 35,
+      "title": "[Pipeline] Simulator — Animated Message Particles Along SVG Paths"
+    },
+    {
+      "timestamp": "2026-02-25T07:52:34Z",
+      "event": "issue_created",
+      "item": 36,
+      "title": "[Pipeline] Replay — Horizontal Scrollable Timeline Component"
+    },
+    {
+      "timestamp": "2026-02-25T07:52:35Z",
+      "event": "issue_created",
+      "item": 37,
+      "title": "[Pipeline] Replay — Event Detail Panel and Playback Controls with Filters"
+    },
+    {
+      "timestamp": "2026-02-25T07:52:37Z",
+      "event": "issue_created",
+      "item": 38,
+      "title": "[Pipeline] Forensics — Pipeline Cycle Cards and AI Review Inspector"
+    },
+    {
+      "timestamp": "2026-02-25T07:52:38Z",
+      "event": "issue_created",
+      "item": 39,
+      "title": "[Pipeline] Forensics — Failure Timeline with 11 Fix Entries"
+    },
+    {
+      "timestamp": "2026-02-25T07:59:24Z",
+      "event": "pr_opened",
+      "item": 40,
+      "title": "[Pipeline] Project Scaffold — Next.js 14, TypeScript, Tailwind, Vitest"
+    },
+    {
+      "timestamp": "2026-02-25T07:59:26Z",
+      "event": "issue_created",
+      "item": 41,
+      "title": "[Pipeline] Status"
+    },
+    {
+      "timestamp": "2026-02-25T07:59:35Z",
+      "event": "review_approved",
+      "item": 40,
+      "title": "[Pipeline] Project Scaffold — Next.js 14, TypeScript, Tailwind, Vitest"
+    },
+    {
+      "timestamp": "2026-02-25T07:59:46Z",
+      "event": "pr_merged",
+      "item": 40,
+      "title": "[Pipeline] Project Scaffold — Next.js 14, TypeScript, Tailwind, Vitest"
+    },
+    {
+      "timestamp": "2026-02-25T08:08:19Z",
+      "event": "pr_opened",
+      "item": 42,
+      "title": "[Pipeline] Static Fixture Data & Data Loading Layer"
+    },
+    {
+      "timestamp": "2026-02-25T08:08:29Z",
+      "event": "review_approved",
+      "item": 42,
+      "title": "[Pipeline] Static Fixture Data & Data Loading Layer"
+    },
+    {
+      "timestamp": "2026-02-25T08:08:38Z",
+      "event": "pr_merged",
+      "item": 42,
+      "title": "[Pipeline] Static Fixture Data & Data Loading Layer"
+    },
+    {
+      "timestamp": "2026-02-25T12:45:06Z",
+      "event": "pr_opened",
+      "item": 46,
+      "title": "[Pipeline] Navigation Bar and Landing Page with View Cards"
+    },
+    {
+      "timestamp": "2026-02-25T12:45:43Z",
+      "event": "review_approved",
+      "item": 46,
+      "title": "[Pipeline] Navigation Bar and Landing Page with View Cards"
+    },
+    {
+      "timestamp": "2026-02-25T12:45:57Z",
+      "event": "pr_merged",
+      "item": 46,
+      "title": "[Pipeline] Navigation Bar and Landing Page with View Cards"
+    },
+    {
+      "timestamp": "2026-02-25T12:55:55Z",
+      "event": "pr_opened",
+      "item": 47,
+      "title": "[Pipeline] Simulator — Interactive SVG Node Graph with Chain Animation"
+    },
+    {
+      "timestamp": "2026-02-25T12:55:58Z",
+      "event": "pr_opened",
+      "item": 48,
+      "title": "[Pipeline] Replay — Horizontal Scrollable Timeline Component"
+    },
+    {
+      "timestamp": "2026-02-25T12:56:02Z",
+      "event": "pr_opened",
+      "item": 49,
+      "title": "[Pipeline] Forensics — Pipeline Cycle Cards and AI Review Inspector"
+    },
+    {
+      "timestamp": "2026-02-25T12:56:19Z",
+      "event": "review_approved",
+      "item": 49,
+      "title": "[Pipeline] Forensics — Pipeline Cycle Cards and AI Review Inspector"
+    },
+    {
+      "timestamp": "2026-02-25T12:56:31Z",
+      "event": "pr_merged",
+      "item": 49,
+      "title": "[Pipeline] Forensics — Pipeline Cycle Cards and AI Review Inspector"
+    },
+    {
+      "timestamp": "2026-02-25T12:56:33Z",
+      "event": "review_changes_requested",
+      "item": 47,
+      "title": "[Pipeline] Simulator — Interactive SVG Node Graph with Chain Animation"
+    },
+    {
+      "timestamp": "2026-02-25T12:56:47Z",
+      "event": "review_approved",
+      "item": 48,
+      "title": "[Pipeline] Replay — Horizontal Scrollable Timeline Component"
+    },
+    {
+      "timestamp": "2026-02-25T12:56:56Z",
+      "event": "pr_merged",
+      "item": 48,
+      "title": "[Pipeline] Replay — Horizontal Scrollable Timeline Component"
+    },
+    {
+      "timestamp": "2026-02-25T13:06:50Z",
+      "event": "pr_opened",
+      "item": 50,
+      "title": "[Pipeline] Forensics — Failure Timeline with 11 Fix Entries"
+    },
+    {
+      "timestamp": "2026-02-25T13:06:53Z",
+      "event": "pr_opened",
+      "item": 51,
+      "title": "[Pipeline] Replay — Event Detail Panel and Playback Controls with Filters"
+    },
+    {
+      "timestamp": "2026-02-25T13:07:15Z",
+      "event": "review_changes_requested",
+      "item": 50,
+      "title": "[Pipeline] Forensics — Failure Timeline with 11 Fix Entries"
+    },
+    {
+      "timestamp": "2026-02-25T13:07:28Z",
+      "event": "review_changes_requested",
+      "item": 51,
+      "title": "[Pipeline] Replay — Event Detail Panel and Playback Controls with Filters"
+    },
+    {
+      "timestamp": "2026-02-25T13:34:46Z",
+      "event": "review_changes_requested",
+      "item": 50,
+      "title": "[Pipeline] Forensics — Failure Timeline with 11 Fix Entries"
+    },
+    {
+      "timestamp": "2026-02-25T13:35:05Z",
+      "event": "review_approved",
+      "item": 47,
+      "title": "[Pipeline] Simulator — Interactive SVG Node Graph with Chain Animation"
+    },
+    {
+      "timestamp": "2026-02-25T13:35:06Z",
+      "event": "review_changes_requested",
+      "item": 51,
+      "title": "[Pipeline] Replay — Event Detail Panel and Playback Controls with Filters"
+    },
+    {
+      "timestamp": "2026-02-25T13:35:15Z",
+      "event": "pr_merged",
+      "item": 47,
+      "title": "[Pipeline] Simulator — Interactive SVG Node Graph with Chain Animation"
+    },
+    {
+      "timestamp": "2026-02-25T13:43:22Z",
+      "event": "pr_opened",
+      "item": 52,
+      "title": "[Pipeline] Simulator — Node Detail Panels with Slide-Down Animation"
+    },
+    {
+      "timestamp": "2026-02-25T13:43:55Z",
+      "event": "review_changes_requested",
+      "item": 52,
+      "title": "[Pipeline] Simulator — Node Detail Panels with Slide-Down Animation"
+    },
+    {
+      "timestamp": "2026-02-25T14:14:44Z",
+      "event": "review_approved",
+      "item": 50,
+      "title": "[Pipeline] Forensics — Failure Timeline with 11 Fix Entries"
+    },
+    {
+      "timestamp": "2026-02-25T14:14:45Z",
+      "event": "review_approved",
+      "item": 51,
+      "title": "[Pipeline] Replay — Event Detail Panel and Playback Controls with Filters"
+    },
+    {
+      "timestamp": "2026-02-25T14:14:51Z",
+      "event": "review_approved",
+      "item": 52,
+      "title": "[Pipeline] Simulator — Node Detail Panels with Slide-Down Animation"
+    },
+    {
+      "timestamp": "2026-02-25T14:20:14Z",
+      "event": "review_approved",
+      "item": 51,
+      "title": "[Pipeline] Replay — Event Detail Panel and Playback Controls with Filters"
+    },
+    {
+      "timestamp": "2026-02-25T14:20:29Z",
+      "event": "pr_merged",
+      "item": 51,
+      "title": "[Pipeline] Replay — Event Detail Panel and Playback Controls with Filters"
+    },
+    {
+      "timestamp": "2026-02-25T14:20:34Z",
+      "event": "review_approved",
+      "item": 50,
+      "title": "[Pipeline] Forensics — Failure Timeline with 11 Fix Entries"
+    },
+    {
+      "timestamp": "2026-02-25T14:20:37Z",
+      "event": "review_approved",
+      "item": 52,
+      "title": "[Pipeline] Simulator — Node Detail Panels with Slide-Down Animation"
+    },
+    {
+      "timestamp": "2026-02-25T14:20:50Z",
+      "event": "pr_merged",
+      "item": 50,
+      "title": "[Pipeline] Forensics — Failure Timeline with 11 Fix Entries"
+    },
+    {
+      "timestamp": "2026-02-25T14:20:53Z",
+      "event": "pr_merged",
+      "item": 52,
+      "title": "[Pipeline] Simulator — Node Detail Panels with Slide-Down Animation"
+    },
+    {
+      "timestamp": "2026-02-25T14:30:28Z",
+      "event": "pr_opened",
+      "item": 53,
+      "title": "[Pipeline] Simulator — Animated Message Particles Along SVG Paths"
+    },
+    {
+      "timestamp": "2026-02-25T14:31:24Z",
+      "event": "review_approved",
+      "item": 53,
+      "title": "[Pipeline] Simulator — Animated Message Particles Along SVG Paths"
+    },
+    {
+      "timestamp": "2026-02-25T14:31:33Z",
+      "event": "pr_merged",
+      "item": 53,
+      "title": "[Pipeline] Simulator — Animated Message Particles Along SVG Paths"
+    },
+    {
+      "timestamp": "2026-02-25T18:16:24Z",
+      "event": "pr_opened",
+      "item": 54,
+      "title": "Fix watchdog orphaned-issue parsing by removing unsafe shell word-splitting"
+    },
+    {
+      "timestamp": "2026-02-25T18:21:30Z",
+      "event": "review_approved",
+      "item": 54,
+      "title": "Fix watchdog orphaned-issue parsing by removing unsafe shell word-splitting"
+    },
+    {
+      "timestamp": "2026-02-25T18:22:47Z",
+      "event": "pr_opened",
+      "item": 55,
+      "title": "Harden PR reviewer dispatch by safely passing AI summary into shell"
+    },
+    {
+      "timestamp": "2026-02-25T18:28:21Z",
+      "event": "review_approved",
+      "item": 55,
+      "title": "Harden PR reviewer dispatch by safely passing AI summary into shell"
+    },
+    {
+      "timestamp": "2026-02-25T18:29:06Z",
+      "event": "pr_merged",
+      "item": 55,
+      "title": "Harden PR reviewer dispatch by safely passing AI summary into shell"
+    },
+    {
+      "timestamp": "2026-02-25T18:30:37Z",
+      "event": "pr_merged",
+      "item": 54,
+      "title": "Fix watchdog orphaned-issue parsing by removing unsafe shell word-splitting"
+    },
+    {
+      "timestamp": "2026-02-25T20:35:06Z",
+      "event": "pr_opened",
+      "item": 56,
+      "title": "Fix workflow shell injection vulnerabilities and build type error"
+    },
+    {
+      "timestamp": "2026-02-25T20:49:42Z",
+      "event": "review_approved",
+      "item": 56,
+      "title": "Fix workflow shell injection vulnerabilities and build type error"
+    },
+    {
+      "timestamp": "2026-02-25T20:50:03Z",
+      "event": "pr_merged",
+      "item": 56,
+      "title": "Fix workflow shell injection vulnerabilities and build type error"
+    },
+    {
+      "timestamp": "2026-02-25T21:09:17Z",
+      "event": "pr_opened",
+      "item": 58,
+      "title": "[Pipeline] Scale simulator pipeline graph and nodes to fill the screen"
+    },
+    {
+      "timestamp": "2026-02-25T21:09:51Z",
+      "event": "review_approved",
+      "item": 58,
+      "title": "[Pipeline] Scale simulator pipeline graph and nodes to fill the screen"
+    },
+    {
+      "timestamp": "2026-02-25T21:10:03Z",
+      "event": "pr_merged",
+      "item": 58,
+      "title": "[Pipeline] Scale simulator pipeline graph and nodes to fill the screen"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-name: .NET CI
+name: Docker CI
 
 on:
   pull_request:
@@ -20,22 +20,17 @@ jobs:
       - id: check
         run: |
           PROFILE=$(cat .deploy-profile 2>/dev/null || echo "dotnet-azure")
-          if [[ "$PROFILE" == "dotnet-azure" ]]; then
+          if [[ "$PROFILE" == "docker-generic" ]]; then
             echo "should-run=true" >> $GITHUB_OUTPUT
           else
             echo "should-run=false" >> $GITHUB_OUTPUT
-            echo "Skipping .NET CI — active profile is '${PROFILE}'"
+            echo "Skipping Docker CI — active profile is '${PROFILE}'"
           fi
 
-  build-and-test:
+  build-image:
     needs: check-profile
     if: needs.check-profile.outputs.should-run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-      - run: dotnet restore TicketDeflection.sln
-      - run: dotnet build TicketDeflection.sln --no-restore
-      - run: dotnet test TicketDeflection.sln --no-build --verbosity normal
+      - run: docker build -t prd-to-prod-ci:${{ github.sha }} .

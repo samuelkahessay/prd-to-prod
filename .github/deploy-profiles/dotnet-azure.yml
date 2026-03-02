@@ -1,0 +1,27 @@
+# Deploy Profile: .NET on Azure App Service
+# Read by prd-decomposer and repo-assist to configure CI/CD for this stack.
+stack: dotnet
+name: ".NET + Azure App Service"
+
+detect:
+  files: ["*.sln", "*.csproj"]
+
+build:
+  runtime: dotnet
+  runtime_version: "10.0.x"
+  restore: "dotnet restore ${solution_file}"
+  build: "dotnet build ${solution_file} --no-restore -c Release"
+  test: "dotnet test ${solution_file} --no-build -c Release --verbosity normal"
+  publish: "dotnet publish ${main_project} --no-build -c Release -o ./publish"
+
+deploy:
+  workflow: deploy-azure.yml
+  method: "Azure App Service via OIDC"
+  secrets:
+    - AZURE_CLIENT_ID
+    - AZURE_TENANT_ID
+    - AZURE_SUBSCRIPTION_ID
+
+ci:
+  workflow: dotnet-ci.yml
+  name: ".NET CI"

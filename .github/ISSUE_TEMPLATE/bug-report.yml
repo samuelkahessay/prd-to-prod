@@ -8,6 +8,14 @@ body:
         Thanks for reporting a bug. Please fill out the sections below so the pipeline can reproduce and fix the issue.
 
   - type: textarea
+    id: intake-marker
+    attributes:
+      label: intake-marker
+      value: "<!-- bug-intake-template -->"
+    validations:
+      required: true
+
+  - type: textarea
     id: what-happened
     attributes:
       label: What happened?

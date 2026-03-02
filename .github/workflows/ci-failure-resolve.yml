@@ -1,13 +1,13 @@
 #
 # CI Failure Resolver — Marks active PR repair incidents resolved when the
-# current PR head passes .NET CI.
+# current PR head passes the active CI workflow.
 #
 
 name: "CI Failure Resolver"
 
 on:
   workflow_run:
-    workflows: [".NET CI"]
+    workflows: [".NET CI", "Node CI", "Docker CI"]
     types: [completed]
 
 permissions:
@@ -128,7 +128,7 @@ jobs:
 
           PR_NUMBER=$(printf '%s' "$PULL_REQUESTS_JSON" | jq -r '.[0].number // empty')
           if [ -z "$PR_NUMBER" ]; then
-            echo "Successful .NET CI run is not attached to a PR. Nothing to resolve."
+            echo "Successful CI run is not attached to a PR. Nothing to resolve."
             exit 0
           fi
 
@@ -191,6 +191,6 @@ jobs:
 
           if [ -n "$LINKED_ISSUE" ] && { [ "$EXISTING_STATUS" = "dispatched" ] || [ "$EXISTING_STATUS" = "repairing" ]; }; then
             gh issue comment "$LINKED_ISSUE" --repo "$REPO" \
-              --body "CI repair incident resolved for PR #${PR_NUMBER}. .NET CI passed on ${SUCCESS_RUN_URL} for head \`${HEAD_SHA}\`." >/dev/null || \
+              --body "CI repair incident resolved for PR #${PR_NUMBER}. CI passed on ${SUCCESS_RUN_URL} for head \`${HEAD_SHA}\`." >/dev/null || \
               echo "::warning::Could not post resolution comment on issue #${LINKED_ISSUE}"
           fi

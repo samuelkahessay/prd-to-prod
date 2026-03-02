@@ -77,6 +77,25 @@ If the instructions above contain a URL or file path, fetch/read that content as
 
 8. **Self-contained acceptance criteria.** Each issue's acceptance criteria must ONLY reference files, functions, and artifacts that will be created or modified IN THAT ISSUE. Do not include criteria that depend on artifacts from other issues — those belong on the issue that creates the artifact. If a feature spans multiple issues, each issue's criteria cover only its portion. Example: if Issue A creates `page.tsx` and Issue B adds OG metadata to it, Issue B's criteria should say "Add OG metadata to the card page" NOT "Update `generateMetadata` in `src/app/card/[username]/page.tsx`" — because that file doesn't exist until Issue A merges.
 
+## Tech Stack Detection
+
+Before creating issues, determine the target tech stack and deploy profile:
+
+1. **Check the PRD for explicit stack preference.** Look for mentions of specific frameworks (Next.js, React, .NET, Express), languages (TypeScript, C#, Python), or deployment targets (Vercel, Azure, Docker).
+
+2. **If no explicit preference**, infer from the requirements:
+   - Web dashboard, landing page, interactive UI, visualization → `nextjs-vercel`
+   - API service, enterprise backend, .NET/C# → `dotnet-azure`
+   - Multi-language, microservices, or unclear → `docker-generic`
+   - Default (no clear signals): `nextjs-vercel`
+
+3. **Read the selected deploy profile** from `.github/deploy-profiles/{profile-name}.yml` to understand the build, test, and deploy configuration.
+
+4. **The FIRST issue must be a bootstrap/scaffold issue** that includes in its Technical Notes:
+   - The selected deploy profile (e.g., "Deploy profile: `nextjs-vercel`")
+   - Instruction: "Update `.deploy-profile` to `{profile-name}`"
+   - Build, test, and deploy commands from the profile
+
 ## Output Format
 
 After creating all issues:

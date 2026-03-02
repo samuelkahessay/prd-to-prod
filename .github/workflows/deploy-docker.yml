@@ -1,0 +1,44 @@
+#
+# Deploy Docker — Builds a Docker image and pushes to GitHub Container Registry.
+# Called by deploy-router.yml when the active profile is docker-generic.
+#
+# The image is pushed to ghcr.io/<owner>/<repo>:latest and :sha.
+# Downstream deployment (Railway, Fly, Azure Container Apps, etc.) can pull
+# from GHCR using a webhook or polling strategy.
+#
+
+name: Deploy Docker
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-docker
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}

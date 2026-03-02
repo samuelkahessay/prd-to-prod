@@ -292,7 +292,32 @@ compute_verdict() {
 # Layer 2: Finders — GitHub API queries (shared by run and audit)
 # ---------------------------------------------------------------------------
 
-# find_ci_failure(commit) — find failing Deploy to Azure or .NET CI run
+ci_failure_workflow_rank() {
+  local workflow_name="$1"
+
+  case "$workflow_name" in
+    "Deploy Router") echo 0 ;;
+    "Deploy to Azure") echo 1 ;;
+    ".NET CI") echo 2 ;;
+    *) echo 99 ;;
+  esac
+}
+
+is_ci_failure_workflow_name() {
+  local workflow_name="$1"
+  [ "$(ci_failure_workflow_rank "$workflow_name")" -lt 99 ]
+}
+
+is_main_recovery_workflow_name() {
+  local workflow_name="$1"
+
+  case "$workflow_name" in
+    "Deploy Router"|"Deploy to Azure") return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# find_ci_failure(commit) — find failing Deploy Router/Deploy to Azure/.NET CI run
 # Sets: CI_FAIL_RUN_ID, CI_FAIL_RUN_URL, CI_FAIL_TIMESTAMP, CI_FAIL_STATUS
 find_ci_failure() {
   local commit="$1"
@@ -301,17 +326,34 @@ find_ci_failure() {
   CI_FAIL_TIMESTAMP=""
   CI_FAIL_STATUS="not_found"
 
-  # Look for failing runs on this commit (Deploy to Azure or .NET CI)
+  # Look for failing runs on this commit. Prefer the current main deploy entrypoint,
+  # but keep older workflow names auditable.
   local runs_json
   runs_json=$(gh api "repos/${REPO}/actions/runs?head_sha=${commit}&per_page=50" \
     --jq '.workflow_runs' 2>/dev/null || echo "[]")
 
-  # Prefer "Deploy to Azure" failure, fall back to ".NET CI"
-  local run
-  run=$(echo "$runs_json" | jq -r '
-    [.[] | select(.conclusion == "failure" and (.name == "Deploy to Azure" or .name == ".NET CI"))]
-    | sort_by(if .name == "Deploy to Azure" then 0 else 1 end)
-    | first // empty' 2>/dev/null || true)
+  local sorted_runs
+  sorted_runs=$(echo "$runs_json" | jq -c '
+    [.[] | select(.conclusion == "failure")]
+    | sort_by(
+        if .name == "Deploy Router" then 0
+        elif .name == "Deploy to Azure" then 1
+        elif .name == ".NET CI" then 2
+        else 99
+        end
+      )[]' 2>/dev/null || true)
+
+  local run=""
+  while IFS= read -r candidate; do
+    [ -z "$candidate" ] && continue
+    local candidate_name
+    candidate_name=$(echo "$candidate" | jq -r '.name // ""')
+    if ! is_ci_failure_workflow_name "$candidate_name"; then
+      continue
+    fi
+    run="$candidate"
+    break
+  done <<< "$sorted_runs"
 
   if [ -n "$run" ] && [ "$run" != "null" ]; then
     CI_FAIL_RUN_ID=$(echo "$run" | jq -r '.id')
@@ -723,7 +765,7 @@ find_merge() {
   fi
 }
 
-# find_main_recovery(merge_commit) — find successful Deploy to Azure on merge commit
+# find_main_recovery(merge_commit) — find successful main deploy on merge commit
 # Sets: RECOVERY_RUN_URL, RECOVERY_TIMESTAMP, RECOVERY_STATUS
 find_main_recovery() {
   local merge_commit="$1"
@@ -735,10 +777,27 @@ find_main_recovery() {
   runs_json=$(gh api "repos/${REPO}/actions/runs?head_sha=${merge_commit}&per_page=50" \
     --jq '.workflow_runs' 2>/dev/null || echo "[]")
 
-  local passing
-  passing=$(echo "$runs_json" | jq -r '
-    [.[] | select(.conclusion == "success" and .name == "Deploy to Azure")]
-    | first // empty' 2>/dev/null || true)
+  local sorted_runs
+  sorted_runs=$(echo "$runs_json" | jq -c '
+    [.[] | select(.conclusion == "success")]
+    | sort_by(
+        if .name == "Deploy Router" then 0
+        elif .name == "Deploy to Azure" then 1
+        else 99
+        end
+      )[]' 2>/dev/null || true)
+
+  local passing=""
+  while IFS= read -r candidate; do
+    [ -z "$candidate" ] && continue
+    local candidate_name
+    candidate_name=$(echo "$candidate" | jq -r '.name // ""')
+    if ! is_main_recovery_workflow_name "$candidate_name"; then
+      continue
+    fi
+    passing="$candidate"
+    break
+  done <<< "$sorted_runs"
 
   if [ -n "$passing" ] && [ "$passing" != "null" ]; then
     RECOVERY_RUN_URL=$(echo "$passing" | jq -r '.html_url')
@@ -1155,7 +1214,7 @@ run_drill() {
 
   # --- Stage 7: Main Recovery ---
   if [ -n "$MERGE_SHA" ]; then
-    log_stage "main_recovered" "searching" "Waiting for Deploy to Azure on merge commit..."
+    log_stage "main_recovered" "searching" "Waiting for main deploy recovery on merge commit..."
     max_wait=$((SLA_MERGE_TO_RECOVERY * 2))
 
     if poll_until find_main_recovery RECOVERY_STATUS "$max_wait" "$MERGE_SHA"; then
