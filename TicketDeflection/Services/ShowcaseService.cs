@@ -20,7 +20,17 @@ public sealed class ShowcaseService : IShowcaseService
         var configured = configuration["ShowcasePath"];
         _showcasePath = !string.IsNullOrEmpty(configured)
             ? configured
-            : Path.Combine(env.ContentRootPath, "..", "showcase");
+            : ResolveDefaultShowcasePath(env.ContentRootPath);
+    }
+
+    // Resolve the showcase path: prefer ContentRoot/showcase (published output)
+    // and fall back to ContentRoot/../showcase (local development).
+    internal static string ResolveDefaultShowcasePath(string contentRoot)
+    {
+        var publishedPath = Path.GetFullPath(Path.Combine(contentRoot, "showcase"));
+        if (Directory.Exists(publishedPath))
+            return publishedPath;
+        return Path.GetFullPath(Path.Combine(contentRoot, "..", "showcase"));
     }
 
     public Task<IReadOnlyList<ShowcaseRun>> GetCompletedRunsAsync()
