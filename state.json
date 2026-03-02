@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-02T01:57:50Z",
-  "workflow_run_id": "22558284709",
+  "last_run": "2026-03-02T02:05:37Z",
+  "workflow_run_id": "22558431912",
   "current_prd": {
     "issue": 123,
     "title": "PRD: Ticket Deflection Service (Run 04 — C#/.NET 8)",
@@ -45,9 +45,9 @@
     {"issue": 283, "pr": 284, "status": "merged"},
     {"issue": 288, "status": "closed"},
     {"issue": 291, "status": "merged"},
-    {"issue": 295, "status": "in-review", "notes": "Dashboard score inconsistency fix — PR created from branch repo-assist/issue-295-dashboard-score-source-of-truth"}
+    {"issue": 295, "pr": 296, "status": "in-review", "notes": "Dashboard score inconsistency fix — PR open, CI pending"}
   ],
   "open_issues": [295],
-  "open_prs": [],
-  "notes": "Run 04 — Issue #295 (dashboard score bug) implemented. PR created with Coverage-as-single-source-of-truth fix. 71/71 tests pass."
+  "open_prs": [296],
+  "notes": "Run 04 — Only issue #295 remains. PR #296 open and waiting for CI. 71/71 tests pass."
 }
