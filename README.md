@@ -85,6 +85,13 @@ git push
 - Delete branch on merge enabled
 - Active `Protect main` ruleset on `main`
 
+### Emergency Control
+
+Set repository variable `PIPELINE_HEALING_ENABLED=false` to pause autonomous
+healing. Review submission and failure detection still run, but auto-dispatch,
+watchdog remediation, repair-command posting, and pipeline auto-merge are
+skipped until the variable is unset or set back to `true`.
+
 ## How the Pipeline Works
 
 1. **Write a PRD** — paste it in a GitHub Issue
