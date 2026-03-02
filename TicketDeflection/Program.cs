@@ -39,6 +39,7 @@ app.UseStaticFiles();
 app.MapPipelineEndpoints();
 app.MapSimulateEndpoints();
 app.MapMetricsEndpoints();
+app.MapShowcaseEndpoints();
 app.MapRazorPages();
 app.MapTicketEndpoints();
 app.MapKnowledgeEndpoints();

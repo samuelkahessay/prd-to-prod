@@ -323,6 +323,191 @@
             </div>
         </section>
 
+        <!-- Replay -->
+        <section class="mb-16" id="replay-section">
+            <div class="text-xs text-dim mb-1 uppercase tracking-widest">// run replay — step through a completed pipeline run</div>
+            <div class="text-xs text-dim mb-5">Select a run to inspect its timeline event-by-event.</div>
+            <div class="panel p-4">
+                <!-- Run selector -->
+                <div class="mb-4">
+                    <label class="text-xs text-dim uppercase tracking-widest block mb-2">Select run:</label>
+                    <div id="run-selector" class="flex flex-wrap gap-2">
+                        @foreach (var run in Model.CompletedRuns.OrderByDescending(r => r.Number))
+                        {
+                            <button
+                                class="run-select-btn text-xs px-3 py-1.5 border border-border text-dim hover:text-accent hover:border-accent transition-colors"
+                                style="border-color: var(--border); font-family: var(--mono);"
+                                data-slug="@run.Slug">
+                                @run.Number.ToString("D2") · @run.Name
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- No-selection state -->
+                <div id="replay-empty" class="text-dim text-xs py-6">No replay selected — choose a run above to begin.</div>
+
+                <!-- Replay pane (hidden until run selected) -->
+                <div id="replay-pane" class="hidden">
+                    <!-- Run meta -->
+                    <div id="run-meta" class="mb-4 text-xs grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+
+                    <!-- Step controls -->
+                    <div class="flex items-center gap-3 mb-4">
+                        <button id="btn-prev" class="exec-btn text-xs px-4 py-1.5" style="font-size:0.75rem; padding:6px 18px;" disabled>&#8592; Prev</button>
+                        <span id="step-counter" class="text-dim text-xs"></span>
+                        <button id="btn-next" class="exec-btn text-xs px-4 py-1.5" style="font-size:0.75rem; padding:6px 18px;">Next &#8594;</button>
+                    </div>
+
+                    <!-- Detail panel -->
+                    <div id="event-detail" class="panel p-3 mb-4 text-xs hidden">
+                        <div class="flex items-start gap-3">
+                            <span id="detail-badge" class="px-2 py-0.5 text-xs font-bold" style="background: rgba(0,170,255,0.1); border: 1px solid var(--border); color: var(--accent); white-space: nowrap;"></span>
+                            <div>
+                                <div id="detail-title" class="text-white font-bold mb-1"></div>
+                                <div id="detail-meta" class="text-dim"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline list -->
+                    <div id="timeline-list" class="space-y-1 max-h-64 overflow-y-auto pr-1"></div>
+                </div>
+
+                <!-- Loading state -->
+                <div id="replay-loading" class="hidden text-dim text-xs py-4">Loading timeline...</div>
+
+                <!-- Error state -->
+                <div id="replay-error" class="hidden text-red-400 text-xs py-4"></div>
+            </div>
+        </section>
+
+        <script>
+        (function () {
+            var state = { runs: [], events: [], current: -1 };
+
+            var elEmpty   = document.getElementById('replay-empty');
+            var elPane    = document.getElementById('replay-pane');
+            var elLoading = document.getElementById('replay-loading');
+            var elError   = document.getElementById('replay-error');
+            var elMeta    = document.getElementById('run-meta');
+            var elList    = document.getElementById('timeline-list');
+            var elDetail  = document.getElementById('event-detail');
+            var elBadge   = document.getElementById('detail-badge');
+            var elTitle   = document.getElementById('detail-title');
+            var elMetaD   = document.getElementById('detail-meta');
+            var elPrev    = document.getElementById('btn-prev');
+            var elNext    = document.getElementById('btn-next');
+            var elCounter = document.getElementById('step-counter');
+
+            var eventColors = {
+                issue_created: { bg: 'rgba(245,166,35,0.1)', border: 'rgba(245,166,35,0.3)', color: '#f5a623', label: 'ISSUE' },
+                pr_opened:     { bg: 'rgba(0,170,255,0.08)', border: 'var(--border)',          color: 'var(--accent)', label: 'PR OPEN' },
+                pr_reviewed:   { bg: 'rgba(61,220,132,0.08)', border: 'rgba(61,220,132,0.2)', color: '#3ddc84', label: 'REVIEW' },
+                pr_merged:     { bg: 'rgba(61,220,132,0.15)', border: 'rgba(61,220,132,0.3)', color: '#3ddc84', label: 'MERGED' }
+            };
+
+            function colorFor(ev) {
+                return eventColors[ev] || { bg: 'rgba(74,90,114,0.2)', border: 'var(--border)', color: 'var(--dim)', label: ev.toUpperCase() };
+            }
+
+            function show(el) { el.classList.remove('hidden'); }
+            function hide(el) { el.classList.add('hidden'); }
+
+            function renderMeta(run, stats) {
+                elMeta.innerHTML = [
+                    ['NAME', run.name],
+                    ['STACK', run.tech_stack],
+                    ['ISSUES', stats.issues_created],
+                    ['LINES +', stats.lines_added.toLocaleString()]
+                ].map(function(p) {
+                    return '<div><div class="text-dim uppercase tracking-widest mb-0.5" style="font-size:0.6rem">' + p[0] + '</div>'
+                         + '<div class="text-accent font-bold">' + p[1] + '</div></div>';
+                }).join('');
+            }
+
+            function renderList(idx) {
+                elList.innerHTML = state.events.map(function(ev, i) {
+                    var c = colorFor(ev.event);
+                    var active = (i === idx);
+                    return '<div class="flex items-start gap-2 px-2 py-1.5 cursor-pointer event-row ' + (active ? 'selected-event' : '') + '" '
+                         + 'style="' + (active ? 'background: rgba(0,170,255,0.07);' : '') + '" '
+                         + 'data-idx="' + i + '">'
+                         + '<span class="px-1.5 py-0.5 text-xs font-bold flex-shrink-0" style="background:' + c.bg + ';border:1px solid ' + c.border + ';color:' + c.color + ';font-size:0.6rem">' + c.label + '</span>'
+                         + '<div class="min-w-0">'
+                         + '<div class="text-white text-xs truncate">#' + ev.item + ' ' + ev.title + '</div>'
+                         + '<div class="text-dim" style="font-size:0.65rem">' + new Date(ev.timestamp).toISOString().slice(0, 10) + '</div>'
+                         + '</div></div>';
+                }).join('');
+                elList.querySelectorAll('.event-row').forEach(function(row) {
+                    row.addEventListener('click', function() { goTo(parseInt(row.dataset.idx)); });
+                });
+            }
+
+            function renderDetail(idx) {
+                var ev = state.events[idx];
+                if (!ev) { hide(elDetail); return; }
+                var c = colorFor(ev.event);
+                elBadge.textContent = c.label;
+                elBadge.style.cssText = 'background:' + c.bg + ';border:1px solid ' + c.border + ';color:' + c.color + ';padding:2px 8px;font-size:0.7rem;white-space:nowrap;';
+                elTitle.textContent = '#' + ev.item + ' ' + ev.title;
+                elMetaD.textContent = new Date(ev.timestamp).toUTCString();
+                show(elDetail);
+            }
+
+            function goTo(idx) {
+                state.current = idx;
+                elPrev.disabled = (idx <= 0);
+                elNext.disabled = (idx >= state.events.length - 1);
+                elCounter.textContent = 'Event ' + (idx + 1) + ' of ' + state.events.length;
+                renderList(idx);
+                renderDetail(idx);
+                var active = elList.querySelector('.selected-event');
+                if (active) active.scrollIntoView({ block: 'nearest' });
+            }
+
+            elPrev.addEventListener('click', function() { if (state.current > 0) goTo(state.current - 1); });
+            elNext.addEventListener('click', function() { if (state.current < state.events.length - 1) goTo(state.current + 1); });
+
+            document.querySelectorAll('.run-select-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var slug = btn.dataset.slug;
+                    document.querySelectorAll('.run-select-btn').forEach(function(b) {
+                        b.style.borderColor = 'var(--border)'; b.style.color = 'var(--dim)';
+                    });
+                    btn.style.borderColor = 'var(--accent)'; btn.style.color = 'var(--accent)';
+
+                    hide(elEmpty); hide(elPane); hide(elError);
+                    show(elLoading);
+
+                    fetch('/api/showcase/' + encodeURIComponent(slug) + '/timeline')
+                        .then(function(r) {
+                            if (!r.ok) throw new Error('HTTP ' + r.status);
+                            return r.json();
+                        })
+                        .then(function(data) {
+                            hide(elLoading);
+                            state.events = data.timeline || [];
+                            state.current = -1;
+                            renderMeta(data.run, data.stats);
+                            elList.innerHTML = '';
+                            hide(elDetail);
+                            elCounter.textContent = '';
+                            elPrev.disabled = true;
+                            elNext.disabled = state.events.length === 0;
+                            show(elPane);
+                            if (state.events.length > 0) goTo(0);
+                        })
+                        .catch(function(err) {
+                            hide(elLoading);
+                            elError.textContent = 'Failed to load timeline: ' + err.message;
+                            show(elError);
+                        });
+                });
+            });
+        })();
+        </script>
+
         <!-- Provenance -->
         <section class="mb-14">
             <div class="text-xs text-dim mb-4 uppercase tracking-widest">// provenance — verify the work is real</div>
