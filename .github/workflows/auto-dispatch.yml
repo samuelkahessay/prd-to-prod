@@ -5,6 +5,7 @@ on:
     types: [opened, reopened, labeled]
 
 permissions:
+  contents: read
   actions: write
   issues: write
 
@@ -28,11 +29,35 @@ jobs:
         contains(github.event.issue.labels.*.name, 'test')
       )
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PIPELINE_HEALING_ENABLED: ${{ vars.PIPELINE_HEALING_ENABLED }}
     steps:
+      - name: Checkout workflow helpers
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/healing-control.sh
+          sparse-checkout-cone-mode: false
+
+      - name: Check healing pause switch
+        id: healing
+        run: |
+          if scripts/healing-control.sh is-enabled; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "skip_reason=healing_paused" >> "$GITHUB_OUTPUT"
+            echo "Autonomous healing is paused via PIPELINE_HEALING_ENABLED."
+          fi
+
       - name: Debounce (let issue burst settle)
+        if: steps.healing.outputs.skip != 'true'
         run: sleep 15
 
       - name: Skip when repo-assist already active
+        if: steps.healing.outputs.skip != 'true'
         id: guard
         env:
           GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
@@ -56,7 +81,7 @@ jobs:
           fi
 
       - name: Record deferred dispatch marker
-        if: steps.guard.outputs.skip == 'true'
+        if: steps.healing.outputs.skip != 'true' && steps.guard.outputs.skip == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
@@ -81,7 +106,7 @@ jobs:
             echo "::warning::Could not record deferred dispatch marker on issue #${ISSUE_NUMBER}"
 
       - name: Dispatch repo-assist scheduled mode
-        if: steps.guard.outputs.skip != 'true'
+        if: steps.healing.outputs.skip != 'true' && steps.guard.outputs.skip != 'true'
         id: dispatch_repo_assist
         env:
           GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
@@ -113,7 +138,7 @@ jobs:
           echo "repo_assist_run_url=${REPO_ASSIST_RUN_URL}" >> "$GITHUB_OUTPUT"
 
       - name: Record dispatch marker
-        if: steps.guard.outputs.skip != 'true'
+        if: steps.healing.outputs.skip != 'true' && steps.guard.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
