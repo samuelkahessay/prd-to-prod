@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-02T04:52:56Z",
-  "workflow_run_id": "22561928661",
+  "last_run": "2026-03-02T05:02:22Z",
+  "workflow_run_id": "22562130129",
   "current_prd": {
     "issue": 297,
     "title": "PRD: Run 05 Landing Page Demo",
@@ -216,13 +216,18 @@
       "issue": 302,
       "status": "in-review",
       "notes": "Landing Page Hardening \u2014 PR open (awaiting review)"
+    },
+    {
+      "issue": 313,
+      "status": "in-review",
+      "notes": "ShowcaseService path fix \u2014 prefers ContentRoot/showcase (published), falls back to ContentRoot/../showcase (dev)"
     }
   ],
   "open_issues": [
-    302
+    313
   ],
   "open_prs": [
-    "issue-302"
+    "issue-313"
   ],
   "dependency_graph": {
     "302": [
@@ -232,5 +237,5 @@
       301
     ]
   },
-  "notes": "Run 05 near complete. All dependencies merged. #302 PR opened this run."
+  "notes": "#302 PR was awaiting review (no longer listed as open PR now). #313 (showcase path bug) PR created this run."
 }
