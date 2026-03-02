@@ -21,7 +21,11 @@ for label in "pipeline:0075ca:Pipeline-managed issue" \
              "ready:0e8a16:Ready for implementation" \
              "completed:0e8a16:Completed and merged" \
              "report:c5def5:Status report" \
-             "bug-intake:e4e669:Filed via bug-report template"; do
+             "bug-intake:e4e669:Filed via bug-report template" \
+             "agentic-workflows:ededed:Agentic workflow failure notification" \
+             "ci-failure:C24E3F:Tracks active CI repair incidents on pull requests" \
+             "repair-in-progress:D97706:Automated CI repair has been dispatched or is actively retrying" \
+             "repair-escalated:B60205:Automated CI repair exhausted retries and needs human attention"; do
   IFS=: read -r name color desc <<< "$label"
   gh label create "$name" --color "$color" --description "$desc" --force 2>/dev/null || true
 done
@@ -52,10 +56,12 @@ fi
 # Configure repo settings for pipeline
 echo "Configuring repo settings..."
 gh api repos/{owner}/{repo} --method PATCH \
+  -f allow_auto_merge=true \
   -f squash_merge_commit_message="PR_BODY" \
   -f squash_merge_commit_title="PR_TITLE" \
   --silent 2>/dev/null || true
 echo "Squash merge set to use PR body (preserves Closes #N)."
+echo "Auto-merge enabled."
 
 # Configure secrets reminder
 echo ""
@@ -64,7 +70,13 @@ echo ""
 echo "Next steps:"
 echo "1. Ensure GitHub Copilot is configured as the AI engine"
 echo "   Run: gh aw secrets bootstrap"
-echo "2. Push changes: git push"
-echo "3. Test the pipeline:"
+echo "2. Verify required repo settings:"
+echo "   - 'Protect main' ruleset exists and is active"
+echo "   - Ruleset requires 1 approving review"
+echo "   - Ruleset requires the 'review' status check"
+echo "   - Ruleset allows squash-only merges"
+echo "   - Admin bypass remains enabled"
+echo "3. Push changes: git push"
+echo "4. Test the pipeline:"
 echo "   - Create an issue with a PRD, then comment /decompose"
 echo "   - Or run: gh aw run prd-decomposer"

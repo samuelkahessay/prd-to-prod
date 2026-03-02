@@ -40,6 +40,9 @@ See [`showcase/`](showcase/) for detailed run reports.
 
 ## Quick Start
 
+Week-one MVP support is currently validated for the `dotnet-azure` profile.
+See [docs/SELF_HEALING_MVP.md](docs/SELF_HEALING_MVP.md) for the operator runbook.
+
 ```bash
 # 1. Clone
 git clone https://github.com/samuelkahessay/prd-to-prod.git
@@ -54,13 +57,33 @@ bash scripts/bootstrap.sh
 # 4. Configure secrets
 gh aw secrets bootstrap
 
-# 5. Push
+# 5. Verify repo settings
+#    - auto-merge enabled
+#    - delete branch on merge enabled
+#    - active Protect main ruleset
+
+# 6. Push
 git push
 
-# 6. Create an issue with your PRD, then comment: /decompose
+# 7. Create an issue with your PRD, then comment: /decompose
 ```
 
 **Requirements:** GitHub account with Copilot subscription, GitHub CLI (`gh`) v2.0+, `gh-aw` extension.
+
+### Required Secrets
+
+- `COPILOT_GITHUB_TOKEN`
+- `GH_AW_GITHUB_TOKEN`
+- `GH_AW_PROJECT_GITHUB_TOKEN`
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_SUBSCRIPTION_ID`
+
+### Required Repo Settings
+
+- Auto-merge enabled
+- Delete branch on merge enabled
+- Active `Protect main` ruleset on `main`
 
 ## How the Pipeline Works
 
@@ -74,6 +97,7 @@ git push
 The loop runs until every issue from the PRD is shipped.
 
 For the full architecture, workflow details, design decisions, and self-healing mechanics, see [**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md).
+For the MVP setup, verification steps, and drill commands, see [**docs/SELF_HEALING_MVP.md**](docs/SELF_HEALING_MVP.md).
 
 ## License
 

@@ -1,13 +1,15 @@
 # Ticket Deflection Service
 
-An ASP.NET Core 8 web application that automatically classifies, matches, and resolves support tickets against a knowledge base, reducing manual workload.
+An ASP.NET Core 10 web application that automatically classifies, matches, and resolves support tickets against a knowledge base, reducing manual workload.
 
 ## Tech Stack
 
-- **Framework**: ASP.NET Core 8 (Minimal API + Razor Pages)
-- **ORM**: Entity Framework Core 8 (InMemory)
-- **Language**: C# (.NET 8)
+- **Framework**: ASP.NET Core 10 (Minimal API + Razor Pages)
+- **ORM**: Entity Framework Core 9 (InMemory)
+- **Language**: C# (.NET 10)
 - **Testing**: xUnit + Microsoft.AspNetCore.Mvc.Testing
+
+The repository pins the SDK version in [`global.json`](../global.json).
 
 ## Build
 
