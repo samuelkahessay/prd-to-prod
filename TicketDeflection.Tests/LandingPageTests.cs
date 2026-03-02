@@ -83,4 +83,22 @@ public class LandingPageTests : IClassFixture<WebApplicationFactory<Program>>
         var html = await client.GetStringAsync("/");
         Assert.Contains("github.com/github/gh-aw", html);
     }
+
+    [Fact]
+    public async Task ShowcaseTimeline_Returns200ForValidSlug()
+    {
+        var client = _factory.CreateClient();
+        var response = await client.GetAsync("/api/showcase/01-code-snippet-manager/timeline");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await response.Content.ReadAsStringAsync();
+        Assert.Contains("timeline", json);
+    }
+
+    [Fact]
+    public async Task ShowcaseTimeline_Returns404ForUnknownSlug()
+    {
+        var client = _factory.CreateClient();
+        var response = await client.GetAsync("/api/showcase/nonexistent/timeline");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }
