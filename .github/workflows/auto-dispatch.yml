@@ -15,6 +15,9 @@ concurrency:
 
 jobs:
   dispatch:
+    # Security model: external reporters cannot self-assign labels on free-form
+    # issues, but GitHub issue forms apply labels server-side. The `pipeline`
+    # label is therefore the trusted dispatch gate for template-filed bugs.
     if: |
       !startsWith(github.event.issue.title, '[CI Incident]') &&
       github.event.issue.title != '[Pipeline] Status' &&
