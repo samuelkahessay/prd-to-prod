@@ -459,7 +459,7 @@ jobs:
       - name: Dispatch repo-assist for next cycle
         if: always() && steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict != '' && steps.healing.outputs.enabled == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
           REVIEW_VERDICT: ${{ steps.review.outputs.verdict }}
           REVIEW_SUMMARY: ${{ steps.review.outputs.summary }}
           PR_NUMBER: ${{ github.event.issue.number }}
@@ -905,7 +905,7 @@ jobs:
       - name: Dispatch repo-assist for next cycle
         if: always() && steps.healing.outputs.enabled == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
           REVIEW_VERDICT: ${{ steps.review.outputs.verdict }}
           INPUT_VERDICT: ${{ github.event.inputs.verdict }}
           REVIEW_SUMMARY: ${{ github.event.inputs.summary }}
@@ -957,10 +957,6 @@ jobs:
 
       - name: Log paused autonomous follow-up skip
         if: always() && steps.healing.outputs.enabled != 'true'
-        run: echo "Review completed, but autonomous follow-up is paused via PIPELINE_HEALING_ENABLED."
-
-      - name: Log paused autonomous follow-up skip
-        if: always() && steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict != '' && steps.healing.outputs.enabled != 'true'
         run: echo "Review completed, but autonomous follow-up is paused via PIPELINE_HEALING_ENABLED."
 
   # ---------------------------------------------------------------------------

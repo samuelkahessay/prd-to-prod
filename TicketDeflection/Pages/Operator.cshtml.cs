@@ -28,9 +28,21 @@ public class OperatorModel : PageModel
 
     public async Task OnGetAsync()
     {
-        Queue = await _ledger.GetQueueAsync();
-        Metrics = await _ledger.GetMetricsAsync();
-        Decisions = (await _ledger.GetDecisionsAsync()).Take(6).ToList();
+        var all = await _ledger.GetDecisionsAsync();
+        Decisions = all.Take(6).ToList();
+
+        var blocked = all.Where(e => e.Outcome == "blocked").ToList();
+        var queuedForHuman = all.Where(e => e.Outcome == "queued_for_human").ToList();
+        var recentAutonomous = all
+            .Where(e => e.Outcome == "acted" && e.PolicyResult.Mode == "autonomous")
+            .ToList();
+        Queue = new DecisionQueue(blocked, queuedForHuman, recentAutonomous);
+
+        var autonomousActed = all.Count(e => e.Outcome == "acted" && e.PolicyResult.Mode == "autonomous");
+        var escalated = all.Count(e => e.Outcome == "escalated");
+        string? lastUpdatedUtc = all.Count > 0 ? all[0].Timestamp : null;
+        Metrics = new DecisionMetrics(all.Count, autonomousActed, blocked.Count, queuedForHuman.Count, escalated, lastUpdatedUtc);
+
         FeaturedBoundaryStop = Queue.Blocked.FirstOrDefault(IsHardBoundaryStop)
             ?? Queue.QueuedForHuman.FirstOrDefault(IsHardBoundaryStop);
     }

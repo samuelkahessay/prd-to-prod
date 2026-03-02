@@ -15,6 +15,10 @@
 - .github/workflows/ci-failure-issue.yml — Routes CI failures to repair
 - .github/workflows/pr-review-submit.yml — Submits reviews and arms auto-merge
 
+## Operations
+- [docs/SELF_HEALING_MVP.md](docs/SELF_HEALING_MVP.md) — Self-healing MVP runbook
+- [docs/decision-ledger/README.md](docs/decision-ledger/README.md) — Decision ledger format and usage
+
 ## Configuration
 - .deploy-profile — Active deployment profile
 - .github/deploy-profiles/ — Stack-specific build/test/deploy commands

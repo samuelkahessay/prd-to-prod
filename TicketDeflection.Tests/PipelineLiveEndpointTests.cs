@@ -12,7 +12,7 @@ public class PipelineLiveEndpointTests
     [Fact]
     public async Task PipelineLiveEndpoint_ReturnsSnapshotJson()
     {
-        var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {

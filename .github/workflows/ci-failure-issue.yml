@@ -287,7 +287,6 @@ jobs:
           CORRELATED_FILES_JSON=$(printf '%s' "$FAILURE_JSON" | jq -r 'if .correlated_files then (.correlated_files | join(", ")) else empty end')
           SHORT_SUMMARY=$(printf '%.80s' "$FAILURE_SUMMARY")
 
-          PR_NUMBER=$(printf '%s' "$PULL_REQUESTS_JSON" | jq -r '.[0].number // empty')
           if [ -z "$PR_NUMBER" ]; then
             if [ "${HEALING_PAUSED:-false}" = "true" ]; then
               TITLE="[CI Incident] ${HEAD_BRANCH} failure: ${SHORT_SUMMARY}"

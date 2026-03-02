@@ -144,7 +144,7 @@ if [ -n "$CHANGED_FILES" ]; then
       FOUND=false
       while IFS= read -r cfile; do
         [ -n "$cfile" ] || continue
-        if printf '%s' "$cfile" | grep -qF "$(basename "$efile")"; then
+        if [ "$(basename "$cfile")" = "$(basename "$efile")" ]; then
           MATCHED+=("$cfile")
           FOUND=true
           break

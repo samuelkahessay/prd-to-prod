@@ -29,8 +29,13 @@ public sealed partial class GitHubPipelineSnapshotService : IGitHubPipelineSnaps
         _logger = logger;
 
         var configuredRepo = configuration["GitHub:Repository"]
-            ?? Environment.GetEnvironmentVariable("GITHUB_REPOSITORY")
-            ?? "samuelkahessay/prd-to-prod";
+            ?? Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
+
+        if (string.IsNullOrWhiteSpace(configuredRepo))
+        {
+            configuredRepo = "samuelkahessay/prd-to-prod";
+            _logger.LogWarning("No GitHub:Repository or GITHUB_REPOSITORY configured — falling back to hardcoded {Repo}", configuredRepo);
+        }
 
         var configuredOwner = configuration["GitHub:RepoOwner"];
         var configuredName = configuration["GitHub:RepoName"];

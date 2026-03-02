@@ -11,6 +11,8 @@ USAGE
   exit 2
 }
 
+command -v ruby >/dev/null 2>&1 || { echo "Error: ruby is required" >&2; exit 1; }
+
 [ "$#" -ge 1 ] || usage
 
 COMMAND="$1"

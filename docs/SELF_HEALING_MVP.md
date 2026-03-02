@@ -3,7 +3,7 @@
 ## Supported MVP Scope
 
 Week-one MVP support is currently validated for the `dotnet-azure` profile in
-[.deploy-profile](/Users/skahessay/Documents/Projects/active/prd-to-prod/.deploy-profile).
+[.deploy-profile](../.deploy-profile).
 
 This repository still contains profile-aware CI and deploy routing for Node and
 Docker, but the reproducible MVP claim in this runbook applies only to the
