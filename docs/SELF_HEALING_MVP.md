@@ -178,6 +178,24 @@ What it means:
 - The self-healing loop can redispatch and escalate, but it does not yet
   implement an automatic rebase or PR recreation strategy.
 
+### Watchdog JSON parsing errors
+
+Historical symptoms (fixed in the current watchdog implementation):
+
+- `pipeline-watchdog` fails during orphaned-issue or stalled-PR scanning with
+  `jq: parse error: Unfinished string at EOF`.
+- Logs show watchdog iterating over raw JSON rows in a shell `for` loop.
+
+What changed:
+
+- The watchdog now iterates over JSON results with a line-safe
+  `while IFS= read -r` loop and process substitution, preserving each JSON
+  object as a single line and avoiding shell word-splitting.
+
+If you still see these parsing errors, you are likely running an older commit
+without the hardened watchdog fix; update your branch to the latest `main`
+before debugging further.
+
 ### Deferred dispatch vs direct dispatch
 
 Symptoms:

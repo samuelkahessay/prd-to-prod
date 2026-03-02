@@ -207,6 +207,9 @@ Safety mechanisms:
 - Concurrency group `pipeline-watchdog` with `cancel-in-progress: false`
 - Honors repository variable `PIPELINE_HEALING_ENABLED=false` and exits without
   taking write actions
+- Uses line-safe `while IFS= read -r` JSON iteration (no shell word-splitting) so
+  issue and PR titles with spaces or quotes do not break stalled-PR or orphaned-
+  issue scanning
 - Posts completion notice on status issue when all pipeline items are resolved
 
 ### ci-failure-issue
