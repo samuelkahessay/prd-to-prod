@@ -72,12 +72,17 @@ This repo uses both. The split follows a simple rule: **deterministic logic stay
 | `copilot-setup-steps.yml` | Environment setup (install .NET SDK, gh-aw) |
 | `close-issues.yml` | Parse PR body for `Closes #N`, close linked issues |
 | `auto-dispatch.yml` | Debounce guard — check if repo-assist is already running, then dispatch |
-| `pr-review-submit.yml` | Parse `[PIPELINE-VERDICT]` comment, submit formal GH review, enable auto-merge, dispatch next cycle |
+| `pr-review-submit.yml` | Parse `[PIPELINE-VERDICT]` comment, submit formal GH review, enable auto-merge for approved `[Pipeline]` PRs, dispatch next cycle |
 | `ci-failure-issue.yml` | Extract failure logs, post `/repo-assist` repair command to linked issue |
 | `ci-failure-resolve.yml` | Update incident comment to "resolved" when CI passes after a failure |
 | `pipeline-watchdog.yml` | Cron stall detector — retry stuck repairs, escalate orphaned issues |
 
 These workflows are routing, guard logic, state transitions, and deployment. They follow fixed rules: if X then Y. No ambiguity, no judgment needed.
+
+This repo also keeps an explicit autonomy boundary: the autonomous merge path is
+restricted to pipeline-generated PRs whose titles start with `[Pipeline]`.
+Human-authored PRs can reuse the same CI and review workflows, but they are
+manually merged by default.
 
 ### gh-aw agentic workflows (LLM-powered)
 
@@ -98,7 +103,7 @@ The `.md` → `.lock.yml` pair is fundamental to gh-aw. You author in Markdown, 
 
 ### 1. It closes the "last mile" gap
 
-The industry has automated building, testing, and deploying for years. But writing code remained manual. gh-aw puts an agent in that gap — a design brief (GitHub issue) goes in, a working PR comes out. This pipeline chains that capability into a loop: decompose → implement → review → merge → repeat.
+The industry has automated building, testing, and deploying for years. But writing code remained manual. gh-aw puts an agent in that gap — a design brief (GitHub issue) goes in, a working PR comes out. This pipeline chains that capability into a loop: decompose → implement → review → auto-merge approved pipeline PRs → repeat.
 
 ### 2. Natural language becomes the interface
 

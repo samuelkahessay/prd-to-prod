@@ -10,8 +10,8 @@
 A Next.js 14 dashboard that visualizes the agentic pipeline itself — interactive
 simulator, timeline replay of real GitHub data, and forensic inspection of agent
 decisions and failure patterns. 10 features decomposed from the PRD, all
-autonomously implemented, reviewed, and merged. 32 Vitest tests. Deployed to
-Vercel.
+autonomously implemented, reviewed, and merged on the pipeline-generated path.
+32 Vitest tests. Deployed to Vercel.
 
 ## Tech Stack
 

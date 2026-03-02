@@ -9,6 +9,17 @@ This repository still contains profile-aware CI and deploy routing for Node and
 Docker, but the reproducible MVP claim in this runbook applies only to the
 current `.NET + Azure App Service` path.
 
+## Autonomy Boundary
+
+This MVP is autonomous only on the pipeline-generated path:
+
+- Approved `[Pipeline]` PRs can be auto-merged by `pr-review-submit`.
+- Human-authored PRs still run through review and CI, but they remain
+  manually merged by default.
+- "Self-healing" in this runbook means retry, redispatch, repair, escalation,
+  and cleanup of pipeline incidents. It does not mean rollback automation or
+  automatic merge of arbitrary approved PRs.
+
 ## Required Secrets
 
 Configure these repository secrets before using the autonomous loop:
@@ -110,6 +121,10 @@ For a passing audit or live drill, confirm all of the following evidence exists:
 - A successful main recovery run URL
 - A final drill JSON report under `drills/reports/`
 
+For an approved `[Pipeline]` PR, you may also see an `auto-merge-armed` status
+evidence marker before the merge completes. Human-authored PRs will not emit
+that status because they are not auto-merged by default.
+
 ## Known Limitations
 
 - There is no rollback automation.
@@ -117,6 +132,7 @@ For a passing audit or live drill, confirm all of the following evidence exists:
 - Week-one MVP support is not claimed for profiles other than `dotnet-azure`.
 - Watchdog and requeue behavior are mostly redispatch logic, not root-cause
   diagnosis.
+- Human-authored PRs are not auto-merged by the autonomous loop.
 
 ## Troubleshooting
 
@@ -174,6 +190,20 @@ Interpretation:
 - `direct`: auto-dispatch ran immediately.
 - `deferred`: repo-assist was already active, so dispatch was postponed.
 - `deferred->requeued`: the requeue workflow picked it up later.
+
+### Approved PR did not auto-merge
+
+Symptoms:
+
+- The PR shows `APPROVED`.
+- CI is green.
+- No merge happens automatically.
+
+Interpretation:
+
+- Only `[Pipeline]` PRs are auto-merged by the autonomous loop.
+- Human-authored PRs can use the same review workflows and status checks, but
+  they stay manual unless you intentionally change the merge policy.
 
 ### Local tests pass but GitHub audit fails
 

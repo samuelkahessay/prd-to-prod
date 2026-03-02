@@ -10,10 +10,10 @@ Product Requirements Documents (PRDs) into implemented code via AI agents:
    acceptance criteria
 3. **`repo-assist`** — AI picks up issues, writes code, opens draft PRs
 4. **`pr-review-agent`** — Agentic review posts a verdict comment (full context, no truncation)
-5. **`pr-review-submit`** — Submits the formal APPROVE/REQUEST_CHANGES review as `github-actions[bot]`
+5. **`pr-review-submit`** — Submits the formal APPROVE/REQUEST_CHANGES review as `github-actions[bot]` and auto-merges approved `[Pipeline]` PRs
 6. **`pipeline-status`** — Daily dashboard tracks progress
 
-Human role: write PRDs, review PRs, merge.
+Human role: write PRDs, review outcomes, and manually merge non-pipeline PRs.
 
 ## Repository Structure
 ```
@@ -69,7 +69,7 @@ The pipeline follows a **drop → run → tag → showcase → reset** cycle.
 | `repo-assist` | Daily + `/repo-assist` | Implements issues → opens PRs |
 | `pipeline-status` | Daily | Updates progress dashboard issue |
 | `pr-review-agent` | PR opened/updated | AI code review (full context) |
-| `pr-review-submit` | Verdict comment created | Submits formal review + auto-merge |
+| `pr-review-submit` | Verdict comment created | Submits formal review + auto-merge for approved `[Pipeline]` PRs |
 
 ## Pipeline Issue Lifecycle
 1. `prd-decomposer` creates issues with `[Pipeline]` prefix and `pipeline` label
@@ -79,9 +79,12 @@ The pipeline follows a **drop → run → tag → showcase → reset** cycle.
    (`repo-assist/issue-<N>-<desc>`), implements code, and opens draft PRs
 4. `pr-review-agent` reviews pipeline PRs with full context, posts a verdict comment
 5. `pr-review-submit` reads the verdict and submits the formal APPROVE/REQUEST_CHANGES review
-6. On approval, auto-merge is enabled; on merge, the linked issue auto-closes
-   via `Closes #N`
+6. On approval of a `[Pipeline]` PR, auto-merge is enabled; on merge, the linked
+   issue auto-closes via `Closes #N`
 7. `repo-assist` re-dispatches to pick up the next issue
+
+Human-authored PRs can still use the same review and CI workflows, but they
+are manually merged by default.
 
 ## PR Conventions
 - Title prefix: `[Pipeline]` for all agent-created PRs

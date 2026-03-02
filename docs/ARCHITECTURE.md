@@ -3,7 +3,8 @@
 ## Pipeline Overview
 
 The agentic pipeline turns Product Requirements Documents (PRDs) into shipped code
-with minimal human intervention. Ten workflows cooperate in a loop:
+with minimal human intervention on the pipeline-generated path. Ten workflows
+cooperate in a loop:
 
 ```
  You write a PRD
@@ -24,7 +25,7 @@ with minimal human intervention. Ten workflows cooperate in a loop:
        | opens PR
        v
  +-----------------+  posts verdict   +--------------------+
- | pr-review-agent | ──────────────> | pr-review-submit | ──> Squash merge (auto)
+ | pr-review-agent | ──────────────> | pr-review-submit | ──> Squash merge (auto for [Pipeline] PRs)
  | (agentic, gpt-5)|  (comment)       | (GHA, bot)         |
  +-----------------+                  +--------------------+
        |                                      |
@@ -125,14 +126,15 @@ Decision rules:
 | **File** | `.github/workflows/pr-review-submit.yml` |
 | **Engine** | Standard GitHub Actions (`github-actions[bot]`) |
 | **Trigger** | `issue_comment: created` — fires when pr-review-agent posts its verdict |
-| **Output** | Formal APPROVE or REQUEST_CHANGES GitHub review; auto-merge; repo-assist dispatch |
+| **Output** | Formal APPROVE or REQUEST_CHANGES GitHub review; auto-merge for approved `[Pipeline]` PRs; repo-assist dispatch |
 
 Standard workflow that runs as `github-actions[bot]`. Watches for comments containing
 `[PIPELINE-VERDICT]` on PRs, parses the verdict, and submits the formal GitHub
 review. This is the identity that satisfies GitHub's self-approval restriction.
 For approved `[Pipeline]` PRs, the workflow then enables auto-merge with
 `GH_AW_GITHUB_TOKEN` so the merge commit to `main` still triggers downstream
-push-based workflows such as Azure deploy.
+push-based workflows such as Azure deploy. Human-authored PRs can still be
+reviewed by this workflow, but they are intentionally left for manual merge.
 
 Submit process:
 1. Detects verdict comment via `[PIPELINE-VERDICT]` marker
@@ -141,6 +143,12 @@ Submit process:
 4. Submits formal GitHub review as `github-actions[bot]`
 5. On APPROVE of `[Pipeline]` PRs: marks draft ready, enables auto-merge (squash)
 6. After review: checks for remaining pipeline issues, dispatches `repo-assist` (APPROVE) or posts `/repo-assist` on linked issue (REQUEST_CHANGES)
+
+Autonomy boundary:
+
+- `[Pipeline]` PRs are the autonomous merge path.
+- Human-authored PRs reuse the same review machinery, but do not get auto-merge
+  armed by `pr-review-submit`.
 
 ### pipeline-status
 
@@ -255,7 +263,7 @@ Feeds into `ci-failure-issue` on failure.
 ## Self-Healing Loops
 
 The pipeline has three feedback loops that allow it to recover from failures without
-human intervention:
+human intervention inside the pipeline-generated path:
 
 1. **Watchdog stall recovery** — `pipeline-watchdog` runs every 30 minutes. If a PR
    has a `CHANGES_REQUESTED` review and no activity for 30+ min, it posts `/repo-assist`
@@ -271,6 +279,12 @@ human intervention:
 3. **Superseded PR cleanup** — Both `pr-review-submit` (on merge) and `pipeline-watchdog`
    (on cron) detect open PRs whose linked issue was already closed by another merged PR,
    and close them with `--delete-branch`.
+
+Self-healing does not mean:
+
+- automatic merge of arbitrary approved PRs
+- rollback automation for bad deploys
+- generalized diagnosis of every workflow or infrastructure failure
 
 ## PRD Lifecycle
 
@@ -296,6 +310,11 @@ auto-merged with `GH_AW_GITHUB_TOKEN` rather than `GITHUB_TOKEN` so the merge
 to `main` can trigger downstream workflows. The dedicated `close-issues`
 workflow remains as deterministic issue cleanup after each merge.
 
+**Pipeline PR boundary** — Auto-merge is intentionally restricted to PRs whose
+title starts with `[Pipeline]`. That is the autonomous implementation path
+created by the agentic loop. Human-authored PRs may still use the same review
+workflows and status checks, but they are manually merged by default.
+
 **Orphan branch memory** — repo-assist stores state in a JSON file on the
 `memory/repo-assist` orphan branch. This persists across workflow runs without
 polluting the main branch history.
@@ -320,7 +339,7 @@ until all issues from the PRD are implemented.
 
 | Secret | Purpose |
 |--------|---------|
-| `GH_AW_GITHUB_TOKEN` | Token for gh-aw agentic workflows and pipeline auto-merge |
+| `GH_AW_GITHUB_TOKEN` | Token for gh-aw agentic workflows and auto-merge of approved `[Pipeline]` PRs |
 | `COPILOT_GITHUB_TOKEN` | Copilot agent token |
 
 Note: `MODELS_TOKEN` is no longer required — pr-review-agent uses the Copilot engine
