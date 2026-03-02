@@ -83,4 +83,13 @@ public class LandingPageTests : IClassFixture<WebApplicationFactory<Program>>
         var html = await client.GetStringAsync("/");
         Assert.Contains("github.com/github/gh-aw", html);
     }
+
+    [Fact]
+    public async Task LandingPage_RunHistoryRendersWithData()
+    {
+        var client = _factory.CreateClient();
+        var html = await client.GetStringAsync("/");
+        // Real showcase files exist in the repo; "Code Snippet Manager" is in 01-code-snippet-manager/manifest.json
+        Assert.Contains("Code Snippet Manager", html);
+    }
 }

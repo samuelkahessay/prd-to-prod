@@ -245,7 +245,7 @@
         <!-- Run History -->
         <section class="mb-16">
             <div class="text-xs text-dim mb-1 uppercase tracking-widest">// build manifest — pipeline run history</div>
-            <div class="text-xs font-bold mb-5 text-accent">4 runs · 4 apps · 3 tech stacks · 50+ issues · 61+ PRs · zero human code</div>
+            <div class="text-xs font-bold mb-5 text-accent">@Model.TotalRuns runs · @Model.TotalIssues+ issues · @Model.TotalPrs+ PRs · zero human code</div>
             <div class="panel overflow-hidden">
                 <!-- Column headers (desktop) -->
                 <div class="hidden sm:grid px-4 py-2 text-xs" style="grid-template-columns: 44px 1fr 1fr 60px 60px 72px; border-bottom: 1px solid var(--border); color: var(--dim);">
@@ -257,103 +257,64 @@
                     <span class="text-right">STATUS</span>
                 </div>
 
-                <!-- Run 04 — ACTIVE -->
-                <div class="px-4 py-4" style="border-bottom: 1px solid rgba(0,170,255,0.08); background: rgba(0,170,255,0.03);">
-                    <!-- desktop row -->
-                    <div class="hidden sm:grid text-xs items-start" style="grid-template-columns: 44px 1fr 1fr 60px 60px 72px;">
-                        <span class="text-accent font-bold pt-0.5">04</span>
-                        <div>
-                            <div class="text-white font-bold">Ticket Deflection Service</div>
-                            <div class="text-dim text-xs mt-1">this instance · <a href="https://github.com/samuelkahessay/prd-to-prod/tree/main" class="text-accent hover:underline">main</a></div>
+                @if (!Model.CompletedRuns.Any())
+                {
+                    <div class="px-4 py-6 text-dim text-xs">No completed runs yet</div>
+                }
+                else
+                {
+                    @foreach (var run in Model.CompletedRuns.OrderByDescending(r => r.Number))
+                    {
+                        var isLatest = run.Number == Model.CompletedRuns.Max(r => r.Number);
+                        var tagUrl = string.IsNullOrEmpty(run.Tag) || run.Tag == "main"
+                            ? "https://github.com/samuelkahessay/prd-to-prod/tree/main"
+                            : $"https://github.com/samuelkahessay/prd-to-prod/tree/{run.Tag}";
+                        var tagLabel = string.IsNullOrEmpty(run.Tag) || run.Tag == "main" ? "main" : run.Tag;
+                        var isLast = run.Number == Model.CompletedRuns.Min(r => r.Number);
+                        <div class="px-4 py-4 @(isLatest ? "bg-accent-dim" : "")" style="@(isLast ? "" : "border-bottom: 1px solid var(--border);") @(isLatest ? "background: rgba(0,170,255,0.03);" : "")">
+                            <!-- desktop row -->
+                            <div class="hidden sm:grid text-xs items-start" style="grid-template-columns: 44px 1fr 1fr 60px 60px 72px;">
+                                <span class="@(isLatest ? "text-accent" : "text-dim") font-bold pt-0.5">@run.Number.ToString("D2")</span>
+                                <div>
+                                    <div class="text-white font-bold">@run.Name</div>
+                                    <div class="text-dim text-xs mt-1">
+                                        <a href="@tagUrl" class="@(isLatest ? "text-accent" : "") hover:underline transition-colors">@tagLabel</a>
+                                    </div>
+                                </div>
+                                <div class="text-dim leading-relaxed">@run.TechStack</div>
+                                <span class="@(isLatest ? "text-accent" : "text-dim") text-right font-bold">@run.IssueCount</span>
+                                <span class="@(isLatest ? "text-accent" : "text-dim") text-right font-bold">@run.PrCount</span>
+                                <div class="text-right">
+                                    @if (isLatest)
+                                    {
+                                        <span class="text-green font-bold">ACTIVE</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-dim">merged</span>
+                                    }
+                                </div>
+                            </div>
+                            <!-- mobile -->
+                            <div class="sm:hidden">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="@(isLatest ? "text-accent" : "text-dim") font-bold text-xs">RUN @run.Number.ToString("D2")</span>
+                                    @if (isLatest)
+                                    {
+                                        <span class="text-green font-bold text-xs">ACTIVE</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-dim text-xs">merged</span>
+                                    }
+                                </div>
+                                <div class="text-white font-bold text-sm">@run.Name</div>
+                                <div class="text-dim text-xs mt-1">@run.TechStack</div>
+                                <div class="text-xs mt-1"><span class="text-dim">@run.IssueCount issues · @run.PrCount PRs</span> · <a href="@tagUrl" class="@(isLatest ? "text-accent" : "text-dim hover:text-accent") transition-colors">@tagLabel</a></div>
+                            </div>
                         </div>
-                        <div class="text-dim leading-relaxed">C# / .NET 10<br />ASP.NET Core / Razor Pages<br />EF Core / xUnit</div>
-                        <span class="text-accent text-right font-bold">13</span>
-                        <span class="text-accent text-right font-bold">13</span>
-                        <div class="text-right"><span class="text-green font-bold">ACTIVE</span></div>
-                    </div>
-                    <!-- mobile -->
-                    <div class="sm:hidden">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-accent font-bold text-xs">RUN 04</span>
-                            <span class="text-green font-bold text-xs">ACTIVE</span>
-                        </div>
-                        <div class="text-white font-bold text-sm">Ticket Deflection Service</div>
-                        <div class="text-dim text-xs mt-1">C# / .NET 10 / ASP.NET Core / EF Core</div>
-                        <div class="text-xs mt-1"><span class="text-dim">13 issues · 13 PRs</span> · <a href="https://github.com/samuelkahessay/prd-to-prod/tree/main" class="text-accent hover:underline">main</a></div>
-                    </div>
-                </div>
-
-                <!-- Run 03 -->
-                <div class="px-4 py-4" style="border-bottom: 1px solid var(--border);">
-                    <div class="hidden sm:grid text-xs items-start" style="grid-template-columns: 44px 1fr 1fr 60px 60px 72px;">
-                        <span class="text-dim font-bold pt-0.5">03</span>
-                        <div>
-                            <div class="text-white font-bold">DevCard</div>
-                            <div class="text-dim text-xs mt-1"><a href="https://github.com/samuelkahessay/prd-to-prod/tree/v3.0.0" class="hover:text-accent transition-colors">v3.0.0</a></div>
-                        </div>
-                        <div class="text-dim leading-relaxed">Next.js 14 / TypeScript<br />Tailwind CSS / Framer Motion<br />29 tests · 6 themes</div>
-                        <span class="text-dim text-right">17</span>
-                        <span class="text-dim text-right">22</span>
-                        <div class="text-right text-dim">merged</div>
-                    </div>
-                    <div class="sm:hidden">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-dim font-bold text-xs">RUN 03</span>
-                            <span class="text-dim text-xs">merged</span>
-                        </div>
-                        <div class="text-white font-bold text-sm">DevCard</div>
-                        <div class="text-dim text-xs mt-1">Next.js 14 / TypeScript / Tailwind CSS</div>
-                        <div class="text-xs mt-1"><span class="text-dim">17 issues · 22 PRs</span> · <a href="https://github.com/samuelkahessay/prd-to-prod/tree/v3.0.0" class="hover:text-accent transition-colors text-dim">v3.0.0</a></div>
-                    </div>
-                </div>
-
-                <!-- Run 02 -->
-                <div class="px-4 py-4" style="border-bottom: 1px solid var(--border);">
-                    <div class="hidden sm:grid text-xs items-start" style="grid-template-columns: 44px 1fr 1fr 60px 60px 72px;">
-                        <span class="text-dim font-bold pt-0.5">02</span>
-                        <div>
-                            <div class="text-white font-bold">Pipeline Observatory</div>
-                            <div class="text-dim text-xs mt-1"><a href="https://github.com/samuelkahessay/prd-to-prod/tree/v2.0.0" class="hover:text-accent transition-colors">v2.0.0</a></div>
-                        </div>
-                        <div class="text-dim leading-relaxed">Next.js 14 / TypeScript<br />Tailwind CSS / Framer Motion<br />32 tests</div>
-                        <span class="text-dim text-right">12</span>
-                        <span class="text-dim text-right">19</span>
-                        <div class="text-right text-dim">merged</div>
-                    </div>
-                    <div class="sm:hidden">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-dim font-bold text-xs">RUN 02</span>
-                            <span class="text-dim text-xs">merged</span>
-                        </div>
-                        <div class="text-white font-bold text-sm">Pipeline Observatory</div>
-                        <div class="text-dim text-xs mt-1">Next.js 14 / TypeScript / Tailwind CSS</div>
-                        <div class="text-xs mt-1"><span class="text-dim">12 issues · 19 PRs</span> · <a href="https://github.com/samuelkahessay/prd-to-prod/tree/v2.0.0" class="hover:text-accent transition-colors text-dim">v2.0.0</a></div>
-                    </div>
-                </div>
-
-                <!-- Run 01 -->
-                <div class="px-4 py-4">
-                    <div class="hidden sm:grid text-xs items-start" style="grid-template-columns: 44px 1fr 1fr 60px 60px 72px;">
-                        <span class="text-dim font-bold pt-0.5">01</span>
-                        <div>
-                            <div class="text-white font-bold">Code Snippet Manager</div>
-                            <div class="text-dim text-xs mt-1"><a href="https://github.com/samuelkahessay/prd-to-prod/tree/v1.0.0" class="hover:text-accent transition-colors">v1.0.0</a></div>
-                        </div>
-                        <div class="text-dim leading-relaxed">Express / TypeScript<br />EJS / REST<br />first end-to-end run</div>
-                        <span class="text-dim text-right">8</span>
-                        <span class="text-dim text-right">7</span>
-                        <div class="text-right text-dim">merged</div>
-                    </div>
-                    <div class="sm:hidden">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-dim font-bold text-xs">RUN 01</span>
-                            <span class="text-dim text-xs">merged</span>
-                        </div>
-                        <div class="text-white font-bold text-sm">Code Snippet Manager</div>
-                        <div class="text-dim text-xs mt-1">Express / TypeScript / EJS</div>
-                        <div class="text-xs mt-1"><span class="text-dim">8 issues · 7 PRs</span> · <a href="https://github.com/samuelkahessay/prd-to-prod/tree/v1.0.0" class="hover:text-accent transition-colors text-dim">v1.0.0</a></div>
-                    </div>
-                </div>
+                    }
+                }
             </div>
             <div class="mt-3 text-xs text-dim">
                 Runs 01–03: git tags are the source of truth — inspect the full commit history at each tag link above.
