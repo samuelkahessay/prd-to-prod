@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR=$(cd "$(dirname "$0")/../.." && pwd)
+SCRIPT="$ROOT_DIR/scripts/demo-preflight.sh"
+
+TMPDIR=$(mktemp -d)
+trap 'rm -rf "$TMPDIR"' EXIT
+
+mkdir -p "$TMPDIR/bin"
+mkdir -p "$TMPDIR/scripts"
+LOG_FILE="$TMPDIR/calls.log"
+: > "$LOG_FILE"
+
+touch "$TMPDIR/TicketDeflection.sln"
+
+# Create fake drill evidence with a PASS verdict
+mkdir -p "$TMPDIR/drills/reports"
+echo '{"verdict":"PASS","run":"mock"}' > "$TMPDIR/drills/reports/mock-drill.json"
+
+# Stub bash (for sub-shell checks like live checks)
+cat > "$TMPDIR/bin/bash" <<'EOF'
+#!/bin/bash
+printf 'bash %s\n' "$*" >> "$LOG_FILE"
+exit 0
+EOF
+
+# Stub dotnet
+cat > "$TMPDIR/bin/dotnet" <<'EOF'
+#!/bin/bash
+printf 'dotnet %s\n' "$*" >> "$LOG_FILE"
+exit 0
+EOF
+
+# Stub check-autonomy-policy.sh to succeed
+cat > "$TMPDIR/scripts/check-autonomy-policy.sh" <<'EOF'
+#!/bin/bash
+printf 'check-autonomy-policy %s\n' "$*" >> "$LOG_FILE"
+cat <<JSON
+{"ok":true,"path":"autonomy-policy.yml","version":1,"action_count":3,"errors":[]}
+JSON
+exit 0
+EOF
+
+# Stub verify-mvp.sh to succeed
+cat > "$TMPDIR/scripts/verify-mvp.sh" <<'EOF'
+#!/bin/bash
+printf 'verify-mvp %s\n' "$*" >> "$LOG_FILE"
+exit 0
+EOF
+
+chmod +x "$TMPDIR/bin/bash" "$TMPDIR/bin/dotnet" "$TMPDIR/scripts/check-autonomy-policy.sh" "$TMPDIR/scripts/verify-mvp.sh"
+
+export LOG_FILE
+
+run_and_capture() {
+  : > "$LOG_FILE"
+  # Override REPO_ROOT to use our stub repo layout, and override PATH
+  REPO_ROOT="$TMPDIR" PATH="$TMPDIR/bin:$PATH" /bin/bash "$SCRIPT" "$@" 2>&1 || true
+}
+
+# ---- Test default mode (with --skip-live to avoid network calls in CI) ----
+OUTPUT=$(run_and_capture --skip-live)
+
+# Should call dotnet build
+if ! printf '%s\n' "$OUTPUT" | grep -qiF "build"; then
+  echo "FAIL: Expected build check in output" >&2
+  exit 1
+fi
+
+# Should call dotnet test
+if ! printf '%s\n' "$OUTPUT" | grep -qiF "test"; then
+  echo "FAIL: Expected test check in output" >&2
+  exit 1
+fi
+
+# Should include policy check step label
+if ! printf '%s\n' "$OUTPUT" | grep -qF "Policy:"; then
+  echo "FAIL: Expected Policy check label in output" >&2
+  exit 1
+fi
+
+# Should include drill evidence check
+if ! printf '%s\n' "$OUTPUT" | grep -qiF "drill"; then
+  echo "FAIL: Expected drill evidence check in output" >&2
+  exit 1
+fi
+
+# Should include MVP check
+if ! printf '%s\n' "$OUTPUT" | grep -qiF "MVP"; then
+  echo "FAIL: Expected MVP check in output" >&2
+  exit 1
+fi
+
+# ---- Test --skip-live suppresses live checks ----
+OUTPUT_SKIP=$(run_and_capture --skip-live)
+if printf '%s\n' "$OUTPUT_SKIP" | grep -qi "Live:"; then
+  echo "FAIL: --skip-live should suppress Live checks" >&2
+  exit 1
+fi
+
+echo "demo-preflight.sh tests passed"
