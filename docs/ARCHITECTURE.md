@@ -197,6 +197,8 @@ Safety mechanisms:
 - Skips all dispatches if repo-assist is already running (prevents flooding)
 - One action per cycle (stalled PR takes priority over orphaned issue)
 - Concurrency group `pipeline-watchdog` with `cancel-in-progress: false`
+- Honors repository variable `PIPELINE_HEALING_ENABLED=false` and exits without
+  taking write actions
 - Posts completion notice on status issue when all pipeline items are resolved
 
 ### ci-failure-issue
@@ -224,6 +226,19 @@ Fallback and escalation paths:
 - If the failure is on `main`, the PR is not a `[Pipeline]` PR, the PR has no linked
   issue, or repair dispatch fails, the workflow creates or updates a standalone
   `[CI Incident]` issue instead of silently dropping the event.
+- If `PIPELINE_HEALING_ENABLED=false`, failure detection still runs and incident
+  state is still recorded, but the router escalates instead of posting a repair
+  command or creating an auto-dispatchable pipeline bug issue.
+
+## Healing Pause Switch
+
+The repository-level variable `PIPELINE_HEALING_ENABLED` acts as the stop-the-
+bleeding control for the autonomous loop:
+
+- Reviews still happen, and the `review` status check is still written.
+- Failure detection still happens, and CI incidents are still recorded.
+- Autonomous remediation, repo-assist dispatch, repair-command reposts, and
+  pipeline PR auto-merge are paused when the variable is set to `false`.
 
 ### dotnet-ci
 

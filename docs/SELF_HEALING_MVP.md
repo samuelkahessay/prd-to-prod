@@ -33,6 +33,19 @@ with all of them in place:
 - `Protect main` requires the `review` status check
 - `Protect main` remains squash-only with admin bypass enabled
 
+## Healing Pause Switch
+
+Use repository variable `PIPELINE_HEALING_ENABLED` for the stop-the-bleeding
+control:
+
+- unset or `true`: autonomous healing stays enabled
+- `false`: review submission and failure detection still run, but autonomous
+  remediation and pipeline auto-merge are paused
+
+When paused, the workflows still record incident state and escalation evidence.
+They do not auto-dispatch `repo-assist`, repost repair commands, or arm
+pipeline PR auto-merge.
+
 ## Bootstrap Steps
 
 ```bash
