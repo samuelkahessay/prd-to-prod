@@ -1,9 +1,9 @@
 {
-  "last_run": "2026-03-02T19:57:27Z",
-  "workflow_run_id": "22593163251",
+  "last_run": "2026-03-02T22:00:00Z",
+  "workflow_run_id": "22597004332",
   "current_prd": {
     "issue": 297,
-    "title": "PRD: Run 05 Landing Page Demo",
+    "title": "PRD: Run 06 Policy-Bounded Execution",
     "status": "active"
   },
   "pipeline_status": "ON_TRACK",
@@ -56,9 +56,16 @@
     {"issue": 316, "pr": 318, "status": "merged"},
     {"issue": 327, "pr": 328, "status": "merged"},
     {"issue": 329, "pr": 330, "status": "merged"},
-    {"issue": 331, "branch": "repo-assist/issue-331-accurate-headline", "status": "pr_open"}
+    {"issue": 331, "pr": 332, "status": "merged"},
+    {"issue": 333, "branch": "repo-assist/issue-333-policy-bounded-narrative", "status": "pr_open"},
+    {"issue": 334, "branch": "repo-assist/issue-334-demo-preflight", "status": "pr_open"},
+    {"issue": 335, "branch": "repo-assist/issue-335-autonomy-apis", "status": "pr_open"}
   ],
-  "open_issues": [331],
-  "open_prs": [{"issue": 331, "branch": "repo-assist/issue-331-accurate-headline"}],
-  "notes": "Run 05 active. Issue #331 implemented: hero headline updated from 'Zero human code.' to 'Human sets the intent. AI handles everything else.' PR created, awaiting review. All 82 tests pass."
+  "open_issues": [333, 334, 335],
+  "open_prs": [
+    {"issue": 333, "branch": "repo-assist/issue-333-policy-bounded-narrative"},
+    {"issue": 334, "branch": "repo-assist/issue-334-demo-preflight"},
+    {"issue": 335, "branch": "repo-assist/issue-335-autonomy-apis"}
+  ],
+  "notes": "Run 06 active. Three PRs created this run: #333 (policy-bounded narrative + autonomy-policy.yml), #334 (demo-preflight.sh), #335 (autonomy APIs). All PRs awaiting review. 93 tests pass."
 }
