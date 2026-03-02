@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-02T05:27:22Z",
-  "workflow_run_id": "22562674827",
+  "last_run": "2026-03-02T05:34:18Z",
+  "workflow_run_id": "22562844670",
   "current_prd": {
     "issue": 297,
     "title": "PRD: Run 05 Landing Page Demo",
@@ -52,10 +52,10 @@
     {"issue": 300, "pr": 307, "status": "merged"},
     {"issue": 302, "pr": 311, "status": "merged"},
     {"issue": 313, "pr": 314, "status": "merged"},
-    {"issue": 315, "status": "pr_open", "notes": "PR created for WCAG contrast fix on Index.cshtml (--dim #4a5a72 -> #7a8fa8)"},
-    {"issue": 316, "status": "blocked", "notes": "Depends on #315 (not yet merged). Will implement after #315 merges."}
+    {"issue": 315, "pr": 317, "status": "pr_open", "notes": "PR #317 open — WCAG contrast fix on Index.cshtml. CI pending."},
+    {"issue": 316, "status": "blocked", "notes": "Depends on #315. Will implement after #315 merges."}
   ],
   "open_issues": [315, 316],
-  "open_prs": [315],
-  "notes": "New enhancement issues #315 and #316 added for WCAG contrast fixes. #315 PR created. #316 blocked on #315."
+  "open_prs": [317],
+  "notes": "PR #317 open for issue #315. Issue #316 blocked on #315. Added in-progress label to #315, blocked label to #316."
 }

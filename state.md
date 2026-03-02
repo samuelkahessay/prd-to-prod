@@ -1,22 +1,25 @@
 # Pipeline State — 2026-03-02
 
 ## Last Run
-- Workflow run: 22562354034
-- Date: 2026-03-02T05:13:57Z
+- Workflow run: 22562844670
+- Date: 2026-03-02T05:34:18Z
 
 ## Current Run: Run 05 — Landing Page Demo
 
-### Status: **COMPLETE** ✅
+### Status: **NEAR COMPLETE** 🔄
 
-All issues for Run 05 implemented and merged:
-- ShowcaseService (issue #298, PR #303) ✅
-- ShowcasePath fix (issue #313, PR #314) ✅ — merged 2026-03-02T05:11Z
-- All other Run 05 features previously merged
+Two WCAG accessibility enhancement issues remain:
 
-### Open Items
-- Issue #298 is repeatedly re-opened by auto-dispatch (3+ times). The implementation is verified complete on `main`. This is a known automation loop — the close-issues workflow doesn't trigger for App-token merges.
-- Issue #297 is the PRD source issue (not a feature issue).
+| Issue | Title | Status |
+|-------|-------|--------|
+| #315 | WCAG Contrast Fix — Landing Page | PR #317 open (CI pending) |
+| #316 | WCAG Contrast Fix — All Pages | Blocked on #315 |
+
+### Open PR
+- PR #317 → closes #315 (CSS var `--dim` updated from `#4a5a72` to `#7a8fa8`)
+- CI checks still pending, no failures
 
 ### Next Actions
-1. Close issue #298 manually (or let it be — it's harmless).
-2. Archive Run 05 and start Run 06 when ready.
+1. Wait for PR #317 CI to pass and get reviewed/merged.
+2. Once #315 closes, implement #316 (extend same fix site-wide).
+3. Archive Run 05 once #316 is merged.
