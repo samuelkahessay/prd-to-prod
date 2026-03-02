@@ -170,11 +170,13 @@
 
     <div class="max-w-6xl mx-auto px-4 py-10">
         <div class="mb-8">
-            <div class="text-xs text-dim mb-2 uppercase tracking-widest">// current repo state — issues, prs, runs, deploys</div>
+            <div class="text-xs text-dim mb-2 uppercase tracking-widest">// current repo state — actionable issues, prs, runs, deploys</div>
             <h1 class="font-sans text-3xl font-bold text-white mb-3">Live Pipeline Snapshot</h1>
             <p class="max-w-3xl text-sm leading-relaxed text-dim">
                 This page polls the current GitHub control plane and renders the active software delivery loop as it exists now,
-                not as a canned replay. It is read-only and falls back cleanly when only unauthenticated GitHub API access is available.
+                not as a canned replay. Issue counts here refer to actionable pipeline work, not every open issue with the
+                <code class="text-white">pipeline</code> label. The page is read-only and falls back cleanly when only unauthenticated
+                GitHub API access is available.
             </p>
         </div>
 
@@ -182,7 +184,7 @@
 
         <div class="grid grid-cols-2 md:grid-cols-7 gap-4 mb-8">
             <div class="panel panel-top p-4">
-                <div class="metric-lbl">open issues</div>
+                <div class="metric-lbl">actionable issues</div>
                 <div id="metricIssues" class="metric-val">0</div>
             </div>
             <div class="panel panel-top p-4">
@@ -205,9 +207,9 @@
                 <div class="metric-lbl">merge armed</div>
                 <div id="metricMerge" class="metric-val text-green">0</div>
             </div>
-            <div class="panel p-4">
+            <div class="panel p-4 overflow-hidden">
                 <div class="metric-lbl">mode</div>
-                <div id="metricMode" class="text-white text-sm">loading</div>
+                <div id="metricMode" class="text-white text-sm truncate">loading</div>
             </div>
         </div>
 
@@ -224,7 +226,7 @@
 
         <div class="grid lg:grid-cols-3 gap-6">
             <section class="panel p-5">
-                <div class="text-xs text-dim uppercase tracking-widest mb-2">open pipeline issues</div>
+                <div class="text-xs text-dim uppercase tracking-widest mb-2">open actionable pipeline issues</div>
                 <h2 class="font-sans text-xl font-bold text-white mb-4">Issue queue</h2>
                 <div id="issueList" class="text-sm text-dim">Loading issues...</div>
             </section>
@@ -357,7 +359,7 @@
             document.getElementById('metricDeferred').textContent = snapshot.summary.deferredIssues;
             document.getElementById('metricRepairs').textContent = snapshot.summary.repairLoops;
             document.getElementById('metricMerge').textContent = snapshot.summary.autoMergeArmed;
-            document.getElementById('metricMode').textContent = `${snapshot.mode} · ${snapshot.repository}`;
+            document.getElementById('metricMode').textContent = snapshot.mode;
             document.getElementById('updatedAt').textContent = `updated: ${snapshot.updatedAtUtc}`;
 
             renderWarnings(snapshot.warnings, snapshot.mode);
