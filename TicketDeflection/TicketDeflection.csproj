@@ -14,4 +14,9 @@
     <InternalsVisibleTo Include="TicketDeflection.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\showcase\**\*.json" CopyToOutputDirectory="PreserveNewest"
+             Link="showcase\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
 </Project>
