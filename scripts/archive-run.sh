@@ -10,6 +10,12 @@
 # ─────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+REPO_ROOT=$(pwd)
+
+# shellcheck source=scripts/run-lifecycle-lib.sh
+source "${SCRIPT_DIR}/run-lifecycle-lib.sh"
+
 # ── Args ──
 RUN_NUM="${1:?Usage: archive-run.sh <run-number> <slug> <tag> [deployment-url]}"
 SLUG="${2:?Usage: archive-run.sh <run-number> <slug> <tag> [deployment-url]}"
@@ -47,6 +53,11 @@ if [ ! -f "${SHOWCASE_DIR}/README.md" ]; then
   echo "▸ Generating showcase entry at ${SHOWCASE_DIR}/..."
   mkdir -p "${SHOWCASE_DIR}"
 
+  RESTORE_TARGETS=$(run_lifecycle_existing_app_paths "${REPO_ROOT}" | paste -sd ' ' -)
+  if [ -z "${RESTORE_TARGETS}" ]; then
+    RESTORE_TARGETS="src/"
+  fi
+
   # Gather stats
   ISSUE_COUNT=$(gh issue list --repo "${REPO}" --label pipeline --state all --json number --jq 'length' 2>/dev/null || echo "?")
   PR_COUNT=$(gh pr list --repo "${REPO}" --label pipeline --state merged --json number --jq 'length' 2>/dev/null || echo "?")
@@ -73,7 +84,7 @@ ${DEPLOY_LINE}
 ## Restore Code
 
 \`\`\`bash
-git checkout ${TAG} -- src/
+git checkout ${TAG} -- ${RESTORE_TARGETS}
 \`\`\`
 
 > Fill in additional details: summary, tech stack, lessons learned.
@@ -112,27 +123,17 @@ echo ""
 # ── Step 4: Remove PRD-specific files ──
 echo "▸ Removing PRD implementation files..."
 
-# Implementation code
-rm -rf src/
-
-# Config files (PRD-specific)
-PRD_CONFIGS=(
-  package.json
-  package-lock.json
-  tsconfig.json
-  tailwind.config.ts
-  postcss.config.js
-  next.config.js
-  vitest.config.ts
-  vercel.json
-  next-env.d.ts
-)
-for f in "${PRD_CONFIGS[@]}"; do
-  if [ -f "$f" ]; then
-    git rm -f "$f" 2>/dev/null || rm -f "$f"
-    echo "  ✓ Removed $f"
-  fi
-done
+REMOVED_PATHS=$(run_lifecycle_remove_ephemeral_paths "${REPO_ROOT}")
+if [ -z "${REMOVED_PATHS}" ]; then
+  echo "  No application files matched archive patterns."
+else
+  while IFS= read -r path; do
+    [ -z "${path}" ] && continue
+    echo "  ✓ Removed ${path}"
+  done <<EOF
+${REMOVED_PATHS}
+EOF
+fi
 
 # Build artifacts (may already be gitignored)
 rm -rf node_modules/ .next/ dist/ .vercel/
@@ -161,8 +162,8 @@ by the prd-decomposer workflow, and implemented by the repo-assist workflow.
 - Use TypeScript strict mode when the PRD specifies TypeScript
 
 ## Build & Test
-Check the active PRD and package.json for build/test commands.
-When no PRD is active, there is no application code to build.
+Check the active PRD and `.deploy-profile` for build/test commands.
+Enhancement runs may extend the current application in place, so do not assume a clean-slate scaffold.
 
 ## Tech Stack
 Determined by the active PRD. The pipeline is tech-stack agnostic.
@@ -189,6 +190,8 @@ Determined by the active PRD. The pipeline is tech-stack agnostic.
 ## PRD Lifecycle
 This repo follows a drop → run → tag → showcase → reset cycle:
 
+Enhancement runs are allowed. A new PRD may evolve the current application in place when the repo still contains active app code.
+
 ### Permanent files (pipeline infrastructure)
 - `.github/` — Workflows, agent configs, copilot instructions
 - `scripts/` — Bootstrap, archive, monitoring scripts
@@ -199,10 +202,10 @@ This repo follows a drop → run → tag → showcase → reset cycle:
 - `README.md`, `LICENSE`, `.gitignore`
 
 ### Ephemeral files (removed on archive)
-- `src/` — Application code (implementation of the active PRD)
-- `package.json`, `tsconfig.json`, etc. — PRD-specific configs
+- `src/`, `TicketDeflection/`, `TicketDeflection.Tests/` — Application code for the active PRD
+- `package.json`, `tsconfig.json`, `TicketDeflection.sln`, `Dockerfile`, `global.json`, etc. — PRD-specific project and runtime configs
 - `docs/plans/` — Design documents for the active PRD
-- `node_modules/`, `.next/`, `dist/` — Build artifacts
+- `node_modules/`, `.next/`, `dist/`, `drills/reports/*.json` — Build and generated runtime artifacts
 AGENTS_EOF
 echo "  ✓ AGENTS.md reset"
 echo ""
@@ -226,7 +229,7 @@ echo "  ✓ Archive complete!"
 echo ""
 echo "  Tag:      ${TAG}"
 echo "  Showcase: showcase/${RUN_NUM}-${SLUG}/"
-echo "  Restore:  git checkout ${TAG} -- src/"
+echo "  Restore:  git checkout ${TAG} -- ${RESTORE_TARGETS}"
 echo ""
 echo "  Next: drop a new PRD into docs/prd/ and /decompose"
 echo "════════════════════════════════════════════"

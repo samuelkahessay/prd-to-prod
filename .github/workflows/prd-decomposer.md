@@ -77,6 +77,32 @@ If the instructions above contain a URL or file path, fetch/read that content as
 
 8. **Self-contained acceptance criteria.** Each issue's acceptance criteria must ONLY reference files, functions, and artifacts that will be created or modified IN THAT ISSUE. Do not include criteria that depend on artifacts from other issues — those belong on the issue that creates the artifact. If a feature spans multiple issues, each issue's criteria cover only its portion. Example: if Issue A creates `page.tsx` and Issue B adds OG metadata to it, Issue B's criteria should say "Add OG metadata to the card page" NOT "Update `generateMetadata` in `src/app/card/[username]/page.tsx`" — because that file doesn't exist until Issue A merges.
 
+## Delivery Mode Detection
+
+Before planning issues, inspect the repository state and determine whether the PRD is:
+
+- **Greenfield** — a new app or service should be scaffolded
+- **Enhancement** — the PRD extends or reworks the application already in the repo
+- **Migration** — the PRD intentionally replaces the current stack or app foundation
+
+Use the repo contents as evidence. Existing application directories, solution files, runtime configs, and deployed app assets are strong signals that this is an enhancement run unless the PRD explicitly says to replace them.
+
+### Enhancement Mode Rules
+
+If the PRD is an enhancement to the existing app:
+
+1. **Do NOT create a bootstrap/scaffold issue by default.**
+2. Reuse the active deploy profile unless the PRD explicitly requires a stack/deploy change.
+3. Decompose against the current codebase. Technical Notes may reference existing files already present in the repo.
+4. The first issue should start with the highest-leverage modification needed for the enhancement, not repo initialization.
+
+### Greenfield or Migration Rules
+
+If the PRD creates a new app or intentionally changes the app foundation:
+
+1. Create a bootstrap/scaffold issue first.
+2. Include the selected deploy profile and setup commands in that issue's Technical Notes.
+
 ## Tech Stack Detection
 
 Before creating issues, determine the target tech stack and deploy profile:
@@ -91,10 +117,12 @@ Before creating issues, determine the target tech stack and deploy profile:
 
 3. **Read the selected deploy profile** from `.github/deploy-profiles/{profile-name}.yml` to understand the build, test, and deploy configuration.
 
-4. **The FIRST issue must be a bootstrap/scaffold issue** that includes in its Technical Notes:
+4. **In greenfield or migration mode**, the FIRST issue must be a bootstrap/scaffold issue that includes in its Technical Notes:
    - The selected deploy profile (e.g., "Deploy profile: `nextjs-vercel`")
    - Instruction: "Update `.deploy-profile` to `{profile-name}`"
    - Build, test, and deploy commands from the profile
+
+5. **In enhancement mode**, do not create a bootstrap issue unless the PRD explicitly requires replacing the stack, deploy profile, or app foundation.
 
 ## Output Format
 

@@ -9,7 +9,7 @@
 #   bash scripts/start-run.sh ~/my-project/requirements.md
 #
 # What it does:
-#   1. Validates the repo is in a clean (archived) state
+#   1. Detects whether this is a clean-slate or enhancement run
 #   2. Copies the PRD into docs/prd/
 #   3. Creates a GitHub Issue with the PRD content
 #   4. Prints next steps (run /decompose)
@@ -18,6 +18,11 @@ set -euo pipefail
 
 PRD_PATH="${1:?Usage: start-run.sh <path-to-prd-file>}"
 REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+REPO_ROOT=$(pwd)
+
+# shellcheck source=scripts/run-lifecycle-lib.sh
+source "${SCRIPT_DIR}/run-lifecycle-lib.sh"
 
 if [ ! -f "${PRD_PATH}" ]; then
   echo "ERROR: PRD file not found: ${PRD_PATH}"
@@ -33,10 +38,15 @@ echo "  Repo: ${REPO}"
 echo "════════════════════════════════════════════"
 echo ""
 
-# ── Preflight: warn if src/ still exists ──
-if [ -d "src/" ]; then
-  echo "⚠ WARNING: src/ directory exists. Did you forget to run archive-run.sh?"
-  echo "  Continuing anyway — the pipeline will overwrite src/ as needed."
+# ── Preflight: detect active application code ──
+if run_lifecycle_has_active_app "${REPO_ROOT}"; then
+  echo "⚠ NOTICE: active application artifacts detected in the repo:"
+  while IFS= read -r path; do
+    echo "  - ${path}"
+  done < <(run_lifecycle_existing_app_paths "${REPO_ROOT}")
+  echo ""
+  echo "  Enhancement runs are supported. Continue if this PRD extends the current app."
+  echo "  If you want a clean-slate run, archive the current run first."
   echo ""
 fi
 

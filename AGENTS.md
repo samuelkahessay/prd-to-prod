@@ -12,8 +12,8 @@ by the prd-decomposer workflow, and implemented by the repo-assist workflow.
 - Use TypeScript strict mode when the PRD specifies TypeScript
 
 ## Build & Test
-Check the active PRD and package.json for build/test commands.
-When no PRD is active, there is no application code to build.
+Check the active PRD and `.deploy-profile` for build/test commands.
+Enhancement runs may extend the current application in place, so do not assume a clean-slate scaffold.
 
 ## Tech Stack
 Determined by the active PRD. The pipeline is tech-stack agnostic.
@@ -40,6 +40,8 @@ Determined by the active PRD. The pipeline is tech-stack agnostic.
 ## PRD Lifecycle
 This repo follows a drop → run → tag → showcase → reset cycle:
 
+Enhancement runs are allowed. A new PRD may evolve the current application in place when the repo still contains active app code.
+
 ### Permanent files (pipeline infrastructure)
 - `.github/` — Workflows, agent configs, copilot instructions
 - `scripts/` — Bootstrap, archive, monitoring scripts
@@ -50,7 +52,7 @@ This repo follows a drop → run → tag → showcase → reset cycle:
 - `README.md`, `LICENSE`, `.gitignore`
 
 ### Ephemeral files (removed on archive)
-- `src/` — Application code (implementation of the active PRD)
-- `package.json`, `tsconfig.json`, etc. — PRD-specific configs
+- `src/`, `TicketDeflection/`, `TicketDeflection.Tests/` — Application code (implementation of the active PRD)
+- `package.json`, `tsconfig.json`, `TicketDeflection.sln`, `Dockerfile`, `global.json`, etc. — PRD-specific configs
 - `docs/plans/` — Design documents for the active PRD
-- `node_modules/`, `.next/`, `dist/` — Build artifacts
+- `node_modules/`, `.next/`, `dist/`, `drills/reports/*.json` — Build and generated artifacts
