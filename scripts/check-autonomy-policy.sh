@@ -157,7 +157,8 @@ end
 def target_matches?(pattern, target)
   if pattern.end_with?("/**")
     prefix = pattern.sub(%r{/\*\*$}, "/")
-    return target.start_with?(prefix)
+    # Only use the fast start_with? shortcut when the prefix has no remaining globs
+    return target.start_with?(prefix) unless prefix.include?("*") || prefix.include?("?")
   end
 
   File.fnmatch?(pattern, target, File::FNM_PATHNAME | File::FNM_DOTMATCH | File::FNM_EXTGLOB)

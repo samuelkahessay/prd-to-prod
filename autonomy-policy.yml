@@ -85,6 +85,24 @@ actions:
       - Failure logs or review comments
       - Current head SHA and failing run context
 
+  - action: sensitive_app_change
+    scope: Modify application code in security-sensitive, compliance, or payment paths.
+    default_mode: human_required
+    requires_human_reason: >
+      Changes to authentication, compliance, or payment logic carry elevated risk
+      and require human review before merge.
+    allowed_targets:
+      - TicketDeflection/**/Auth/**
+      - TicketDeflection/**/Compliance/**
+      - TicketDeflection/**/Payments/**
+      - src/**/auth/**
+      - src/**/compliance/**
+      - src/**/payments/**
+    evidence_required:
+      - Human-approved sensitive change
+      - Security or compliance impact assessment
+      - Test coverage for the sensitive path
+
   - action: auto_merge_pipeline_pr
     scope: Arm auto-merge for an approved pipeline PR.
     default_mode: autonomous
