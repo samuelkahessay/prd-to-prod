@@ -150,6 +150,31 @@ Use persistent repo memory to track:
 Read memory at the **start** of every run; update at the **end**.
 Memory may be stale — always verify against current repo state.
 
+## Checkpoint Protocol
+
+Write structured checkpoint entries to repo-memory at these key moments during Task 1 (implementing issues):
+
+1. **Plan checkpoint** — after reading the issue and forming an implementation plan, before writing any code. Key: `checkpoint:<issue-number>:plan`
+2. **Progress checkpoint** — after completing a significant code change (creating a new file, making a test pass, completing a logical unit of work). Key: `checkpoint:<issue-number>:progress`
+3. **Pre-PR checkpoint** — immediately before creating a PR or pushing to a PR branch. Key: `checkpoint:<issue-number>:pre-pr`
+
+Each checkpoint value is a JSON string:
+```json
+{
+  "timestamp": "ISO 8601",
+  "stage": "plan | progress | pre-pr",
+  "issue": 123,
+  "summary": "Read issue #123, plan: add AuthService with 2 endpoints",
+  "files_touched": ["TicketDeflection/Services/AuthService.cs"],
+  "blockers": [],
+  "next_step": "Create test file and write failing tests"
+}
+```
+
+**Resumption**: At the start of every run, after reading memory, check for any `checkpoint:*` entries. If a checkpoint exists for an issue you are about to work on, read it and resume from that state rather than re-reading the issue and re-planning from scratch. Update the checkpoint as you progress.
+
+**Cleanup**: After a PR is created or an issue is closed, delete all `checkpoint:<issue-number>:*` entries for that issue.
+
 ## Workflow
 
 Each run, work on 2-5 tasks from the list below. Use round-robin scheduling based on memory. Always do Task 5 (status update) and Task 6 (agentic workflow failure triage).
