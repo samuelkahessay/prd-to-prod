@@ -1,12 +1,12 @@
 {
-  "last_run": "2026-03-02T05:13:57Z",
-  "workflow_run_id": "22562354034",
+  "last_run": "2026-03-02T05:27:22Z",
+  "workflow_run_id": "22562674827",
   "current_prd": {
     "issue": 297,
     "title": "PRD: Run 05 Landing Page Demo",
-    "status": "complete"
+    "status": "active"
   },
-  "pipeline_status": "COMPLETE",
+  "pipeline_status": "ON_TRACK",
   "attempts": [
     {"issue": 125, "pr": 138, "status": "merged"},
     {"issue": 126, "pr": 139, "status": "merged"},
@@ -46,15 +46,16 @@
     {"issue": 288, "status": "closed"},
     {"issue": 291, "status": "merged"},
     {"issue": 295, "pr": 296, "status": "merged"},
-    {"issue": 298, "pr": 303, "status": "merged", "notes": "Merged via PR #303; repeatedly re-opened by auto-dispatch (3x). Implementation verified complete on main."},
+    {"issue": 298, "pr": 303, "status": "merged"},
     {"issue": 301, "pr": 304, "status": "merged"},
     {"issue": 299, "pr": 305, "status": "merged"},
     {"issue": 300, "pr": 307, "status": "merged"},
     {"issue": 302, "pr": 311, "status": "merged"},
-    {"issue": 313, "pr": 314, "status": "merged", "notes": "ShowcaseService path fix — closed 2026-03-02T05:11Z"}
+    {"issue": 313, "pr": 314, "status": "merged"},
+    {"issue": 315, "status": "pr_open", "notes": "PR created for WCAG contrast fix on Index.cshtml (--dim #4a5a72 -> #7a8fa8)"},
+    {"issue": 316, "status": "blocked", "notes": "Depends on #315 (not yet merged). Will implement after #315 merges."}
   ],
-  "open_issues": [298],
-  "open_prs": [],
-  "stale_issues": [298],
-  "notes": "Issue #298 is stale-re-open (implementation on main via PR #303). #297 is the PRD source issue. Pipeline is COMPLETE for Run 05. Ready for archive."
+  "open_issues": [315, 316],
+  "open_prs": [315],
+  "notes": "New enhancement issues #315 and #316 added for WCAG contrast fixes. #315 PR created. #316 blocked on #315."
 }
