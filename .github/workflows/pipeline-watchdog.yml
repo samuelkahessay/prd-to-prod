@@ -1,10 +1,11 @@
 #
 # Pipeline Watchdog — Cron-based stall detector and CI incident retry/escalation loop.
 #
-# Detects three conditions:
+# Detects four conditions:
 #   1. Active CI repair incidents on [Pipeline] PRs that need a retry or escalation
 #   2. Stalled [Pipeline] PRs with CHANGES_REQUESTED reviews and no active CI incident
 #   3. Orphaned pipeline issues with no linked open PR
+#   4. Stale [aw] workflow failure issues that need a repo-assist retry
 #
 
 name: "Pipeline Watchdog"
@@ -466,6 +467,38 @@ jobs:
               echo "::warning::Could not close PR #${PR_NUM}"
             ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
           done < <(printf '%s' "$PIPELINE_PRS" | jq -c '.[]')
+
+          echo ""
+          echo "=== Checking for stale [aw] workflow failure issues ==="
+          AW_ISSUES=$(gh issue list --repo "$REPO" --label agentic-workflows --state open --json number,title,updatedAt 2>/dev/null || echo '[]')
+
+          while IFS= read -r AW_ROW; do
+            [ -z "$AW_ROW" ] && continue
+            AW_NUM=$(printf '%s' "$AW_ROW" | jq -r '.number')
+            AW_TITLE=$(printf '%s' "$AW_ROW" | jq -r '.title')
+            AW_UPDATED=$(printf '%s' "$AW_ROW" | jq -r '.updatedAt')
+            AW_EPOCH=$(to_epoch "$AW_UPDATED")
+            AGE=$((NOW - AW_EPOCH))
+
+            if [ "$AGE" -lt "$STALE_THRESHOLD" ]; then
+              echo "[aw] Issue #${AW_NUM}: recently updated (${AGE}s ago). Skipping."
+              continue
+            fi
+
+            if [ "$ACTIONS_TAKEN" -gt 0 ]; then
+              echo "Already dispatched this cycle. Will handle [aw] issue #${AW_NUM} on next run."
+              break
+            fi
+
+            echo "[aw] Issue #${AW_NUM}: stale workflow failure (${AW_TITLE}). Dispatching repo-assist and closing."
+            gh workflow run repo-assist.lock.yml --repo "$REPO" || \
+              echo "::warning::Could not dispatch repo-assist for [aw] issue #${AW_NUM}"
+            gh issue close "$AW_NUM" --repo "$REPO" \
+              -c "Watchdog: dispatched a fresh repo-assist run to retry the interrupted work. Closing this workflow failure notification." || \
+              echo "::warning::Could not close [aw] issue #${AW_NUM}"
+            ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
+            break
+          done < <(printf '%s' "$AW_ISSUES" | jq -c '.[]')
 
           echo ""
           echo "=== Completion check ==="
