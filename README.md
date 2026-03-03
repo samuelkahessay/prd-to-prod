@@ -76,6 +76,31 @@ system must stop.
 This repo rebuilds that loop as an AI-native operating system with a
 human-owned control plane.
 
+## Why This Matters for Wealthsimple
+
+Wealthsimple is landing hundreds of AI-generated changes a day. At that volume,
+the bottleneck is not code generation — it is routing, oversight, and knowing
+when the system must stop. This repo is built for exactly that problem:
+
+- **Policy-bounded execution** — an explicit authority boundary
+  ([`autonomy-policy.yml`](autonomy-policy.yml)) that the AI cannot redefine.
+  Unknown actions fail closed to `human_required`.
+- **Structural stopping conditions** — compliance decisions that require human
+  judgment omit the remediation field entirely. The boundary is in the schema,
+  not in a prompt.
+- **Observable control plane** — every autonomous decision, escalation, and
+  merge gate is visible through operator surfaces and a durable decision ledger.
+  A human can audit what the system did and why it stopped.
+- **Proven self-healing** — 7 drills where the pipeline broke its own build,
+  detected the failure, created a fix, reviewed it, and merged — with no human
+  in the loop for the repair, but a human-owned kill switch
+  (`PIPELINE_HEALING_ENABLED`) to halt it.
+
+The architecture separates the human control plane from the AI execution lane.
+Scaling AI-generated changes safely means the control plane must be
+human-owned, explicit, and auditable — not implicit in agent prompts that drift
+under load.
+
 ## System Loop
 
 1. A human expresses intent as a PRD or issue with acceptance criteria.
