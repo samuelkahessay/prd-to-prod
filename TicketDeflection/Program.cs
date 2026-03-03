@@ -23,6 +23,9 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<TicketDbContext>();
     SeedData.Initialize(context);
 
+    if (app.Configuration.GetValue<bool>("DemoSeed:Enabled", true))
+        ComplianceSeedData.Seed(context);
+
     if (app.Configuration.GetValue<bool>("DemoSeed:Enabled", true) && !context.Tickets.Any())
     {
         var pipeline = scope.ServiceProvider.GetRequiredService<PipelineService>();

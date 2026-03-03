@@ -10,4 +10,7 @@ public class TicketDbContext : DbContext
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<KnowledgeArticle> KnowledgeArticles => Set<KnowledgeArticle>();
     public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
+    public DbSet<ComplianceScan> ComplianceScans => Set<ComplianceScan>();
+    public DbSet<ComplianceFinding> ComplianceFindings => Set<ComplianceFinding>();
+    public DbSet<ComplianceDecision> ComplianceDecisions => Set<ComplianceDecision>();
 }
