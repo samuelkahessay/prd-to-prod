@@ -19,6 +19,8 @@ for label in "pipeline:0075ca:Pipeline-managed issue" \
              "in-progress:d93f0b:Work in progress" \
              "blocked:b60205:Blocked by dependency" \
              "ready:0e8a16:Ready for implementation" \
+             "architecture-draft:7057ff:Architecture plan awaiting human review" \
+             "architecture-approved:0e8a16:Architecture plan approved for decomposition" \
              "completed:0e8a16:Completed and merged" \
              "report:c5def5:Status report" \
              "bug-intake:e4e669:Filed via bug-report template" \
