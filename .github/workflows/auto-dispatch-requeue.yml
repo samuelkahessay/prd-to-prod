@@ -17,6 +17,13 @@ concurrency:
 
 jobs:
   requeue:
+    # Skip runs where repo-assist had no activation (skipped) or was cancelled mid-run.
+    # These are caused by [aw] Noop issues or other events with no /repo-assist command,
+    # and there is nothing to requeue in those cases.
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion != 'skipped' &&
+       github.event.workflow_run.conclusion != 'cancelled')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:

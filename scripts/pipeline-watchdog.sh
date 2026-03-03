@@ -447,6 +447,13 @@ while IFS= read -r AW_ROW; do
   AW_EPOCH=$(to_epoch "$AW_UPDATED")
   AGE=$((NOW - AW_EPOCH))
 
+  # Skip noop tracking issues — these collect no-op run messages and are NOT failures.
+  # Dispatching repo-assist for them is wasteful; agentics-maintenance handles expiry.
+  if printf '%s' "$AW_TITLE" | grep -qi "no-op runs"; then
+    echo "[aw] Issue #${AW_NUM}: noop tracking issue (${AW_TITLE}). Skipping."
+    continue
+  fi
+
   if [ "$AGE" -lt "$STALE_THRESHOLD" ]; then
     echo "[aw] Issue #${AW_NUM}: recently updated (${AGE}s ago). Skipping."
     continue
