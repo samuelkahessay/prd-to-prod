@@ -95,8 +95,8 @@ ledger and operator-facing surfaces for live inspection.
 - [`autonomy-policy.yml`](autonomy-policy.yml) — explicit authority boundary
 - [`docs/decision-ledger/README.md`](docs/decision-ledger/README.md) — event
   schema for autonomous, blocked, and escalated decisions
-- [`/operator`](https://prd-to-prod.azurewebsites.net/operator) — current queue,
-  blocked actions, and metrics
+- [`/operator`](https://prd-to-prod.azurewebsites.net/operator) — evidence-backed
+  operator surface rendering published decision artifacts from real pipeline runs
 - [`/pipeline`](https://prd-to-prod.azurewebsites.net/pipeline) — live GitHub
   pipeline visualization
 - [`drills/reports/`](drills/reports/) — historical self-healing evidence

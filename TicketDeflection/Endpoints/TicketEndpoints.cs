@@ -12,11 +12,11 @@ public static class TicketEndpoints
     {
         var group = app.MapGroup("/api/tickets");
 
-        group.MapPost("/", CreateTicket);
+        group.MapPost("/", CreateTicket).RequireRateLimiting("PublicPost");
         group.MapGet("/", GetTickets);
         group.MapGet("/{id:guid}", GetTicket);
-        group.MapPut("/{id:guid}", UpdateTicket);
-        group.MapDelete("/{id:guid}", DeleteTicket);
+        group.MapPut("/{id:guid}", UpdateTicket).RequireAuthorization();
+        group.MapDelete("/{id:guid}", DeleteTicket).RequireAuthorization();
     }
 
     private static async Task<Results<Created<TicketResponse>, BadRequest>> CreateTicket(

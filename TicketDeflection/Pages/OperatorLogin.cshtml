@@ -1,0 +1,83 @@
+@page "/operator/login"
+@model OperatorLoginModel
+@{
+    ViewData["Title"] = "Operator Login — prd-to-prod";
+    ViewData["NavTitle"] = "OPERATOR LOGIN";
+}
+
+@section Styles {
+<style>
+    .login-panel {
+        background: rgba(4, 10, 20, 0.7);
+        border: 1px solid var(--border);
+        border-top: 2px solid var(--accent);
+        max-width: 420px;
+        margin: 0 auto;
+    }
+    .login-header {
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--border);
+        color: var(--dim);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    .login-body { padding: 24px 20px; }
+    .login-label {
+        color: var(--dim);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        display: block;
+        margin-bottom: 5px;
+    }
+    .login-input {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 0.85rem;
+        padding: 10px 14px;
+        outline: none;
+        margin-bottom: 16px;
+    }
+    .login-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0, 170, 255, 0.2); }
+    .login-error {
+        color: var(--red);
+        font-size: 0.78rem;
+        margin-bottom: 12px;
+    }
+</style>
+}
+
+<div class="max-w-5xl mx-auto px-4 py-10">
+    <div class="mb-8">
+        <div class="text-xs text-dim mb-2">// operator authentication</div>
+        <h1 class="font-sans text-3xl font-bold text-white">Operator Login</h1>
+        <p class="text-dim text-sm mt-2">Authenticate to record compliance decisions.</p>
+    </div>
+
+    <div class="login-panel">
+        <div class="login-header">authenticate</div>
+        <div class="login-body">
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="login-error">@Model.ErrorMessage</div>
+            }
+            <form method="post" asp-page="/OperatorLogin" asp-route-returnUrl="@Model.ReturnUrl">
+                @Html.AntiForgeryToken()
+                <label class="login-label" for="OperatorName">operator name</label>
+                <input id="OperatorName" name="OperatorName" class="login-input" type="text"
+                       placeholder="e.g. compliance-officer-1" autocomplete="off"
+                       value="@Model.OperatorName" required />
+
+                <label class="login-label" for="Passphrase">passphrase</label>
+                <input id="Passphrase" name="Passphrase" class="login-input" type="password"
+                       placeholder="operator passphrase" required />
+
+                <button type="submit" class="exec-btn" style="width:100%;text-align:center;">[ authenticate ]</button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Configuration;
 using TicketDeflection.Data;
 using TicketDeflection.Models;
 
@@ -9,16 +10,19 @@ namespace TicketDeflection.Services;
 public class ComplianceScanService : IComplianceScanService
 {
     private readonly IComplianceRuleLibrary _ruleLibrary;
+    private readonly bool _allowDemoBypass;
 
-    public ComplianceScanService(IComplianceRuleLibrary ruleLibrary)
+    public ComplianceScanService(IComplianceRuleLibrary ruleLibrary, IConfiguration configuration)
     {
         _ruleLibrary = ruleLibrary;
+        _allowDemoBypass = configuration.GetValue<bool>("ComplianceScanner:AllowDemoBypass", false);
     }
 
     public async Task<ComplianceScan> ScanAsync(string content, ContentType contentType, string? sourceLabel, TicketDbContext db)
     {
-        bool isTestContext = content.Contains("// test-context", StringComparison.OrdinalIgnoreCase)
-                           || content.Contains("// demo-context", StringComparison.OrdinalIgnoreCase);
+        bool isTestContext = _allowDemoBypass
+            && (content.Contains("// test-context", StringComparison.OrdinalIgnoreCase)
+                || content.Contains("// demo-context", StringComparison.OrdinalIgnoreCase));
 
         var lines = content.Split('\n');
         var rules = _ruleLibrary.GetRules();

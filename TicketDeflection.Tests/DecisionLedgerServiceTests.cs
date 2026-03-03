@@ -191,6 +191,45 @@ public class DecisionLedgerServiceTests : IDisposable
         Assert.Equal("2026-03-02T20:20:30Z", metrics.LastUpdatedUtc);
     }
 
+    [Fact]
+    public async Task GetDecisionsAsync_CorrectedEvent_SupersedesOriginal()
+    {
+        WriteEvent(new DecisionEvent(
+            1,
+            "original-event",
+            "2026-03-02T20:18:40Z",
+            new DecisionActor("workflow", "pr-review-submit"),
+            "pr-review-submit",
+            "sensitive_app_change",
+            new PolicyResult("human_required", "App config change"),
+            new DecisionTarget("file", null, "appsettings.json", "appsettings.json"),
+            ["Config file modified"],
+            "queued_for_human",
+            "Original event",
+            "repo maintainer"));
+
+        WriteEvent(new DecisionEvent(
+            1,
+            "original-event-CORRECTED",
+            "2026-03-03T02:02:00Z",
+            new DecisionActor("workflow", "pr-review-submit"),
+            "pr-review-submit",
+            "sensitive_app_change",
+            new PolicyResult("human_required", "App config change"),
+            new DecisionTarget("file", null, "appsettings.json", "appsettings.json"),
+            ["Config file modified"],
+            "queued_for_human",
+            "Corrected event",
+            "repo maintainer",
+            Replaces: "original-event"));
+
+        var service = CreateService();
+        var events = await service.GetDecisionsAsync();
+
+        Assert.Single(events);
+        Assert.Equal("original-event-CORRECTED", events[0].EventId);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDir))

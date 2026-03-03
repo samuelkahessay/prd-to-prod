@@ -15,8 +15,8 @@ public class KnowledgeEndpointTests : IClassFixture<WebApplicationFactory<Progra
 
     public KnowledgeEndpointTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory;
-        _client = factory.CreateClient();
+        _factory = factory.WithTestAuth();
+        _client = _factory.CreateClient();
     }
 
     [Fact]

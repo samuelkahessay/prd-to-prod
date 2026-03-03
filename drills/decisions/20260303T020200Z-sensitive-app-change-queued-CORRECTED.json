@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "event_id": "20260303T020200Z-sensitive-app-change-queued-CORRECTED",
+  "timestamp": "2026-03-03T02:02:00Z",
+  "correction_timestamp": "2026-03-03T12:00:00Z",
+  "actor": {
+    "type": "agent",
+    "name": "repo-assist"
+  },
+  "workflow": "auto-dispatch",
+  "requested_action": "sensitive_app_change",
+  "policy_result": {
+    "mode": "human_required",
+    "reason": "Changes to authentication, compliance, or payment logic carry elevated risk and require human review before merge."
+  },
+  "target": {
+    "type": "file",
+    "id": null,
+    "path": "TicketDeflection/Services/ComplianceRuleLibrary.cs",
+    "display": "Compliance Rule Library"
+  },
+  "evidence": [
+    "PR modifies compliance-sensitive path matching TicketDeflection/Services/Compliance*",
+    "Policy action sensitive_app_change matched via corrected glob patterns",
+    "Agent requested adding a new AUTO_BLOCK rule to FINTRAC set",
+    "CORRECTION: Original artifact claimed match via TicketDeflection/**/Compliance/** which was provably false — File.fnmatch? returned false because no literal Compliance/ directory exists in the path. Policy updated to include TicketDeflection/Services/Compliance* glob. This replacement artifact reflects the corrected match."
+  ],
+  "outcome": "queued_for_human",
+  "summary": "New FINTRAC AUTO_BLOCK rule addition queued for human review — compliance-sensitive path. (Corrected: original glob mismatch fixed.)",
+  "human_owner": "repo maintainer",
+  "replaces": "20260303T020200Z-sensitive-app-change-queued",
+  "correction_reason": "Original artifact evidence[0] claimed match via TicketDeflection/**/Compliance/** glob, but File.fnmatch? with FNM_PATHNAME returns false for TicketDeflection/Services/ComplianceRuleLibrary.cs against that pattern. The glob requires a literal Compliance/ directory segment which does not exist. Policy has been updated with explicit file-level patterns."
+}

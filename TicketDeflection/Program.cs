@@ -1,4 +1,7 @@
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using TicketDeflection.Data;
 using TicketDeflection.Endpoints;
@@ -13,7 +16,10 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 // --- Service Registrations ---
-builder.Services.AddDbContext<TicketDbContext>(o => o.UseInMemoryDatabase("TicketDb"));
+var connectionString = builder.Environment.IsDevelopment()
+    ? "Data Source=ticketdb.db"
+    : "Data Source=/home/data/ticketdb.db";
+builder.Services.AddDbContext<TicketDbContext>(o => o.UseSqlite(connectionString));
 builder.Services.AddScoped<ClassificationService>();
 builder.Services.AddScoped<MatchingService>();
 builder.Services.AddScoped<PipelineService>();
@@ -25,12 +31,59 @@ builder.Services.AddScoped<IComplianceScanService, ComplianceScanService>();
 builder.Services.AddHttpClient<IGitHubPipelineSnapshotService, GitHubPipelineSnapshotService>();
 builder.Services.AddRazorPages();
 
+// --- Authentication & Authorization ---
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/operator/login";
+        options.Cookie.Name = "OperatorAuth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnRedirectToLogin = context =>
+            {
+                // API endpoints get 401, not 302 redirect
+                if (context.Request.Path.StartsWithSegments("/api"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                }
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            }
+        };
+    });
+builder.Services.AddAuthorization();
+
+// --- Rate Limiting ---
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("PublicPost", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 30,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
+
 var app = builder.Build();
+
+// Ensure data directory exists for production SQLite path
+if (!app.Environment.IsDevelopment())
+{
+    Directory.CreateDirectory("/home/data");
+}
 
 // Seed knowledge base and auto-populate demo tickets on startup
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<TicketDbContext>();
+    await SqliteDatabaseInitializer.EnsureCreatedAndApplyCompatibilityFixesAsync(context);
     SeedData.Initialize(context);
 
     if (app.Configuration.GetValue<bool>("DemoSeed:Enabled", true))
@@ -49,6 +102,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
 
 // --- Endpoint Mappings ---
 app.MapPipelineEndpoints();

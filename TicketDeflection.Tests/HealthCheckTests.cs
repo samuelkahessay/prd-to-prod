@@ -10,7 +10,7 @@ public class HealthCheckTests : IClassFixture<WebApplicationFactory<Program>>
 
     public HealthCheckTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory;
+        _factory = factory.WithTestAuth();
     }
 
     [Fact]

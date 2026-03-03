@@ -101,7 +101,7 @@ public static class ComplianceSeedData
             Id = Guid.NewGuid(),
             ScanId = humanDecidedScanId,
             OperatorId = "demo-operator",
-            Decision = "APPROVED",
+            Decision = ComplianceDecisionType.Approved,
             Notes = "Verification confirmed in upstream auth service. Safe to proceed.",
             DecidedAt = now.AddHours(-4),
             Scan = humanDecidedScan

@@ -8,7 +8,7 @@ public class NavigationLayoutTests : IClassFixture<WebApplicationFactory<Program
 
     public NavigationLayoutTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory;
+        _factory = factory.WithTestAuth();
     }
 
     [Fact]

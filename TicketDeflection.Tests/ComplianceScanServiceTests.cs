@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using TicketDeflection.Data;
 using TicketDeflection.Models;
 using TicketDeflection.Services;
@@ -12,8 +13,16 @@ public class ComplianceScanServiceTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options);
 
-    private static ComplianceScanService CreateService() =>
-        new(new ComplianceRuleLibrary());
+    private static IConfiguration CreateConfig(bool allowDemoBypass = false) =>
+        new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ComplianceScanner:AllowDemoBypass"] = allowDemoBypass.ToString()
+            })
+            .Build();
+
+    private static ComplianceScanService CreateService(bool allowDemoBypass = false) =>
+        new(new ComplianceRuleLibrary(), CreateConfig(allowDemoBypass));
 
     [Fact]
     public async Task SIN_Plaintext_Produces_AutoBlock()
@@ -51,15 +60,26 @@ public class ComplianceScanServiceTests
     }
 
     [Fact]
-    public async Task TestContext_Marker_Does_Not_Produce_AutoBlock()
+    public async Task TestContext_Marker_Does_Not_Produce_AutoBlock_When_DemoBypass_Enabled()
     {
         using var db = CreateContext();
-        var svc = CreateService();
+        var svc = CreateService(allowDemoBypass: true);
 
         var scan = await svc.ScanAsync("// test-context\nSIN: 123-456-789", ContentType.FREETEXT, null, db);
 
         Assert.NotEqual(ComplianceDisposition.AUTO_BLOCK, scan.Disposition);
         Assert.DoesNotContain(scan.Findings, f => f.Disposition == ComplianceDisposition.AUTO_BLOCK);
+    }
+
+    [Fact]
+    public async Task TestContext_Marker_Still_AutoBlocks_When_DemoBypass_Disabled()
+    {
+        using var db = CreateContext();
+        var svc = CreateService(allowDemoBypass: false);
+
+        var scan = await svc.ScanAsync("// test-context\nSIN: 123-456-789", ContentType.FREETEXT, null, db);
+
+        Assert.Equal(ComplianceDisposition.AUTO_BLOCK, scan.Disposition);
     }
 
     [Fact]

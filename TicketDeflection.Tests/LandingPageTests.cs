@@ -10,7 +10,7 @@ public class LandingPageTests : IClassFixture<WebApplicationFactory<Program>>
 
     public LandingPageTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory;
+        _factory = factory.WithTestAuth();
     }
 
     [Fact]

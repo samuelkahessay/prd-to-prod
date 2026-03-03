@@ -27,6 +27,8 @@ public class RunHistoryTests
         {
             builder.ConfigureServices(services =>
             {
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, $"TestDb_{Guid.NewGuid()}");
+
                 // Remove the real ShowcaseService and replace with stub
                 var descriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(IShowcaseService));

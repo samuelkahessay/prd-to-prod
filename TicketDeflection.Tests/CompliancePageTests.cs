@@ -10,11 +10,13 @@ namespace TicketDeflection.Tests;
 
 public class CompliancePageTests : IClassFixture<WebApplicationFactory<Program>>
 {
+    private readonly WebApplicationFactory<Program> _rootFactory;
     private readonly WebApplicationFactory<Program> _factory;
 
     public CompliancePageTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory;
+        _rootFactory = factory;
+        _factory = factory.WithTestAuth();
     }
 
     [Fact]
@@ -23,6 +25,26 @@ public class CompliancePageTests : IClassFixture<WebApplicationFactory<Program>>
         var client = _factory.CreateClient();
         var response = await client.GetAsync("/compliance");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CompliancePage_Returns200_With_Sqlite()
+    {
+        var tempDir = CreateTempDirectory();
+        try
+        {
+            var dbPath = Path.Combine(tempDir, "ticketdb.db");
+            await using var factory = _rootFactory.WithTestAuthSqlite($"Data Source={dbPath}");
+            var client = factory.CreateClient();
+
+            var response = await client.GetAsync("/compliance");
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
     }
 
     [Fact]
@@ -46,9 +68,7 @@ public class CompliancePageTests : IClassFixture<WebApplicationFactory<Program>>
         await using var factory = _factory.WithWebHostBuilder(builder =>
             builder.ConfigureServices(services =>
             {
-                var existing = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<TicketDbContext>));
-                if (existing != null) services.Remove(existing);
-                services.AddDbContext<TicketDbContext>(options => options.UseInMemoryDatabase(dbName));
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, dbName);
             }));
 
         var client = factory.CreateClient();
@@ -81,5 +101,12 @@ public class CompliancePageTests : IClassFixture<WebApplicationFactory<Program>>
 
         Assert.True(match.Success, $"Could not find element with id '{elementId}'.");
         return match.Groups[1].Value.Trim();
+    }
+
+    private static string CreateTempDirectory()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"TicketDeflectionTests_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(path);
+        return path;
     }
 }

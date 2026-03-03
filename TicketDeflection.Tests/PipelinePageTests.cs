@@ -8,7 +8,13 @@ public class PipelinePageTests
     [Fact]
     public async Task PipelinePage_Returns200()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, $"TestDb_{Guid.NewGuid()}");
+            });
+        });
         var client = factory.CreateClient();
 
         var response = await client.GetAsync("/pipeline");
@@ -19,7 +25,13 @@ public class PipelinePageTests
     [Fact]
     public async Task PipelinePage_RendersLiveSnapshotScaffold()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, $"TestDb_{Guid.NewGuid()}");
+            });
+        });
         var client = factory.CreateClient();
 
         var html = await client.GetStringAsync("/pipeline");

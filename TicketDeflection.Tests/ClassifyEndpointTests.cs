@@ -16,8 +16,8 @@ public class ClassifyEndpointTests : IClassFixture<WebApplicationFactory<Program
 
     public ClassifyEndpointTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory;
-        _client = factory.CreateClient();
+        _factory = factory.WithTestAuth();
+        _client = _factory.CreateClient();
     }
 
     private async Task<Guid> CreateTicketInDb(string title, string description = "desc")

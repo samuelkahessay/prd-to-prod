@@ -73,6 +73,10 @@ public class AutonomyEndpointTests : IDisposable
                     ["DecisionLedger:Path"] = _decisionsDir,
                     ["DemoSeed:Enabled"] = "false"
                 }));
+            builder.ConfigureServices(services =>
+            {
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, $"AutonomyTestDb_{Guid.NewGuid()}");
+            });
         });
     }
 

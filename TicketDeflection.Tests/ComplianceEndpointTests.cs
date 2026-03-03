@@ -5,24 +5,26 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using TicketDeflection.Data;
-using TicketDeflection.Models;
 
 namespace TicketDeflection.Tests;
 
 public class ComplianceEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 {
+    private readonly WebApplicationFactory<Program> _rootFactory;
     private readonly WebApplicationFactory<Program> _factory;
+    private readonly WebApplicationFactory<Program> _unauthFactory;
 
     public ComplianceEndpointTests(WebApplicationFactory<Program> factory)
     {
+        _rootFactory = factory;
         var dbName = $"ComplianceEndpointTestDb_{Guid.NewGuid()}";
-        _factory = factory.WithWebHostBuilder(b =>
+        _factory = factory.WithTestAuth(dbName);
+
+        // Unauthenticated factory — keeps default cookie auth (no cookie = 401)
+        _unauthFactory = factory.WithWebHostBuilder(b =>
             b.ConfigureServices(services =>
             {
-                var existing = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<TicketDbContext>));
-                if (existing != null) services.Remove(existing);
-                services.AddDbContext<TicketDbContext>(o =>
-                    o.UseInMemoryDatabase(dbName));
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, dbName + "_unauth");
             }));
     }
 
@@ -58,6 +60,26 @@ public class ComplianceEndpointTests : IClassFixture<WebApplicationFactory<Progr
         var body = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(body);
         Assert.Equal(JsonValueKind.Array, doc.RootElement.ValueKind);
+    }
+
+    [Fact]
+    public async Task GetScans_Returns200_List_With_Sqlite()
+    {
+        var tempDir = CreateTempDirectory();
+        try
+        {
+            var dbPath = Path.Combine(tempDir, "ticketdb.db");
+            await using var factory = _rootFactory.WithTestAuthSqlite($"Data Source={dbPath}");
+            var client = factory.CreateClient();
+
+            var response = await client.GetAsync("/api/scans");
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
     }
 
     [Fact]
@@ -101,11 +123,11 @@ public class ComplianceEndpointTests : IClassFixture<WebApplicationFactory<Progr
         // Attempt to record a decision on the AUTO_BLOCK scan
         var decisionResponse = await client.PostAsJsonAsync($"/api/scans/{scanId}/decision", new
         {
-            operatorId = "test-operator",
-            decision = "approve",
+            decision = "Approved",
             notes = "test"
         });
 
+        // AUTO_BLOCK scans should return 400 — decisions only on HUMAN_REQUIRED
         Assert.Equal(HttpStatusCode.BadRequest, decisionResponse.StatusCode);
     }
 
@@ -136,8 +158,7 @@ public class ComplianceEndpointTests : IClassFixture<WebApplicationFactory<Progr
 
         var decisionResponse = await client.PostAsJsonAsync($"/api/scans/{scanId}/decision", new
         {
-            operatorId = "test-operator",
-            decision = "Approve",
+            decision = "Approved",
             notes = "looks acceptable"
         });
         Assert.Equal(HttpStatusCode.OK, decisionResponse.StatusCode);
@@ -153,7 +174,7 @@ public class ComplianceEndpointTests : IClassFixture<WebApplicationFactory<Progr
 
         Assert.Equal(JsonValueKind.Object, decidedScan.ValueKind);
         Assert.True(decidedScan.GetProperty("hasDecision").GetBoolean());
-        Assert.Equal("Approve", decidedScan.GetProperty("latestDecision").GetString());
+        Assert.Equal("Approved", decidedScan.GetProperty("latestDecision").GetString());
 
         var metricsResponse = await client.GetAsync("/api/compliance/metrics");
         Assert.Equal(HttpStatusCode.OK, metricsResponse.StatusCode);
@@ -161,6 +182,106 @@ public class ComplianceEndpointTests : IClassFixture<WebApplicationFactory<Progr
         var metricsBody = await metricsResponse.Content.ReadAsStringAsync();
         using var metricsDoc = JsonDocument.Parse(metricsBody);
         Assert.Equal(pendingBefore, metricsDoc.RootElement.GetProperty("pendingDecisions").GetInt32());
+    }
+
+    [Fact]
+    public async Task PostDecision_Returns400_For_Advisory_Scan()
+    {
+        var client = _factory.CreateClient();
+
+        // ADVISORY scan — no violations triggers ADVISORY disposition
+        var createResponse = await client.PostAsJsonAsync("/api/scans", new
+        {
+            content = "GET /api/health HTTP/1.1 200 OK",
+            contentType = "FREETEXT",
+            sourceLabel = "test"
+        });
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadAsStringAsync();
+        using var createdDoc = JsonDocument.Parse(created);
+        var scanId = createdDoc.RootElement.GetProperty("id").GetString();
+
+        var decisionResponse = await client.PostAsJsonAsync($"/api/scans/{scanId}/decision", new
+        {
+            decision = "Approved",
+            notes = "test"
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, decisionResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostDecision_Returns401_Without_Auth()
+    {
+        var client = _unauthFactory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+
+        // Create a scan first (public endpoint)
+        var createResponse = await client.PostAsJsonAsync("/api/scans", new
+        {
+            content = "dob: 1990-01-15 in exported user report",
+            contentType = "CODE",
+            sourceLabel = "test"
+        });
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadAsStringAsync();
+        using var createdDoc = JsonDocument.Parse(created);
+        var scanId = createdDoc.RootElement.GetProperty("id").GetString();
+
+        // Decision without auth should return 401
+        var decisionResponse = await client.PostAsJsonAsync($"/api/scans/{scanId}/decision", new
+        {
+            decision = "Approved",
+            notes = "test"
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, decisionResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostDecision_Returns409_For_Duplicate_Decision()
+    {
+        var client = _factory.CreateClient();
+
+        // Create HUMAN_REQUIRED scan
+        var createResponse = await client.PostAsJsonAsync("/api/scans", new
+        {
+            content = "dob: 1990-01-15 in exported user report",
+            contentType = "CODE",
+            sourceLabel = "test"
+        });
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadAsStringAsync();
+        using var createdDoc = JsonDocument.Parse(created);
+        var scanId = createdDoc.RootElement.GetProperty("id").GetString();
+
+        // First decision succeeds
+        var firstDecision = await client.PostAsJsonAsync($"/api/scans/{scanId}/decision", new
+        {
+            decision = "Approved",
+            notes = "first"
+        });
+        Assert.Equal(HttpStatusCode.OK, firstDecision.StatusCode);
+
+        // Second decision should be 409 Conflict
+        var secondDecision = await client.PostAsJsonAsync($"/api/scans/{scanId}/decision", new
+        {
+            decision = "Rejected",
+            notes = "second attempt"
+        });
+        Assert.Equal(HttpStatusCode.Conflict, secondDecision.StatusCode);
+    }
+
+    private static string CreateTempDirectory()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"TicketDeflectionTests_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(path);
+        return path;
     }
 
     [Fact]

@@ -101,6 +101,13 @@ public sealed class DecisionLedgerService : IDecisionLedgerService
             }
         }
 
+        // Remove events that have been superseded by corrected versions
+        var replacedIds = new HashSet<string>(
+            results.Where(e => e.Replaces is not null).Select(e => e.Replaces!),
+            StringComparer.Ordinal);
+        if (replacedIds.Count > 0)
+            results.RemoveAll(e => replacedIds.Contains(e.EventId));
+
         return results;
     }
 

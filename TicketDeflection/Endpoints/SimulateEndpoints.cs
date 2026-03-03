@@ -44,7 +44,7 @@ public static class SimulateEndpoints
 
     public static void MapSimulateEndpoints(this WebApplication app)
     {
-        app.MapPost("/api/simulate", RunSimulation);
+        app.MapPost("/api/simulate", RunSimulation).RequireAuthorization();
     }
 
     private static async Task<IResult> RunSimulation(

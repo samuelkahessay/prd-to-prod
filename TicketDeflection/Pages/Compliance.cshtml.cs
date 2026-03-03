@@ -15,6 +15,7 @@ public class ComplianceModel : PageModel
     }
 
     public List<ComplianceScan> PendingHumanRequiredScans { get; set; } = new();
+    public List<ComplianceScan> RejectedScans { get; set; } = new();
     public List<ComplianceScan> AutoBlockedScans { get; set; } = new();
     public List<ComplianceScan> RecentScans { get; set; } = new();
     public int TotalScans { get; set; }
@@ -25,11 +26,25 @@ public class ComplianceModel : PageModel
 
     public async Task OnGetAsync()
     {
-        var decidedScanIds = await _db.ComplianceDecisions
+        // SQLite cannot translate DateTimeOffset ORDER BY, so decision ordering happens in memory.
+        var latestDecisions = (await _db.ComplianceDecisions
             .AsNoTracking()
-            .Select(d => d.ScanId)
-            .Distinct()
-            .ToHashSetAsync();
+            .Select(d => new { d.ScanId, d.Decision, d.DecidedAt })
+            .ToListAsync())
+            .GroupBy(d => d.ScanId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(d => d.DecidedAt).First().Decision);
+
+        var approvedScanIds = latestDecisions
+            .Where(kv => kv.Value == ComplianceDecisionType.Approved)
+            .Select(kv => kv.Key)
+            .ToHashSet();
+
+        var rejectedScanIds = latestDecisions
+            .Where(kv => kv.Value == ComplianceDecisionType.Rejected)
+            .Select(kv => kv.Key)
+            .ToHashSet();
 
         TotalScans = await _db.ComplianceScans
             .AsNoTracking()
@@ -47,30 +62,38 @@ public class ComplianceModel : PageModel
             .AsNoTracking()
             .CountAsync(s => s.Disposition == ComplianceDisposition.ADVISORY);
 
-        PendingHumanRequiredScans = await _db.ComplianceScans
+        var allHumanRequired = (await _db.ComplianceScans
             .AsNoTracking()
             .Include(s => s.Findings)
             .Where(s => s.Disposition == ComplianceDisposition.HUMAN_REQUIRED)
+            .ToListAsync())
             .OrderByDescending(s => s.SubmittedAt)
-            .ToListAsync();
+            .ToList();
 
-        PendingHumanRequiredScans = PendingHumanRequiredScans
-            .Where(s => !decidedScanIds.Contains(s.Id))
+        // Only approved decisions remove scans from pending; rejected go to remediation
+        PendingHumanRequiredScans = allHumanRequired
+            .Where(s => !approvedScanIds.Contains(s.Id) && !rejectedScanIds.Contains(s.Id))
+            .ToList();
+
+        RejectedScans = allHumanRequired
+            .Where(s => rejectedScanIds.Contains(s.Id))
             .ToList();
 
         PendingDecisionCount = PendingHumanRequiredScans.Count;
 
-        AutoBlockedScans = await _db.ComplianceScans
+        AutoBlockedScans = (await _db.ComplianceScans
             .AsNoTracking()
             .Include(s => s.Findings)
             .Where(s => s.Disposition == ComplianceDisposition.AUTO_BLOCK)
+            .ToListAsync())
             .OrderByDescending(s => s.SubmittedAt)
-            .ToListAsync();
+            .ToList();
 
-        RecentScans = await _db.ComplianceScans
+        RecentScans = (await _db.ComplianceScans
             .AsNoTracking()
+            .ToListAsync())
             .OrderByDescending(s => s.SubmittedAt)
             .Take(20)
-            .ToListAsync();
+            .ToList();
     }
 }

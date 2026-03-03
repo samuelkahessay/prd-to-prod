@@ -197,6 +197,10 @@ public class OperatorPageTests : IDisposable
                     ["DrillReports:Path"] = _reportsDir,
                     ["DemoSeed:Enabled"] = "false"
                 }));
+            builder.ConfigureServices(services =>
+            {
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, $"OperatorPageTestDb_{Guid.NewGuid()}");
+            });
         });
     }
 
@@ -215,7 +219,7 @@ public class OperatorPageTests : IDisposable
         var client = _factory.CreateClient();
         var html = await client.GetStringAsync("/operator");
 
-        Assert.Contains("Operator Queue", html);
+        Assert.Contains("Decision Evidence", html);
         Assert.Contains("Human-required refusals", html);
         Assert.Contains("Waiting on an operator", html);
         Assert.Contains("Recent autonomous actions", html);

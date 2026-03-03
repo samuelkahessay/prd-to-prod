@@ -12,10 +12,10 @@ public static class KnowledgeEndpoints
     {
         var group = app.MapGroup("/api/knowledge");
 
-        group.MapPost("/", CreateArticle);
+        group.MapPost("/", CreateArticle).RequireRateLimiting("PublicPost");
         group.MapGet("/", GetArticles);
         group.MapGet("/{id:guid}", GetArticle);
-        group.MapDelete("/{id:guid}", DeleteArticle);
+        group.MapDelete("/{id:guid}", DeleteArticle).RequireAuthorization();
     }
 
     private static async Task<Results<Created<KnowledgeResponse>, BadRequest>> CreateArticle(

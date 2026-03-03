@@ -8,7 +8,13 @@ public class TicketsPageTests
     [Fact]
     public async Task TicketsPage_Returns200()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, $"TestDb_{Guid.NewGuid()}");
+            });
+        });
         var client = factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false
@@ -22,7 +28,13 @@ public class TicketsPageTests
     [Fact]
     public async Task TicketsPage_RendersFeedScaffold()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, $"TestDb_{Guid.NewGuid()}");
+            });
+        });
         var client = factory.CreateClient();
 
         var html = await client.GetStringAsync("/tickets");

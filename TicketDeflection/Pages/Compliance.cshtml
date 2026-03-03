@@ -209,11 +209,19 @@
         </div>
     </div>
 
-    @* Operator ID *@
-    <div class="mb-6 flex items-center gap-4">
-        <label class="term-label" for="operator-id" style="white-space:nowrap;margin-bottom:0;">Operator ID</label>
-        <input id="operator-id" class="term-input" style="max-width:260px;" type="text" value="demo-operator" autocomplete="off" />
-    </div>
+    @* Authenticated operator identity *@
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="mb-6 text-xs text-dim">
+            authenticated as <span class="text-accent">@User.Identity.Name</span>
+        </div>
+    }
+    else
+    {
+        <div class="mb-6 text-xs" style="color:#f59e0b;">
+            <a href="/operator/login?returnUrl=/compliance" style="color:#f59e0b;text-decoration:underline;">authenticate</a> to record decisions
+        </div>
+    }
 
     @* (2) HUMAN DECISION REQUIRED *@
     <div class="compliance-section human-required" aria-label="Human decision required">
@@ -258,8 +266,8 @@
                         }
                         <div class="decision-area">
                             <textarea id="notes-@scan.Id" class="term-input term-textarea" style="max-width:400px;min-height:44px;" placeholder="Operator notes..."></textarea>
-                            <button class="exec-btn" onclick="recordDecision('@scan.Id', 'Approve')">[ Approve ]</button>
-                            <button class="exec-btn" style="border-color:var(--red);color:var(--red);" onclick="recordDecision('@scan.Id', 'Reject')">[ Reject ]</button>
+                            <button class="exec-btn" onclick="recordDecision('@scan.Id', 'Approved')">[ Approve ]</button>
+                            <button class="exec-btn" style="border-color:var(--red);color:var(--red);" onclick="recordDecision('@scan.Id', 'Rejected')">[ Reject ]</button>
                             <span id="decision-status-@scan.Id" class="text-dim" style="font-size:0.72rem;" aria-live="polite"></span>
                         </div>
                     </div>
@@ -267,6 +275,38 @@
             }
         </div>
     </div>
+
+    @* (2b) REJECTED — PENDING REMEDIATION *@
+    @if (Model.RejectedScans.Any())
+    {
+        <div class="compliance-section" style="border-top-color:var(--red);" aria-label="Rejected scans pending remediation">
+            <div class="section-header" style="color:var(--red);">
+                <span class="section-title" style="color:var(--red);">REJECTED — PENDING REMEDIATION</span>
+                <span>@Model.RejectedScans.Count item(s)</span>
+            </div>
+            <div id="rejected-body">
+                @foreach (var scan in Model.RejectedScans)
+                {
+                    <div class="scan-item" id="scan-@scan.Id">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-dim font-mono">scan/@scan.Id.ToString()[..8]</span>
+                            <span class="text-xs text-dim">@scan.SubmittedAt.ToString("yyyy-MM-dd HH:mm") UTC · @scan.ContentType @(scan.SourceLabel != null ? "· " + scan.SourceLabel : "")</span>
+                        </div>
+                        @foreach (var f in scan.Findings.Where(f => f.Disposition == TicketDeflection.Models.ComplianceDisposition.HUMAN_REQUIRED))
+                        {
+                            <div class="finding-row">
+                                <span class="finding-key">regulation</span><span class="finding-val danger">@f.Regulation</span>
+                                <span class="finding-key">citation</span><span class="finding-val">@f.Citation</span>
+                                <span class="finding-key">category</span><span class="finding-val">@f.Category</span>
+                                <span class="finding-key">severity</span><span class="finding-val danger">@f.Severity</span>
+                            </div>
+                        }
+                        <div class="mt-2 text-xs" style="color:var(--red);">Rejected by operator — requires remediation before resubmission.</div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 
     @* (3) AUTO-BLOCKED *@
     <div class="compliance-section auto-blocked" aria-label="Auto-blocked scans">
@@ -492,8 +532,8 @@
             ${findingsHtml}
             <div class="decision-area">
                 <textarea id="notes-${s.id}" class="term-input term-textarea" style="max-width:400px;min-height:44px;" placeholder="Operator notes..."></textarea>
-                <button class="exec-btn" onclick="recordDecision('${s.id}','Approve')">[ Approve ]</button>
-                <button class="exec-btn" style="border-color:var(--red);color:var(--red);" onclick="recordDecision('${s.id}','Reject')">[ Reject ]</button>
+                <button class="exec-btn" onclick="recordDecision('${s.id}','Approved')">[ Approve ]</button>
+                <button class="exec-btn" style="border-color:var(--red);color:var(--red);" onclick="recordDecision('${s.id}','Rejected')">[ Reject ]</button>
                 <span id="decision-status-${s.id}" class="text-dim" style="font-size:0.72rem;" aria-live="polite"></span>
             </div>
         </div>`;
@@ -521,7 +561,6 @@
     }
 
     async function recordDecision(scanId, decision) {
-        const operatorId = document.getElementById('operator-id').value.trim() || 'demo-operator';
         const notes = (document.getElementById('notes-' + scanId) || {}).value || '';
         const statusEl = document.getElementById('decision-status-' + scanId);
         if (statusEl) statusEl.textContent = 'submitting...';
@@ -529,8 +568,12 @@
             const res = await fetch('/api/scans/' + scanId + '/decision', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ operatorId, decision, notes })
+                body: JSON.stringify({ decision, notes })
             });
+            if (res.status === 401) {
+                window.location.href = '/operator/login?returnUrl=' + encodeURIComponent(window.location.pathname);
+                return;
+            }
             if (!res.ok) {
                 const msg = await res.text().catch(() => 'HTTP ' + res.status);
                 if (statusEl) statusEl.textContent = 'error: ' + msg;

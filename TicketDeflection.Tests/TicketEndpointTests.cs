@@ -10,7 +10,7 @@ public class TicketEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 
     public TicketEndpointTests(WebApplicationFactory<Program> factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.WithTestAuth().CreateClient();
     }
 
     [Fact]

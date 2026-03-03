@@ -31,7 +31,8 @@ public sealed record DecisionEvent(
     string[] Evidence,
     string Outcome,
     string Summary,
-    string? HumanOwner);
+    string? HumanOwner,
+    string? Replaces = null);
 
 public sealed record DecisionActor(string Type, string Name);
 

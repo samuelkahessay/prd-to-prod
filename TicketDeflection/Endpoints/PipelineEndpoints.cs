@@ -8,7 +8,7 @@ public static class PipelineEndpoints
 {
     public static void MapPipelineEndpoints(this WebApplication app)
     {
-        app.MapPost("/api/tickets/submit", SubmitTicket);
+        app.MapPost("/api/tickets/submit", SubmitTicket).RequireRateLimiting("PublicPost");
     }
 
     private static async Task<IResult> SubmitTicket(

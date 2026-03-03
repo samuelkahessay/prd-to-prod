@@ -9,7 +9,7 @@ public class DashboardPageTests : IClassFixture<WebApplicationFactory<Program>>
 
     public DashboardPageTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory;
+        _factory = factory.WithTestAuth();
     }
 
     [Fact]

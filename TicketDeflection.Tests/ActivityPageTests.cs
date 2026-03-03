@@ -8,7 +8,13 @@ public class ActivityPageTests
     [Fact]
     public async Task ActivityPage_Returns200()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, $"TestDb_{Guid.NewGuid()}");
+            });
+        });
         var client = factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false
@@ -22,7 +28,13 @@ public class ActivityPageTests
     [Fact]
     public async Task ActivityPage_RendersTimelineScaffold()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, $"TestDb_{Guid.NewGuid()}");
+            });
+        });
         var client = factory.CreateClient();
 
         var html = await client.GetStringAsync("/activity");

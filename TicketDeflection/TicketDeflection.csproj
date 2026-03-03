@@ -7,7 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,12 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\showcase\**\*.json" CopyToOutputDirectory="PreserveNewest"
-             Link="showcase\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Content Include="..\drills\decisions\**\*.json" CopyToOutputDirectory="PreserveNewest"
-             Link="drills\decisions\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Content Include="..\drills\reports\**\*.json" CopyToOutputDirectory="PreserveNewest"
-             Link="drills\reports\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="..\showcase\**\*.json" CopyToOutputDirectory="PreserveNewest" Link="showcase\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="..\drills\decisions\**\*.json" CopyToOutputDirectory="PreserveNewest" Link="drills\decisions\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="..\drills\reports\**\*.json" CopyToOutputDirectory="PreserveNewest" Link="drills\reports\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

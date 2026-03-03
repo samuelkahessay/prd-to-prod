@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,10 +22,10 @@ public class TicketFeedEndpointTests : IClassFixture<WebApplicationFactory<Progr
                 config.AddInMemoryCollection(new Dictionary<string, string?> { ["DemoSeed:Enabled"] = "false" }));
             b.ConfigureServices(services =>
             {
-                var existing = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<TicketDbContext>));
-                if (existing != null) services.Remove(existing);
-                services.AddDbContext<TicketDbContext>(o =>
-                    o.UseInMemoryDatabase(dbName));
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, dbName);
+                services.AddAuthentication(TestAuthHandler.SchemeName)
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                        TestAuthHandler.SchemeName, _ => { });
             });
         });
     }

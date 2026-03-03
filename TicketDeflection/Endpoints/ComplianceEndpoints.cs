@@ -43,12 +43,12 @@ public static class ComplianceEndpoints
 
     public static void MapComplianceEndpoints(this WebApplication app)
     {
-        app.MapPost("/api/scans", SubmitScan);
+        app.MapPost("/api/scans", SubmitScan).RequireRateLimiting("PublicPost");
         app.MapGet("/api/scans", GetAllScans);
         app.MapGet("/api/scans/{id:guid}", GetScanById);
         app.MapGet("/api/compliance/metrics", GetMetrics);
-        app.MapPost("/api/scans/{id:guid}/decision", RecordDecision);
-        app.MapPost("/api/scans/simulate", RunComplianceSimulation);
+        app.MapPost("/api/scans/{id:guid}/decision", RecordDecision).RequireAuthorization();
+        app.MapPost("/api/scans/simulate", RunComplianceSimulation).RequireAuthorization();
     }
 
     private static async Task<IResult> SubmitScan(
@@ -62,22 +62,27 @@ public static class ComplianceEndpoints
 
     private static async Task<IResult> GetAllScans(TicketDbContext db)
     {
-        var decisionLookup = await db.ComplianceDecisions
+        // SQLite cannot translate DateTimeOffset ORDER BY, so timestamp ordering happens in memory.
+        var decisions = await db.ComplianceDecisions
+            .AsNoTracking()
+            .Select(d => new { d.ScanId, d.Decision, d.DecidedAt })
+            .ToListAsync();
+        var decisionLookup = decisions
             .GroupBy(d => d.ScanId)
-            .Select(g => new
-            {
-                ScanId = g.Key,
-                LatestDecision = g
+            .ToDictionary(
+                g => g.Key,
+                g => g
                     .OrderByDescending(d => d.DecidedAt)
-                    .Select(d => d.Decision)
-                    .FirstOrDefault()
-            })
-            .ToDictionaryAsync(x => x.ScanId, x => x.LatestDecision);
+                    .Select(d => (ComplianceDecisionType?)d.Decision)
+                    .FirstOrDefault());
 
         var scans = await db.ComplianceScans
+            .AsNoTracking()
             .Include(s => s.Findings)
-            .OrderByDescending(s => s.SubmittedAt)
             .ToListAsync();
+        scans = scans
+            .OrderByDescending(s => s.SubmittedAt)
+            .ToList();
 
         return Results.Ok(scans.Select(scan => new
         {
@@ -121,6 +126,7 @@ public static class ComplianceEndpoints
     private static async Task<IResult> RecordDecision(
         Guid id,
         DecisionRequest request,
+        HttpContext httpContext,
         TicketDbContext db)
     {
         var scan = await db.ComplianceScans
@@ -130,18 +136,32 @@ public static class ComplianceEndpoints
         if (scan is null)
             return Results.NotFound();
 
-        if (scan.Disposition == ComplianceDisposition.AUTO_BLOCK)
-            return Results.BadRequest("AUTO_BLOCK decisions cannot be overridden through this endpoint");
+        if (scan.Disposition != ComplianceDisposition.HUMAN_REQUIRED)
+            return Results.BadRequest("Decisions can only be recorded on HUMAN_REQUIRED scans");
+
+        var existingDecision = await db.ComplianceDecisions
+            .AnyAsync(d => d.ScanId == id);
+        if (existingDecision)
+            return Results.Conflict("A decision has already been recorded for this scan");
+
+        var operatorId = httpContext.User.Identity?.Name ?? "unknown";
 
         var decision = new ComplianceDecision
         {
             ScanId = id,
-            OperatorId = request.OperatorId,
+            OperatorId = operatorId,
             Decision = request.Decision,
             Notes = request.Notes,
         };
         db.ComplianceDecisions.Add(decision);
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return Results.Conflict("A decision has already been recorded for this scan");
+        }
 
         return Results.Ok(scan);
     }
@@ -174,4 +194,4 @@ public static class ComplianceEndpoints
 }
 
 public record ScanRequest(string Content, ContentType ContentType, string? SourceLabel);
-public record DecisionRequest(string OperatorId, string Decision, string? Notes);
+public record DecisionRequest(ComplianceDecisionType Decision, string? Notes);

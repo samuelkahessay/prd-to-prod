@@ -16,6 +16,7 @@ public class PipelineLiveEndpointTests
         {
             builder.ConfigureServices(services =>
             {
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, $"TestDb_{Guid.NewGuid()}");
                 services.RemoveAll<IGitHubPipelineSnapshotService>();
                 services.AddSingleton<IGitHubPipelineSnapshotService>(new StubPipelineSnapshotService());
             });

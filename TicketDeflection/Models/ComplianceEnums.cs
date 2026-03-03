@@ -30,3 +30,9 @@ public enum ContentType
     LOG,
     FREETEXT
 }
+
+public enum ComplianceDecisionType
+{
+    Approved,
+    Rejected
+}
