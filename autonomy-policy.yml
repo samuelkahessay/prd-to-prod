@@ -25,6 +25,18 @@ actions:
       - Acceptance criteria in the source material
       - Dependency ordering between created issues
 
+  - action: architecture_planning
+    scope: Generate structured architecture plan from a PRD before decomposition begins.
+    default_mode: autonomous
+    requires_human_reason: null
+    allowed_targets:
+      - Issue comments on PRD issues
+      - Architecture artifacts in repo-memory branch
+    evidence_required:
+      - Human-authored PRD in the source issue
+      - Architecture artifact written to repo-memory
+      - Human approval via /approve-architecture before decomposition
+
   - action: app_code_change
     scope: Implement or refine application and test code for the active product surface.
     default_mode: autonomous
