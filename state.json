@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-03T01:06:30Z",
-  "workflow_run_id": "22603346083",
+  "last_run": "2026-03-03T01:10:52Z",
+  "workflow_run_id": "22603440364",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 — C#/.NET 10)",
@@ -59,9 +59,10 @@
     {"issue": 340, "pr": 348, "status": "merged"},
     {"issue": 341, "pr": 349, "status": "merged"},
     {"issue": 342, "pr": 350, "status": "merged"},
-    {"issue": 343, "pr": 351, "status": "pr_open", "branch": "repo-assist/issue-343-compliance-scan-engine"}
+    {"issue": 343, "pr": 351, "status": "merged"},
+    {"issue": 344, "branch": "repo-assist/issue-344-compliance-api-endpoints", "status": "pr_creating"}
   ],
-  "open_issues": [343, 344, 345, 346, 347],
-  "open_prs": [351],
-  "notes": "Run 07: PR #351 for #343 (Compliance Scan Engine) is open and in review (CI pending). Issues #344-#347 blocked pending #343 merge. Next: after #343 merges, implement #344 (API Endpoints)."
+  "open_issues": [344, 345, 346, 347],
+  "open_prs": [],
+  "notes": "Run 07: PR #351 for #343 merged. Now creating PR for #344 (Compliance API Endpoints). Issues #345-#347 blocked pending #344 merge."
 }
