@@ -125,6 +125,30 @@ In CI Repair Command Mode:
 
 If the instructions are non-empty and do **not** contain `ci-repair-command:v1`, follow the user's instructions instead of the normal workflow. Apply all the same guidelines (read AGENTS.md, run tests, use AI disclosure). If the issue's requirements are already satisfied by merged code, close the issue with a comment referencing the PR that resolved it — do not create a new PR. Skip the scheduled workflow and directly do what was requested. Then exit.
 
+## Architecture Context
+
+Before implementing any issue, check if an architecture plan exists:
+
+1. Read the issue body for an `## Architecture Context` section. If present, it will contain:
+   - The source PRD issue number
+   - The component name, type, and suggested file path
+   - Related design patterns to follow
+
+2. If an Architecture Context section exists, also read the full architecture artifact from repo-memory at `architecture/{prd-issue-number}.json` to understand:
+   - `tech_stack`: Build environment and framework conventions
+   - `components`: The full system shape — understand where your component fits
+   - `entities`: Data model relationships your code should respect
+   - `patterns`: Design patterns to follow for consistency across the codebase
+   - `risks`: Known risks and mitigations to consider
+
+3. Use this context to:
+   - Follow the suggested `file_hint` for file placement (adapt if the codebase has evolved)
+   - Apply patterns from the architecture plan consistently
+   - Ensure your implementation fits the overall component structure
+   - Reference the architecture in your PR description
+
+4. If no Architecture Context section exists, proceed with current behavior — infer architecture from the codebase and issue acceptance criteria.
+
 ## Scheduled Mode
 
 You are the Pipeline Assistant for `${{ github.repository }}`. Your job is to implement issues created by the PRD Decomposer as pull requests.
