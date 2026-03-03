@@ -4,7 +4,7 @@
 
 prd-to-prod is not AI layered onto an existing workflow. It is a software delivery process rebuilt from scratch as an AI-native system. One person can now supervise continuous delivery across multiple parallel workstreams — triage, implementation, security scanning, code review, CI repair — without writing implementation code. I write product intent and acceptance criteria. The system decomposes, implements, reviews, merges, and repairs. My attention goes to what to build and why.
 
-Everything in this repo was built by the pipeline itself. 5 apps across 3 tech stacks (Express, Next.js, ASP.NET Core), 7 self-healing drills where the system broke and repaired its own build, 4 upstream fixes I reported against `gh-aw` that were merged into the platform. The pipeline was its own first customer — and the sustained usage is what turned it from a prototype into something that actually works under pressure.
+The pipeline was dogfooded heavily. Every application, UI surface, and feature in this repo was built through the pipeline path — 5 apps across 3 tech stacks, 7 self-healing drills where the system broke and repaired its own build, 4 upstream fixes I reported against `gh-aw` that shipped into the platform. Sustained usage is what turned it from a prototype into something that works under pressure.
 
 ## What the AI handles
 
@@ -14,13 +14,13 @@ The pipeline manages the full delivery loop: PRD decomposition into dependency-o
 
 The compliance service cannot determine remediation for escalated findings. That boundary is structural, not advisory — HUMAN_REQUIRED response payloads omit the remediation field entirely. It does not exist in the schema. Getting it wrong under PIPEDA or the Proceeds of Crime Act has legal consequences. The AI classifies and stops. A human decides.
 
-The same logic governs the pipeline itself. `gh-aw` (GitHub Agentic Workflows, released February 2026) agents handle decomposition, implementation, review, and repair. GitHub Actions handles routing, merge gates, deploy policy, and authority enforcement. The agents operate inside the human-owned control plane. They do not get to redefine it. Unknown actions fail closed to human_required.
+The same logic governs the pipeline itself. `gh-aw` (GitHub Agentic Workflows) agents handle decomposition, implementation, review, and repair. GitHub Actions handles routing, merge gates, deploy policy, and authority enforcement. The agents operate inside the human-owned control plane. They do not get to redefine it. Unknown actions fail closed to human_required.
 
 ## What breaks first at scale
 
-What breaks first is not code generation — it is the control plane. External platform dependencies on GitHub, Copilot, and Azure remain critical. Repair routing is only as good as the failure signals it can extract. Ambiguous inputs produce variable outputs. Silent degradation compounds: a watchdog failing without alerting, a rate limit approaching without backoff.
+What breaks first is not code generation — it is the control plane. External platform dependencies on GitHub, Copilot, and Azure remain critical. Repair routing is only as good as the failure signals it can extract. Ambiguous inputs produce variable outputs. Silent degradation compounds: a watchdog failing without alerting, a rate limit approaching unnoticed.
 
-Pressure-testing this at depth revealed edges. 4 fixes I reported against `gh-aw` upstream were merged and I'm credited in the release notes — including one shipped today (v0.51.6) for auto-merge gating incorrectly blocking on non-required third-party deployment statuses. Running a pipeline in production means you find the platform's limits. You stop being a user and start being responsible for it.
+Pressure-testing at depth revealed platform edges. The 4 `gh-aw` fixes I mentioned — including one shipped today (v0.51.6) for auto-merge gating incorrectly blocking on non-required deployment statuses — came from running this pipeline hard enough to find the platform's limits.
 
 ---
 
