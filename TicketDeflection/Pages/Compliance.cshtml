@@ -1,0 +1,538 @@
+@page "/compliance"
+@model ComplianceModel
+@{
+    ViewData["Title"] = "Compliance Dashboard — prd-to-prod";
+    ViewData["NavTitle"] = "COMPLIANCE SCAN SERVICE";
+}
+
+@section Styles {
+<style>
+    .metrics-bar {
+        background: rgba(4, 10, 20, 0.7);
+        border: 1px solid var(--border);
+        border-top: 2px solid var(--accent);
+    }
+    .metric-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px 28px;
+    }
+    .metric-item + .metric-item {
+        border-left: 1px solid var(--border);
+    }
+    .metric-val-lg {
+        font-family: var(--mono);
+        color: var(--accent);
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+    .compliance-section {
+        background: rgba(4, 10, 20, 0.7);
+        border: 1px solid var(--border);
+        border-top: 2px solid var(--accent);
+        margin-bottom: 1.5rem;
+    }
+    .compliance-section.human-required {
+        border-top-color: #f59e0b;
+    }
+    .compliance-section.auto-blocked {
+        border-top-color: var(--red);
+    }
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--dim);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    .section-header .section-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+    }
+    .section-header.human-required .section-title { color: #f59e0b; }
+    .section-header.auto-blocked .section-title { color: var(--red); }
+    .scan-item {
+        border-bottom: 1px solid rgba(0, 160, 255, 0.06);
+        padding: 12px 16px;
+        font-size: 0.8rem;
+    }
+    .scan-item:last-child { border-bottom: none; }
+    .finding-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        padding: 6px 0;
+        font-size: 0.75rem;
+        border-bottom: 1px solid rgba(0,160,255,0.04);
+    }
+    .finding-row:last-child { border-bottom: none; }
+    .finding-key { color: var(--dim); min-width: 80px; }
+    .finding-val { color: var(--text); }
+    .finding-val.accent { color: var(--accent); }
+    .finding-val.warn { color: #f59e0b; }
+    .finding-val.danger { color: var(--red); }
+    .decision-area {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: flex-end;
+    }
+    .feed-panel {
+        background: rgba(4, 10, 20, 0.7);
+        border: 1px solid var(--border);
+        border-top: 2px solid var(--accent);
+    }
+    .feed-header {
+        display: flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--dim);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    .feed-col-id     { width: 90px; flex-shrink: 0; }
+    .feed-col-label  { flex: 1; min-width: 0; padding: 0 12px; }
+    .feed-col-disp   { width: 150px; flex-shrink: 0; text-align: right; }
+    .feed-body { max-height: 320px; overflow-y: auto; }
+    .feed-row {
+        display: flex;
+        align-items: center;
+        padding: 7px 16px;
+        border-bottom: 1px solid rgba(0, 160, 255, 0.06);
+        font-size: 0.8rem;
+        transition: background 0.15s;
+    }
+    .feed-row:last-child { border-bottom: none; }
+    .feed-row:hover { background: rgba(0, 170, 255, 0.04); }
+    .feed-id { color: var(--dim); font-size: 0.7rem; }
+    .feed-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--dim); }
+    .submit-panel {
+        background: rgba(4, 10, 20, 0.7);
+        border: 1px solid var(--border);
+        border-top: 2px solid var(--accent);
+    }
+    .submit-panel-header {
+        display: flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--dim);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    .submit-panel-body { padding: 16px; }
+    .term-label {
+        color: var(--dim);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        display: block;
+        margin-bottom: 5px;
+    }
+    .term-input {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 0.85rem;
+        padding: 8px 12px;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .term-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0, 170, 255, 0.2); }
+    .term-input::placeholder { color: var(--dim); }
+    .term-textarea { resize: vertical; min-height: 80px; }
+    .scan-result {
+        margin-top: 12px;
+        padding: 12px;
+        border: 1px solid var(--border);
+        font-size: 0.78rem;
+        display: none;
+    }
+    .empty-msg { color: var(--dim); font-size: 0.78rem; padding: 12px 16px; font-style: italic; }
+</style>
+}
+
+<div class="max-w-5xl mx-auto px-4 py-10">
+
+    <div class="mb-8">
+        <div class="text-xs text-dim mb-2">// compliance scan service — operator dashboard</div>
+        <h1 class="font-sans text-3xl font-bold text-white">Compliance Dashboard</h1>
+    </div>
+
+    {{!-- (1) Metrics bar --}}
+    <div class="metrics-bar flex items-stretch mb-8" aria-label="Compliance metrics">
+        <div class="metric-item flex-1">
+            <div class="metric-lbl">total scans</div>
+            <div id="m-total" class="metric-val-lg mt-1" aria-live="polite">@Model.RecentScans.Count</div>
+        </div>
+        <div class="metric-item flex-1">
+            <div class="metric-lbl">auto-blocked</div>
+            <div id="m-autoblocked" class="metric-val-lg mt-1" style="color:var(--red);" aria-live="polite">@Model.AutoBlockedScans.Count</div>
+        </div>
+        <div class="metric-item flex-1">
+            <div class="metric-lbl">human required</div>
+            <div id="m-humanreq" class="metric-val-lg mt-1" style="color:#f59e0b;" aria-live="polite">@Model.HumanRequiredScans.Count</div>
+        </div>
+        <div class="metric-item flex-1">
+            <div class="metric-lbl">advisory</div>
+            <div id="m-advisory" class="metric-val-lg mt-1" aria-live="polite">0</div>
+        </div>
+        <div class="metric-item flex-1">
+            <div class="metric-lbl">pending decisions</div>
+            <div id="m-pending" class="metric-val-lg mt-1" style="color:#f59e0b;" aria-live="polite">@Model.HumanRequiredScans.Count</div>
+        </div>
+    </div>
+
+    {{!-- Operator ID --}}
+    <div class="mb-6 flex items-center gap-4">
+        <label class="term-label" for="operator-id" style="white-space:nowrap;margin-bottom:0;">Operator ID</label>
+        <input id="operator-id" class="term-input" style="max-width:260px;" type="text" value="demo-operator" autocomplete="off" />
+    </div>
+
+    {{!-- (2) HUMAN DECISION REQUIRED --}}
+    <div class="compliance-section human-required" aria-label="Human decision required">
+        <div class="section-header human-required">
+            <span class="section-title">HUMAN DECISION REQUIRED</span>
+            <span id="hr-count">@Model.HumanRequiredScans.Count item(s)</span>
+        </div>
+        <div id="human-required-body">
+            @if (!Model.HumanRequiredScans.Any())
+            {
+                <div class="empty-msg">No items requiring human decision.</div>
+            }
+            else
+            {
+                foreach (var scan in Model.HumanRequiredScans)
+                {
+                    <div class="scan-item" id="scan-@scan.Id">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-dim font-mono">scan/@scan.Id.ToString()[..8]</span>
+                            <span class="text-xs text-dim">@scan.SubmittedAt.ToString("yyyy-MM-dd HH:mm") UTC · @scan.ContentType @(scan.SourceLabel != null ? "· " + scan.SourceLabel : "")</span>
+                        </div>
+                        @foreach (var f in scan.Findings.Where(f => f.Disposition == TicketDeflection.Models.ComplianceDisposition.HUMAN_REQUIRED))
+                        {
+                            <div class="finding-row">
+                                <span class="finding-key">regulation</span><span class="finding-val accent">@f.Regulation</span>
+                                <span class="finding-key">citation</span><span class="finding-val">@f.Citation</span>
+                                <span class="finding-key">category</span><span class="finding-val">@f.Category</span>
+                                <span class="finding-key">severity</span><span class="finding-val warn">@f.Severity</span>
+                                @if (f.LineNumber.HasValue)
+                                {
+                                    <span class="finding-key">line</span><span class="finding-val">@f.LineNumber</span>
+                                }
+                                @if (!string.IsNullOrEmpty(f.StopReason))
+                                {
+                                    <span class="finding-key">stop reason</span><span class="finding-val warn">@f.StopReason</span>
+                                }
+                                @if (!string.IsNullOrEmpty(f.RedactedExcerpt))
+                                {
+                                    <span class="finding-key">excerpt</span><span class="finding-val text-dim">@f.RedactedExcerpt</span>
+                                }
+                            </div>
+                        }
+                        <div class="decision-area">
+                            <textarea id="notes-@scan.Id" class="term-input term-textarea" style="max-width:400px;min-height:44px;" placeholder="Operator notes..."></textarea>
+                            <button class="exec-btn" onclick="recordDecision('@scan.Id', 'Approve')">[ Approve ]</button>
+                            <button class="exec-btn" style="border-color:var(--red);color:var(--red);" onclick="recordDecision('@scan.Id', 'Reject')">[ Reject ]</button>
+                            <span id="decision-status-@scan.Id" class="text-dim" style="font-size:0.72rem;" aria-live="polite"></span>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    {{!-- (3) AUTO-BLOCKED --}}
+    <div class="compliance-section auto-blocked" aria-label="Auto-blocked scans">
+        <div class="section-header auto-blocked">
+            <span class="section-title">AUTO-BLOCKED</span>
+            <span id="ab-count">@Model.AutoBlockedScans.Count item(s)</span>
+        </div>
+        <div id="auto-blocked-body">
+            @if (!Model.AutoBlockedScans.Any())
+            {
+                <div class="empty-msg">No auto-blocked scans.</div>
+            }
+            else
+            {
+                foreach (var scan in Model.AutoBlockedScans)
+                {
+                    <div class="scan-item" id="scan-@scan.Id">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-dim font-mono">scan/@scan.Id.ToString()[..8]</span>
+                            <span class="text-xs text-dim">@scan.SubmittedAt.ToString("yyyy-MM-dd HH:mm") UTC · @scan.ContentType @(scan.SourceLabel != null ? "· " + scan.SourceLabel : "")</span>
+                        </div>
+                        @foreach (var f in scan.Findings.Where(f => f.Disposition == TicketDeflection.Models.ComplianceDisposition.AUTO_BLOCK))
+                        {
+                            <div class="finding-row">
+                                <span class="finding-key">regulation</span><span class="finding-val danger">@f.Regulation</span>
+                                <span class="finding-key">citation</span><span class="finding-val">@f.Citation</span>
+                                <span class="finding-key">category</span><span class="finding-val">@f.Category</span>
+                                <span class="finding-key">severity</span><span class="finding-val danger">@f.Severity</span>
+                                @if (f.LineNumber.HasValue)
+                                {
+                                    <span class="finding-key">line</span><span class="finding-val">@f.LineNumber</span>
+                                }
+                                @if (!string.IsNullOrEmpty(f.RedactedExcerpt))
+                                {
+                                    <span class="finding-key">excerpt</span><span class="finding-val text-dim">@f.RedactedExcerpt</span>
+                                }
+                            </div>
+                        }
+                        <div class="mt-2 text-xs" style="color:var(--dim);">AUTO_BLOCK cannot be overridden.</div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    {{!-- (4) Recent scans feed --}}
+    <div class="feed-panel mb-8" aria-label="Recent scans">
+        <div class="feed-header" aria-hidden="true">
+            <span class="feed-col-id">id</span>
+            <span class="feed-col-label">source label</span>
+            <span class="feed-col-disp">disposition</span>
+        </div>
+        <div id="feed-body" class="feed-body" aria-live="polite">
+            @if (!Model.RecentScans.Any())
+            {
+                <div class="empty-msg">No scans yet.</div>
+            }
+            else
+            {
+                foreach (var scan in Model.RecentScans)
+                {
+                    var dispClass = scan.Disposition == TicketDeflection.Models.ComplianceDisposition.AUTO_BLOCK ? "tag-escalated"
+                                  : scan.Disposition == TicketDeflection.Models.ComplianceDisposition.HUMAN_REQUIRED ? "tag-pending"
+                                  : "tag-resolved";
+                    <div class="feed-row">
+                        <span class="feed-col-id feed-id">@scan.Id.ToString()[..8]</span>
+                        <span class="feed-col-label feed-label">@(scan.SourceLabel ?? scan.ContentType.ToString())</span>
+                        <span class="feed-col-disp"><span class="tag @dispClass">@scan.Disposition</span></span>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    {{!-- (5) Submit-for-scan panel --}}
+    <div class="submit-panel mb-8">
+        <div class="submit-panel-header">
+            <span>submit for scan</span>
+        </div>
+        <div class="submit-panel-body">
+            <div class="mb-4">
+                <label class="term-label" for="scan-content">content</label>
+                <textarea id="scan-content" class="term-input term-textarea" placeholder="Paste code, diff, log, or freetext to scan..."></textarea>
+            </div>
+            <div class="flex gap-4 mb-4">
+                <div style="flex:1;">
+                    <label class="term-label" for="scan-type">content type</label>
+                    <select id="scan-type" class="term-input">
+                        <option value="CODE">CODE</option>
+                        <option value="DIFF">DIFF</option>
+                        <option value="LOG">LOG</option>
+                        <option value="FREETEXT">FREETEXT</option>
+                    </select>
+                </div>
+                <div style="flex:2;">
+                    <label class="term-label" for="scan-label">source label</label>
+                    <input id="scan-label" class="term-input" type="text" placeholder="e.g. pr-123-diff" autocomplete="off" />
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="scan-btn" class="exec-btn" onclick="submitScan()">[ scan ]</button>
+                <span id="scan-status" class="text-dim" style="font-size:0.75rem;" role="status" aria-live="polite"></span>
+            </div>
+            <div id="scan-result" class="scan-result"></div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+<script>
+    async function refreshMetrics() {
+        try {
+            const res = await fetch('/api/compliance/metrics');
+            if (!res.ok) return;
+            const d = await res.json();
+            document.getElementById('m-total').textContent       = d.totalScans       ?? '—';
+            document.getElementById('m-autoblocked').textContent = d.autoBlocked      ?? '—';
+            document.getElementById('m-humanreq').textContent    = d.humanRequired    ?? '—';
+            document.getElementById('m-advisory').textContent    = d.advisory         ?? '—';
+            document.getElementById('m-pending').textContent     = d.pendingDecisions ?? '—';
+        } catch (_) {}
+    }
+
+    async function refreshQueues() {
+        try {
+            const res = await fetch('/api/scans');
+            if (!res.ok) return;
+            const scans = await res.json();
+
+            const hr = scans.filter(s => s.disposition === 'HUMAN_REQUIRED');
+            const ab = scans.filter(s => s.disposition === 'AUTO_BLOCK');
+
+            document.getElementById('hr-count').textContent = hr.length + ' item(s)';
+            document.getElementById('ab-count').textContent = ab.length + ' item(s)';
+
+            document.getElementById('human-required-body').innerHTML =
+                hr.length === 0
+                    ? '<div class="empty-msg">No items requiring human decision.</div>'
+                    : hr.map(s => renderHumanRequired(s)).join('');
+
+            document.getElementById('auto-blocked-body').innerHTML =
+                ab.length === 0
+                    ? '<div class="empty-msg">No auto-blocked scans.</div>'
+                    : ab.map(s => renderAutoBlocked(s)).join('');
+
+            const recent = scans.slice(0, 20);
+            document.getElementById('feed-body').innerHTML =
+                recent.length === 0
+                    ? '<div class="empty-msg">No scans yet.</div>'
+                    : recent.map(s => {
+                        const dispClass = s.disposition === 'AUTO_BLOCK'     ? 'tag-escalated'
+                                        : s.disposition === 'HUMAN_REQUIRED' ? 'tag-pending'
+                                        : 'tag-resolved';
+                        const label = escapeHtml(s.sourceLabel || s.contentType || '');
+                        return `<div class="feed-row">
+                            <span class="feed-col-id feed-id">${s.id.substring(0,8)}</span>
+                            <span class="feed-col-label feed-label">${label}</span>
+                            <span class="feed-col-disp"><span class="tag ${dispClass}">${s.disposition}</span></span>
+                        </div>`;
+                    }).join('');
+        } catch (_) {}
+    }
+
+    function renderHumanRequired(s) {
+        const findingsHtml = (s.findings || [])
+            .filter(f => f.disposition === 'HUMAN_REQUIRED')
+            .map(f => `<div class="finding-row">
+                <span class="finding-key">regulation</span><span class="finding-val accent">${escapeHtml(f.regulation)}</span>
+                <span class="finding-key">citation</span><span class="finding-val">${escapeHtml(f.citation)}</span>
+                <span class="finding-key">category</span><span class="finding-val">${escapeHtml(f.category)}</span>
+                <span class="finding-key">severity</span><span class="finding-val warn">${escapeHtml(f.severity)}</span>
+                ${f.lineNumber != null ? `<span class="finding-key">line</span><span class="finding-val">${f.lineNumber}</span>` : ''}
+                ${f.stopReason ? `<span class="finding-key">stop reason</span><span class="finding-val warn">${escapeHtml(f.stopReason)}</span>` : ''}
+            </div>`).join('');
+
+        return `<div class="scan-item" id="scan-${s.id}">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-dim font-mono">scan/${s.id.substring(0,8)}</span>
+                <span class="text-xs text-dim">${escapeHtml(s.contentType || '')} ${s.sourceLabel ? '· ' + escapeHtml(s.sourceLabel) : ''}</span>
+            </div>
+            ${findingsHtml}
+            <div class="decision-area">
+                <textarea id="notes-${s.id}" class="term-input term-textarea" style="max-width:400px;min-height:44px;" placeholder="Operator notes..."></textarea>
+                <button class="exec-btn" onclick="recordDecision('${s.id}','Approve')">[ Approve ]</button>
+                <button class="exec-btn" style="border-color:var(--red);color:var(--red);" onclick="recordDecision('${s.id}','Reject')">[ Reject ]</button>
+                <span id="decision-status-${s.id}" class="text-dim" style="font-size:0.72rem;" aria-live="polite"></span>
+            </div>
+        </div>`;
+    }
+
+    function renderAutoBlocked(s) {
+        const findingsHtml = (s.findings || [])
+            .filter(f => f.disposition === 'AUTO_BLOCK')
+            .map(f => `<div class="finding-row">
+                <span class="finding-key">regulation</span><span class="finding-val danger">${escapeHtml(f.regulation)}</span>
+                <span class="finding-key">citation</span><span class="finding-val">${escapeHtml(f.citation)}</span>
+                <span class="finding-key">category</span><span class="finding-val">${escapeHtml(f.category)}</span>
+                <span class="finding-key">severity</span><span class="finding-val danger">${escapeHtml(f.severity)}</span>
+                ${f.lineNumber != null ? `<span class="finding-key">line</span><span class="finding-val">${f.lineNumber}</span>` : ''}
+            </div>`).join('');
+
+        return `<div class="scan-item" id="scan-${s.id}">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-dim font-mono">scan/${s.id.substring(0,8)}</span>
+                <span class="text-xs text-dim">${escapeHtml(s.contentType || '')} ${s.sourceLabel ? '· ' + escapeHtml(s.sourceLabel) : ''}</span>
+            </div>
+            ${findingsHtml}
+            <div class="mt-2 text-xs" style="color:var(--dim);">AUTO_BLOCK cannot be overridden.</div>
+        </div>`;
+    }
+
+    async function recordDecision(scanId, decision) {
+        const operatorId = document.getElementById('operator-id').value.trim() || 'demo-operator';
+        const notes = (document.getElementById('notes-' + scanId) || {}).value || '';
+        const statusEl = document.getElementById('decision-status-' + scanId);
+        if (statusEl) statusEl.textContent = 'submitting...';
+        try {
+            const res = await fetch('/api/scans/' + scanId + '/decision', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ operatorId, decision, notes })
+            });
+            if (!res.ok) {
+                const msg = await res.text().catch(() => 'HTTP ' + res.status);
+                if (statusEl) statusEl.textContent = 'error: ' + msg;
+                return;
+            }
+            if (statusEl) statusEl.textContent = decision + ' recorded.';
+            await Promise.all([refreshMetrics(), refreshQueues()]);
+        } catch (e) {
+            if (statusEl) statusEl.textContent = 'error: ' + e.message;
+        }
+    }
+
+    async function submitScan() {
+        const content = document.getElementById('scan-content').value.trim();
+        if (!content) { document.getElementById('scan-status').textContent = 'content is required'; return; }
+        const contentType = document.getElementById('scan-type').value;
+        const sourceLabel = document.getElementById('scan-label').value.trim() || null;
+        const btn = document.getElementById('scan-btn');
+        const status = document.getElementById('scan-status');
+        const result = document.getElementById('scan-result');
+        btn.disabled = true;
+        status.textContent = 'scanning...';
+        result.style.display = 'none';
+        try {
+            const res = await fetch('/api/scans', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content, contentType, sourceLabel })
+            });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const scan = await res.json();
+            status.textContent = '';
+            result.style.display = '';
+            const dispClass = scan.disposition === 'AUTO_BLOCK'     ? 'tag-escalated'
+                            : scan.disposition === 'HUMAN_REQUIRED' ? 'tag-pending'
+                            : 'tag-resolved';
+            result.innerHTML = `<div class="flex items-center gap-3 mb-2">
+                <span class="text-dim text-xs">scan/${(scan.id||'').substring(0,8)}</span>
+                <span class="tag ${dispClass}">${escapeHtml(scan.disposition||'')}</span>
+                <span class="text-dim text-xs">${(scan.findings||[]).length} finding(s)</span>
+            </div>
+            ${(scan.findings||[]).map(f => `<div class="finding-row">
+                <span class="finding-key">${escapeHtml(f.regulation||'')}</span>
+                <span class="finding-val">${escapeHtml(f.ruleName||'')} — ${escapeHtml(f.category||'')}</span>
+                <span class="finding-val ${f.disposition==='AUTO_BLOCK'?'danger':'warn'}">${escapeHtml(f.disposition||'')}</span>
+            </div>`).join('')}`;
+            await Promise.all([refreshMetrics(), refreshQueues()]);
+        } catch (e) {
+            status.textContent = 'error: ' + e.message;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    setInterval(() => { refreshMetrics(); refreshQueues(); }, 30000);
+</script>
+}
