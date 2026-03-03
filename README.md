@@ -117,7 +117,11 @@ What breaks first at scale is not raw code generation. It is the control plane.
 
 ## Evidence
 
-The proof is not a slogan about autonomy. It is observable behavior.
+The proof is not a slogan about autonomy. It is observable behavior. This
+system was dogfooded continuously — 5 apps across 3 tech stacks, 7 self-healing
+drills, and 4 upstream fixes merged into `gh-aw` all came from running the
+pipeline against real work in this repo. The pipeline built the apps, broke
+itself, repaired itself, and surfaced the platform bugs along the way.
 
 ### Completed Runs
 

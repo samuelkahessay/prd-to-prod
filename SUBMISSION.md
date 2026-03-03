@@ -4,6 +4,8 @@
 
 prd-to-prod is not AI layered onto an existing workflow. It is a software delivery process rebuilt from scratch as an AI-native system. One person can now supervise continuous delivery across multiple parallel workstreams — triage, implementation, security scanning, code review, CI repair — without writing implementation code. I write product intent and acceptance criteria. The system decomposes, implements, reviews, merges, and repairs. My attention goes to what to build and why.
 
+Everything in this repo was built by the pipeline itself. 5 apps across 3 tech stacks (Express, Next.js, ASP.NET Core), 7 self-healing drills where the system broke and repaired its own build, 4 upstream fixes I reported against `gh-aw` that were merged into the platform. The pipeline was its own first customer — and the sustained usage is what turned it from a prototype into something that actually works under pressure.
+
 ## What the AI handles
 
 The pipeline manages the full delivery loop: PRD decomposition into dependency-ordered issues, implementation, PR creation, review against acceptance criteria, CI diagnosis on failure, and first-line repair. The compliance service in this submission is the specimen — the pipeline built a Canadian regulatory scanner that classifies PIPEDA and FINTRAC violations, auto-blocks clear violations, and escalates ambiguous findings to a human operator. It built that system the same way it builds everything else: one scoped issue at a time, inside a human-owned control plane.
