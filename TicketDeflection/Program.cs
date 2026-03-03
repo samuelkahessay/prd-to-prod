@@ -16,9 +16,9 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 // --- Service Registrations ---
-var dbProvider = builder.Configuration["Database:Provider"] ?? "Sqlite";
+var dbProvider = Program.GetDatabaseProvider(builder.Configuration);
 
-if (string.Equals(dbProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
+if (Program.IsSqlServerProvider(dbProvider))
 {
     var connStr = builder.Configuration.GetConnectionString("SqlServer");
     if (string.IsNullOrWhiteSpace(connStr))
@@ -91,13 +91,14 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+var enableDemoSeed = Program.GetDemoSeedEnabled(app.Configuration, dbProvider);
 
 // Seed knowledge base and auto-populate demo tickets on startup
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<TicketDbContext>();
 
-    if (string.Equals(dbProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
+    if (Program.IsSqlServerProvider(dbProvider))
     {
         await context.Database.MigrateAsync();
     }
@@ -114,10 +115,10 @@ using (var scope = app.Services.CreateScope())
     }
     SeedData.Initialize(context);
 
-    if (app.Configuration.GetValue<bool>("DemoSeed:Enabled", true))
+    if (enableDemoSeed)
         ComplianceSeedData.Seed(context);
 
-    if (app.Configuration.GetValue<bool>("DemoSeed:Enabled", true) && !context.Tickets.Any())
+    if (enableDemoSeed && !context.Tickets.Any())
     {
         var pipeline = scope.ServiceProvider.GetRequiredService<PipelineService>();
         var random = new Random(42);
@@ -153,4 +154,33 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "1.0.
 app.Run();
 
 // Expose for WebApplicationFactory in tests
-public partial class Program { }
+public partial class Program
+{
+    internal const string SqliteProvider = "Sqlite";
+    internal const string SqlServerProvider = "SqlServer";
+
+    internal static string GetDatabaseProvider(IConfiguration configuration)
+    {
+        var configuredProvider = configuration["Database:Provider"];
+        if (string.IsNullOrWhiteSpace(configuredProvider))
+            return SqliteProvider;
+
+        var normalizedProvider = configuredProvider.Trim();
+
+        if (string.Equals(normalizedProvider, SqliteProvider, StringComparison.OrdinalIgnoreCase))
+            return SqliteProvider;
+
+        if (string.Equals(normalizedProvider, SqlServerProvider, StringComparison.OrdinalIgnoreCase))
+            return SqlServerProvider;
+
+        throw new InvalidOperationException(
+            $"Unsupported Database:Provider value '{configuredProvider}'. Supported values are '{SqliteProvider}' and '{SqlServerProvider}'.");
+    }
+
+    internal static bool IsSqlServerProvider(string databaseProvider) =>
+        string.Equals(databaseProvider, SqlServerProvider, StringComparison.OrdinalIgnoreCase);
+
+    internal static bool GetDemoSeedEnabled(IConfiguration configuration, string databaseProvider) =>
+        configuration.GetValue<bool?>("DemoSeed:Enabled")
+        ?? !IsSqlServerProvider(databaseProvider);
+}

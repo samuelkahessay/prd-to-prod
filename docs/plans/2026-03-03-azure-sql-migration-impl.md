@@ -1,7 +1,5 @@
 # Azure SQL Migration Readiness — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Make the app provider-configurable (SQLite for dev/demo, Azure SQL for production) with hardened schema, real EF migrations authored against SQL Server, and design-time factory for migration tooling.
 
 **Architecture:** Single `TicketDbContext` with `OnModelCreating` defining the full schema. Provider selected at startup via `Database:Provider` config. SQL Server uses EF migrations (`Migrate()`); SQLite uses `SqliteDatabaseInitializer` (`EnsureCreated()` + compatibility fixes). A design-time factory ensures `dotnet ef` always targets SQL Server.
@@ -223,7 +221,11 @@ Run: `dotnet test TicketDeflection.Tests/ --filter "FullyQualifiedName~SchemaHar
 Then build and run:
 Run: `dotnet test TicketDeflection.Tests/ --filter "FullyQualifiedName~SchemaHardeningTests"`
 
-Expected: `ActivityLog_RequiresValidTicketId` PASSES (SQLite without FK pragma still inserts — but we enabled FK pragma, so it depends on whether the FK is defined). The tests for FK behaviors should FAIL because `OnModelCreating` doesn't define the ActivityLog FK or explicit delete behaviors yet.
+Expected:
+- `ActivityLog_RequiresValidTicketId` FAILS because the ActivityLog FK is not defined yet
+- `ActivityLog_CascadeDeletesWithTicket` FAILS because there is no ActivityLog FK/cascade path yet
+- `ComplianceDecision_RestrictDeleteOfScanWithDecision` FAILS because the current relationship is not explicitly `Restrict`
+- `ComplianceFinding_CascadeDeletesWithScan` may already PASS by convention, but keep the explicit delete behavior in code for clarity and provider consistency
 
 **Step 3: Implement schema hardening**
 
@@ -334,10 +336,9 @@ public class ProviderSelectionTests
                 .WithWebHostBuilder(b =>
                 {
                     b.UseSetting("Database:Provider", "SqlServer");
-                    // Deliberately omit the connection string
                 });
-            // Force host to build
-            _ = factory.Services;
+            // Force host startup
+            using var client = factory.CreateClient();
         });
     }
 }
@@ -419,9 +420,12 @@ var dbProvider = builder.Configuration["Database:Provider"] ?? "Sqlite";
 
 if (string.Equals(dbProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
 {
-    var connStr = builder.Configuration.GetConnectionString("SqlServer")
-        ?? throw new InvalidOperationException(
+    var connStr = builder.Configuration.GetConnectionString("SqlServer");
+    if (string.IsNullOrWhiteSpace(connStr))
+    {
+        throw new InvalidOperationException(
             "Database:Provider is set to SqlServer but ConnectionStrings:SqlServer is not configured.");
+    }
     builder.Services.AddDbContext<TicketDbContext>(o => o.UseSqlServer(connStr));
 }
 else
@@ -511,6 +515,7 @@ EOF
 
 **Files:**
 - Create: `TicketDeflection/Data/TicketDbContextFactory.cs`
+- Create: `TicketDeflection.Tests/TicketDbContextFactoryTests.cs`
 
 **Step 1: Write a test for the factory**
 
@@ -521,57 +526,78 @@ using TicketDeflection.Data;
 
 namespace TicketDeflection.Tests;
 
+[Collection("EnvironmentVariableTests")]
 public class TicketDbContextFactoryTests
 {
+    private static readonly object EnvironmentLock = new();
+
     [Fact]
     public void CreateDbContext_WithoutConnectionString_Throws()
     {
-        // Clear any env var that might be set
-        var original = Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer");
-        try
+        lock (EnvironmentLock)
         {
-            Environment.SetEnvironmentVariable("ConnectionStrings__SqlServer", null);
+            var original = Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer");
+            try
+            {
+                Environment.SetEnvironmentVariable("ConnectionStrings__SqlServer", null);
 
-            var factory = new TicketDbContextFactory();
-            var ex = Assert.Throws<InvalidOperationException>(
-                () => factory.CreateDbContext(Array.Empty<string>()));
+                var factory = new TicketDbContextFactory();
+                var ex = Assert.Throws<InvalidOperationException>(
+                    () => factory.CreateDbContext(Array.Empty<string>()));
 
-            Assert.Contains("ConnectionStrings__SqlServer", ex.Message);
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("ConnectionStrings__SqlServer", original);
+                Assert.Contains("ConnectionStrings__SqlServer", ex.Message);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("ConnectionStrings__SqlServer", original);
+            }
         }
     }
 
     [Fact]
     public void CreateDbContext_WithConnectionString_ReturnsContext()
     {
-        var original = Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer");
-        try
+        lock (EnvironmentLock)
         {
-            // Set a dummy connection string (we won't actually connect)
-            Environment.SetEnvironmentVariable(
-                "ConnectionStrings__SqlServer",
-                "Server=localhost;Database=test;Trusted_Connection=True;");
+            var original = Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer");
+            try
+            {
+                // Set a dummy connection string (we won't actually connect)
+                Environment.SetEnvironmentVariable(
+                    "ConnectionStrings__SqlServer",
+                    "Server=localhost;Database=test;User Id=sa;Password=Dummy_password123;TrustServerCertificate=True;");
 
-            var factory = new TicketDbContextFactory();
-            using var context = factory.CreateDbContext(Array.Empty<string>());
+                var factory = new TicketDbContextFactory();
+                using var context = factory.CreateDbContext(Array.Empty<string>());
 
-            Assert.NotNull(context);
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("ConnectionStrings__SqlServer", original);
+                Assert.NotNull(context);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("ConnectionStrings__SqlServer", original);
+            }
         }
     }
+}
+```
+
+Also add `TicketDeflection.Tests/EnvironmentVariableCollection.cs`:
+
+```csharp
+using Xunit;
+
+namespace TicketDeflection.Tests;
+
+[CollectionDefinition("EnvironmentVariableTests", DisableParallelization = true)]
+public sealed class EnvironmentVariableCollection
+{
 }
 ```
 
 **Step 2: Run to see it fail**
 
 Run: `dotnet test TicketDeflection.Tests/ --filter "FullyQualifiedName~TicketDbContextFactoryTests"`
-Expected: FAIL — `TicketDbContextFactory` doesn't exist yet
+Expected: FAIL — `TicketDbContextFactory` and the environment-variable collection helper do not exist yet
 
 **Step 3: Create the factory**
 
@@ -598,7 +624,7 @@ public class TicketDbContextFactory : IDesignTimeDbContextFactory<TicketDbContex
         {
             throw new InvalidOperationException(
                 "Set the ConnectionStrings__SqlServer environment variable to generate SQL Server migrations. " +
-                "Example: export ConnectionStrings__SqlServer=\"Server=localhost;Database=TicketDeflection;Trusted_Connection=True;TrustServerCertificate=True;\"");
+                "Example: export ConnectionStrings__SqlServer=\"Server=localhost;Database=TicketDeflection;User Id=sa;Password=Dummy_password123;TrustServerCertificate=True;\"");
         }
 
         var optionsBuilder = new DbContextOptionsBuilder<TicketDbContext>();
@@ -608,6 +634,8 @@ public class TicketDbContextFactory : IDesignTimeDbContextFactory<TicketDbContex
     }
 }
 ```
+
+This is intentionally narrower than the design doc's "env var or local developer secret" wording. For pre-panel readiness, env-var-only is the safer, more deterministic design-time path. User-secrets support can be layered in later without changing the migration model.
 
 **Step 4: Run factory tests**
 
@@ -622,13 +650,14 @@ Expected: All tests PASS
 **Step 6: Commit**
 
 ```bash
-git add TicketDeflection/Data/TicketDbContextFactory.cs TicketDeflection.Tests/TicketDbContextFactoryTests.cs
+git add TicketDeflection/Data/TicketDbContextFactory.cs TicketDeflection.Tests/TicketDbContextFactoryTests.cs TicketDeflection.Tests/EnvironmentVariableCollection.cs
 git commit -m "$(cat <<'EOF'
 feat(db): add design-time SQL Server factory for EF migrations
 
 TicketDbContextFactory implements IDesignTimeDbContextFactory and
 always targets SQL Server via ConnectionStrings__SqlServer env var.
-Fails fast with a clear message when the connection string is missing.
+Adds test isolation for env-var mutation and fails fast with a clear
+message when the connection string is missing.
 
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 EOF
@@ -644,8 +673,8 @@ EOF
 
 **Step 1: Install EF Core CLI tools if needed**
 
-Run: `dotnet tool list -g | grep dotnet-ef || dotnet tool install --global dotnet-ef`
-Expected: `dotnet-ef` listed or installed
+Run: `dotnet tool list -g | grep dotnet-ef || dotnet tool install --global dotnet-ef --version 10.0.3`
+Expected: `dotnet-ef` listed at `10.0.3` or installed at `10.0.3`
 
 **Step 2: Generate the migration**
 
@@ -653,7 +682,7 @@ This requires a SQL Server connection string. Since we don't have a live SQL Ser
 
 Run:
 ```bash
-ConnectionStrings__SqlServer="Server=localhost;Database=TicketDeflection;Trusted_Connection=True;TrustServerCertificate=True;" \
+ConnectionStrings__SqlServer="Server=localhost;Database=TicketDeflection;User Id=sa;Password=Dummy_password123;TrustServerCertificate=True;" \
   dotnet ef migrations add InitialCreate \
   --project TicketDeflection \
   --startup-project TicketDeflection
@@ -723,7 +752,7 @@ Expected: `{"status": "healthy", "version": "1.0.0"}`
 Run: `curl -s http://localhost:5123/api/tickets | python3 -c "import sys, json; data=json.load(sys.stdin); print(f'{len(data)} tickets')"`
 Expected: `25 tickets` (demo seed)
 
-Run: `curl -s http://localhost:5123/api/compliance/scans | python3 -c "import sys, json; data=json.load(sys.stdin); print(f'{len(data)} scans')"`
+Run: `curl -s http://localhost:5123/api/scans | python3 -c "import sys, json; data=json.load(sys.stdin); print(f'{len(data)} scans')"`
 Expected: `5 scans` (compliance seed)
 
 **Step 4: Stop the app**
@@ -751,7 +780,7 @@ Expected: All tests PASS, 0 failures
 **Step 2: Verify git status is clean**
 
 Run: `git status`
-Expected: Only the untracked files that existed before this work (drills/decisions/, docs/plans/template-repo, etc.). No unexpected modified files.
+Expected: No unexpected modified files. Pre-existing unrelated untracked files may still be present.
 
 **Step 3: Review commit log**
 

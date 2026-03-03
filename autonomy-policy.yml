@@ -107,6 +107,11 @@ actions:
       - TicketDeflection/**/Auth/**
       - TicketDeflection/**/Compliance/**
       - TicketDeflection/**/Payments/**
+      - TicketDeflection/Services/Compliance*
+      - TicketDeflection/Models/Compliance*
+      - TicketDeflection/Endpoints/ComplianceEndpoints.cs
+      - TicketDeflection/Pages/Compliance*
+      - TicketDeflection/Data/ComplianceSeedData.cs
       - src/**/auth/**
       - src/**/compliance/**
       - src/**/payments/**

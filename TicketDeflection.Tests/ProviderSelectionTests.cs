@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using TicketDeflection.Data;
 
@@ -32,6 +33,46 @@ public class ProviderSelectionTests
             // Force host startup
             using var client = factory.CreateClient();
         });
+    }
+
+    [Fact]
+    public void UnknownProvider_ThrowsOnStartup()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            using var factory = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(b =>
+                {
+                    b.UseSetting("Database:Provider", "SqlSrv");
+                });
+            using var client = factory.CreateClient();
+        });
+    }
+
+    [Fact]
+    public void GetDemoSeedEnabled_DefaultsFalseForSqlServer()
+    {
+        var configuration = new ConfigurationBuilder().Build();
+
+        Assert.False(Program.GetDemoSeedEnabled(configuration, Program.SqlServerProvider));
+    }
+
+    [Fact]
+    public void GetDemoSeedEnabled_DefaultsTrueForSqlite()
+    {
+        var configuration = new ConfigurationBuilder().Build();
+
+        Assert.True(Program.GetDemoSeedEnabled(configuration, Program.SqliteProvider));
+    }
+
+    [Fact]
+    public void GetDemoSeedEnabled_ExplicitOverrideWins()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["DemoSeed:Enabled"] = "true" })
+            .Build();
+
+        Assert.True(Program.GetDemoSeedEnabled(configuration, Program.SqlServerProvider));
     }
 
     [Fact]

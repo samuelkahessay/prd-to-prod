@@ -28,6 +28,38 @@ APP_MATCH_JSON=$(bash "$SCRIPT" match app_code_change "TicketDeflection/Program.
 printf '%s' "$APP_MATCH_JSON" | jq -e '.matched == true' >/dev/null
 printf '%s' "$APP_MATCH_JSON" | jq -e '.mode == "autonomous"' >/dev/null
 
+# --- Regression: sensitive_app_change must match real compliance file paths ---
+COMPLIANCE_FILES=(
+  "TicketDeflection/Services/ComplianceScanService.cs"
+  "TicketDeflection/Services/ComplianceRuleLibrary.cs"
+  "TicketDeflection/Models/ComplianceDecision.cs"
+  "TicketDeflection/Models/ComplianceScan.cs"
+  "TicketDeflection/Models/ComplianceEnums.cs"
+  "TicketDeflection/Endpoints/ComplianceEndpoints.cs"
+  "TicketDeflection/Pages/Compliance.cshtml"
+  "TicketDeflection/Pages/Compliance.cshtml.cs"
+  "TicketDeflection/Data/ComplianceSeedData.cs"
+)
+
+for FILE in "${COMPLIANCE_FILES[@]}"; do
+  SENSITIVE_JSON=$(bash "$SCRIPT" match sensitive_app_change "$FILE" "$POLICY")
+  printf '%s' "$SENSITIVE_JSON" | jq -e '.matched == true' >/dev/null || {
+    echo "FAIL: sensitive_app_change should match $FILE" >&2
+    exit 1
+  }
+  printf '%s' "$SENSITIVE_JSON" | jq -e '.mode == "human_required"' >/dev/null || {
+    echo "FAIL: sensitive_app_change mode should be human_required for $FILE" >&2
+    exit 1
+  }
+done
+
+# Non-compliance files should NOT match sensitive_app_change
+NON_SENSITIVE_JSON=$(bash "$SCRIPT" match sensitive_app_change "TicketDeflection/Program.cs" "$POLICY")
+printf '%s' "$NON_SENSITIVE_JSON" | jq -e '.matched == false' >/dev/null || {
+  echo "FAIL: sensitive_app_change should NOT match TicketDeflection/Program.cs" >&2
+  exit 1
+}
+
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
