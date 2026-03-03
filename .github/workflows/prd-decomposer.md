@@ -38,6 +38,7 @@ tools:
   bash: true
   github:
     toolsets: [issues, labels]
+  repo-memory: true
 
 ---
 
@@ -96,6 +97,33 @@ If the instructions above contain a URL or file path, fetch/read that content as
 10. **Self-contained acceptance criteria.** Each issue's acceptance criteria must ONLY reference files, functions, and artifacts that will be created or modified IN THAT ISSUE. Do not include criteria that depend on artifacts from other issues — those belong on the issue that creates the artifact. If a feature spans multiple issues, each issue's criteria cover only its portion.
 
 11. **Self-contained does not mean weaker.** If a PRD requirement belongs to this issue, preserve it exactly even when you rewrite it into issue-local language. Duplicate the exact contractual detail into this issue's traceability and acceptance criteria rather than replacing it with a looser summary.
+
+## Architecture-Aware Decomposition
+
+Before creating issues, check repo-memory for an architecture artifact at `architecture/{issue-number}.json`.
+
+### If an architecture artifact exists:
+
+1. **Use `decomposition_order`** from the artifact to sequence issue creation instead of the default heuristic (infrastructure → features → tests).
+
+2. **Reference `components`** in each issue's `## Technical Notes` section. For each issue, include the relevant component names, types, and `file_hint` paths from the artifact.
+
+3. **Reference `patterns`** from the artifact in acceptance criteria where applicable. If the architecture specifies a pattern (e.g., "Three-disposition classification"), issues that implement that pattern should reference it.
+
+4. **Preserve `requirements`** from the artifact. Cross-reference each issue's acceptance criteria against the artifact's requirements to ensure coverage. Every `must` requirement must appear in at least one issue's acceptance criteria.
+
+5. **Add a `## Architecture Context` section** to each issue (after PRD Traceability):
+   ```
+   ## Architecture Context
+   - **Architecture Plan**: Approved on #{prd-issue-number}
+   - **Component**: {component name} ({component type})
+   - **File Hint**: {file_hint from artifact}
+   - **Related Patterns**: {relevant pattern names}
+   ```
+
+### If no architecture artifact exists:
+
+Fall back to current behavior — use heuristic ordering and infer architecture from the PRD and codebase. This preserves backward compatibility for PRDs that skip the planning step.
 
 ## Delivery Mode Detection
 
