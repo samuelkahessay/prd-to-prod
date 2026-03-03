@@ -75,7 +75,7 @@ public sealed class ShowcaseService : IShowcaseService
             }
         }
 
-        results.Sort((a, b) => a.Number.CompareTo(b.Number));
+        results.Sort((a, b) => b.Number.CompareTo(a.Number));
         return Task.FromResult<IReadOnlyList<ShowcaseRun>>(results);
     }
 

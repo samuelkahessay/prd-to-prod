@@ -10,6 +10,7 @@ public sealed record DrillReport(
     string DrillType,
     string? FailureSignature,
     string Verdict,
+    string? VerdictReason,
     string? StartedAt,
     string? CompletedAt,
     Dictionary<string, DrillStage> Stages);
@@ -17,6 +18,6 @@ public sealed record DrillReport(
 public sealed record DrillStage(
     string Status,
     string? Timestamp,
-    int ElapsedFromPreviousS,
+    int? ElapsedFromPreviousS,
     int SlaS,
     string? Url);

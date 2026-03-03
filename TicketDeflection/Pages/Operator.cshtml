@@ -90,6 +90,9 @@
     .stage-dot-pass {
         background: var(--green);
     }
+    .stage-dot-manual {
+        background: var(--amber);
+    }
     .stage-dot-fail {
         background: var(--red);
     }
@@ -325,9 +328,9 @@
                     <div class="text-xs text-dim uppercase tracking-widest mb-1">decision ledger</div>
                     <h2 id="ledger-heading" class="font-sans text-xl font-bold text-white">Recent entries</h2>
                 </div>
-                <span class="badge badge-blue">@Model.Decisions.Count shown</span>
+                <span class="badge badge-blue">@Model.RecentDecisions.Count shown</span>
             </div>
-            @foreach (var decision in Model.Decisions)
+            @foreach (var decision in Model.RecentDecisions)
             {
                 <article class="record">
                     <div class="flex flex-wrap items-center gap-2 mb-2">
@@ -365,14 +368,9 @@
             @foreach (var run in Model.DrillRuns)
             {
                 var stageNames = new[] { "ci_failure", "issue_created", "auto_dispatch", "repair_pr", "ci_green", "auto_merge", "main_recovered" };
-                var passedCount = run.Stages.Count(s => s.Value.Status == "pass");
+                var stageSummary = OperatorModel.GetDrillStageSummary(run);
                 var totalStages = stageNames.Length;
-                var durationText = "—";
-                if (DateTimeOffset.TryParse(run.StartedAt, out var start) && DateTimeOffset.TryParse(run.CompletedAt, out var end))
-                {
-                    var dur = end - start;
-                    durationText = dur.TotalMinutes >= 1 ? $"{dur.Minutes}m{dur.Seconds:D2}s" : $"{dur.TotalSeconds:F0}s";
-                }
+                var durationText = OperatorModel.GetDrillDurationText(run);
                 var verdictBadge = run.Verdict switch
                 {
                     "PASS" => "badge-green",
@@ -385,7 +383,15 @@
                         <span class="badge @verdictBadge">@run.Verdict</span>
                         <span class="text-white text-sm font-medium">@run.DrillId</span>
                         <span class="run-duration">@durationText</span>
-                        <span class="text-dim text-xs">@passedCount/@totalStages stages</span>
+                        <span class="text-dim text-xs">@stageSummary.CompletedCount/@totalStages complete</span>
+                        @if (stageSummary.ManualCount > 0)
+                        {
+                            <span class="badge badge-amber">@stageSummary.ManualCount manual</span>
+                        }
+                        @if (stageSummary.FailedCount > 0)
+                        {
+                            <span class="badge badge-red">@stageSummary.FailedCount failed</span>
+                        }
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="code-pill">@run.DrillType</span>
@@ -394,11 +400,22 @@
                             <span class="text-dim text-xs">@run.FailureSignature</span>
                         }
                     </div>
+                    @if (!string.IsNullOrEmpty(run.VerdictReason))
+                    {
+                        <div class="meta-line mt-2">
+                            reason: @run.VerdictReason
+                        </div>
+                    }
                     <div class="stage-dots mt-3">
                         @foreach (var name in stageNames)
                         {
                             var dotClass = run.Stages.TryGetValue(name, out var stage)
-                                ? (stage.Status == "pass" ? "stage-dot-pass" : "stage-dot-fail")
+                                ? stage.Status switch
+                                {
+                                    "pass" => "stage-dot-pass",
+                                    "pass_manual" => "stage-dot-manual",
+                                    _ => "stage-dot-fail"
+                                }
                                 : "stage-dot-skip";
                             <div class="stage-dot @dotClass" title="@name"></div>
                         }
@@ -412,7 +429,7 @@
 
         <div class="mt-6 pt-4" style="border-top: 1px solid var(--border);">
             <div class="text-xs text-dim uppercase tracking-widest mb-3">decision trail</div>
-            @foreach (var decision in Model.Decisions)
+            @foreach (var decision in Model.DecisionTrail)
             {
                 <article class="record">
                     <div class="flex flex-wrap items-center gap-2 mb-1">

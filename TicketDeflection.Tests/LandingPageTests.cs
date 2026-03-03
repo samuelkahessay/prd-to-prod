@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
+using System.Text.Json;
 
 namespace TicketDeflection.Tests;
 
@@ -117,6 +118,24 @@ public class LandingPageTests : IClassFixture<WebApplicationFactory<Program>>
         var client = _factory.CreateClient();
         var response = await client.GetAsync("/api/showcase/nonexistent/timeline");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ShowcaseRuns_ReturnNewestFirst()
+    {
+        var client = _factory.CreateClient();
+        var response = await client.GetAsync("/api/showcase/runs");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(json);
+        var numbers = document.RootElement
+            .EnumerateArray()
+            .Select(item => item.GetProperty("number").GetInt32())
+            .ToArray();
+
+        Assert.Equal(numbers.OrderByDescending(n => n), numbers);
     }
 
     [Fact]

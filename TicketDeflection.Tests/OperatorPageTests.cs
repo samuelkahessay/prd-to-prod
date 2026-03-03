@@ -33,6 +33,7 @@ public class OperatorPageTests : IDisposable
             drill_type = "main_build_syntax",
             failure_signature = "cs1002-missing-semicolon",
             verdict = "PASS",
+            verdict_reason = (string?)null,
             started_at = "2026-03-02T15:20:03Z",
             completed_at = "2026-03-02T15:32:25Z",
             stages = new Dictionary<string, object>
@@ -44,6 +45,48 @@ public class OperatorPageTests : IDisposable
                 ["ci_green"] = new { status = "pass", timestamp = "2026-03-02T15:27:08Z", elapsed_from_previous_s = 44, sla_s = 900, url = "" },
                 ["auto_merge"] = new { status = "pass", timestamp = "2026-03-02T15:30:09Z", elapsed_from_previous_s = 181, sla_s = 600, url = "" },
                 ["main_recovered"] = new { status = "pass", timestamp = "2026-03-02T15:32:17Z", elapsed_from_previous_s = 128, sla_s = 300, url = "" }
+            }
+        });
+
+        WriteDrillReport(new
+        {
+            drill_id = "audit-manual-001",
+            drill_type = "manual-audit",
+            failure_signature = "bootstrap-dispatch",
+            verdict = "PASS_WITH_MANUAL_RESUME",
+            verdict_reason = "Manual label retrigger required during bootstrap.",
+            started_at = "2026-03-02T21:00:00Z",
+            completed_at = "2026-03-02T21:00:09Z",
+            stages = new Dictionary<string, object>
+            {
+                ["ci_failure"] = new { status = "pass", timestamp = "2026-03-02T10:00:00Z", elapsed_from_previous_s = (int?)null, sla_s = 120, url = "" },
+                ["issue_created"] = new { status = "pass", timestamp = "2026-03-02T10:00:20Z", elapsed_from_previous_s = 20, sla_s = 120, url = "" },
+                ["auto_dispatch"] = new { status = "pass_manual", timestamp = "2026-03-02T10:03:00Z", elapsed_from_previous_s = 160, sla_s = 120, url = "" },
+                ["repair_pr"] = new { status = "pass", timestamp = "2026-03-02T10:06:00Z", elapsed_from_previous_s = 180, sla_s = 600, url = "" },
+                ["ci_green"] = new { status = "pass", timestamp = "2026-03-02T10:08:00Z", elapsed_from_previous_s = 120, sla_s = 900, url = "" },
+                ["auto_merge"] = new { status = "pass", timestamp = "2026-03-02T10:10:30Z", elapsed_from_previous_s = 150, sla_s = 600, url = "" },
+                ["main_recovered"] = new { status = "pass", timestamp = "2026-03-02T10:11:11Z", elapsed_from_previous_s = 41, sla_s = 300, url = "" }
+            }
+        });
+
+        WriteDrillReport(new
+        {
+            drill_id = "audit-evidence-001",
+            drill_type = "audit",
+            failure_signature = "evidence-gap",
+            verdict = "FAIL",
+            verdict_reason = "Durable auto-merge evidence missing.",
+            started_at = "2026-03-02T22:00:00Z",
+            completed_at = "2026-03-02T22:00:08Z",
+            stages = new Dictionary<string, object>
+            {
+                ["ci_failure"] = new { status = "pass", timestamp = "2026-03-02T11:00:00Z", elapsed_from_previous_s = (int?)null, sla_s = 120, url = "" },
+                ["issue_created"] = new { status = "pass", timestamp = "2026-03-02T11:00:20Z", elapsed_from_previous_s = 20, sla_s = 120, url = "" },
+                ["auto_dispatch"] = new { status = "pass", timestamp = "2026-03-02T11:01:00Z", elapsed_from_previous_s = 40, sla_s = 120, url = "" },
+                ["repair_pr"] = new { status = "pass", timestamp = "2026-03-02T11:02:00Z", elapsed_from_previous_s = 60, sla_s = 600, url = "" },
+                ["ci_green"] = new { status = "pass", timestamp = "2026-03-02T11:03:00Z", elapsed_from_previous_s = 60, sla_s = 900, url = "" },
+                ["auto_merge"] = new { status = "pass", timestamp = "2026-03-02T11:04:00Z", elapsed_from_previous_s = 60, sla_s = 600, url = "" },
+                ["main_recovered"] = new { status = "pass", timestamp = "2026-03-02T11:06:00Z", elapsed_from_previous_s = 120, sla_s = 300, url = "" }
             }
         });
 
@@ -87,6 +130,62 @@ public class OperatorPageTests : IDisposable
             ["Secret rotation changes system authority"],
             "queued_for_human",
             "Token rotation requires human action outside the autonomous lane.",
+            "repo maintainer"));
+
+        WriteEvent(new DecisionEvent(
+            1,
+            "20260302T201700Z-ci-repair-escalated",
+            "2026-03-02T20:17:00Z",
+            new DecisionActor("workflow", "pipeline-watchdog"),
+            "pipeline-watchdog",
+            "ci_repair_existing_pr",
+            new PolicyResult("human_required", "Repeated repair attempts exhausted."),
+            new DecisionTarget("issue", "401", null, "CI incident #401"),
+            ["Repair attempts exhausted"],
+            "escalated",
+            "Escalated repair is still visible in the full decision trail.",
+            "repo maintainer"));
+
+        WriteEvent(new DecisionEvent(
+            1,
+            "20260302T201600Z-branch-protection-escalated",
+            "2026-03-02T20:16:00Z",
+            new DecisionActor("workflow", "pr-review-submit"),
+            "pr-review-submit",
+            "branch_protection_change",
+            new PolicyResult("human_required", "Branch protection stays under human control."),
+            new DecisionTarget("repository", null, null, "main protection"),
+            ["Branch protection touched"],
+            "escalated",
+            "Branch protection escalation is visible in the full decision trail.",
+            "repo maintainer"));
+
+        WriteEvent(new DecisionEvent(
+            1,
+            "20260302T201500Z-deploy-policy-escalated",
+            "2026-03-02T20:15:00Z",
+            new DecisionActor("workflow", "demo-preflight"),
+            "demo-preflight",
+            "deploy_policy_change",
+            new PolicyResult("human_required", "Deploy policy stays under human control."),
+            new DecisionTarget("file", null, "autonomy-policy.yml", "autonomy-policy.yml"),
+            ["Deploy policy touched"],
+            "escalated",
+            "Deploy policy escalation is visible in the full decision trail.",
+            "repo maintainer"));
+
+        WriteEvent(new DecisionEvent(
+            1,
+            "20260302T201400Z-oldest-escalated",
+            "2026-03-02T20:14:00Z",
+            new DecisionActor("workflow", "pipeline-watchdog"),
+            "pipeline-watchdog",
+            "manual_follow_up",
+            new PolicyResult("human_required", "Oldest event should still appear in the trail."),
+            new DecisionTarget("issue", "399", null, "Historical incident #399"),
+            ["Historical evidence retained"],
+            "escalated",
+            "Oldest decision remains visible in the decision trail.",
             "repo maintainer"));
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
@@ -149,8 +248,40 @@ public class OperatorPageTests : IDisposable
         Assert.Contains("PASS", html);
         Assert.Contains("main_build_syntax", html);
         Assert.Contains("cs1002-missing-semicolon", html);
-        Assert.Contains("7/7 stages", html);
+        Assert.Contains("7/7 complete", html);
         Assert.Contains("decision trail", html);
+    }
+
+    [Fact]
+    public async Task Operator_DecisionTrailIncludesOlderEntriesBeyondRecentSummary()
+    {
+        var client = _factory.CreateClient();
+        var html = await client.GetStringAsync("/operator");
+
+        Assert.Contains("Oldest decision remains visible in the decision trail.", html);
+    }
+
+    [Fact]
+    public async Task Operator_RendersManualResumeWithoutTreatingItAsHardFailure()
+    {
+        var client = _factory.CreateClient();
+        var html = await client.GetStringAsync("/operator");
+
+        Assert.Contains("PASS_WITH_MANUAL_RESUME", html);
+        Assert.Contains("1 manual", html);
+        Assert.Contains("7/7 complete", html);
+        Assert.Contains("Manual label retrigger required during bootstrap.", html);
+        Assert.Contains("11m11s", html);
+    }
+
+    [Fact]
+    public async Task Operator_RendersVerdictReasonForEvidenceOnlyFailure()
+    {
+        var client = _factory.CreateClient();
+        var html = await client.GetStringAsync("/operator");
+
+        Assert.Contains("audit-evidence-001", html);
+        Assert.Contains("Durable auto-merge evidence missing.", html);
     }
 
     public void Dispose()
