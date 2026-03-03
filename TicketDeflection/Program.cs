@@ -54,6 +54,7 @@ app.MapTicketEndpoints();
 app.MapKnowledgeEndpoints();
 app.MapClassifyEndpoints();
 app.MapResolveEndpoints();
+app.MapComplianceEndpoints();
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = "1.0.0" }));
 

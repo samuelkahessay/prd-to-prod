@@ -1,0 +1,153 @@
+#nullable enable
+
+using Microsoft.EntityFrameworkCore;
+using TicketDeflection.Data;
+using TicketDeflection.Models;
+using TicketDeflection.Services;
+
+namespace TicketDeflection.Endpoints;
+
+public static class ComplianceEndpoints
+{
+    // Sample content for the simulate endpoint — mix of PIPEDA, FINTRAC, clean, and advisory
+    private static readonly string[] SampleContents =
+    [
+        // PIPEDA violations (AUTO_BLOCK)
+        "Customer data: SIN: 123-456-789, name: Jane Doe",
+        "Personal health info: patient SIN 987-654-321, diagnosis: hypertension",
+        "SIN: 456-789-123 found in exported log file",
+        "Record includes SIN: 111-222-333 and date of birth",
+        "Credit card 4111-1111-1111-1111 stored in plaintext",
+
+        // FINTRAC violations (HUMAN_REQUIRED)
+        "Transaction of $15,000 CAD deposited without FINTRAC report",
+        "Wire transfer $12,500 to foreign account — no STR filed",
+        "Cash transaction exceeding $10,000 — reporting status unclear",
+        "Transfer amount: $11,200 — compliance officer not notified",
+        "Large cash purchase $13,800 — FINTRAC reporting pending",
+
+        // Advisory samples
+        "Potential data handling issue — review recommended",
+        "Transaction recorded, amount below reporting threshold",
+        "User consent obtained — standard processing",
+        "Log entry: API call completed, no sensitive data detected",
+        "Payment $500 processed — standard threshold",
+
+        // Clean samples
+        "Hello world — simple test content with no violations",
+        "GET /api/health HTTP/1.1 200 OK",
+        "Build succeeded. 0 warnings, 0 errors.",
+        "Unit test passed: OrderCalculation returns correct total",
+        "README updated with new API documentation",
+    ];
+
+    public static void MapComplianceEndpoints(this WebApplication app)
+    {
+        app.MapPost("/api/scans", SubmitScan);
+        app.MapGet("/api/scans", GetAllScans);
+        app.MapGet("/api/scans/{id:guid}", GetScanById);
+        app.MapGet("/api/compliance/metrics", GetMetrics);
+        app.MapPost("/api/scans/{id:guid}/decision", RecordDecision);
+        app.MapPost("/api/scans/simulate", RunComplianceSimulation);
+    }
+
+    private static async Task<IResult> SubmitScan(
+        ScanRequest request,
+        IComplianceScanService scanner,
+        TicketDbContext db)
+    {
+        var scan = await scanner.ScanAsync(request.Content, request.ContentType, request.SourceLabel, db);
+        return Results.Created($"/api/scans/{scan.Id}", scan);
+    }
+
+    private static async Task<IResult> GetAllScans(TicketDbContext db)
+    {
+        var scans = await db.ComplianceScans
+            .Include(s => s.Findings)
+            .OrderByDescending(s => s.SubmittedAt)
+            .ToListAsync();
+        return Results.Ok(scans);
+    }
+
+    private static async Task<IResult> GetScanById(Guid id, TicketDbContext db)
+    {
+        var scan = await db.ComplianceScans
+            .Include(s => s.Findings)
+            .FirstOrDefaultAsync(s => s.Id == id);
+        return scan is null ? Results.NotFound() : Results.Ok(scan);
+    }
+
+    private static async Task<IResult> GetMetrics(TicketDbContext db)
+    {
+        var scans = await db.ComplianceScans.ToListAsync();
+        var pendingDecisions = await db.ComplianceScans
+            .Where(s => s.Disposition == ComplianceDisposition.HUMAN_REQUIRED)
+            .CountAsync(s => !db.ComplianceDecisions.Any(d => d.ScanId == s.Id));
+
+        return Results.Ok(new
+        {
+            totalScans = scans.Count,
+            autoBlocked = scans.Count(s => s.Disposition == ComplianceDisposition.AUTO_BLOCK),
+            humanRequired = scans.Count(s => s.Disposition == ComplianceDisposition.HUMAN_REQUIRED),
+            advisory = scans.Count(s => s.Disposition == ComplianceDisposition.ADVISORY),
+            pendingDecisions,
+        });
+    }
+
+    private static async Task<IResult> RecordDecision(
+        Guid id,
+        DecisionRequest request,
+        TicketDbContext db)
+    {
+        var scan = await db.ComplianceScans
+            .Include(s => s.Findings)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (scan is null)
+            return Results.NotFound();
+
+        if (scan.Disposition == ComplianceDisposition.AUTO_BLOCK)
+            return Results.BadRequest("AUTO_BLOCK decisions cannot be overridden through this endpoint");
+
+        var decision = new ComplianceDecision
+        {
+            ScanId = id,
+            OperatorId = request.OperatorId,
+            Decision = request.Decision,
+            Notes = request.Notes,
+        };
+        db.ComplianceDecisions.Add(decision);
+        await db.SaveChangesAsync();
+
+        return Results.Ok(scan);
+    }
+
+    private static async Task<IResult> RunComplianceSimulation(
+        IComplianceScanService scanner,
+        TicketDbContext db,
+        int count = 10)
+    {
+        if (count < 1) count = 1;
+        if (count > 50) count = 50;
+
+        var random = new Random();
+        int autoBlocked = 0, humanRequired = 0, advisory = 0;
+
+        for (int i = 0; i < count; i++)
+        {
+            var content = SampleContents[random.Next(SampleContents.Length)];
+            var scan = await scanner.ScanAsync(content, ContentType.FREETEXT, "simulate", db);
+            switch (scan.Disposition)
+            {
+                case ComplianceDisposition.AUTO_BLOCK: autoBlocked++; break;
+                case ComplianceDisposition.HUMAN_REQUIRED: humanRequired++; break;
+                default: advisory++; break;
+            }
+        }
+
+        return Results.Ok(new { count, autoBlocked, humanRequired, advisory });
+    }
+}
+
+public record ScanRequest(string Content, ContentType ContentType, string? SourceLabel);
+public record DecisionRequest(string OperatorId, string Decision, string? Notes);
