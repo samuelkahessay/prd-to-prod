@@ -10,6 +10,8 @@ rebuilds a legacy workflow around modern AI: not as a suggestion layer on top of
 old CI/CD, but as an operating loop with explicit authority limits, real failure
 conditions, and visible operator controls.
 
+> **Wealthsimple submission:** see [`SUBMISSION.md`](SUBMISSION.md) for the application brief and compliance service specimen.
+
 ```mermaid
 flowchart TD
   subgraph C["Human Control Plane<br/>&nbsp;"]
@@ -125,6 +127,7 @@ The proof is not a slogan about autonomy. It is observable behavior.
 | 02 | [Pipeline Observatory](showcase/02-pipeline-observatory/) | Next.js 14 + TypeScript | [`v2.0.0`](https://github.com/samuelkahessay/prd-to-prod/tree/v2.0.0) |
 | 03 | [DevCard](showcase/03-devcard/) | Next.js 14 + TypeScript + Framer Motion | [`v3.0.0`](https://github.com/samuelkahessay/prd-to-prod/tree/v3.0.0) |
 | 04 | [Ticket Deflection Service](https://prd-to-prod.azurewebsites.net/) | ASP.NET Core + C# | [`v4.0.0`](https://github.com/samuelkahessay/prd-to-prod/tree/v4.0.0) |
+| 05 | [Compliance Scan Service](showcase/05-compliance-scan/) | ASP.NET Core + C# | [`v5.0.0`](https://github.com/samuelkahessay/prd-to-prod/tree/v5.0.0) |
 
 See [`showcase/`](showcase/) for run manifests, PR lists, and timelines.
 
