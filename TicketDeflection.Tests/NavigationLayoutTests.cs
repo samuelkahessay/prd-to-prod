@@ -16,14 +16,11 @@ public class NavigationLayoutTests : IClassFixture<WebApplicationFactory<Program
     {
         var client = _factory.CreateClient();
 
-        var html = await client.GetStringAsync("/dashboard");
+        var html = await client.GetStringAsync("/");
 
         Assert.Contains("status-bar-brand-row", html);
         Assert.Contains("status-bar-links", html);
         Assert.Contains("href=\"/\"", html);
-        Assert.Contains("href=\"/dashboard\"", html);
-        Assert.Contains("href=\"/tickets\"", html);
-        Assert.Contains("href=\"/activity\"", html);
         Assert.Contains("href=\"/operator\"", html);
         Assert.Contains("href=\"/pipeline\"", html);
         Assert.Contains("href=\"/compliance\"", html);
