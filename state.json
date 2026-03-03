@@ -1,12 +1,12 @@
 {
-  "last_run": "2026-03-03T05:43:05Z",
-  "workflow_run_id": "22610033802",
+  "last_run": "2026-03-03T05:47:24Z",
+  "workflow_run_id": "22610129421",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 — C#/.NET 10)",
     "status": "complete"
   },
-  "pipeline_status": "ON_TRACK",
+  "pipeline_status": "COMPLETE",
   "attempts": [
     {"issue": 125, "pr": 138, "status": "merged"},
     {"issue": 126, "pr": 139, "status": "merged"},
@@ -66,8 +66,8 @@
     {"issue": 347, "pr": 355, "status": "merged"},
     {"issue": 356, "status": "closed_by_owner"},
     {"issue": 359, "pr": 361, "status": "merged"},
-    {"issue": 362, "pr": 363, "status": "pr_open", "branch": "repo-assist/issue-362-trim-nav-to-4-pages-3a6a30b838fd3872"}
+    {"issue": 362, "pr": 363, "status": "merged"}
   ],
-  "open_issues": [362],
-  "notes": "PR #363 open for issue #362 (nav trim). CI pending. No [aw] issues. 2026-03-03T05:43:05Z"
+  "open_issues": [],
+  "notes": "Run 07 complete. PR #363 (nav trim, issue #362) merged. No open pipeline issues or PRs. Ready for archive. 2026-03-03T05:47:24Z"
 }

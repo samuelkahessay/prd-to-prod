@@ -1,8 +1,8 @@
 # Pipeline State — 2026-03-03
 
 ## Last Run
-- Workflow run: 22605885655
-- Date: 2026-03-03T02:45:56Z
+- Workflow run: 22610129421
+- Date: 2026-03-03T05:47:24Z
 
 ## Run 07 — Compliance Scan Service: **COMPLETE** ✅
 
@@ -17,11 +17,14 @@
 | #345 | Create Compliance Dashboard Razor Page at /compliance | #344 | ✅ Merged (PR #353) |
 | #346 | Add Compliance Link to Navigation and Landing Page | #345 | ✅ Merged (PR #354) |
 | #347 | Add Tests for Compliance Scan Service | #346 | ✅ Merged (PR #355) |
+| #359 | NavigationLayoutTests: Assert 4 nav items | None | ✅ Merged (PR #361) |
+| #362 | Trim shared navigation to 4 pages | None | ✅ Merged (PR #363) |
 
 ### Status
 - 0 open implementable pipeline issues
 - 0 open PRs
 - 0 [aw] triage issues
+- Pipeline: **COMPLETE**
 
 ### Next Actions
 1. Archive Run 07: `scripts/archive-run.sh` to tag v7.0.0 and create showcase entry `07-compliance-scan-service`
