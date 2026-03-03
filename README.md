@@ -134,6 +134,16 @@ fixes merged into `gh-aw` came from running it against real work in this repo.
 
 See [`showcase/`](showcase/) for run manifests, PR lists, and timelines.
 
+### Upstream Contributions to gh-aw
+
+Running this pipeline against real work surfaced bugs in gh-aw itself. These
+were reported, fixed, and credited in the release notes:
+
+| Release | Issues |
+|---|---|
+| [`v0.51.3`](https://github.com/github/gh-aw/releases/tag/v0.51.3) | [#19023](https://github.com/github/gh-aw/issues/19023) Mixed-trigger concurrency group collapse, [#19024](https://github.com/github/gh-aw/issues/19024) Malformed `#aw_*` references pass without validation |
+| [`v0.51.6`](https://github.com/github/gh-aw/releases/tag/v0.51.6) | [#19158](https://github.com/github/gh-aw/issues/19158) `gh aw checks --json` collapses optional failures into top-level state, [#19020](https://github.com/github/gh-aw/issues/19020) Auto-merge gating ignores non-required deployment statuses |
+
 ### Operational Proof
 
 - Historical drill audits in [`drills/reports/`](drills/reports/)
