@@ -1,12 +1,12 @@
 {
-  "last_run": "2026-03-02T22:10:00Z",
-  "workflow_run_id": "22597910273",
+  "last_run": "2026-03-03T00:22:42Z",
+  "workflow_run_id": "22602120671",
   "current_prd": {
-    "issue": 297,
-    "title": "PRD: Run 05 Landing Page Demo (open as tracker)",
-    "status": "complete_pending_archive"
+    "issue": 339,
+    "title": "PRD: Compliance Scan Service (Run 07 — C#/.NET 10)",
+    "status": "awaiting_decomposition"
   },
-  "pipeline_status": "COMPLETE",
+  "pipeline_status": "ON_TRACK",
   "attempts": [
     {"issue": 125, "pr": 138, "status": "merged"},
     {"issue": 126, "pr": 139, "status": "merged"},
@@ -59,5 +59,5 @@
   ],
   "open_issues": [],
   "open_prs": [],
-  "notes": "Run 06 complete. All three issues merged: #333→PR#336 (policy narrative), #334→PR#337 (demo-preflight), #335→PR#338 (autonomy APIs). 93 tests pass. Pipeline ready to archive as v6.0.0 / 06-policy-bounded-execution."
+  "notes": "Run 07 PRD #339 (Compliance Scan Service) created 2026-03-03. Awaiting /decompose to generate implementation issues. Run 06 fully complete."
 }
