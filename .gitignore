@@ -37,3 +37,7 @@ scripts/demo-video/
 
 # Scratch screenshots
 pipeline-replay-screenshot.png
+
+# Local tool state
+.playwright-mcp/
+.sisyphus/

@@ -30,10 +30,13 @@ if (string.Equals(dbProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
 }
 else
 {
-    var connStr = builder.Configuration.GetConnectionString("Sqlite")
-        ?? (builder.Environment.IsDevelopment()
+    var connStr = builder.Configuration.GetConnectionString("Sqlite");
+    if (string.IsNullOrWhiteSpace(connStr))
+    {
+        connStr = builder.Environment.IsDevelopment()
             ? "Data Source=ticketdb.db"
-            : "Data Source=/home/data/ticketdb.db");
+            : "Data Source=/home/data/ticketdb.db";
+    }
     builder.Services.AddDbContext<TicketDbContext>(o => o.UseSqlite(connStr));
 }
 builder.Services.AddScoped<ClassificationService>();
@@ -102,7 +105,10 @@ using (var scope = app.Services.CreateScope())
     {
         // Ensure data directory exists for production SQLite path
         if (!app.Environment.IsDevelopment())
-            Directory.CreateDirectory("/home/data");
+        {
+            try { Directory.CreateDirectory("/home/data"); }
+            catch (IOException) { /* running outside container (e.g. macOS) */ }
+        }
 
         await SqliteDatabaseInitializer.EnsureCreatedAndApplyCompatibilityFixesAsync(context);
     }
