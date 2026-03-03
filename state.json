@@ -1,12 +1,12 @@
 {
-  "last_run": "2026-03-03T05:13:36Z",
-  "workflow_run_id": "22609299393",
+  "last_run": "2026-03-03T05:24:35Z",
+  "workflow_run_id": "22609575454",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 — C#/.NET 10)",
     "status": "complete"
   },
-  "pipeline_status": "AT_RISK",
+  "pipeline_status": "COMPLETE",
   "attempts": [
     {"issue": 125, "pr": 138, "status": "merged"},
     {"issue": 126, "pr": 139, "status": "merged"},
@@ -65,8 +65,8 @@
     {"issue": 346, "pr": 354, "status": "merged"},
     {"issue": 347, "pr": 355, "status": "merged"},
     {"issue": 356, "status": "closed_by_owner"},
-    {"issue": 359, "pr": "pending", "status": "in_progress", "description": "Fix NavigationLayoutTests to assert 4-page nav: /, /operator, /pipeline, /compliance"}
+    {"issue": 359, "pr": 361, "status": "merged"}
   ],
-  "open_issues": [{"number": 359, "title": "Update NavigationLayoutTests to match current 4-page navigation"}],
-  "notes": "Run 07 COMPLETE. Issue #356 (wrong CI fix) was closed by owner. Issue #359 created to properly update the test to assert only 4 nav links. PR submitted by this run. All 124 tests pass. 2026-03-03T05:13:36Z"
+  "open_issues": [],
+  "notes": "Run 07 COMPLETE. All 22 issues merged (PRs #348-355, #361). CI passing (124 tests). Ready to archive as showcase/07-compliance-scan-service / tag v7.0.0. 2026-03-03T05:24:35Z"
 }
