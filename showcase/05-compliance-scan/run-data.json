@@ -1,0 +1,295 @@
+{
+  "run": {
+    "number": 5,
+    "name": "Compliance Scan Service",
+    "tag": "v5.0.0",
+    "tech_stack": "ASP.NET Core + C#",
+    "date": "2026-03",
+    "deployment": "https://prd-to-prod.azurewebsites.net",
+    "prd": "docs/prd/run-07-compliance-scan-prd.md"
+  },
+  "stats": {
+    "issues_created": 8,
+    "prs_total": 8,
+    "prs_merged": 8,
+    "lines_added": 1576,
+    "lines_removed": 0,
+    "files_changed": 23
+  },
+  "issues": [
+    {
+      "number": 340,
+      "title": "[Pipeline] Add Compliance Domain Models and Enums",
+      "body": "",
+      "state": "closed",
+      "labels": ["pipeline", "infra", "in-progress"],
+      "created_at": "2026-03-03T00:30:56Z",
+      "closed_at": "2026-03-03T00:42:50Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 341,
+      "title": "[Pipeline] Extend DbContext and Add Compliance Demo Seed Data",
+      "body": "",
+      "state": "closed",
+      "labels": ["pipeline", "infra", "in-progress"],
+      "created_at": "2026-03-03T00:30:57Z",
+      "closed_at": "2026-03-03T00:55:56Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 342,
+      "title": "[Pipeline] Implement Static Compliance Rule Library (PIPEDA + FINTRAC)",
+      "body": "",
+      "state": "closed",
+      "labels": ["pipeline", "feature", "in-progress"],
+      "created_at": "2026-03-03T00:30:59Z",
+      "closed_at": "2026-03-03T00:56:22Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 343,
+      "title": "[Pipeline] Implement Compliance Scan Engine Service",
+      "body": "",
+      "state": "closed",
+      "labels": ["pipeline", "feature", "in-progress"],
+      "created_at": "2026-03-03T00:31:00Z",
+      "closed_at": "2026-03-03T01:08:11Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 344,
+      "title": "[Pipeline] Implement Compliance API Endpoints",
+      "body": "",
+      "state": "closed",
+      "labels": ["pipeline", "feature", "in-progress"],
+      "created_at": "2026-03-03T00:31:01Z",
+      "closed_at": "2026-03-03T01:19:08Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 345,
+      "title": "[Pipeline] Create Compliance Dashboard Razor Page at /compliance",
+      "body": "",
+      "state": "closed",
+      "labels": ["pipeline", "feature", "in-progress"],
+      "created_at": "2026-03-03T00:31:03Z",
+      "closed_at": "2026-03-03T01:33:38Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 346,
+      "title": "[Pipeline] Add Compliance Link to Navigation and Landing Page",
+      "body": "",
+      "state": "closed",
+      "labels": ["pipeline", "feature"],
+      "created_at": "2026-03-03T00:31:04Z",
+      "closed_at": "2026-03-03T01:49:48Z",
+      "user": "samuelkahessay"
+    },
+    {
+      "number": 347,
+      "title": "[Pipeline] Add Tests for Compliance Scan Service, Endpoints, and Dashboard",
+      "body": "",
+      "state": "closed",
+      "labels": ["pipeline", "test"],
+      "created_at": "2026-03-03T00:31:06Z",
+      "closed_at": "2026-03-03T01:50:43Z",
+      "user": "samuelkahessay"
+    }
+  ],
+  "timeline": [
+    {
+      "timestamp": "2026-03-03T00:30:56Z",
+      "event": "issue_created",
+      "item": 340,
+      "title": "[Pipeline] Add Compliance Domain Models and Enums"
+    },
+    {
+      "timestamp": "2026-03-03T00:30:57Z",
+      "event": "issue_created",
+      "item": 341,
+      "title": "[Pipeline] Extend DbContext and Add Compliance Demo Seed Data"
+    },
+    {
+      "timestamp": "2026-03-03T00:30:59Z",
+      "event": "issue_created",
+      "item": 342,
+      "title": "[Pipeline] Implement Static Compliance Rule Library (PIPEDA + FINTRAC)"
+    },
+    {
+      "timestamp": "2026-03-03T00:31:00Z",
+      "event": "issue_created",
+      "item": 343,
+      "title": "[Pipeline] Implement Compliance Scan Engine Service"
+    },
+    {
+      "timestamp": "2026-03-03T00:31:01Z",
+      "event": "issue_created",
+      "item": 344,
+      "title": "[Pipeline] Implement Compliance API Endpoints"
+    },
+    {
+      "timestamp": "2026-03-03T00:31:03Z",
+      "event": "issue_created",
+      "item": 345,
+      "title": "[Pipeline] Create Compliance Dashboard Razor Page at /compliance"
+    },
+    {
+      "timestamp": "2026-03-03T00:31:04Z",
+      "event": "issue_created",
+      "item": 346,
+      "title": "[Pipeline] Add Compliance Link to Navigation and Landing Page"
+    },
+    {
+      "timestamp": "2026-03-03T00:31:06Z",
+      "event": "issue_created",
+      "item": 347,
+      "title": "[Pipeline] Add Tests for Compliance Scan Service, Endpoints, and Dashboard"
+    },
+    {
+      "timestamp": "2026-03-03T00:39:03Z",
+      "event": "pr_opened",
+      "item": 348,
+      "title": "[Pipeline] Add Compliance Domain Models and Enums"
+    },
+    {
+      "timestamp": "2026-03-03T00:42:43Z",
+      "event": "review_approved",
+      "item": 348,
+      "title": "[Pipeline] Add Compliance Domain Models and Enums"
+    },
+    {
+      "timestamp": "2026-03-03T00:42:48Z",
+      "event": "pr_merged",
+      "item": 348,
+      "title": "[Pipeline] Add Compliance Domain Models and Enums"
+    },
+    {
+      "timestamp": "2026-03-03T00:52:12Z",
+      "event": "pr_opened",
+      "item": 349,
+      "title": "[Pipeline] Extend DbContext and Add Compliance Demo Seed Data"
+    },
+    {
+      "timestamp": "2026-03-03T00:52:15Z",
+      "event": "pr_opened",
+      "item": 350,
+      "title": "[Pipeline] Implement Static Compliance Rule Library (PIPEDA + FINTRAC)"
+    },
+    {
+      "timestamp": "2026-03-03T00:55:51Z",
+      "event": "review_approved",
+      "item": 349,
+      "title": "[Pipeline] Extend DbContext and Add Compliance Demo Seed Data"
+    },
+    {
+      "timestamp": "2026-03-03T00:55:55Z",
+      "event": "pr_merged",
+      "item": 349,
+      "title": "[Pipeline] Extend DbContext and Add Compliance Demo Seed Data"
+    },
+    {
+      "timestamp": "2026-03-03T00:56:15Z",
+      "event": "review_approved",
+      "item": 350,
+      "title": "[Pipeline] Implement Static Compliance Rule Library (PIPEDA + FINTRAC)"
+    },
+    {
+      "timestamp": "2026-03-03T00:56:21Z",
+      "event": "pr_merged",
+      "item": 350,
+      "title": "[Pipeline] Implement Static Compliance Rule Library (PIPEDA + FINTRAC)"
+    },
+    {
+      "timestamp": "2026-03-03T01:04:25Z",
+      "event": "pr_opened",
+      "item": 351,
+      "title": "[Pipeline] Implement Compliance Scan Engine Service"
+    },
+    {
+      "timestamp": "2026-03-03T01:08:05Z",
+      "event": "review_approved",
+      "item": 351,
+      "title": "[Pipeline] Implement Compliance Scan Engine Service"
+    },
+    {
+      "timestamp": "2026-03-03T01:08:10Z",
+      "event": "pr_merged",
+      "item": 351,
+      "title": "[Pipeline] Implement Compliance Scan Engine Service"
+    },
+    {
+      "timestamp": "2026-03-03T01:15:23Z",
+      "event": "pr_opened",
+      "item": 352,
+      "title": "[Pipeline] Implement Compliance API Endpoints"
+    },
+    {
+      "timestamp": "2026-03-03T01:19:02Z",
+      "event": "review_approved",
+      "item": 352,
+      "title": "[Pipeline] Implement Compliance API Endpoints"
+    },
+    {
+      "timestamp": "2026-03-03T01:19:07Z",
+      "event": "pr_merged",
+      "item": 352,
+      "title": "[Pipeline] Implement Compliance API Endpoints"
+    },
+    {
+      "timestamp": "2026-03-03T01:29:18Z",
+      "event": "pr_opened",
+      "item": 353,
+      "title": "[Pipeline] Implement Compliance Dashboard Razor Page"
+    },
+    {
+      "timestamp": "2026-03-03T01:33:32Z",
+      "event": "review_approved",
+      "item": 353,
+      "title": "[Pipeline] Implement Compliance Dashboard Razor Page"
+    },
+    {
+      "timestamp": "2026-03-03T01:33:37Z",
+      "event": "pr_merged",
+      "item": 353,
+      "title": "[Pipeline] Implement Compliance Dashboard Razor Page"
+    },
+    {
+      "timestamp": "2026-03-03T01:45:24Z",
+      "event": "pr_opened",
+      "item": 354,
+      "title": "[Pipeline] Add Compliance Link to Navigation and Landing Page"
+    },
+    {
+      "timestamp": "2026-03-03T01:45:27Z",
+      "event": "pr_opened",
+      "item": 355,
+      "title": "[Pipeline] Add Tests for Compliance Scan Service, Endpoints, and Dashboard"
+    },
+    {
+      "timestamp": "2026-03-03T01:49:43Z",
+      "event": "review_approved",
+      "item": 354,
+      "title": "[Pipeline] Add Compliance Link to Navigation and Landing Page"
+    },
+    {
+      "timestamp": "2026-03-03T01:49:47Z",
+      "event": "pr_merged",
+      "item": 354,
+      "title": "[Pipeline] Add Compliance Link to Navigation and Landing Page"
+    },
+    {
+      "timestamp": "2026-03-03T01:50:34Z",
+      "event": "review_approved",
+      "item": 355,
+      "title": "[Pipeline] Add Tests for Compliance Scan Service, Endpoints, and Dashboard"
+    },
+    {
+      "timestamp": "2026-03-03T01:50:42Z",
+      "event": "pr_merged",
+      "item": 355,
+      "title": "[Pipeline] Add Tests for Compliance Scan Service, Endpoints, and Dashboard"
+    }
+  ]
+}

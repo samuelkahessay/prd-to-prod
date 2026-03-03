@@ -24,9 +24,9 @@ public class PipelinePageTests
 
         var html = await client.GetStringAsync("/pipeline");
 
-        Assert.Contains("Live Pipeline Snapshot", html);
-        Assert.Contains("refreshes every 15 seconds", html);
+        Assert.Contains("Pipeline", html);
         Assert.Contains("/api/pipeline/live", html);
         Assert.Contains("Current pipeline flow", html);
+        Assert.Contains("/api/showcase/runs", html);
     }
 }

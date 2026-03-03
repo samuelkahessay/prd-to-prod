@@ -1,8 +1,8 @@
 @page "/pipeline"
 @model TicketDeflection.Pages.PipelineModel
 @{
-    ViewData["Title"] = "Pipeline Live";
-    ViewData["NavTitle"] = "PIPELINE LIVE";
+    ViewData["Title"] = "Pipeline";
+    ViewData["NavTitle"] = "PIPELINE";
 }
 
 @section Styles {
@@ -69,62 +69,236 @@
     .chip-review { color: #d4d8ff; }
     .chip-deploy { color: var(--green); }
     .chip-ops { color: #ff9bd7; }
+
+    /* Mode selector */
+    .mode-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--dim);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+    .mode-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+    .mode-btn.active {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(0, 170, 255, 0.08);
+    }
+    .live-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+        animation: pulse 2s infinite;
+    }
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+
+    /* Replay controls */
+    .ctrl-btn {
+        padding: 5px 12px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--dim);
+        font-size: 0.75rem;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.15s;
+    }
+    .ctrl-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+    .ctrl-btn.accent {
+        color: var(--green);
+        border-color: rgba(61, 220, 132, 0.3);
+    }
+    .ctrl-btn.accent:hover {
+        background: rgba(61, 220, 132, 0.08);
+    }
+
+    /* Event log */
+    .event-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px 10px;
+        border-left: 2px solid var(--border);
+        transition: all 0.15s;
+    }
+    .event-item.current {
+        border-left-color: var(--accent);
+        background: rgba(0, 170, 255, 0.06);
+    }
+    .event-item.upcoming {
+        opacity: 0.35;
+    }
+    .event-marker {
+        flex-shrink: 0;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-top: 4px;
+    }
+    .event-marker.issue_created { background: var(--amber); }
+    .event-marker.pr_opened { background: var(--accent); }
+    .event-marker.review_approved, .event-marker.review_commented { background: #d4d8ff; }
+    .event-marker.pr_merged { background: var(--green); }
+    .event-time {
+        flex-shrink: 0;
+        width: 44px;
+        font-size: 0.68rem;
+        color: var(--dim);
+        font-variant-numeric: tabular-nums;
+    }
+    .event-type {
+        flex-shrink: 0;
+        width: 110px;
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .event-type.issue_created { color: var(--amber); }
+    .event-type.pr_opened { color: var(--accent); }
+    .event-type.review_approved, .event-type.review_commented { color: #d4d8ff; }
+    .event-type.pr_merged { color: var(--green); }
+
+    /* Current event highlight */
+    .current-event-box {
+        border: 1px solid rgba(0, 170, 255, 0.2);
+        background: rgba(0, 170, 255, 0.04);
+        padding: 14px 16px;
+    }
+
+    /* Run history table */
+    .run-row {
+        display: grid;
+        grid-template-columns: 40px 1fr 1fr 60px 60px 80px;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .run-row:hover {
+        background: rgba(0, 170, 255, 0.04);
+    }
+    .run-row-header {
+        color: var(--dim);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        cursor: default;
+    }
+    .run-row-header:hover {
+        background: transparent;
+    }
+    .run-num {
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+    }
+
     @@media (max-width: 900px) {
         .stage-grid { grid-template-columns: 1fr 1fr; }
         .stage-node::after { display: none; }
+        .run-row { grid-template-columns: 40px 1fr 60px 60px; }
+        .run-row > :nth-child(3) { display: none; }
+        .run-row > :nth-child(6) { display: none; }
     }
     @@media (max-width: 640px) {
         .stage-grid { grid-template-columns: 1fr; }
+        .run-row { grid-template-columns: 40px 1fr 60px; }
+        .run-row > :nth-child(4) { display: none; }
     }
 </style>
 }
 
 <div class="max-w-6xl mx-auto px-4 py-10">
     <div class="mb-8">
-        <div class="text-xs text-dim mb-2 uppercase tracking-widest">// current repo state — actionable issues, prs, runs, deploys</div>
-        <h1 class="font-sans text-3xl font-bold text-white mb-3">Live Pipeline Snapshot</h1>
-        <div class="text-xs text-dim mb-3">live GitHub state, refreshes every 15 seconds</div>
+        <div class="text-xs text-dim mb-2 uppercase tracking-widest">// pipeline state &mdash; live &amp; historical</div>
+        <h1 class="font-sans text-3xl font-bold text-white mb-3">Pipeline</h1>
         <p class="max-w-3xl text-sm leading-relaxed text-dim">
-            This page polls the current GitHub control plane and renders the active software delivery loop as it exists now,
-            not as a canned replay. Issue counts here refer to actionable pipeline work, not every open issue with the
-            <code class="text-white">pipeline</code> label. The page is read-only and falls back cleanly when only unauthenticated
-            GitHub API access is available.
+            Live GitHub control plane and historical run playback. Switch between real-time state
+            and step-through replays of completed pipeline runs. Use <kbd class="text-white">&larr;</kbd> <kbd class="text-white">&rarr;</kbd> arrow keys in replay mode.
         </p>
     </div>
 
+    <!-- Mode Selector -->
+    <div id="modeSelector" class="flex flex-wrap gap-2 mb-6" role="tablist">
+        <button class="mode-btn active" data-mode="live" onclick="switchMode('live')" role="tab" aria-selected="true">
+            <span class="live-dot"></span> LIVE
+        </button>
+    </div>
+
+    <!-- Warning Box (live mode) -->
     <div id="warningBox" class="warning p-4 mb-6 hidden" role="alert"></div>
 
-    <div class="grid grid-cols-2 md:grid-cols-7 gap-4 mb-8" aria-label="Pipeline metrics">
+    <!-- Replay Controls (replay mode) -->
+    <div id="replayControls" class="panel p-4 mb-6 hidden">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+                <div class="text-xs text-dim uppercase tracking-widest">replaying</div>
+                <div id="replayRunName" class="text-white font-bold text-lg"></div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="replayStepLabel" class="text-dim text-sm mr-2">step 0 / 0</span>
+                <button class="ctrl-btn" onclick="prevStep()" title="Previous step (←)">&#9664;</button>
+                <button class="ctrl-btn" onclick="nextStep()" title="Next step (→)">&#9654;</button>
+                <button class="ctrl-btn" onclick="resetReplay()" title="Reset to start">&#8634;</button>
+                <button class="ctrl-btn accent" onclick="switchMode('live')">&#9679; LIVE</button>
+            </div>
+        </div>
+        <div id="replayStats" class="flex flex-wrap gap-4 mt-3 text-xs text-dim"></div>
+    </div>
+
+    <!-- Metrics -->
+    <div id="metricsRow" class="grid grid-cols-2 md:grid-cols-7 gap-4 mb-8" aria-label="Pipeline metrics">
         <div class="panel panel-top p-4">
-            <div class="metric-lbl">actionable issues</div>
-            <div id="metricIssues" class="metric-val" aria-live="polite">0</div>
+            <div id="metricLbl0" class="metric-lbl">actionable issues</div>
+            <div id="metricVal0" class="metric-val" aria-live="polite">0</div>
         </div>
         <div class="panel panel-top p-4">
-            <div class="metric-lbl">open prs</div>
-            <div id="metricPrs" class="metric-val" aria-live="polite">0</div>
+            <div id="metricLbl1" class="metric-lbl">open prs</div>
+            <div id="metricVal1" class="metric-val" aria-live="polite">0</div>
         </div>
         <div class="panel panel-top p-4">
-            <div class="metric-lbl">active runs</div>
-            <div id="metricRuns" class="metric-val" aria-live="polite">0</div>
+            <div id="metricLbl2" class="metric-lbl">active runs</div>
+            <div id="metricVal2" class="metric-val" aria-live="polite">0</div>
         </div>
         <div class="panel panel-amber p-4">
-            <div class="metric-lbl">deferred</div>
-            <div id="metricDeferred" class="metric-val text-amber" aria-live="polite">0</div>
+            <div id="metricLbl3" class="metric-lbl">deferred</div>
+            <div id="metricVal3" class="metric-val text-amber" aria-live="polite">0</div>
         </div>
         <div class="panel panel-red p-4">
-            <div class="metric-lbl">repairs</div>
-            <div id="metricRepairs" class="metric-val text-red" aria-live="polite">0</div>
+            <div id="metricLbl4" class="metric-lbl">repairs</div>
+            <div id="metricVal4" class="metric-val text-red" aria-live="polite">0</div>
         </div>
         <div class="panel panel-green p-4">
-            <div class="metric-lbl">merge armed</div>
-            <div id="metricMerge" class="metric-val text-green" aria-live="polite">0</div>
+            <div id="metricLbl5" class="metric-lbl">merge armed</div>
+            <div id="metricVal5" class="metric-val text-green" aria-live="polite">0</div>
         </div>
         <div class="panel p-4 overflow-hidden">
-            <div class="metric-lbl">mode</div>
-            <div id="metricMode" class="text-white text-sm truncate">loading</div>
+            <div id="metricLbl6" class="metric-lbl">mode</div>
+            <div id="metricVal6" class="text-white text-sm truncate">loading</div>
         </div>
     </div>
 
+    <!-- Stage Grid -->
     <section class="panel p-5 mb-8" aria-labelledby="stage-heading">
         <div class="flex items-center justify-between mb-4">
             <div>
@@ -136,29 +310,58 @@
         <div id="stageGrid" class="stage-grid" aria-live="polite"></div>
     </section>
 
-    <div class="grid lg:grid-cols-3 gap-6">
-        <section class="panel p-5" aria-labelledby="issue-heading">
-            <div class="text-xs text-dim uppercase tracking-widest mb-2">open actionable pipeline issues</div>
-            <h2 id="issue-heading" class="font-sans text-xl font-bold text-white mb-4">Issue queue</h2>
-            <div id="issueList" class="text-sm text-dim" aria-live="polite">Loading issues...</div>
-        </section>
+    <!-- Live Content -->
+    <div id="liveContent">
+        <div class="grid lg:grid-cols-3 gap-6">
+            <section class="panel p-5" aria-labelledby="issue-heading">
+                <div class="text-xs text-dim uppercase tracking-widest mb-2">open actionable pipeline issues</div>
+                <h2 id="issue-heading" class="font-sans text-xl font-bold text-white mb-4">Issue queue</h2>
+                <div id="issueList" class="text-sm text-dim" aria-live="polite">Loading issues...</div>
+            </section>
 
-        <section class="panel p-5" aria-labelledby="pr-heading">
-            <div class="text-xs text-dim uppercase tracking-widest mb-2">open pipeline prs</div>
-            <h2 id="pr-heading" class="font-sans text-xl font-bold text-white mb-4">Pull requests</h2>
-            <div id="prList" class="text-sm text-dim" aria-live="polite">Loading pull requests...</div>
-        </section>
+            <section class="panel p-5" aria-labelledby="pr-heading">
+                <div class="text-xs text-dim uppercase tracking-widest mb-2">open pipeline prs</div>
+                <h2 id="pr-heading" class="font-sans text-xl font-bold text-white mb-4">Pull requests</h2>
+                <div id="prList" class="text-sm text-dim" aria-live="polite">Loading pull requests...</div>
+            </section>
 
-        <section class="panel p-5" aria-labelledby="run-heading">
-            <div class="text-xs text-dim uppercase tracking-widest mb-2">actions in progress</div>
-            <h2 id="run-heading" class="font-sans text-xl font-bold text-white mb-4">Workflow runs</h2>
-            <div id="runList" class="text-sm text-dim" aria-live="polite">Loading workflow runs...</div>
+            <section class="panel p-5" aria-labelledby="run-heading">
+                <div class="text-xs text-dim uppercase tracking-widest mb-2">actions in progress</div>
+                <h2 id="run-heading" class="font-sans text-xl font-bold text-white mb-4">Workflow runs</h2>
+                <div id="runList" class="text-sm text-dim" aria-live="polite">Loading workflow runs...</div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Replay Content -->
+    <div id="replayContent" class="hidden">
+        <div id="currentEventBox" class="current-event-box mb-6 hidden">
+            <div class="flex items-center gap-3 mb-2">
+                <span id="currentEventMarker" class="event-marker"></span>
+                <span id="currentEventType" class="event-type text-sm"></span>
+                <span id="currentEventItem" class="text-accent text-sm"></span>
+            </div>
+            <div id="currentEventTitle" class="text-white"></div>
+            <div id="currentEventTime" class="text-dim text-xs mt-1"></div>
+        </div>
+        <section class="panel p-5">
+            <div class="text-xs text-dim uppercase tracking-widest mb-2">event timeline</div>
+            <h2 class="font-sans text-xl font-bold text-white mb-4">Pipeline activity</h2>
+            <div id="eventLog" class="max-h-96 overflow-y-auto text-sm"></div>
         </section>
     </div>
+
+    <!-- Run History Table -->
+    <section class="panel p-5 mt-8" aria-labelledby="history-heading">
+        <div class="text-xs text-dim uppercase tracking-widest mb-2">completed pipeline runs</div>
+        <h2 id="history-heading" class="font-sans text-xl font-bold text-white mb-4">Run history</h2>
+        <div id="runHistory" class="text-sm text-dim">Loading runs...</div>
+    </section>
 </div>
 
 @section Scripts {
 <script>
+    // ── Constants ──
     const stageChipClass = {
         queue: 'chip chip-queue',
         implementation: 'chip chip-implementation',
@@ -166,12 +369,27 @@
         deploy: 'chip chip-deploy',
         operations: 'chip chip-ops'
     };
+    const eventLabels = {
+        issue_created: 'issue created',
+        pr_opened: 'pr opened',
+        review_approved: 'review approved',
+        review_commented: 'review comment',
+        pr_merged: 'pr merged'
+    };
+    const GITHUB_REPO = 'https://github.com/samuelkahessay/prd-to-prod';
+
+    // ── State ──
+    let currentMode = 'live';
+    let liveInterval = null;
+    let showcaseRuns = [];
+    let replayData = null;
+    let replayStep = -1;
+
+    // ── Live Mode: Rendering ──
 
     async function loadSnapshot() {
         const response = await fetch('/api/pipeline/live', { cache: 'no-store' });
-        if (!response.ok) {
-            throw new Error(`pipeline snapshot request failed: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`pipeline snapshot request failed: ${response.status}`);
         return response.json();
     }
 
@@ -257,14 +475,14 @@
         box.innerHTML = messages.map(message => `<div>${escapeHtml(message)}</div>`).join('');
     }
 
-    function renderSnapshot(snapshot) {
-        document.getElementById('metricIssues').textContent = snapshot.summary.openIssues;
-        document.getElementById('metricPrs').textContent = snapshot.summary.openPullRequests;
-        document.getElementById('metricRuns').textContent = snapshot.summary.activeRuns;
-        document.getElementById('metricDeferred').textContent = snapshot.summary.deferredIssues;
-        document.getElementById('metricRepairs').textContent = snapshot.summary.repairLoops;
-        document.getElementById('metricMerge').textContent = snapshot.summary.autoMergeArmed;
-        document.getElementById('metricMode').textContent = snapshot.mode;
+    function renderLiveSnapshot(snapshot) {
+        setMetric(0, 'actionable issues', snapshot.summary.openIssues);
+        setMetric(1, 'open prs', snapshot.summary.openPullRequests);
+        setMetric(2, 'active runs', snapshot.summary.activeRuns);
+        setMetric(3, 'deferred', snapshot.summary.deferredIssues);
+        setMetric(4, 'repairs', snapshot.summary.repairLoops);
+        setMetric(5, 'merge armed', snapshot.summary.autoMergeArmed);
+        setMetric(6, 'mode', snapshot.mode, true);
         document.getElementById('updatedAt').textContent = `updated: ${snapshot.updatedAtUtc}`;
 
         renderWarnings(snapshot.warnings, snapshot.mode);
@@ -274,16 +492,280 @@
         renderRuns(snapshot.activeRuns);
     }
 
-    async function refresh() {
+    function setMetric(index, label, value, isText) {
+        document.getElementById('metricLbl' + index).textContent = label;
+        const el = document.getElementById('metricVal' + index);
+        el.textContent = value;
+        el.className = isText ? 'text-white text-sm truncate' : 'metric-val';
+    }
+
+    // ── Live Mode: Polling ──
+
+    async function refreshLive() {
         try {
             const snapshot = await loadSnapshot();
-            renderSnapshot(snapshot);
+            renderLiveSnapshot(snapshot);
         } catch (error) {
             renderWarnings([error.message || 'Failed to load live pipeline snapshot.'], 'unauthenticated');
         }
     }
 
-    refresh();
-    window.setInterval(refresh, 15000);
+    function startLivePolling() {
+        refreshLive();
+        liveInterval = window.setInterval(refreshLive, 15000);
+    }
+
+    function stopLivePolling() {
+        if (liveInterval) {
+            window.clearInterval(liveInterval);
+            liveInterval = null;
+        }
+    }
+
+    // ── Replay Mode ──
+
+    async function loadReplayData(slug) {
+        const response = await fetch('/api/showcase/' + encodeURIComponent(slug) + '/timeline', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Failed to load run data');
+        return response.json();
+    }
+
+    function computeStagesAtStep(timeline, step) {
+        let issues = 0, prsOpened = 0, reviewed = 0, merged = 0;
+        for (let i = 0; i <= step && i < timeline.length; i++) {
+            switch (timeline[i].event) {
+                case 'issue_created': issues++; break;
+                case 'pr_opened': prsOpened++; break;
+                case 'review_approved':
+                case 'review_commented': reviewed++; break;
+                case 'pr_merged': merged++; break;
+            }
+        }
+        const queue = Math.max(0, issues - prsOpened);
+        const impl = Math.max(0, prsOpened - reviewed);
+        const review = Math.max(0, reviewed - merged);
+        return [
+            { label: 'Queue', key: 'queue', count: queue, status: queue > 0 ? 'active' : 'idle' },
+            { label: 'Implementation', key: 'implementation', count: impl, status: impl > 0 ? 'active' : 'idle' },
+            { label: 'Review', key: 'review', count: review, status: review > 0 ? 'active' : 'idle' },
+            { label: 'Deploy', key: 'deploy', count: merged, status: merged > 0 ? 'active' : 'idle' }
+        ];
+    }
+
+    function renderReplayStep() {
+        if (!replayData) return;
+        const timeline = replayData.timeline;
+        const total = timeline.length;
+        const step = replayStep;
+
+        // Step label
+        document.getElementById('replayStepLabel').textContent = `step ${step + 1} / ${total}`;
+
+        // Stage grid
+        const stages = computeStagesAtStep(timeline, step);
+        renderStages(stages);
+
+        // Replay metrics
+        let issuesCreated = 0, prsOpened = 0, prsMerged = 0;
+        for (let i = 0; i <= step; i++) {
+            switch (timeline[i].event) {
+                case 'issue_created': issuesCreated++; break;
+                case 'pr_opened': prsOpened++; break;
+                case 'pr_merged': prsMerged++; break;
+            }
+        }
+        const pct = Math.round(((step + 1) / total) * 100);
+        setMetric(0, 'issues created', issuesCreated);
+        setMetric(1, 'prs opened', prsOpened);
+        setMetric(2, 'prs merged', prsMerged);
+        setMetric(3, 'lines added', replayData.stats.lines_added.toLocaleString());
+        setMetric(4, 'files changed', replayData.stats.files_changed);
+        setMetric(5, 'completion', pct + '%');
+        setMetric(6, 'tech', replayData.run.tech_stack, true);
+
+        // Updated at
+        const ts = new Date(timeline[step].timestamp);
+        document.getElementById('updatedAt').textContent = `replay: ${ts.toISOString().slice(11, 19)} UTC`;
+
+        // Current event highlight
+        const evt = timeline[step];
+        const box = document.getElementById('currentEventBox');
+        box.classList.remove('hidden');
+        document.getElementById('currentEventMarker').className = `event-marker ${evt.event}`;
+        document.getElementById('currentEventType').className = `event-type ${evt.event}`;
+        document.getElementById('currentEventType').textContent = eventLabels[evt.event] || evt.event;
+        const prefix = evt.event.startsWith('pr_') || evt.event.startsWith('review_') ? 'PR' : 'Issue';
+        document.getElementById('currentEventItem').innerHTML = `<a href="${GITHUB_REPO}/${prefix === 'PR' ? 'pull' : 'issues'}/${evt.item}" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">#${evt.item}</a>`;
+        document.getElementById('currentEventTitle').textContent = cleanTitle(evt.title);
+        document.getElementById('currentEventTime').textContent = ts.toISOString().replace('T', ' ').replace('Z', ' UTC');
+
+        // Event log
+        renderEventLog(timeline, step);
+    }
+
+    function renderEventLog(timeline, currentStep) {
+        const log = document.getElementById('eventLog');
+        log.innerHTML = timeline.map((evt, i) => {
+            const cls = i === currentStep ? 'current' : (i > currentStep ? 'upcoming' : '');
+            const ts = new Date(evt.timestamp);
+            const time = ts.toISOString().slice(11, 16);
+            const prefix = evt.event.startsWith('pr_') || evt.event.startsWith('review_') ? 'pull' : 'issues';
+            return `<div class="event-item ${cls}">
+                <span class="event-marker ${evt.event}"></span>
+                <span class="event-time">${time}</span>
+                <span class="event-type ${evt.event}">${eventLabels[evt.event] || evt.event}</span>
+                <a href="${GITHUB_REPO}/${prefix}/${evt.item}" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">#${evt.item}</a>
+                <span class="text-dim ml-1 truncate">${escapeHtml(cleanTitle(evt.title))}</span>
+            </div>`;
+        }).join('');
+
+        // Scroll current event into view
+        const currentEl = log.querySelector('.event-item.current');
+        if (currentEl) currentEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    function cleanTitle(title) {
+        return title.replace(/^\[Pipeline\]\s*/i, '');
+    }
+
+    function nextStep() {
+        if (!replayData || replayStep >= replayData.timeline.length - 1) return;
+        replayStep++;
+        renderReplayStep();
+    }
+
+    function prevStep() {
+        if (!replayData || replayStep <= 0) return;
+        replayStep--;
+        renderReplayStep();
+    }
+
+    function resetReplay() {
+        if (!replayData) return;
+        replayStep = 0;
+        renderReplayStep();
+    }
+
+    // ── Mode Switching ──
+
+    async function switchMode(mode) {
+        if (mode === currentMode) return;
+        currentMode = mode;
+
+        // Update mode selector buttons
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
+            btn.setAttribute('aria-selected', btn.dataset.mode === mode);
+        });
+
+        if (mode === 'live') {
+            // Switch to live
+            document.getElementById('replayControls').classList.add('hidden');
+            document.getElementById('replayContent').classList.add('hidden');
+            document.getElementById('currentEventBox').classList.add('hidden');
+            document.getElementById('liveContent').classList.remove('hidden');
+            document.getElementById('warningBox').classList.remove('hidden');
+            replayData = null;
+            replayStep = -1;
+            startLivePolling();
+        } else {
+            // Switch to replay
+            stopLivePolling();
+            document.getElementById('liveContent').classList.add('hidden');
+            document.getElementById('warningBox').classList.add('hidden');
+            document.getElementById('replayControls').classList.remove('hidden');
+            document.getElementById('replayContent').classList.remove('hidden');
+
+            try {
+                replayData = await loadReplayData(mode);
+                replayStep = 0;
+                document.getElementById('replayRunName').textContent =
+                    `Run ${String(replayData.run.number).padStart(2, '0')}: ${replayData.run.name}`;
+
+                // Stats bar
+                const s = replayData.stats;
+                document.getElementById('replayStats').innerHTML = [
+                    `${s.issues_created} issues`,
+                    `${s.prs_total} PRs`,
+                    `${s.prs_merged} merged`,
+                    `+${s.lines_added.toLocaleString()} lines`,
+                    `${s.files_changed} files`,
+                    replayData.run.tech_stack
+                ].map(t => `<span>${escapeHtml(t)}</span>`).join('<span class="text-dim">·</span>');
+
+                renderReplayStep();
+            } catch (err) {
+                document.getElementById('replayRunName').textContent = 'Error loading run data';
+                document.getElementById('replayStats').innerHTML = `<span class="text-red">${escapeHtml(err.message)}</span>`;
+            }
+        }
+    }
+
+    // ── Mode Selector + Run History ──
+
+    function renderModeSelector(runs) {
+        const container = document.getElementById('modeSelector');
+        runs.forEach(run => {
+            const btn = document.createElement('button');
+            btn.className = 'mode-btn';
+            btn.dataset.mode = run.slug;
+            btn.setAttribute('role', 'tab');
+            btn.setAttribute('aria-selected', 'false');
+            btn.textContent = `${String(run.number).padStart(2, '0')} ${run.name}`;
+            btn.onclick = () => switchMode(run.slug);
+            container.appendChild(btn);
+        });
+    }
+
+    function renderRunHistory(runs) {
+        const el = document.getElementById('runHistory');
+        if (!runs.length) {
+            el.innerHTML = '<div class="text-dim">No completed runs found.</div>';
+            return;
+        }
+        const header = `<div class="run-row run-row-header">
+            <span>#</span><span>Name</span><span>Tech Stack</span><span>Issues</span><span>PRs</span><span>Date</span>
+        </div>`;
+        const rows = runs.map(run => `
+            <div class="run-row" onclick="switchMode('${escapeHtml(run.slug)}')" title="Replay ${escapeHtml(run.name)}">
+                <span class="run-num">${String(run.number).padStart(2, '0')}</span>
+                <span class="text-white">${escapeHtml(run.name)}</span>
+                <span class="text-dim">${escapeHtml(run.tech_stack)}</span>
+                <span class="text-dim" style="font-variant-numeric:tabular-nums">${run.issues}</span>
+                <span class="text-dim" style="font-variant-numeric:tabular-nums">${run.prs}</span>
+                <span class="text-dim">${escapeHtml(run.date)}</span>
+            </div>
+        `).join('');
+        el.innerHTML = header + rows;
+    }
+
+    // ── Keyboard Shortcuts ──
+
+    document.addEventListener('keydown', function(e) {
+        if (currentMode === 'live') return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.key === 'ArrowRight') { e.preventDefault(); nextStep(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prevStep(); }
+        if (e.key === 'Home') { e.preventDefault(); resetReplay(); }
+        if (e.key === 'Escape') { e.preventDefault(); switchMode('live'); }
+    });
+
+    // ── Init ──
+
+    async function init() {
+        try {
+            const response = await fetch('/api/showcase/runs', { cache: 'no-store' });
+            if (response.ok) {
+                showcaseRuns = await response.json();
+                renderModeSelector(showcaseRuns);
+                renderRunHistory(showcaseRuns);
+            }
+        } catch (e) {
+            document.getElementById('runHistory').innerHTML = '<div class="text-dim">Could not load run history.</div>';
+        }
+        startLivePolling();
+    }
+
+    init();
 </script>
 }

@@ -6,6 +6,22 @@ public static class ShowcaseEndpoints
 {
     public static void MapShowcaseEndpoints(this WebApplication app)
     {
+        app.MapGet("/api/showcase/runs", async (IShowcaseService showcase) =>
+        {
+            var runs = await showcase.GetCompletedRunsAsync();
+            return Results.Ok(runs.Select(r => new
+            {
+                slug = r.Slug,
+                number = r.Number,
+                name = r.Name,
+                tag = r.Tag,
+                tech_stack = r.TechStack,
+                date = r.Date,
+                issues = r.IssueCount,
+                prs = r.PrCount
+            }));
+        });
+
         app.MapGet("/api/showcase/{slug}/timeline", async (string slug, IShowcaseService showcase) =>
         {
             var detail = await showcase.GetRunDetailAsync(slug);
