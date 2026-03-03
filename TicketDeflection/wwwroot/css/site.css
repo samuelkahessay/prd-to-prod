@@ -57,8 +57,35 @@ h1, h2, h3, .font-sans { font-family: var(--sans); }
     background: rgba(0, 170, 255, 0.04);
     border-bottom: 1px solid var(--border);
 }
+.status-bar-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.status-bar-brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.status-bar-title,
+.status-bar-meta-link {
+    flex: 0 0 auto;
+}
+.status-bar-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
 
 .nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    white-space: nowrap;
     color: rgba(0, 170, 255, 0.6);
     text-decoration: none;
     font-size: 0.75rem;
@@ -68,6 +95,16 @@ h1, h2, h3, .font-sans { font-family: var(--sans); }
 }
 .nav-link:hover { border-color: var(--border); color: var(--accent); }
 .nav-link.active { border-color: var(--border); color: var(--accent); }
+
+@media (max-width: 640px) {
+    .status-bar {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    .status-bar-brand-row {
+        justify-content: flex-start;
+    }
+}
 
 /* ===== Panels ===== */
 .panel {

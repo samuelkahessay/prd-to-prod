@@ -17,22 +17,32 @@
 
     @{
         var path = Context.Request.Path.Value?.TrimEnd('/') ?? "";
+        path = string.IsNullOrEmpty(path) ? "/" : path;
+        var navItems = new (string Href, string Label)[]
+        {
+            ("/", "overview"),
+            ("/dashboard", "dashboard"),
+            ("/tickets", "tickets"),
+            ("/activity", "activity"),
+            ("/operator", "operator"),
+            ("/pipeline", "pipeline"),
+            ("/compliance", "compliance")
+        };
     }
 
     <nav aria-label="Main navigation">
-        <div class="status-bar px-6 py-2 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-4">
-                <span class="text-accent font-bold tracking-widest">@(ViewData["NavTitle"] ?? "PRD-TO-PROD")</span>
-                <a href="/" class="nav-link @(path == "" ? "active" : "")">overview</a>
-                <a href="/dashboard" class="nav-link @(path == "/dashboard" ? "active" : "")">dashboard</a>
-                <a href="/tickets" class="nav-link @(path == "/tickets" ? "active" : "")">tickets</a>
-                <a href="/activity" class="nav-link @(path == "/activity" ? "active" : "")">activity</a>
-                <a href="/operator" class="nav-link @(path == "/operator" ? "active" : "")">operator</a>
-                <a href="/pipeline" class="nav-link @(path == "/pipeline" ? "active" : "")">pipeline</a>
-                <a href="/compliance" class="nav-link @(path == "/compliance" ? "active" : "")">compliance</a>
-            </div>
-            <div class="flex items-center gap-4">
-                <a href="https://github.com/samuelkahessay/prd-to-prod" target="_blank" rel="noopener noreferrer" class="text-dim hover:text-accent transition-colors" aria-label="View source on GitHub">GitHub</a>
+        <div class="status-bar px-4 py-3 text-xs">
+            <div class="status-bar-inner">
+                <div class="status-bar-brand-row">
+                    <span class="status-bar-title text-accent font-bold tracking-widest">@(ViewData["NavTitle"] ?? "PRD-TO-PROD")</span>
+                    <a href="https://github.com/samuelkahessay/prd-to-prod" target="_blank" rel="noopener noreferrer" class="status-bar-meta-link text-dim hover:text-accent transition-colors" aria-label="View source on GitHub">GitHub</a>
+                </div>
+                <div class="status-bar-links" role="list">
+                    @foreach (var item in navItems)
+                    {
+                        <a href="@item.Href" class="nav-link @(path == item.Href ? "active" : "")">@item.Label</a>
+                    }
+                </div>
             </div>
         </div>
     </nav>
