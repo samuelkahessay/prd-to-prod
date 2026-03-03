@@ -13,6 +13,7 @@ builder.Services.AddScoped<PipelineService>();
 builder.Services.AddSingleton<IDecisionLedgerService, DecisionLedgerService>();
 builder.Services.AddSingleton<IShowcaseService, ShowcaseService>();
 builder.Services.AddSingleton<IComplianceRuleLibrary, ComplianceRuleLibrary>();
+builder.Services.AddScoped<IComplianceScanService, ComplianceScanService>();
 builder.Services.AddHttpClient<IGitHubPipelineSnapshotService, GitHubPipelineSnapshotService>();
 builder.Services.AddRazorPages();
 
