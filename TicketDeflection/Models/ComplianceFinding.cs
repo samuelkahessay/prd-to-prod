@@ -1,5 +1,7 @@
 #nullable enable
 
+using System.Text.Json.Serialization;
+
 namespace TicketDeflection.Models;
 
 public class ComplianceFinding
@@ -17,5 +19,7 @@ public class ComplianceFinding
     public int? LineNumber { get; set; }
     /// <summary>Populated only for HUMAN_REQUIRED findings; null for AUTO_BLOCK and ADVISORY.</summary>
     public string? StopReason { get; set; }
+    [JsonIgnore]
     public ComplianceScan? Scan { get; set; }
 }
+

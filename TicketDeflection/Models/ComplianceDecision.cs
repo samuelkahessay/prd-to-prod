@@ -1,5 +1,7 @@
 #nullable enable
 
+using System.Text.Json.Serialization;
+
 namespace TicketDeflection.Models;
 
 public class ComplianceDecision
@@ -10,5 +12,6 @@ public class ComplianceDecision
     public string Decision { get; set; } = string.Empty;
     public string? Notes { get; set; }
     public DateTimeOffset DecidedAt { get; set; } = DateTimeOffset.UtcNow;
+    [JsonIgnore]
     public ComplianceScan? Scan { get; set; }
 }
