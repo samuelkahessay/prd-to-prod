@@ -8,7 +8,9 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
-engine: copilot
+engine:
+  id: copilot
+  model: claude-sonnet-4.6
 safe-outputs:
   create-issue:
     expires: 2d
