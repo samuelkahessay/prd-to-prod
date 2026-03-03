@@ -1,8 +1,7 @@
 # Run 02 — Pipeline Observatory
 
 **PRD**: [docs/prd/pipeline-observatory-prd.md](../../docs/prd/pipeline-observatory-prd.md)
-**Tag**: [`v2.0.0`](https://github.com/samuelkahessay/agentic-pipeline/tree/v2.0.0)
-**Deployment**: [prdtoprod.vercel.app](https://prdtoprod.vercel.app)
+**Tag**: [`v2.0.0`](https://github.com/samuelkahessay/prd-to-prod/tree/v2.0.0)
 **Date**: February 2026
 
 ## Summary
@@ -33,25 +32,25 @@ Framer Motion, @octokit/rest, Vitest + @testing-library/react
 
 | PR | Feature | Status |
 |----|---------|--------|
-| [#40](https://github.com/samuelkahessay/agentic-pipeline/pull/40) | Project Scaffold (Next.js 14, TS, Tailwind, Vitest) | Merged |
-| [#42](https://github.com/samuelkahessay/agentic-pipeline/pull/42) | Static Fixture Data & Data Loading Layer | Merged |
-| [#46](https://github.com/samuelkahessay/agentic-pipeline/pull/46) | Navigation Bar and Landing Page | Merged |
-| [#47](https://github.com/samuelkahessay/agentic-pipeline/pull/47) | Interactive SVG Node Graph | Merged |
-| [#48](https://github.com/samuelkahessay/agentic-pipeline/pull/48) | Horizontal Scrollable Timeline | Merged |
-| [#49](https://github.com/samuelkahessay/agentic-pipeline/pull/49) | Pipeline Cycle Cards + AI Review Inspector | Merged |
-| [#50](https://github.com/samuelkahessay/agentic-pipeline/pull/50) | Failure Timeline | Merged |
-| [#51](https://github.com/samuelkahessay/agentic-pipeline/pull/51) | Event Detail Panel + Playback Controls | Merged |
-| [#52](https://github.com/samuelkahessay/agentic-pipeline/pull/52) | Node Detail Panels with Slide-Down | Merged |
-| [#53](https://github.com/samuelkahessay/agentic-pipeline/pull/53) | Animated Message Particles | Merged |
+| [#40](https://github.com/samuelkahessay/prd-to-prod/pull/40) | Project Scaffold (Next.js 14, TS, Tailwind, Vitest) | Merged |
+| [#42](https://github.com/samuelkahessay/prd-to-prod/pull/42) | Static Fixture Data & Data Loading Layer | Merged |
+| [#46](https://github.com/samuelkahessay/prd-to-prod/pull/46) | Navigation Bar and Landing Page | Merged |
+| [#47](https://github.com/samuelkahessay/prd-to-prod/pull/47) | Interactive SVG Node Graph | Merged |
+| [#48](https://github.com/samuelkahessay/prd-to-prod/pull/48) | Horizontal Scrollable Timeline | Merged |
+| [#49](https://github.com/samuelkahessay/prd-to-prod/pull/49) | Pipeline Cycle Cards + AI Review Inspector | Merged |
+| [#50](https://github.com/samuelkahessay/prd-to-prod/pull/50) | Failure Timeline | Merged |
+| [#51](https://github.com/samuelkahessay/prd-to-prod/pull/51) | Event Detail Panel + Playback Controls | Merged |
+| [#52](https://github.com/samuelkahessay/prd-to-prod/pull/52) | Node Detail Panels with Slide-Down | Merged |
+| [#53](https://github.com/samuelkahessay/prd-to-prod/pull/53) | Animated Message Particles | Merged |
 
 ## Hardening PRs
 
 | PR | Fix |
 |----|-----|
-| [#54](https://github.com/samuelkahessay/agentic-pipeline/pull/54) | Watchdog orphaned-issue parsing (shell word-splitting) |
-| [#55](https://github.com/samuelkahessay/agentic-pipeline/pull/55) | PR reviewer dispatch (review summary shell leak) |
-| [#56](https://github.com/samuelkahessay/agentic-pipeline/pull/56) | Shell injection hardening + Octokit type fix |
-| [#58](https://github.com/samuelkahessay/agentic-pipeline/pull/58) | Simulator graph scaling (agent-created from issue #57) |
+| [#54](https://github.com/samuelkahessay/prd-to-prod/pull/54) | Watchdog orphaned-issue parsing (shell word-splitting) |
+| [#55](https://github.com/samuelkahessay/prd-to-prod/pull/55) | PR reviewer dispatch (review summary shell leak) |
+| [#56](https://github.com/samuelkahessay/prd-to-prod/pull/56) | Shell injection hardening + Octokit type fix |
+| [#58](https://github.com/samuelkahessay/prd-to-prod/pull/58) | Simulator graph scaling (agent-created from issue #57) |
 
 ## Pipeline Lessons
 

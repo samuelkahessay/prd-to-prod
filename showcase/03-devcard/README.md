@@ -1,8 +1,7 @@
 # Run 03 — DevCard
 
 **PRD**: [docs/prd/devcard-prd.md](../../docs/prd/devcard-prd.md)
-**Tag**: [`v3.0.0`](https://github.com/samuelkahessay/agentic-pipeline/tree/v3.0.0)
-**Deployment**: [prdtoprod.vercel.app](https://prdtoprod.vercel.app)
+**Tag**: [`v3.0.0`](https://github.com/samuelkahessay/prd-to-prod/tree/v3.0.0)
 **Date**: February 2026
 
 ## Summary
@@ -34,28 +33,28 @@ Framer Motion, @octokit/rest, html-to-image, @vercel/og, Vitest + @testing-libra
 
 | Issue | Feature |
 |-------|---------|
-| [#63](https://github.com/samuelkahessay/agentic-pipeline/issues/63) | Project Scaffold — Next.js 14 + TypeScript + Tailwind + Vitest |
-| [#64](https://github.com/samuelkahessay/agentic-pipeline/issues/64) | GitHub Data Layer — Types, Fixtures, and API Fetching |
-| [#65](https://github.com/samuelkahessay/agentic-pipeline/issues/65) | Navigation Bar and Landing Page with Username Form |
-| [#66](https://github.com/samuelkahessay/agentic-pipeline/issues/66) | Card Component — Profile Section (Avatar, Bio, Stats) |
-| [#67](https://github.com/samuelkahessay/agentic-pipeline/issues/67) | Card Component — Language Breakdown Bar and Color Map |
-| [#68](https://github.com/samuelkahessay/agentic-pipeline/issues/68) | Card Component — Top Repositories List |
-| [#69](https://github.com/samuelkahessay/agentic-pipeline/issues/69) | Card Themes — Theme Data, DevCard Theming, and Theme Selector |
-| [#70](https://github.com/samuelkahessay/agentic-pipeline/issues/70) | Card Generator Page — /card/[username] Dynamic Route |
-| [#71](https://github.com/samuelkahessay/agentic-pipeline/issues/71) | Card Export — Download PNG and Copy Link Buttons |
-| [#73](https://github.com/samuelkahessay/agentic-pipeline/issues/73) | Gallery Page — Grid of Notable Developer DevCards |
+| [#63](https://github.com/samuelkahessay/prd-to-prod/issues/63) | Project Scaffold — Next.js 14 + TypeScript + Tailwind + Vitest |
+| [#64](https://github.com/samuelkahessay/prd-to-prod/issues/64) | GitHub Data Layer — Types, Fixtures, and API Fetching |
+| [#65](https://github.com/samuelkahessay/prd-to-prod/issues/65) | Navigation Bar and Landing Page with Username Form |
+| [#66](https://github.com/samuelkahessay/prd-to-prod/issues/66) | Card Component — Profile Section (Avatar, Bio, Stats) |
+| [#67](https://github.com/samuelkahessay/prd-to-prod/issues/67) | Card Component — Language Breakdown Bar and Color Map |
+| [#68](https://github.com/samuelkahessay/prd-to-prod/issues/68) | Card Component — Top Repositories List |
+| [#69](https://github.com/samuelkahessay/prd-to-prod/issues/69) | Card Themes — Theme Data, DevCard Theming, and Theme Selector |
+| [#70](https://github.com/samuelkahessay/prd-to-prod/issues/70) | Card Generator Page — /card/[username] Dynamic Route |
+| [#71](https://github.com/samuelkahessay/prd-to-prod/issues/71) | Card Export — Download PNG and Copy Link Buttons |
+| [#73](https://github.com/samuelkahessay/prd-to-prod/issues/73) | Gallery Page — Grid of Notable Developer DevCards |
 
 ## Bug Fixes (post-run)
 
 | Issue | Fix |
 |-------|-----|
-| [#89](https://github.com/samuelkahessay/agentic-pipeline/issues/89) | Wire LanguageBar and TopRepos into DevCard (empty placeholders) |
-| [#90](https://github.com/samuelkahessay/agentic-pipeline/issues/90) | Fix sarah-edo 404 — username changed |
-| [#91](https://github.com/samuelkahessay/agentic-pipeline/issues/91) | Add OpenClaw creator steipete to gallery |
-| [#101](https://github.com/samuelkahessay/agentic-pipeline/issues/101) | Fix gallery card clipping at 0.75 scale |
-| [#102](https://github.com/samuelkahessay/agentic-pipeline/issues/102) | Add box-shadow for card visual separation |
-| [#103](https://github.com/samuelkahessay/agentic-pipeline/issues/103) | Fix sdrasner → sdras username |
-| [#104](https://github.com/samuelkahessay/agentic-pipeline/issues/104) | Fix share URL hydration mismatch |
+| [#89](https://github.com/samuelkahessay/prd-to-prod/issues/89) | Wire LanguageBar and TopRepos into DevCard (empty placeholders) |
+| [#90](https://github.com/samuelkahessay/prd-to-prod/issues/90) | Fix sarah-edo 404 — username changed |
+| [#91](https://github.com/samuelkahessay/prd-to-prod/issues/91) | Add OpenClaw creator steipete to gallery |
+| [#101](https://github.com/samuelkahessay/prd-to-prod/issues/101) | Fix gallery card clipping at 0.75 scale |
+| [#102](https://github.com/samuelkahessay/prd-to-prod/issues/102) | Add box-shadow for card visual separation |
+| [#103](https://github.com/samuelkahessay/prd-to-prod/issues/103) | Fix sdrasner → sdras username |
+| [#104](https://github.com/samuelkahessay/prd-to-prod/issues/104) | Fix share URL hydration mismatch |
 
 ## Pipeline Lessons
 

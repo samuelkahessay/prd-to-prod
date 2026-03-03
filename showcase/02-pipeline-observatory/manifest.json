@@ -5,7 +5,7 @@
     "tag": "v2.0.0",
     "tech_stack": "Next.js 14 + TypeScript",
     "date": "2026-02",
-    "deployment": "https://prdtoprod.vercel.app",
+    "deployment": null,
     "prd": "docs/prd/pipeline-observatory-prd.md"
   },
   "issues": [29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 41],

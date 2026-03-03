@@ -6,7 +6,7 @@
     "tech_stack": "ASP.NET Core + C#",
     "date": "2026-03",
     "deployment": "https://prd-to-prod.azurewebsites.net",
-    "prd": "docs/prd/run-07-compliance-scan-prd.md"
+    "prd": "docs/prd/run-07-compliance-scan-service-prd.md"
   },
   "issues": [340, 341, 342, 343, 344, 345, 346, 347],
   "pull_requests": [348, 349, 350, 351, 352, 353, 354, 355]
