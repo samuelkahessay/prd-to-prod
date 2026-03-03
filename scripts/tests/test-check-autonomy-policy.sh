@@ -53,10 +53,15 @@ for FILE in "${COMPLIANCE_FILES[@]}"; do
   }
 done
 
-# Non-compliance files should NOT match sensitive_app_change
-NON_SENSITIVE_JSON=$(bash "$SCRIPT" match sensitive_app_change "TicketDeflection/Program.cs" "$POLICY")
-printf '%s' "$NON_SENSITIVE_JSON" | jq -e '.matched == false' >/dev/null || {
-  echo "FAIL: sensitive_app_change should NOT match TicketDeflection/Program.cs" >&2
+PROGRAM_SENSITIVE_JSON=$(bash "$SCRIPT" match sensitive_app_change "TicketDeflection/Program.cs" "$POLICY")
+printf '%s' "$PROGRAM_SENSITIVE_JSON" | jq -e '.matched == true' >/dev/null || {
+  echo "FAIL: sensitive_app_change should match TicketDeflection/Program.cs" >&2
+  exit 1
+}
+
+DBCTX_SENSITIVE_JSON=$(bash "$SCRIPT" match sensitive_app_change "TicketDeflection/Data/TicketDbContext.cs" "$POLICY")
+printf '%s' "$DBCTX_SENSITIVE_JSON" | jq -e '.matched == true' >/dev/null || {
+  echo "FAIL: sensitive_app_change should match TicketDeflection/Data/TicketDbContext.cs" >&2
   exit 1
 }
 
