@@ -18,6 +18,7 @@ builder.Services.AddScoped<ClassificationService>();
 builder.Services.AddScoped<MatchingService>();
 builder.Services.AddScoped<PipelineService>();
 builder.Services.AddSingleton<IDecisionLedgerService, DecisionLedgerService>();
+builder.Services.AddSingleton<IDrillReportService, DrillReportService>();
 builder.Services.AddSingleton<IShowcaseService, ShowcaseService>();
 builder.Services.AddSingleton<IComplianceRuleLibrary, ComplianceRuleLibrary>();
 builder.Services.AddScoped<IComplianceScanService, ComplianceScanService>();
