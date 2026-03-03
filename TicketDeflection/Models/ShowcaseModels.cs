@@ -27,6 +27,7 @@ public record ShowcaseRunDetail(
     int IssueCount,
     int PrCount,
     ShowcaseStats Stats,
+    IReadOnlyList<ShowcasePullRequest> PullRequests,
     IReadOnlyList<ShowcaseTimelineEvent> Timeline
 );
 
@@ -44,6 +45,15 @@ public record ShowcaseTimelineEvent(
     string Event,
     int Item,
     string Title
+);
+
+public record ShowcasePullRequest(
+    int Number,
+    int Additions,
+    int Deletions,
+    int ChangedFiles,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? MergedAt
 );
 
 // Internal JSON deserialization types (snake_case mapping)
@@ -91,6 +101,9 @@ internal sealed class RunDataJson
     [JsonPropertyName("stats")]
     public RunDataStatsJson Stats { get; set; } = new();
 
+    [JsonPropertyName("pull_requests")]
+    public PullRequestJson[] PullRequests { get; set; } = [];
+
     [JsonPropertyName("timeline")]
     public TimelineEventJson[] Timeline { get; set; } = [];
 }
@@ -129,4 +142,25 @@ internal sealed class TimelineEventJson
 
     [JsonPropertyName("title")]
     public string Title { get; set; } = string.Empty;
+}
+
+internal sealed class PullRequestJson
+{
+    [JsonPropertyName("number")]
+    public int Number { get; set; }
+
+    [JsonPropertyName("additions")]
+    public int Additions { get; set; }
+
+    [JsonPropertyName("deletions")]
+    public int Deletions { get; set; }
+
+    [JsonPropertyName("changed_files")]
+    public int ChangedFiles { get; set; }
+
+    [JsonPropertyName("created_at")]
+    public DateTimeOffset CreatedAt { get; set; }
+
+    [JsonPropertyName("merged_at")]
+    public DateTimeOffset? MergedAt { get; set; }
 }

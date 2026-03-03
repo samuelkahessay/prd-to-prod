@@ -50,6 +50,15 @@ public static class ShowcaseEndpoints
                     lines_removed = detail.Stats.LinesRemoved,
                     files_changed = detail.Stats.FilesChanged
                 },
+                pull_requests = detail.PullRequests.Select(pr => new
+                {
+                    number = pr.Number,
+                    additions = pr.Additions,
+                    deletions = pr.Deletions,
+                    changed_files = pr.ChangedFiles,
+                    created_at = pr.CreatedAt,
+                    merged_at = pr.MergedAt
+                }),
                 timeline = detail.Timeline.Select(e => new
                 {
                     timestamp = e.Timestamp,

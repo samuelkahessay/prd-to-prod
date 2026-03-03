@@ -117,6 +117,14 @@ public sealed class ShowcaseService : IShowcaseService
                     LinesRemoved: runData.Stats.LinesRemoved,
                     FilesChanged: runData.Stats.FilesChanged
                 ),
+                PullRequests: runData.PullRequests.Select(pr => new ShowcasePullRequest(
+                    Number: pr.Number,
+                    Additions: pr.Additions,
+                    Deletions: pr.Deletions,
+                    ChangedFiles: pr.ChangedFiles,
+                    CreatedAt: pr.CreatedAt,
+                    MergedAt: pr.MergedAt
+                )).ToList(),
                 Timeline: runData.Timeline.Select(t => new ShowcaseTimelineEvent(
                     Timestamp: t.Timestamp,
                     Event: t.Event,

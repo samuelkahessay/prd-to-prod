@@ -113,6 +113,23 @@ public class LandingPageTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
+    public async Task ShowcaseTimeline_IncludesPullRequestDiffMetadata()
+    {
+        var client = _factory.CreateClient();
+        var response = await client.GetAsync("/api/showcase/01-code-snippet-manager/timeline");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(json);
+        var pullRequests = document.RootElement.GetProperty("pull_requests");
+
+        Assert.True(pullRequests.GetArrayLength() > 0);
+        Assert.True(pullRequests[0].GetProperty("additions").GetInt32() > 0);
+        Assert.True(pullRequests[0].GetProperty("changed_files").GetInt32() > 0);
+    }
+
+    [Fact]
     public async Task ShowcaseTimeline_Returns404ForUnknownSlug()
     {
         var client = _factory.CreateClient();

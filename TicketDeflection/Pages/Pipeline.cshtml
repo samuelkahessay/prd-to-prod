@@ -530,6 +530,27 @@
         return response.json();
     }
 
+    function computeReplayDiffsAtStep(pullRequests, timeline, step) {
+        const seenPullRequests = new Set();
+        let linesAdded = 0;
+        let filesChanged = 0;
+
+        for (let i = 0; i <= step && i < timeline.length; i++) {
+            const evt = timeline[i];
+            if (evt.event !== 'pr_opened') continue;
+            if (seenPullRequests.has(evt.item)) continue;
+            seenPullRequests.add(evt.item);
+
+            const pr = pullRequests.find(candidate => candidate.number === evt.item);
+            if (!pr) continue;
+
+            linesAdded += pr.additions || 0;
+            filesChanged += pr.changed_files || 0;
+        }
+
+        return { linesAdded, filesChanged };
+    }
+
     function computeStagesAtStep(timeline, step) {
         let issues = 0, prsOpened = 0, reviewed = 0, merged = 0;
         for (let i = 0; i <= step && i < timeline.length; i++) {
@@ -575,11 +596,12 @@
             }
         }
         const pct = Math.round(((step + 1) / total) * 100);
+        const diffs = computeReplayDiffsAtStep(replayData.pull_requests || [], timeline, step);
         setMetric(0, 'issues created', issuesCreated);
         setMetric(1, 'prs opened', prsOpened);
         setMetric(2, 'prs merged', prsMerged);
-        setMetric(3, 'lines added', replayData.stats.lines_added.toLocaleString());
-        setMetric(4, 'files changed', replayData.stats.files_changed);
+        setMetric(3, 'lines added', diffs.linesAdded.toLocaleString());
+        setMetric(4, 'files changed', diffs.filesChanged);
         setMetric(5, 'completion', pct + '%');
         setMetric(6, 'tech', replayData.run.tech_stack, true);
 
