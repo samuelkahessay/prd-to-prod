@@ -404,6 +404,16 @@
         `).join('');
     }
 
+    function issueStageChip(issue) {
+        const repairStages = ['repair_requested', 'incident_open'];
+        const deferredStages = ['dispatch_deferred'];
+        if (repairStages.includes(issue.stage))
+            return `<span class="chip" style="color:var(--red);border-color:rgba(248,81,73,0.3)">${escapeHtml(issue.stageLabel)}</span>`;
+        if (deferredStages.includes(issue.stage))
+            return `<span class="chip" style="color:var(--amber);border-color:rgba(245,166,35,0.3)">${escapeHtml(issue.stageLabel)}</span>`;
+        return `<span class="chip chip-queue">${escapeHtml(issue.stageLabel)}</span>`;
+    }
+
     function renderIssues(issues) {
         const list = document.getElementById('issueList');
         if (!issues.length) {
@@ -414,7 +424,7 @@
             <div class="record">
                 <div class="flex items-center justify-between gap-3">
                     <a class="text-accent hover:underline" href="${issue.url}" target="_blank" rel="noopener noreferrer">#${issue.number}</a>
-                    <span class="chip chip-queue">${escapeHtml(issue.stageLabel)}</span>
+                    ${issueStageChip(issue)}
                 </div>
                 <div class="text-white mt-2">${escapeHtml(issue.title)}</div>
                 <div class="text-dim text-xs mt-2">labels: ${escapeHtml(issue.labels.join(', '))}</div>
@@ -423,23 +433,42 @@
         `).join('');
     }
 
+    function mergeGateReason(pr) {
+        if (pr.autoMergeEnabled && pr.ciState === 'passed' && pr.reviewState === 'APPROVED')
+            return { text: 'Merge armed — CI passing, review approved, auto-merge enabled', cls: 'text-green' };
+        if (pr.ciState === 'failed')
+            return { text: 'Merge blocked — CI is failing', cls: 'text-red' };
+        if (pr.reviewState === 'CHANGES_REQUESTED')
+            return { text: 'Merge blocked — changes requested by reviewer', cls: 'text-red' };
+        if (pr.ciState === 'running')
+            return { text: 'Merge waiting — CI running', cls: 'text-amber' };
+        if (pr.ciState === 'pending')
+            return { text: 'Merge waiting — CI pending', cls: 'text-amber' };
+        if (pr.reviewState === 'APPROVED' && !pr.autoMergeEnabled)
+            return { text: 'Merge waiting — approved but auto-merge not enabled', cls: 'text-amber' };
+        return { text: 'Merge waiting — review pending', cls: 'text-dim' };
+    }
+
     function renderPullRequests(prs) {
         const list = document.getElementById('prList');
         if (!prs.length) {
             list.innerHTML = '<div class="text-dim">No open pipeline pull requests.</div>';
             return;
         }
-        list.innerHTML = prs.map(pr => `
+        list.innerHTML = prs.map(pr => {
+            const gate = mergeGateReason(pr);
+            return `
             <div class="record">
                 <div class="flex items-center justify-between gap-3">
                     <a class="text-accent hover:underline" href="${pr.url}" target="_blank" rel="noopener noreferrer">#${pr.number}</a>
                     <span class="chip chip-review">${escapeHtml(pr.stageLabel)}</span>
                 </div>
                 <div class="text-white mt-2">${escapeHtml(pr.title)}</div>
-                <div class="text-dim text-xs mt-2">ci: ${escapeHtml(pr.ciState)} · review: ${escapeHtml(pr.reviewState)} · branch: ${escapeHtml(pr.headBranch)}</div>
+                <div class="${gate.cls} text-xs mt-2" style="font-weight:600">${gate.text}</div>
+                <div class="text-dim text-xs mt-1">ci: ${escapeHtml(pr.ciState)} · review: ${escapeHtml(pr.reviewState)} · branch: ${escapeHtml(pr.headBranch)}</div>
                 ${pr.linkedIssueNumber ? `<div class="text-dim text-xs mt-1">linked issue: #${pr.linkedIssueNumber}</div>` : ''}
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     }
 
     function renderRuns(runs) {
