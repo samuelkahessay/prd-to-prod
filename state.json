@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-03T17:29:39Z",
-  "workflow_run_id": "22634767945",
+  "last_run": "2026-03-03T18:11:12Z",
+  "workflow_run_id": "22636457427",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 — C#/.NET 10)",
@@ -70,7 +70,7 @@
   ],
   "open_issues": [],
   "aw_triage": [
-    {"issue": 364, "title": "[aw] No-Op Runs", "status": "tracking_only_no_action", "root_cause": "Tracking issue only, not a failure. No action needed.", "timestamp": "2026-03-03T17:29:39Z"}
+    {"issue": 364, "title": "[aw] No-Op Runs", "status": "tracking_only_no_action", "root_cause": "Tracking issue only, not a failure. No action needed.", "timestamp": "2026-03-03T18:11:12Z"}
   ],
-  "notes": "Run 07 COMPLETE. All 10 PRs merged. Issue #365 closed by owner. Ready for archive (tag v7.0.0). Project status updated COMPLETE 2026-03-03T17:29:39Z"
+  "notes": "Run 07 COMPLETE. All 10 PRs merged. Ready for archive (tag v7.0.0). Project status updated COMPLETE 2026-03-03T18:11:12Z. Run 22636457427 idle."
 }
