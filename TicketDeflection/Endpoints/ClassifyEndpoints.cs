@@ -9,7 +9,7 @@ public static class ClassifyEndpoints
 {
     public static void MapClassifyEndpoints(this WebApplication app)
     {
-        app.MapPost("/api/tickets/{id:guid}/classify", ClassifyTicket);
+        app.MapPost("/api/tickets/{id:guid}/classify", ClassifyTicket).RequireRateLimiting("PublicPost");
     }
 
     private static async Task<Results<Ok<TicketResponse>, NotFound>> ClassifyTicket(

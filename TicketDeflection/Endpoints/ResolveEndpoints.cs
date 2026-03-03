@@ -10,7 +10,7 @@ public static class ResolveEndpoints
 {
     public static void MapResolveEndpoints(this WebApplication app)
     {
-        app.MapPost("/api/tickets/{id:guid}/resolve", ResolveTicket);
+        app.MapPost("/api/tickets/{id:guid}/resolve", ResolveTicket).RequireRateLimiting("PublicPost");
     }
 
     private static async Task<Results<Ok<ResolveResponse>, NotFound>> ResolveTicket(
