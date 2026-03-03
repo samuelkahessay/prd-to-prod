@@ -45,13 +45,14 @@ public sealed class ComplianceRuleLibrary : IComplianceRuleLibrary
 
         new(
             "PIPEDA-002",
-            "Account Number Unmasked in Log",
+            "Account Number Exposure",
             ComplianceRegulation.PIPEDA,
             "PIPEDA s.5(3)",
             "Financial Identifiers",
             FindingSeverity.High,
-            ComplianceDisposition.AUTO_BLOCK,
-            new Regex(@"account[_\s\-]?(?:number|num|no)\s*[:\-=]\s*\d{8,20}", RegexOptions.IgnoreCase | RegexOptions.Compiled)
+            ComplianceDisposition.HUMAN_REQUIRED,
+            new Regex(@"\b(?:return|Results\.(?:Ok|Json)|WriteAsJsonAsync|logger\.Log(?:Trace|Debug|Information|Warning|Error|Critical)?|_logger\.Log(?:Trace|Debug|Information|Warning|Error|Critical)?|Console\.WriteLine)\b[\s\S]{0,200}\b(?:\w+\.)*(?:account(?:_?(?:number|num|no))|acct(?:_?(?:number|num|no))?)\b(?![\s\S]{0,80}\b(?:mask(?:ed|ing)?|encrypt(?:ed|ion)?|redact(?:ed|ion)?|hash(?:ed|ing)?)\b)", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "Account number field detected in code without masking or encryption markers. Operator must verify this is not exposed to end users or logs."
         ),
 
         new(

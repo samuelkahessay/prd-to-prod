@@ -77,6 +77,48 @@ public class ComplianceScanServiceTests
     }
 
     [Fact]
+    public async Task AccountNumber_Returned_In_Api_Response_Produces_HumanRequired()
+    {
+        using var db = CreateContext();
+        var svc = CreateService();
+
+        var content = """
+            app.MapGet("/users/{id}", (User user) =>
+            {
+                return Results.Ok(new { accountNumber = user.AccountNumber });
+            });
+            """;
+
+        var scan = await svc.ScanAsync(content, ContentType.CODE, "UsersEndpoint.cs", db);
+
+        Assert.Equal(ComplianceDisposition.HUMAN_REQUIRED, scan.Disposition);
+        Assert.Contains(
+            scan.Findings,
+            f => f.RuleId == "PIPEDA-002" && f.Disposition == ComplianceDisposition.HUMAN_REQUIRED);
+    }
+
+    [Fact]
+    public async Task Acct_Field_Logged_Produces_HumanRequired()
+    {
+        using var db = CreateContext();
+        var svc = CreateService();
+
+        var content = """
+            public void LogResponse(User user, ILogger logger)
+            {
+                logger.LogInformation("Returning acct {acct}", user.Acct);
+            }
+            """;
+
+        var scan = await svc.ScanAsync(content, ContentType.CODE, "AuditLogger.cs", db);
+
+        Assert.Equal(ComplianceDisposition.HUMAN_REQUIRED, scan.Disposition);
+        Assert.Contains(
+            scan.Findings,
+            f => f.RuleId == "PIPEDA-002" && f.Disposition == ComplianceDisposition.HUMAN_REQUIRED);
+    }
+
+    [Fact]
     public async Task AutoBlock_Findings_Have_Null_StopReason()
     {
         using var db = CreateContext();
