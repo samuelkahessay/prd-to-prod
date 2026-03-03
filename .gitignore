@@ -28,3 +28,9 @@ CLAUDE.md
 
 # Drill reports (generated, not committed)
 drills/reports/*.json
+
+# Demo video working files
+scripts/demo-video/
+
+# Scratch screenshots
+pipeline-replay-screenshot.png

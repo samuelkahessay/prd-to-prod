@@ -18,7 +18,7 @@ The same logic governs the pipeline itself. `gh-aw` (GitHub Agentic Workflows, r
 
 What breaks first is not code generation — it is the control plane. External platform dependencies on GitHub, Copilot, and Azure remain critical. Repair routing is only as good as the failure signals it can extract. Ambiguous inputs produce variable outputs. Silent degradation compounds: a watchdog failing without alerting, a rate limit approaching without backoff.
 
-Pressure-testing this at depth revealed edges. I filed 9 bug reports against `gh-aw` upstream. 4 were merged and I'm credited in the release notes — including a fix shipped today (v0.51.6) for auto-merge gating incorrectly blocking on non-required third-party deployment statuses. Running a pipeline in production means you find the platform's limits. You stop being a user and start being responsible for it.
+Pressure-testing this at depth revealed edges. 4 fixes I reported against `gh-aw` upstream were merged and I'm credited in the release notes — including one shipped today (v0.51.6) for auto-merge gating incorrectly blocking on non-required third-party deployment statuses. Running a pipeline in production means you find the platform's limits. You stop being a user and start being responsible for it.
 
 ---
 
