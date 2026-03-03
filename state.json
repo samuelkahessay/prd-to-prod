@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-03T15:39:57Z",
-  "workflow_run_id": "22630270254",
+  "last_run": "2026-03-03T16:11:54Z",
+  "workflow_run_id": "22631806507",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 — C#/.NET 10)",
@@ -70,8 +70,8 @@
   ],
   "open_issues": [],
   "aw_triage": [
-    {"issue": 365, "title": "[aw] Duplicate Code Detector failed", "status": "fix_pending_pr_366", "root_cause": "invalid --model gpt-5 flag causes agent to exit before calling safe-output tools. PR #366 (APPROVED) fixes this.", "action": "commented on issue with root cause and fix; awaiting merge of PR #366", "timestamp": "2026-03-03T15:39:57Z"},
-    {"issue": 364, "title": "[aw] No-Op Runs", "status": "no_action", "root_cause": "tracking issue only, not a failure", "timestamp": "2026-03-03T10:07:36Z"}
+    {"issue": 365, "title": "[aw] Duplicate Code Detector failed", "status": "closed", "root_cause": "invalid --model gpt-5 flag. PR #366 fixed it.", "timestamp": "2026-03-03T16:11:54Z"},
+    {"issue": 364, "title": "[aw] No-Op Runs", "status": "tracking_only_no_action", "root_cause": "tracking issue only, not a failure. PR #367 prevents wasteful dispatches.", "timestamp": "2026-03-03T16:11:54Z"}
   ],
-  "notes": "Run 07 COMPLETE. All 10 PRs merged. [aw] #365 root cause identified: invalid --model gpt-5 flag. PR #366 (Copilot, APPROVED) fixes it. PR #367 (Copilot, APPROVED) fixes no-op watchdog noise. Ready for archive (tag v7.0.0). Project status updated 2026-03-03T15:39:57Z"
+  "notes": "Run 07 COMPLETE. All 10 PRs merged. PR #366 (Copilot, merged) fixed --model gpt-5 flag. PR #367 (Copilot, merged) fixed no-op watchdog noise. Issue #365 closed by owner. Ready for archive (tag v7.0.0). Project status updated COMPLETE 2026-03-03T16:11:54Z"
 }
