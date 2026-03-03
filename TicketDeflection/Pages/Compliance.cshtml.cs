@@ -14,9 +14,14 @@ public class ComplianceModel : PageModel
         _db = db;
     }
 
-    public List<ComplianceScan> HumanRequiredScans { get; set; } = new();
+    public List<ComplianceScan> PendingHumanRequiredScans { get; set; } = new();
     public List<ComplianceScan> AutoBlockedScans { get; set; } = new();
     public List<ComplianceScan> RecentScans { get; set; } = new();
+    public int TotalScans { get; set; }
+    public int HumanRequiredCount { get; set; }
+    public int AutoBlockedCount { get; set; }
+    public int AdvisoryCount { get; set; }
+    public int PendingDecisionCount { get; set; }
 
     public async Task OnGetAsync()
     {
@@ -26,8 +31,20 @@ public class ComplianceModel : PageModel
             .Take(50)
             .ToListAsync();
 
-        HumanRequiredScans = all.Where(s => s.Disposition == ComplianceDisposition.HUMAN_REQUIRED).ToList();
-        AutoBlockedScans   = all.Where(s => s.Disposition == ComplianceDisposition.AUTO_BLOCK).ToList();
-        RecentScans        = all.Take(20).ToList();
+        var decidedScanIds = await _db.ComplianceDecisions
+            .Select(d => d.ScanId)
+            .Distinct()
+            .ToHashSetAsync();
+
+        TotalScans = all.Count;
+        HumanRequiredCount = all.Count(s => s.Disposition == ComplianceDisposition.HUMAN_REQUIRED);
+        AutoBlockedCount = all.Count(s => s.Disposition == ComplianceDisposition.AUTO_BLOCK);
+        AdvisoryCount = all.Count(s => s.Disposition == ComplianceDisposition.ADVISORY);
+        PendingHumanRequiredScans = all
+            .Where(s => s.Disposition == ComplianceDisposition.HUMAN_REQUIRED && !decidedScanIds.Contains(s.Id))
+            .ToList();
+        PendingDecisionCount = PendingHumanRequiredScans.Count;
+        AutoBlockedScans = all.Where(s => s.Disposition == ComplianceDisposition.AUTO_BLOCK).ToList();
+        RecentScans = all.Take(20).ToList();
     }
 }

@@ -110,6 +110,60 @@ public class ComplianceEndpointTests : IClassFixture<WebApplicationFactory<Progr
     }
 
     [Fact]
+    public async Task PostDecision_For_HumanRequired_Scan_MarksScanAsDecided()
+    {
+        var client = _factory.CreateClient();
+
+        var initialMetricsResponse = await client.GetAsync("/api/compliance/metrics");
+        Assert.Equal(HttpStatusCode.OK, initialMetricsResponse.StatusCode);
+
+        var initialMetricsBody = await initialMetricsResponse.Content.ReadAsStringAsync();
+        using var initialMetricsDoc = JsonDocument.Parse(initialMetricsBody);
+        var pendingBefore = initialMetricsDoc.RootElement.GetProperty("pendingDecisions").GetInt32();
+
+        var createResponse = await client.PostAsJsonAsync("/api/scans", new
+        {
+            content = "dob: 1990-01-15 in exported user report",
+            contentType = "CODE",
+            sourceLabel = "test"
+        });
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadAsStringAsync();
+        using var createdDoc = JsonDocument.Parse(created);
+        var scanId = createdDoc.RootElement.GetProperty("id").GetString();
+        Assert.NotNull(scanId);
+
+        var decisionResponse = await client.PostAsJsonAsync($"/api/scans/{scanId}/decision", new
+        {
+            operatorId = "test-operator",
+            decision = "Approve",
+            notes = "looks acceptable"
+        });
+        Assert.Equal(HttpStatusCode.OK, decisionResponse.StatusCode);
+
+        var scansResponse = await client.GetAsync("/api/scans");
+        Assert.Equal(HttpStatusCode.OK, scansResponse.StatusCode);
+
+        var scansBody = await scansResponse.Content.ReadAsStringAsync();
+        using var scansDoc = JsonDocument.Parse(scansBody);
+        var decidedScan = scansDoc.RootElement
+            .EnumerateArray()
+            .FirstOrDefault(x => x.GetProperty("id").GetString() == scanId);
+
+        Assert.Equal(JsonValueKind.Object, decidedScan.ValueKind);
+        Assert.True(decidedScan.GetProperty("hasDecision").GetBoolean());
+        Assert.Equal("Approve", decidedScan.GetProperty("latestDecision").GetString());
+
+        var metricsResponse = await client.GetAsync("/api/compliance/metrics");
+        Assert.Equal(HttpStatusCode.OK, metricsResponse.StatusCode);
+
+        var metricsBody = await metricsResponse.Content.ReadAsStringAsync();
+        using var metricsDoc = JsonDocument.Parse(metricsBody);
+        Assert.Equal(pendingBefore, metricsDoc.RootElement.GetProperty("pendingDecisions").GetInt32());
+    }
+
+    [Fact]
     public async Task PostScansSimulate_Count5_Returns200_With_AggregateCounts()
     {
         var client = _factory.CreateClient();

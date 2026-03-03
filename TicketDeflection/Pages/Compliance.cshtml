@@ -178,23 +178,23 @@
     <div class="metrics-bar flex items-stretch mb-8" aria-label="Compliance metrics">
         <div class="metric-item flex-1">
             <div class="metric-lbl">total scans</div>
-            <div id="m-total" class="metric-val-lg mt-1" aria-live="polite">@Model.RecentScans.Count</div>
+            <div id="m-total" class="metric-val-lg mt-1" aria-live="polite">@Model.TotalScans</div>
         </div>
         <div class="metric-item flex-1">
             <div class="metric-lbl">auto-blocked</div>
-            <div id="m-autoblocked" class="metric-val-lg mt-1" style="color:var(--red);" aria-live="polite">@Model.AutoBlockedScans.Count</div>
+            <div id="m-autoblocked" class="metric-val-lg mt-1" style="color:var(--red);" aria-live="polite">@Model.AutoBlockedCount</div>
         </div>
         <div class="metric-item flex-1">
             <div class="metric-lbl">human required</div>
-            <div id="m-humanreq" class="metric-val-lg mt-1" style="color:#f59e0b;" aria-live="polite">@Model.HumanRequiredScans.Count</div>
+            <div id="m-humanreq" class="metric-val-lg mt-1" style="color:#f59e0b;" aria-live="polite">@Model.HumanRequiredCount</div>
         </div>
         <div class="metric-item flex-1">
             <div class="metric-lbl">advisory</div>
-            <div id="m-advisory" class="metric-val-lg mt-1" aria-live="polite">0</div>
+            <div id="m-advisory" class="metric-val-lg mt-1" aria-live="polite">@Model.AdvisoryCount</div>
         </div>
         <div class="metric-item flex-1">
             <div class="metric-lbl">pending decisions</div>
-            <div id="m-pending" class="metric-val-lg mt-1" style="color:#f59e0b;" aria-live="polite">@Model.HumanRequiredScans.Count</div>
+            <div id="m-pending" class="metric-val-lg mt-1" style="color:#f59e0b;" aria-live="polite">@Model.PendingDecisionCount</div>
         </div>
     </div>
 
@@ -208,16 +208,16 @@
     <div class="compliance-section human-required" aria-label="Human decision required">
         <div class="section-header human-required">
             <span class="section-title">HUMAN DECISION REQUIRED</span>
-            <span id="hr-count">@Model.HumanRequiredScans.Count item(s)</span>
+            <span id="hr-count">@Model.PendingHumanRequiredScans.Count item(s)</span>
         </div>
         <div id="human-required-body">
-            @if (!Model.HumanRequiredScans.Any())
+            @if (!Model.PendingHumanRequiredScans.Any())
             {
                 <div class="empty-msg">No items requiring human decision.</div>
             }
             else
             {
-                foreach (var scan in Model.HumanRequiredScans)
+                foreach (var scan in Model.PendingHumanRequiredScans)
                 {
                     <div class="scan-item" id="scan-@scan.Id">
                         <div class="flex items-center justify-between mb-2">
@@ -386,7 +386,7 @@
             if (!res.ok) return;
             const scans = await res.json();
 
-            const hr = scans.filter(s => s.disposition === 'HUMAN_REQUIRED');
+            const hr = scans.filter(s => s.disposition === 'HUMAN_REQUIRED' && !s.hasDecision);
             const ab = scans.filter(s => s.disposition === 'AUTO_BLOCK');
 
             document.getElementById('hr-count').textContent = hr.length + ' item(s)';

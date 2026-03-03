@@ -62,11 +62,35 @@ public static class ComplianceEndpoints
 
     private static async Task<IResult> GetAllScans(TicketDbContext db)
     {
+        var decisionLookup = await db.ComplianceDecisions
+            .GroupBy(d => d.ScanId)
+            .Select(g => new
+            {
+                ScanId = g.Key,
+                LatestDecision = g
+                    .OrderByDescending(d => d.DecidedAt)
+                    .Select(d => d.Decision)
+                    .FirstOrDefault()
+            })
+            .ToDictionaryAsync(x => x.ScanId, x => x.LatestDecision);
+
         var scans = await db.ComplianceScans
             .Include(s => s.Findings)
             .OrderByDescending(s => s.SubmittedAt)
             .ToListAsync();
-        return Results.Ok(scans);
+
+        return Results.Ok(scans.Select(scan => new
+        {
+            scan.Id,
+            scan.SubmittedAt,
+            scan.ContentType,
+            scan.SourceLabel,
+            scan.Disposition,
+            scan.IsDemo,
+            scan.Findings,
+            hasDecision = decisionLookup.ContainsKey(scan.Id),
+            latestDecision = decisionLookup.GetValueOrDefault(scan.Id),
+        }));
     }
 
     private static async Task<IResult> GetScanById(Guid id, TicketDbContext db)
