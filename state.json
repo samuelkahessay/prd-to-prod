@@ -1,12 +1,12 @@
 {
-  "last_run": "2026-03-03T04:54:29Z",
-  "workflow_run_id": "22608876734",
+  "last_run": "2026-03-03T05:04:00Z",
+  "workflow_run_id": "22609053342",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 — C#/.NET 10)",
     "status": "complete"
   },
-  "pipeline_status": "COMPLETE",
+  "pipeline_status": "AT_RISK",
   "attempts": [
     {"issue": 125, "pr": 138, "status": "merged"},
     {"issue": 126, "pr": 139, "status": "merged"},
@@ -63,8 +63,9 @@
     {"issue": 344, "pr": 352, "status": "merged"},
     {"issue": 345, "pr": 353, "status": "merged"},
     {"issue": 346, "pr": 354, "status": "merged"},
-    {"issue": 347, "pr": 355, "status": "merged"}
+    {"issue": 347, "pr": 355, "status": "merged"},
+    {"issue": 356, "pr": "pending", "status": "in_progress", "description": "CI fix: add missing nav links /dashboard /tickets /activity to _Layout.cshtml"}
   ],
-  "open_issues": [],
-  "notes": "Run 07 COMPLETE. All 8 issues from PRD #339 implemented and merged. PRs #348-355. Ready to archive as v7.0.0 / showcase 07-compliance-scan-service. Verified 2026-03-03T04:54:29Z: 0 open implementable pipeline issues, 0 open PRs, 0 [aw] issues. Project status update posted."
+  "open_issues": [{"number": 356, "title": "CI Build Failure: NavigationLayoutTests.SharedNavigation_RendersDedicatedLinkRowWithDistinctTargets"}],
+  "notes": "Run 07 was COMPLETE. CI failure on main detected (#356) — missing nav links in _Layout.cshtml. PR created to fix. All 124 tests pass with fix. 2026-03-03T05:04:00Z"
 }
