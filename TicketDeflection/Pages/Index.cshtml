@@ -314,10 +314,24 @@
         <div class="text-xs text-dim mb-4 uppercase tracking-widest">// provenance — verify the work is real</div>
         <h2 id="provenance-heading" class="sr-only">Provenance</h2>
         <div class="panel p-4 text-xs">
-            <div class="text-dim mb-1">
+            <div class="text-dim mb-2">
                 REPO: <a href="https://github.com/samuelkahessay/prd-to-prod" class="text-accent hover:underline">github.com/samuelkahessay/prd-to-prod</a>
             </div>
-            <div class="text-dim">Every issue, PR, review comment, merge commit, drill report, and live operator surface is part of the evidence. The git history is the source of truth.</div>
+            <div class="text-dim mb-3">Every issue, PR, review comment, merge commit, drill report, and live operator surface is part of the evidence. The git history is the source of truth.</div>
+            <div class="grid sm:grid-cols-3 gap-3">
+                <a href="https://github.com/samuelkahessay/prd-to-prod/blob/main/autonomy-policy.yml" class="panel p-3 block hover:border-accent transition-colors" style="text-decoration: none;">
+                    <div class="text-accent font-bold mb-1">autonomy-policy.yml</div>
+                    <div class="text-dim">Human-owned authority boundary. Unknown actions fail closed.</div>
+                </a>
+                <a href="https://github.com/samuelkahessay/prd-to-prod/blob/main/drills/reports/README.md" class="panel p-3 block hover:border-accent transition-colors" style="text-decoration: none;">
+                    <div class="text-accent font-bold mb-1">drill evidence</div>
+                    <div class="text-dim">7 self-healing drills. 2 FULL_PASS with zero human intervention.</div>
+                </a>
+                <a href="/operator" class="panel p-3 block hover:border-accent transition-colors" style="text-decoration: none;">
+                    <div class="text-accent font-bold mb-1">/operator</div>
+                    <div class="text-dim">Live queue, escalations, and decision ledger.</div>
+                </a>
+            </div>
         </div>
     </section>
 
@@ -340,10 +354,12 @@
                     <div class="text-accent font-bold mb-3">useful links</div>
                     <ul class="space-y-2 text-dim">
                         <li>→ <a href="https://github.com/samuelkahessay/prd-to-prod" class="text-accent hover:underline">github.com/samuelkahessay/prd-to-prod</a></li>
-                        <li>→ <a href="https://github.com/samuelkahessay/prd-to-prod/blob/main/AGENTS.md" class="text-accent hover:underline">AGENTS.md</a> — coding standards &amp; pipeline conventions</li>
-                        <li>→ <a href="https://github.com/samuelkahessay/prd-to-prod/blob/main/docs/prd/ticket-deflection-prd.md" class="text-accent hover:underline">example PRD</a> — the PRD that built this app</li>
+                        <li>→ <a href="https://github.com/samuelkahessay/prd-to-prod/blob/main/SUBMISSION.md" class="text-accent hover:underline">SUBMISSION.md</a> — application brief and compliance specimen</li>
+                        <li>→ <a href="https://github.com/samuelkahessay/prd-to-prod/blob/main/autonomy-policy.yml" class="text-accent hover:underline">autonomy-policy.yml</a> — the human-owned authority boundary</li>
+                        <li>→ <a href="https://github.com/samuelkahessay/prd-to-prod/blob/main/drills/reports/README.md" class="text-accent hover:underline">drill evidence</a> — 7 self-healing drills with issue/PR links</li>
                         <li>→ <a href="/operator" class="text-accent hover:underline">/operator</a> — queue, blocked actions, recent autonomous decisions</li>
                         <li>→ <a href="/pipeline" class="text-accent hover:underline">/pipeline</a> — live pipeline view backed by GitHub state</li>
+                        <li>→ <a href="/compliance" class="text-accent hover:underline">/compliance</a> — PIPEDA/FINTRAC compliance scan dashboard</li>
                         <li>→ <a href="https://github.com/github/gh-aw" class="text-accent hover:underline">gh-aw</a> — the agentic workflow engine powering this pipeline</li>
                     </ul>
                 </div>
