@@ -91,10 +91,11 @@ when the system must stop. This repo is built for exactly that problem:
 - **Observable control plane** — every autonomous decision, escalation, and
   merge gate is visible through operator surfaces and a durable decision ledger.
   A human can audit what the system did and why it stopped.
-- **Proven self-healing** — 7 drills exercised the CI-failure repair path end to
-  end, including 2 FULL_PASS runs with zero human intervention. Earlier drills
-  included manual resume at dispatch while the workflow trigger was hardened.
-  A human-owned kill switch (`PIPELINE_HEALING_ENABLED`) can still halt repair.
+- **Proven self-healing** — 8 recorded drill reports capture the CI-failure
+  repair path, including 2 end-to-end autonomous passes with zero human
+  intervention after the break push. Earlier reports include partial and
+  manual-resume runs while the workflow trigger was hardened. A human-owned
+  kill switch (`PIPELINE_HEALING_ENABLED`) can still halt repair.
 
 The architecture separates the human control plane from the AI execution lane.
 Scaling AI-generated changes safely means the control plane must be
@@ -144,8 +145,9 @@ What breaks first at scale is not raw code generation. It is the control plane.
 
 The proof is not a slogan about autonomy. It is observable behavior. The
 pipeline was dogfooded heavily — every application, UI surface, and feature
-below was built through the pipeline path. 7 self-healing drills and 4 upstream
-fixes merged into `gh-aw` came from running it against real work in this repo.
+below was built through the pipeline path. 8 self-healing drill reports and 4
+upstream fixes merged into `gh-aw` came from running it against real work in
+this repo.
 
 ### Completed Runs
 

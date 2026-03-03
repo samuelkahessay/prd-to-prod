@@ -7,6 +7,29 @@ namespace TicketDeflection.Tests;
 public class OperatorLoginRateLimitTests
 {
     [Fact]
+    public async Task OperatorLogin_Get_IsNotRateLimited()
+    {
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, $"TestDb_{Guid.NewGuid()}");
+            });
+        });
+
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+
+        for (var i = 0; i < 6; i++)
+        {
+            var response = await client.GetAsync("/operator/login");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+    }
+
+    [Fact]
     public async Task OperatorLogin_Post_IsRateLimited()
     {
         await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>

@@ -1,22 +1,24 @@
 #nullable enable
 
+using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.RateLimiting;
+using TicketDeflection.Services;
 
 namespace TicketDeflection.Pages;
 
-[EnableRateLimiting("OperatorLogin")]
 public class OperatorLoginModel : PageModel
 {
     private readonly IConfiguration _config;
+    private readonly IOperatorLoginThrottle _throttle;
 
-    public OperatorLoginModel(IConfiguration config)
+    public OperatorLoginModel(IConfiguration config, IOperatorLoginThrottle throttle)
     {
         _config = config;
+        _throttle = throttle;
     }
 
     [BindProperty]
@@ -36,6 +38,13 @@ public class OperatorLoginModel : PageModel
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
+        if (_throttle.IsBlocked(HttpContext, out var retryAfter))
+        {
+            var retryAfterSeconds = Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds));
+            Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
+            return StatusCode(StatusCodes.Status429TooManyRequests);
+        }
+
         var configuredPassphrase = _config["OperatorAuth:Passphrase"];
         if (string.IsNullOrEmpty(configuredPassphrase))
             configuredPassphrase = Environment.GetEnvironmentVariable("OPERATOR_PASSPHRASE");
@@ -55,9 +64,12 @@ public class OperatorLoginModel : PageModel
 
         if (Passphrase != configuredPassphrase)
         {
+            _throttle.RecordFailure(HttpContext);
             ErrorMessage = "Invalid passphrase.";
             return Page();
         }
+
+        _throttle.Reset(HttpContext);
 
         var claims = new List<Claim>
         {

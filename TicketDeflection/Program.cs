@@ -46,6 +46,7 @@ builder.Services.AddSingleton<IDecisionLedgerService, DecisionLedgerService>();
 builder.Services.AddSingleton<IDrillReportService, DrillReportService>();
 builder.Services.AddSingleton<IShowcaseService, ShowcaseService>();
 builder.Services.AddSingleton<IComplianceRuleLibrary, ComplianceRuleLibrary>();
+builder.Services.AddSingleton<IOperatorLoginThrottle, OperatorLoginThrottle>();
 builder.Services.AddScoped<IComplianceScanService, ComplianceScanService>();
 builder.Services.AddHttpClient<IGitHubPipelineSnapshotService, GitHubPipelineSnapshotService>();
 builder.Services.AddRazorPages();
@@ -85,16 +86,6 @@ builder.Services.AddRateLimiter(options =>
             _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = 30,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0
-            }));
-
-    options.AddPolicy("OperatorLogin", httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 5,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
