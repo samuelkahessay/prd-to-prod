@@ -118,6 +118,49 @@ under load.
 The loop is visible rather than implicit. The repo now exposes both a decision
 ledger and operator-facing surfaces for live inspection.
 
+## Agent Fleet
+
+This is not a single agent behind a CI trigger. It is a small fleet of
+specialized agents with bounded roles. Deterministic workflows enforce
+sequencing, identity separation, escalation, and recovery. Humans set intent.
+The fleet executes.
+
+### Agentic Workflows
+
+| Agent | Role |
+|---|---|
+| **Repo Assist** | Implements issues, opens PRs, and repairs bounded failures on its own branches. |
+| **PR Review Agent** | Reviews diffs against requirements and emits a structured verdict. |
+| **PRD Architecture Planner** | Turns a PRD into an implementation plan before code is written. |
+| **PRD Decomposer** | Splits a PRD into atomic issues with dependencies and acceptance criteria. |
+| **Code Simplifier** | Opens cleanup PRs for clarity, consistency, and maintainability. |
+| **Duplicate Code Detector** | Finds duplication and proposes targeted refactors. |
+| **CI Failure Doctor** | Investigates failed CI runs and creates diagnostic issues. |
+| **Security Compliance Campaign** | Fixes critical vulnerabilities ahead of audit deadlines. |
+| **Pipeline Status Report** | Maintains a rolling status issue for pipeline work. |
+
+### Orchestration Workflows
+
+Agents do not self-coordinate. Deterministic workflows own routing, gating, and
+recovery so the control plane stays human-readable and auditable.
+
+| Workflow | Role |
+|---|---|
+| **Auto-Dispatch** | Routes labeled issues to the right agent. |
+| **Auto-Dispatch Requeue** | Retries failed dispatches. |
+| **PR Review Submit** | Converts verdict comments into formal reviews and arms auto-merge. |
+| **Architecture Approval Gate** | Holds PRD plans behind human approval. |
+| **CI Failure Router** | Turns `main` CI failures into bug issues. |
+| **CI Failure Resolver** | Closes CI bug issues when fixes merge. |
+| **Close Linked Issues** | Closes issues when their PRs merge. |
+| **Pipeline Watchdog** | Flags stuck work and degraded pipeline health. |
+| **Agentic Maintenance** | Cleans up stale PRs and old runs. |
+| **Deploy Router** | Chooses Azure, Vercel, or Docker based on the diff. |
+
+This is not a static DAG. Agents can trigger other agents through issues, PR
+events, and commands, but workflows own routing and authority. The topology is
+dynamic; the policy is not.
+
 ## Operator Surfaces
 
 - [`autonomy-policy.yml`](autonomy-policy.yml) — explicit authority boundary
@@ -239,6 +282,8 @@ the variable is restored.
   drill runbook
 - [**Why gh-aw**](docs/why-gh-aw.md) — why deterministic workflows remain the
   authority layer
+- [**Why Not App Builders**](docs/why-not-app-builders.md) — how this differs
+  from Lovable, Base44, and local AI loops
 
 ## License
 
