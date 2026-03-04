@@ -7,6 +7,27 @@ namespace TicketDeflection.Tests;
 public class OperatorLoginRateLimitTests
 {
     [Fact]
+    public async Task OperatorLogin_Get_ShowsReviewerDemoAccessContext()
+    {
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                TestFactoryExtensions.ReplaceDbWithInMemory(services, $"TestDb_{Guid.NewGuid()}");
+            });
+        });
+
+        var client = factory.CreateClient();
+
+        var html = await client.GetStringAsync("/operator/login");
+
+        Assert.Contains("reviewer demo access", html);
+        Assert.Contains("public read-only", html);
+        Assert.Contains("panel-reviewer", html);
+        Assert.Contains("panel-demo", html);
+    }
+
+    [Fact]
     public async Task OperatorLogin_Get_IsNotRateLimited()
     {
         await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>

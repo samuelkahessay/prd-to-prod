@@ -11,6 +11,8 @@ old CI/CD, but as an operating loop with explicit authority limits, real failure
 conditions, and visible operator controls.
 
 > **Wealthsimple submission:** see [`SUBMISSION.md`](SUBMISSION.md) for the application brief and compliance service specimen.
+>
+> **Interview demo access:** the deployed interview build intentionally publishes a reviewer credential on `/operator/login` so reviewers can exercise authenticated decision recording without a private handoff. `/operator` itself remains public read-only.
 
 ```mermaid
 flowchart TD

@@ -55,7 +55,10 @@
     <div class="mb-8">
         <div class="text-xs text-dim mb-2">// operator authentication</div>
         <h1 class="font-sans text-3xl font-bold text-white">Operator Login</h1>
-        <p class="text-dim text-sm mt-2">Authenticate to record compliance decisions.</p>
+        <p class="text-dim text-sm mt-2">
+            Authenticate to record compliance decisions. <code>/operator</code> remains public read-only;
+            this login exists so reviewers can exercise the authenticated decision path.
+        </p>
     </div>
 
     <div class="login-panel">
@@ -79,7 +82,8 @@
                 <button type="submit" class="exec-btn" style="width:100%;text-align:center;">[ authenticate ]</button>
             </form>
             <div style="margin-top:16px; padding:12px 14px; border:1px solid var(--border); background:rgba(0,0,0,0.3); font-size:0.75rem; color:var(--dim); line-height:1.6;">
-                <span style="color:var(--accent);">demo credentials</span><br/>
+                <span style="color:var(--accent);">reviewer demo access</span><br/>
+                This interview build intentionally publishes a demo operator credential so reviewers can exercise the authenticated flow without a private handoff.<br/><br/>
                 operator name: <code style="color:var(--text);">panel-reviewer</code><br/>
                 passphrase: <code style="color:var(--text);">panel-demo</code>
             </div>

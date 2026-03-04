@@ -183,6 +183,11 @@
         background: rgba(0, 170, 255, 0.04);
         padding: 14px 16px;
     }
+    .event-log {
+        height: 24rem;
+        overflow-y: auto;
+        overflow-anchor: none;
+    }
 
     /* Run history table */
     .run-row {
@@ -213,6 +218,74 @@
         font-variant-numeric: tabular-nums;
     }
 
+    /* Compact metrics bar */
+    .metrics-compact {
+        display: flex;
+        align-items: stretch;
+        background: rgba(4, 10, 20, 0.7);
+        border: 1px solid var(--border);
+        border-top: 2px solid var(--accent);
+        overflow-x: auto;
+    }
+    .metric-slot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        min-width: 0;
+        flex: 1;
+    }
+    .metric-slot + .metric-slot {
+        border-left: 1px solid var(--border);
+    }
+
+    /* Two-column layout */
+    .pipeline-columns {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+        gap: 24px;
+        align-items: start;
+    }
+    .pipeline-left,
+    .pipeline-right {
+        min-width: 0;
+    }
+    .pipeline-right {
+        position: sticky;
+        top: 1rem;
+    }
+    .pipeline-left .stage-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .pipeline-left .stage-node::after {
+        display: none;
+    }
+
+    /* Activity feed */
+    .feed-item {
+        padding: 8px 10px;
+        border-left: 3px solid var(--border);
+    }
+    .feed-item + .feed-item {
+        margin-top: 2px;
+    }
+    .feed-item.feed-issue { border-left-color: var(--amber); }
+    .feed-item.feed-pr { border-left-color: var(--accent); }
+    .feed-item.feed-run { border-left-color: var(--green); }
+    .sidebar-feed {
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    @@media (max-width: 1024px) {
+        .pipeline-columns {
+            grid-template-columns: 1fr;
+        }
+        .pipeline-right {
+            position: static;
+        }
+    }
     @@media (max-width: 900px) {
         .stage-grid { grid-template-columns: 1fr 1fr; }
         .stage-node::after { display: none; }
@@ -228,7 +301,7 @@
 </style>
 }
 
-<div class="max-w-6xl mx-auto px-4 py-10">
+<div class="max-w-7xl mx-auto px-4 py-10">
     <div class="mb-8">
         <div class="text-xs text-dim mb-2 uppercase tracking-widest">// pipeline state &mdash; live &amp; historical</div>
         <h1 class="font-sans text-3xl font-bold text-white mb-3">Pipeline</h1>
@@ -266,89 +339,109 @@
         <div id="replayStats" class="flex flex-wrap gap-4 mt-3 text-xs text-dim"></div>
     </div>
 
-    <!-- Metrics -->
-    <div id="metricsRow" class="grid grid-cols-2 md:grid-cols-7 gap-4 mb-8" aria-label="Pipeline metrics">
-        <div class="panel panel-top p-4">
-            <div id="metricLbl0" class="metric-lbl">actionable issues</div>
+    <!-- Metrics (compact bar) -->
+    <div id="metricsRow" class="metrics-compact mb-6" aria-label="Pipeline metrics">
+        <div class="metric-slot">
             <div id="metricVal0" class="metric-val" aria-live="polite">0</div>
+            <div id="metricLbl0" class="metric-lbl">actionable issues</div>
         </div>
-        <div class="panel panel-top p-4">
-            <div id="metricLbl1" class="metric-lbl">open prs</div>
+        <div class="metric-slot">
             <div id="metricVal1" class="metric-val" aria-live="polite">0</div>
+            <div id="metricLbl1" class="metric-lbl">open prs</div>
         </div>
-        <div class="panel panel-top p-4">
-            <div id="metricLbl2" class="metric-lbl">active runs</div>
+        <div class="metric-slot">
             <div id="metricVal2" class="metric-val" aria-live="polite">0</div>
+            <div id="metricLbl2" class="metric-lbl">active runs</div>
         </div>
-        <div class="panel panel-amber p-4">
+        <div class="metric-slot">
+            <div id="metricVal3" class="metric-val" aria-live="polite">0</div>
             <div id="metricLbl3" class="metric-lbl">deferred</div>
-            <div id="metricVal3" class="metric-val text-amber" aria-live="polite">0</div>
         </div>
-        <div class="panel panel-red p-4">
+        <div class="metric-slot">
+            <div id="metricVal4" class="metric-val" aria-live="polite">0</div>
             <div id="metricLbl4" class="metric-lbl">repairs</div>
-            <div id="metricVal4" class="metric-val text-red" aria-live="polite">0</div>
         </div>
-        <div class="panel panel-green p-4">
+        <div class="metric-slot">
+            <div id="metricVal5" class="metric-val" aria-live="polite">0</div>
             <div id="metricLbl5" class="metric-lbl">merge armed</div>
-            <div id="metricVal5" class="metric-val text-green" aria-live="polite">0</div>
         </div>
-        <div class="panel p-4 overflow-hidden">
-            <div id="metricLbl6" class="metric-lbl">mode</div>
+        <div class="metric-slot">
             <div id="metricVal6" class="text-white text-sm truncate">loading</div>
+            <div id="metricLbl6" class="metric-lbl">mode</div>
         </div>
     </div>
 
-    <!-- Stage Grid -->
-    <section class="panel p-5 mb-8" aria-labelledby="stage-heading">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <div class="text-xs text-dim uppercase tracking-widest mb-1">stage map</div>
-                <h2 id="stage-heading" class="font-sans text-2xl font-bold text-white">Current pipeline flow</h2>
+    <!-- Two-Column Layout -->
+    <div class="pipeline-columns">
+        <!-- Left Column -->
+        <div class="pipeline-left">
+            <!-- Stage Grid -->
+            <section class="panel p-5 mb-6" aria-labelledby="stage-heading">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="text-xs text-dim uppercase tracking-widest mb-1">stage map</div>
+                        <h2 id="stage-heading" class="font-sans text-2xl font-bold text-white">Current pipeline flow</h2>
+                    </div>
+                    <div id="updatedAt" class="text-xs text-dim">updated: pending</div>
+                </div>
+                <div id="stageGrid" class="stage-grid" aria-live="polite"></div>
+            </section>
+
+            <!-- Live Content (left side — detailed cards) -->
+            <div id="liveContent">
+                <section class="panel p-5 mb-6" aria-labelledby="issue-heading">
+                    <div class="text-xs text-dim uppercase tracking-widest mb-2">open actionable pipeline issues</div>
+                    <h2 id="issue-heading" class="font-sans text-xl font-bold text-white mb-4">Issue queue</h2>
+                    <div id="issueList" class="text-sm text-dim" aria-live="polite">Loading issues...</div>
+                </section>
+
+                <section class="panel p-5 mb-6" aria-labelledby="pr-heading">
+                    <div class="text-xs text-dim uppercase tracking-widest mb-2">open pipeline prs</div>
+                    <h2 id="pr-heading" class="font-sans text-xl font-bold text-white mb-4">Pull requests</h2>
+                    <div id="prList" class="text-sm text-dim" aria-live="polite">Loading pull requests...</div>
+                </section>
+
+                <section class="panel p-5" aria-labelledby="run-heading">
+                    <div class="text-xs text-dim uppercase tracking-widest mb-2">actions in progress</div>
+                    <h2 id="run-heading" class="font-sans text-xl font-bold text-white mb-4">Workflow runs</h2>
+                    <div id="runList" class="text-sm text-dim" aria-live="polite">Loading workflow runs...</div>
+                </section>
             </div>
-            <div id="updatedAt" class="text-xs text-dim">updated: pending</div>
-        </div>
-        <div id="stageGrid" class="stage-grid" aria-live="polite"></div>
-    </section>
 
-    <!-- Live Content -->
-    <div id="liveContent">
-        <div class="grid lg:grid-cols-3 gap-6">
-            <section class="panel p-5" aria-labelledby="issue-heading">
-                <div class="text-xs text-dim uppercase tracking-widest mb-2">open actionable pipeline issues</div>
-                <h2 id="issue-heading" class="font-sans text-xl font-bold text-white mb-4">Issue queue</h2>
-                <div id="issueList" class="text-sm text-dim" aria-live="polite">Loading issues...</div>
-            </section>
-
-            <section class="panel p-5" aria-labelledby="pr-heading">
-                <div class="text-xs text-dim uppercase tracking-widest mb-2">open pipeline prs</div>
-                <h2 id="pr-heading" class="font-sans text-xl font-bold text-white mb-4">Pull requests</h2>
-                <div id="prList" class="text-sm text-dim" aria-live="polite">Loading pull requests...</div>
-            </section>
-
-            <section class="panel p-5" aria-labelledby="run-heading">
-                <div class="text-xs text-dim uppercase tracking-widest mb-2">actions in progress</div>
-                <h2 id="run-heading" class="font-sans text-xl font-bold text-white mb-4">Workflow runs</h2>
-                <div id="runList" class="text-sm text-dim" aria-live="polite">Loading workflow runs...</div>
-            </section>
-        </div>
-    </div>
-
-    <!-- Replay Content -->
-    <div id="replayContent" class="hidden">
-        <div id="currentEventBox" class="current-event-box mb-6 hidden">
-            <div class="flex items-center gap-3 mb-2">
-                <span id="currentEventMarker" class="event-marker"></span>
-                <span id="currentEventType" class="event-type text-sm"></span>
-                <span id="currentEventItem" class="text-accent text-sm"></span>
+            <!-- Replay Content (left side — current event highlight) -->
+            <div id="replayContent" class="hidden">
+                <div id="currentEventBox" class="current-event-box hidden">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span id="currentEventMarker" class="event-marker"></span>
+                        <span id="currentEventType" class="event-type text-sm"></span>
+                        <span id="currentEventItem" class="text-accent text-sm"></span>
+                    </div>
+                    <div id="currentEventTitle" class="text-white"></div>
+                    <div id="currentEventTime" class="text-dim text-xs mt-1"></div>
+                </div>
             </div>
-            <div id="currentEventTitle" class="text-white"></div>
-            <div id="currentEventTime" class="text-dim text-xs mt-1"></div>
         </div>
-        <section class="panel p-5">
-            <div class="text-xs text-dim uppercase tracking-widest mb-2">event timeline</div>
-            <h2 class="font-sans text-xl font-bold text-white mb-4">Pipeline activity</h2>
-            <div id="eventLog" class="max-h-96 overflow-y-auto text-sm"></div>
-        </section>
+
+        <!-- Right Column (Sidebar) -->
+        <div class="pipeline-right">
+            <!-- Live Sidebar: Activity Feed -->
+            <div id="liveSidebar">
+                <section class="panel p-5">
+                    <div class="text-xs text-dim uppercase tracking-widest mb-2">activity</div>
+                    <h2 class="font-sans text-lg font-bold text-white mb-4">Live feed</h2>
+                    <div id="liveFeed" class="sidebar-feed text-sm text-dim">Loading...</div>
+                </section>
+            </div>
+
+            <!-- Replay Sidebar: Event Timeline -->
+            <div id="replaySidebar" class="hidden">
+                <section class="panel p-5">
+                    <div class="text-xs text-dim uppercase tracking-widest mb-2">event timeline</div>
+                    <h2 class="font-sans text-xl font-bold text-white mb-4">Pipeline activity</h2>
+                    <div id="eventLog" class="event-log text-sm"></div>
+                </section>
+            </div>
+        </div>
     </div>
 
     <!-- Run History Table -->
@@ -519,6 +612,44 @@
         renderIssues(snapshot.issues);
         renderPullRequests(snapshot.pullRequests);
         renderRuns(snapshot.activeRuns);
+        renderLiveFeed(snapshot);
+    }
+
+    function renderLiveFeed(snapshot) {
+        const feed = document.getElementById('liveFeed');
+        const items = [];
+
+        (snapshot.issues || []).forEach(issue => {
+            items.push({ type: 'issue', number: issue.number, title: issue.title, url: issue.url, label: issue.stageLabel });
+        });
+        (snapshot.pullRequests || []).forEach(pr => {
+            const gate = mergeGateReason(pr);
+            items.push({ type: 'pr', number: pr.number, title: pr.title, url: pr.url, label: pr.stageLabel, gate });
+        });
+        (snapshot.activeRuns || []).forEach(run => {
+            items.push({ type: 'run', name: run.name, url: run.url, label: run.stageLabel });
+        });
+
+        if (!items.length) {
+            feed.innerHTML = '<div class="text-dim">No active items.</div>';
+            return;
+        }
+
+        feed.innerHTML = items.map(item => {
+            const borderCls = item.type === 'issue' ? 'feed-issue' : item.type === 'pr' ? 'feed-pr' : 'feed-run';
+            const id = item.type === 'run'
+                ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline text-xs">${escapeHtml(item.name)}</a>`
+                : `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline text-xs">#${item.number}</a>`;
+            const title = item.title ? `<div class="text-white text-xs mt-1 truncate">${escapeHtml(item.title)}</div>` : '';
+            const gateInfo = item.gate ? `<div class="${item.gate.cls}" style="font-size:0.65rem;margin-top:2px">${item.gate.text}</div>` : '';
+            return `<div class="feed-item ${borderCls}">
+                <div class="flex items-center justify-between">
+                    ${id}
+                    <span class="text-dim" style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.05em">${escapeHtml(item.type)}</span>
+                </div>
+                ${title}${gateInfo}
+            </div>`;
+        }).join('');
     }
 
     function setMetric(index, label, value, isText) {
@@ -670,9 +801,16 @@
             </div>`;
         }).join('');
 
-        // Scroll current event into view
+        // Scroll current event into view within the log container only
         const currentEl = log.querySelector('.event-item.current');
-        if (currentEl) currentEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        if (currentEl) {
+            const elTop = currentEl.offsetTop - log.offsetTop;
+            const elBottom = elTop + currentEl.offsetHeight;
+            const viewTop = log.scrollTop;
+            const viewBottom = viewTop + log.clientHeight;
+            if (elBottom > viewBottom) log.scrollTop = elBottom - log.clientHeight;
+            else if (elTop < viewTop) log.scrollTop = elTop;
+        }
     }
 
     function cleanTitle(title) {
@@ -713,8 +851,10 @@
             // Switch to live
             document.getElementById('replayControls').classList.add('hidden');
             document.getElementById('replayContent').classList.add('hidden');
+            document.getElementById('replaySidebar').classList.add('hidden');
             document.getElementById('currentEventBox').classList.add('hidden');
             document.getElementById('liveContent').classList.remove('hidden');
+            document.getElementById('liveSidebar').classList.remove('hidden');
             document.getElementById('warningBox').classList.remove('hidden');
             replayData = null;
             replayStep = -1;
@@ -723,9 +863,11 @@
             // Switch to replay
             stopLivePolling();
             document.getElementById('liveContent').classList.add('hidden');
+            document.getElementById('liveSidebar').classList.add('hidden');
             document.getElementById('warningBox').classList.add('hidden');
             document.getElementById('replayControls').classList.remove('hidden');
             document.getElementById('replayContent').classList.remove('hidden');
+            document.getElementById('replaySidebar').classList.remove('hidden');
 
             try {
                 replayData = await loadReplayData(mode);
