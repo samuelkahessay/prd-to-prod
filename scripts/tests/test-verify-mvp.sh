@@ -35,6 +35,8 @@ printf '%s\n' "$DEFAULT_CALLS" | grep -F "bash scripts/tests/test-auto-dispatch.
 printf '%s\n' "$DEFAULT_CALLS" | grep -F "bash scripts/tests/test-check-autonomy-policy.sh" >/dev/null
 printf '%s\n' "$DEFAULT_CALLS" | grep -F "bash scripts/tests/test-log-decision.sh" >/dev/null
 printf '%s\n' "$DEFAULT_CALLS" | grep -F "bash scripts/tests/test-pipeline-watchdog.sh" >/dev/null
+printf '%s\n' "$DEFAULT_CALLS" | grep -F "bash scripts/tests/test-classify-pipeline-pr.sh" >/dev/null
+printf '%s\n' "$DEFAULT_CALLS" | grep -F "bash scripts/tests/test-pr-review-agent-activation.sh" >/dev/null
 printf '%s\n' "$DEFAULT_CALLS" | grep -F "bash scripts/tests/test-pr-review-submit-policy-gate.sh" >/dev/null
 printf '%s\n' "$DEFAULT_CALLS" | grep -F "bash scripts/self-healing-drill.sh audit ff2f18746416dfb8ae8bfe1e414e031983a5fb73" >/dev/null
 

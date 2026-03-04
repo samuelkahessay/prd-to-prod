@@ -81,6 +81,7 @@ jobs:
           sparse-checkout: |
             scripts/healing-control.sh
             scripts/check-autonomy-policy.sh
+            scripts/classify-pipeline-pr.sh
             autonomy-policy.yml
           sparse-checkout-cone-mode: false
 
@@ -226,26 +227,28 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.issue.number }}
-          PR_TITLE: ${{ steps.review.outputs.pr_title }}
           REPO: ${{ github.repository }}
         run: |
-          if [ -z "${PR_TITLE:-}" ]; then
-            PR_TITLE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title --jq '.title')
-          fi
-
           echo "blocked=false" >> "$GITHUB_OUTPUT"
           echo "blocked_action=" >> "$GITHUB_OUTPUT"
           echo "blocked_file=" >> "$GITHUB_OUTPUT"
           echo "blocked_reason=" >> "$GITHUB_OUTPUT"
 
-          if [[ "$PR_TITLE" != "[Pipeline]"* ]]; then
+          PR_JSON=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title,headRefName,baseRefName,author)
+          PIPELINE_JSON=$(printf '%s' "$PR_JSON" | bash scripts/classify-pipeline-pr.sh)
+          PIPELINE_PR=$(printf '%s' "$PIPELINE_JSON" | jq -r '.pipeline_pr')
+          PIPELINE_REASON=$(printf '%s' "$PIPELINE_JSON" | jq -r '.reason')
+
+          echo "pipeline_pr=${PIPELINE_PR}" >> "$GITHUB_OUTPUT"
+          echo "pipeline_reason=${PIPELINE_REASON}" >> "$GITHUB_OUTPUT"
+
+          if [ "$PIPELINE_PR" != "true" ]; then
             echo "pipeline_pr=false" >> "$GITHUB_OUTPUT"
             echo "auto_merge_allowed=false" >> "$GITHUB_OUTPUT"
             echo "auto_follow_up_allowed=true" >> "$GITHUB_OUTPUT"
+            echo "Skipping autonomous merge for PR classification: ${PIPELINE_REASON}"
             exit 0
           fi
-
-          echo "pipeline_pr=true" >> "$GITHUB_OUTPUT"
 
           mapfile -t CHANGED_FILES < <(gh api "/repos/${REPO}/pulls/${PR_NUMBER}/files?per_page=100" --paginate --jq '.[].filename')
 
@@ -316,19 +319,14 @@ jobs:
         env:
           MERGE_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.issue.number }}
-          PR_TITLE: ${{ steps.review.outputs.pr_title }}
           REPO: ${{ github.repository }}
         run: |
-          if [[ "$PR_TITLE" == "[Pipeline]"* ]]; then
-            if [ -z "$MERGE_TOKEN" ]; then
-              echo "::error::GH_AW_GITHUB_TOKEN is required for pipeline auto-merge so downstream push workflows can run."
-              exit 1
-            fi
-            GH_TOKEN="$MERGE_TOKEN" gh pr merge "$PR_NUMBER" --repo "$REPO" --auto --squash || echo "::warning::Could not enable auto-merge"
-            echo "PR #${PR_NUMBER} approved and auto-merge enabled."
-          else
-            echo "PR #${PR_NUMBER} approved. Non-pipeline PR — skipping auto-merge."
+          if [ -z "$MERGE_TOKEN" ]; then
+            echo "::error::GH_AW_GITHUB_TOKEN is required for pipeline auto-merge so downstream push workflows can run."
+            exit 1
           fi
+          GH_TOKEN="$MERGE_TOKEN" gh pr merge "$PR_NUMBER" --repo "$REPO" --auto --squash || echo "::warning::Could not enable auto-merge"
+          echo "PR #${PR_NUMBER} approved and auto-merge enabled."
 
       - name: Record auto-merge evidence (APPROVE only)
         if: steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict == 'APPROVE' && steps.healing.outputs.enabled == 'true' && steps.policy.outputs.auto_merge_allowed == 'true'
@@ -336,13 +334,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEAD_SHA: ${{ steps.idempotency.outputs.head_sha }}
           PR_NUMBER: ${{ github.event.issue.number }}
-          PR_TITLE: ${{ steps.review.outputs.pr_title }}
           REPO: ${{ github.repository }}
         run: |
-          if [[ "$PR_TITLE" != "[Pipeline]"* ]]; then
-            echo "Non-pipeline PR — skipping auto-merge evidence status."
-            exit 0
-          fi
           if [ -z "$HEAD_SHA" ]; then
             echo "::warning::HEAD_SHA unavailable — cannot record auto-merge evidence."
             exit 0
@@ -435,14 +428,22 @@ jobs:
             exit 0
           fi
 
-          # Find other open [Pipeline] PRs referencing the same issue
-          DUPES=$(gh pr list --repo "$REPO" --state open \
-            --json number,title,body \
-            --jq "[.[] | select(
-              .number != ${PR_NUMBER} and
-              (.title | startswith(\"[Pipeline]\")) and
-              (.body | test(\"(?i)(close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\\\s+#${ISSUE_NUMBER}\\\\b\"))
-            )] | .[].number")
+          DUPES=$(
+            gh pr list --repo "$REPO" --state open --json number,title,body,headRefName,baseRefName,author \
+              | jq -rc '.[]' \
+              | while read -r pr; do
+                  CANDIDATE_NUMBER=$(printf '%s' "$pr" | jq -r '.number')
+                  if [ "$CANDIDATE_NUMBER" = "$PR_NUMBER" ]; then
+                    continue
+                  fi
+                  if ! printf '%s' "$pr" | bash scripts/classify-pipeline-pr.sh | jq -e '.pipeline_pr == true' >/dev/null; then
+                    continue
+                  fi
+                  if printf '%s' "$pr" | jq -e --arg issue "$ISSUE_NUMBER" '(.body // "") | test("(?i)(close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#" + $issue + "\\b")' >/dev/null; then
+                    echo "$CANDIDATE_NUMBER"
+                  fi
+                done
+          )
 
           if [ -z "$DUPES" ]; then
             echo "No superseded PRs found for issue #${ISSUE_NUMBER}"
@@ -478,8 +479,17 @@ jobs:
               .title != "[Pipeline] Status" and
               ([.labels[]?.name] | any(. == "feature" or . == "infra" or . == "bug" or . == "docs" or . == "test"))
             )] | length')
-          OPEN_PRS=$(gh pr list --repo "$REPO" \
-            --state open --json number,title --jq '[.[] | select(.title // "" | startswith("[Pipeline]"))] | length')
+          OPEN_PRS=$(
+            gh pr list --repo "$REPO" --state open --json number,title,headRefName,baseRefName,author \
+              | jq -rc '.[]' \
+              | while read -r pr; do
+                  if printf '%s' "$pr" | bash scripts/classify-pipeline-pr.sh | jq -e '.pipeline_pr == true' >/dev/null; then
+                    echo 1
+                  fi
+                done \
+              | wc -l \
+              | tr -d '[:space:]'
+          )
           TOTAL=$((OPEN_ISSUES + OPEN_PRS))
 
           if [ "$TOTAL" -eq 0 ]; then
@@ -533,6 +543,7 @@ jobs:
           sparse-checkout: |
             scripts/healing-control.sh
             scripts/check-autonomy-policy.sh
+            scripts/classify-pipeline-pr.sh
             autonomy-policy.yml
           sparse-checkout-cone-mode: false
 
@@ -655,26 +666,28 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.inputs.pr_number }}
-          PR_TITLE: ${{ steps.review.outputs.pr_title }}
           REPO: ${{ github.repository }}
         run: |
-          if [ -z "${PR_TITLE:-}" ]; then
-            PR_TITLE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title --jq '.title')
-          fi
-
           echo "blocked=false" >> "$GITHUB_OUTPUT"
           echo "blocked_action=" >> "$GITHUB_OUTPUT"
           echo "blocked_file=" >> "$GITHUB_OUTPUT"
           echo "blocked_reason=" >> "$GITHUB_OUTPUT"
 
-          if [[ "$PR_TITLE" != "[Pipeline]"* ]]; then
+          PR_JSON=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title,headRefName,baseRefName,author)
+          PIPELINE_JSON=$(printf '%s' "$PR_JSON" | bash scripts/classify-pipeline-pr.sh)
+          PIPELINE_PR=$(printf '%s' "$PIPELINE_JSON" | jq -r '.pipeline_pr')
+          PIPELINE_REASON=$(printf '%s' "$PIPELINE_JSON" | jq -r '.reason')
+
+          echo "pipeline_pr=${PIPELINE_PR}" >> "$GITHUB_OUTPUT"
+          echo "pipeline_reason=${PIPELINE_REASON}" >> "$GITHUB_OUTPUT"
+
+          if [ "$PIPELINE_PR" != "true" ]; then
             echo "pipeline_pr=false" >> "$GITHUB_OUTPUT"
             echo "auto_merge_allowed=false" >> "$GITHUB_OUTPUT"
             echo "auto_follow_up_allowed=true" >> "$GITHUB_OUTPUT"
+            echo "Skipping autonomous merge for PR classification: ${PIPELINE_REASON}"
             exit 0
           fi
-
-          echo "pipeline_pr=true" >> "$GITHUB_OUTPUT"
 
           mapfile -t CHANGED_FILES < <(gh api "/repos/${REPO}/pulls/${PR_NUMBER}/files?per_page=100" --paginate --jq '.[].filename')
 
@@ -747,18 +760,12 @@ jobs:
           PR_NUMBER: ${{ github.event.inputs.pr_number }}
           REPO: ${{ github.repository }}
         run: |
-          PR_TITLE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title --jq '.title')
-
-          if [[ "$PR_TITLE" == "[Pipeline]"* ]]; then
-            if [ -z "$MERGE_TOKEN" ]; then
-              echo "::error::GH_AW_GITHUB_TOKEN is required for pipeline auto-merge so downstream push workflows can run."
-              exit 1
-            fi
-            GH_TOKEN="$MERGE_TOKEN" gh pr merge "$PR_NUMBER" --repo "$REPO" --auto --squash || echo "::warning::Could not enable auto-merge"
-            echo "PR #${PR_NUMBER} approved and auto-merge enabled."
-          else
-            echo "PR #${PR_NUMBER} approved. Non-pipeline PR — skipping auto-merge."
+          if [ -z "$MERGE_TOKEN" ]; then
+            echo "::error::GH_AW_GITHUB_TOKEN is required for pipeline auto-merge so downstream push workflows can run."
+            exit 1
           fi
+          GH_TOKEN="$MERGE_TOKEN" gh pr merge "$PR_NUMBER" --repo "$REPO" --auto --squash || echo "::warning::Could not enable auto-merge"
+          echo "PR #${PR_NUMBER} approved and auto-merge enabled."
 
       - name: Record auto-merge evidence (APPROVE only)
         if: always() && github.event.inputs.verdict == 'APPROVE' && steps.healing.outputs.enabled == 'true' && steps.policy.outputs.auto_merge_allowed == 'true'
@@ -766,17 +773,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEAD_SHA: ${{ steps.idempotency.outputs.head_sha }}
           PR_NUMBER: ${{ github.event.inputs.pr_number }}
-          PR_TITLE: ${{ steps.review.outputs.pr_title }}
           REPO: ${{ github.repository }}
         run: |
-          if [ -z "${PR_TITLE:-}" ]; then
-            PR_TITLE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title --jq '.title')
-          fi
-
-          if [[ "$PR_TITLE" != "[Pipeline]"* ]]; then
-            echo "Non-pipeline PR — skipping auto-merge evidence status."
-            exit 0
-          fi
           if [ -z "$HEAD_SHA" ]; then
             echo "::warning::HEAD_SHA unavailable — cannot record auto-merge evidence."
             exit 0
@@ -882,13 +880,22 @@ jobs:
             exit 0
           fi
 
-          DUPES=$(gh pr list --repo "$REPO" --state open \
-            --json number,title,body \
-            --jq "[.[] | select(
-              .number != ${PR_NUMBER} and
-              (.title | startswith(\"[Pipeline]\")) and
-              (.body | test(\"(?i)(close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\\\s+#${TARGET}\\\\b\"))
-            )] | .[].number")
+          DUPES=$(
+            gh pr list --repo "$REPO" --state open --json number,title,body,headRefName,baseRefName,author \
+              | jq -rc '.[]' \
+              | while read -r pr; do
+                  CANDIDATE_NUMBER=$(printf '%s' "$pr" | jq -r '.number')
+                  if [ "$CANDIDATE_NUMBER" = "$PR_NUMBER" ]; then
+                    continue
+                  fi
+                  if ! printf '%s' "$pr" | bash scripts/classify-pipeline-pr.sh | jq -e '.pipeline_pr == true' >/dev/null; then
+                    continue
+                  fi
+                  if printf '%s' "$pr" | jq -e --arg issue "$TARGET" '(.body // "") | test("(?i)(close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#" + $issue + "\\b")' >/dev/null; then
+                    echo "$CANDIDATE_NUMBER"
+                  fi
+                done
+          )
 
           if [ -z "$DUPES" ]; then
             echo "No superseded PRs found for issue #${TARGET}"
@@ -925,8 +932,17 @@ jobs:
               .title != "[Pipeline] Status" and
               ([.labels[]?.name] | any(. == "feature" or . == "infra" or . == "bug" or . == "docs" or . == "test"))
             )] | length')
-          OPEN_PRS=$(gh pr list --repo "$REPO" \
-            --state open --json number,title --jq '[.[] | select(.title // "" | startswith("[Pipeline]"))] | length')
+          OPEN_PRS=$(
+            gh pr list --repo "$REPO" --state open --json number,title,headRefName,baseRefName,author \
+              | jq -rc '.[]' \
+              | while read -r pr; do
+                  if printf '%s' "$pr" | bash scripts/classify-pipeline-pr.sh | jq -e '.pipeline_pr == true' >/dev/null; then
+                    echo 1
+                  fi
+                done \
+              | wc -l \
+              | tr -d '[:space:]'
+          )
           TOTAL=$((OPEN_ISSUES + OPEN_PRS))
 
           if [ "$TOTAL" -eq 0 ]; then
