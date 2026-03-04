@@ -104,7 +104,7 @@ framework upgrades, and UX hardening — all autonomously:
 5. **The agent designed a full visual language.** Without being asked, the agent
    created a "Blueprint×Terminal" design system (dark navy, cyan accents, grid
    lines, monospace type) and applied it consistently across all pages. This
-   aesthetic carried forward into Run 05 and the panel submission.
+   aesthetic carried forward into Run 05 and later work.
 
 ## Restore Code
 

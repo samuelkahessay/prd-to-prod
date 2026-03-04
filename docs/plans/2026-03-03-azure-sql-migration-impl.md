@@ -635,7 +635,7 @@ public class TicketDbContextFactory : IDesignTimeDbContextFactory<TicketDbContex
 }
 ```
 
-This is intentionally narrower than the design doc's "env var or local developer secret" wording. For pre-panel readiness, env-var-only is the safer, more deterministic design-time path. User-secrets support can be layered in later without changing the migration model.
+This is intentionally narrower than the design doc's "env var or local developer secret" wording. For initial readiness, env-var-only is the safer, more deterministic design-time path. User-secrets support can be layered in later without changing the migration model.
 
 **Step 4: Run factory tests**
 

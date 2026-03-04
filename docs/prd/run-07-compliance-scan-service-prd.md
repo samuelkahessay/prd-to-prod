@@ -14,9 +14,8 @@ regulation, severity, and disposition:
 A Razor Pages dashboard at `/compliance` shows the scan queue, findings feed,
 metrics, and a live operator decision panel for escalated items.
 
-This is the specimen app for the `prd-to-prod` pipeline submission to
-Wealthsimple. The point is not "AI-powered compliance." The point is that the
-pipeline can build a system that knows where automation must stop.
+The point is not "AI-powered compliance." The point is that the pipeline can
+build a system that knows where automation must stop.
 
 This is **Run 07** and should archive as:
 

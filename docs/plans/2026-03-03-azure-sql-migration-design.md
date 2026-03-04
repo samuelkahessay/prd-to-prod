@@ -1,7 +1,7 @@
 # Azure SQL Migration Design
 
 **Date:** 2026-03-03
-**Status:** Pre-panel — code changes only, no live cutover
+**Status:** Phase 1 — code changes only, no live cutover
 
 ## Problem
 
@@ -10,7 +10,7 @@ The app uses SQLite at `/home/data/ticketdb.db` on Azure App Service. This works
 - SQLite on App Service mounts is durable across restarts but not across scale-out, slot swaps, or platform migrations.
 - Schema changes require dropping and recreating the DB (`EnsureCreated()` cannot evolve schemas).
 - The `ActivityLog.TicketId` column has no foreign key constraint — orphaned logs are possible.
-- "SQLite on `/home`" is a weak answer when the panel asks about durable, enforceable compliance state.
+- "SQLite on `/home`" is a weak answer for durable, enforceable compliance state.
 
 ## Target State
 
@@ -104,7 +104,7 @@ else
 ```
 
 **Why not one migration set for both providers:**
-EF Core migrations are provider-aware. SQL Server migrations generate T-SQL; SQLite migrations generate SQLite DDL. Cross-provider migration compatibility is not a claim worth defending in panel. The schema is defined once in `OnModelCreating`; each provider gets the right initialization path.
+EF Core migrations are provider-aware. SQL Server migrations generate T-SQL; SQLite migrations generate SQLite DDL. Cross-provider migration compatibility is not worth the complexity. The schema is defined once in `OnModelCreating`; each provider gets the right initialization path.
 
 ### 4. Transition Plan for Existing SQLite
 
@@ -118,7 +118,7 @@ This is safer than requiring developers to wipe local state just to pick up the 
 
 **Current Azure deployment (pre-cutover):** Continues running on SQLite at `/home/data/ticketdb.db`. The SQLite initializer preserves the current file-backed deployment and applies compatibility fixes to existing decision data. It still does **not** evolve SQLite schemas the way migrations do, so new relational hardening such as the `ActivityLog.TicketId` FK lands fully only when the production cutover creates a fresh Azure SQL schema via `Migrate()`.
 
-**Post-panel Azure cutover:** Azure SQL gets the full schema via `Migrate()`. Seed data populates the new DB. The old SQLite file becomes inert.
+**Phase 2 Azure cutover:** Azure SQL gets the full schema via `Migrate()`. Seed data populates the new DB. The old SQLite file becomes inert.
 
 ### 5. Fallback Plan (Not "Rollback")
 
@@ -150,25 +150,25 @@ Existing packages stay:
 - Verify provider-selection logic: SQLite default, SqlServer when configured, missing connection string throws
 - Add design-time factory coverage: verify migration tooling fails fast when `ConnectionStrings__SqlServer` is missing and builds a SQL Server context when it is present
 
-**Deliberately not required pre-panel:** a live SQL Server migration smoke test. That would need a local SQL Server container, test database, or CI harness that this repo does not currently provide. The safer pre-panel bar is deterministic design-time factory behavior plus provider-selection coverage.
+**Deliberately not required in phase 1:** a live SQL Server migration smoke test. That would need a local SQL Server container, test database, or CI harness that this repo does not currently provide. The safer initial bar is deterministic design-time factory behavior plus provider-selection coverage.
 
 ### 8. What's Out of Scope
 
-- **Azure SQL provisioning** — deferred to post-panel
+- **Azure SQL provisioning** — deferred to phase 2
 - **Azure Storage** — not part of this change
 - **DecisionLedgerService** — remains file-based (gh-aw integration artifacts, separate concern)
 - **Data migration** — seed data handles fresh DBs; no need to migrate demo data
 - **Multi-region or HA** — not needed for this stage
 
-## Panel Framing
+## Migration Phases
 
 **Current state:** SQLite gives durable local/demo state with low deployment risk.
 
-**Pre-panel change:** Migration-ready schema, provider abstraction, real EF migrations authored against SQL Server, missing FK fixed, explicit delete behaviors.
+**Phase 1 (this change):** Migration-ready schema, provider abstraction, real EF migrations authored against SQL Server, missing FK fixed, explicit delete behaviors.
 
-**Post-panel cutover:** Provision Azure SQL, run SQL Server migrations, switch config, validate seed/startup, retire SQLite from production.
+**Phase 2 (future cutover):** Provision Azure SQL, run SQL Server migrations, switch config, validate seed/startup, retire SQLite from production.
 
-**Panel answer:** "The schema and provider abstraction are production-ready. The app currently runs on SQLite for demo stability and uses a compatibility initializer to preserve existing local/demo data safely. The migration to Azure SQL is a config change plus pre-authored SQL Server migrations — no code deploy needed. We authored migrations against SQL Server because that's the production target, and we kept SQLite as a dev convenience rather than claiming cross-provider migration compatibility."
+**Summary:** The schema and provider abstraction are production-ready. The app currently runs on SQLite for demo stability and uses a compatibility initializer to preserve existing local/demo data safely. The migration to Azure SQL is a config change plus pre-authored SQL Server migrations — no code deploy needed. Migrations are authored against SQL Server because that's the production target; SQLite is kept as a dev convenience rather than claiming cross-provider migration compatibility.
 
 ## Files Changed
 

@@ -10,9 +10,10 @@ rebuilds a legacy workflow around modern AI: not as a suggestion layer on top of
 old CI/CD, but as an operating loop with explicit authority limits, real failure
 conditions, and visible operator controls.
 
-> **Wealthsimple submission:** see [`SUBMISSION.md`](SUBMISSION.md) for the application brief and compliance service specimen.
->
-> **Interview demo access:** the deployed interview build intentionally publishes a reviewer credential on `/operator/login` so reviewers can exercise authenticated decision recording without a private handoff. `/operator` itself remains public read-only.
+> **Demo access:** the deployed build publishes a demo credential on
+> [`/operator/login`](https://prd-to-prod.azurewebsites.net/operator/login)
+> so visitors can exercise authenticated decision recording.
+> `/operator` itself remains public read-only.
 
 ```mermaid
 flowchart TD
@@ -77,32 +78,6 @@ system must stop.
 
 This repo rebuilds that loop as an AI-native operating system with a
 human-owned control plane.
-
-## Why This Matters for Wealthsimple
-
-Wealthsimple is landing hundreds of AI-generated changes a day. At that volume,
-the bottleneck is not code generation — it is routing, oversight, and knowing
-when the system must stop. This repo is built for exactly that problem:
-
-- **Policy-bounded execution** — an explicit authority boundary
-  ([`autonomy-policy.yml`](autonomy-policy.yml)) that the AI cannot redefine.
-  Unknown actions fail closed to `human_required`.
-- **Structural stopping conditions** — compliance decisions that require human
-  judgment omit the remediation field entirely. The boundary is in the schema,
-  not in a prompt.
-- **Observable control plane** — every autonomous decision, escalation, and
-  merge gate is visible through operator surfaces and a durable decision ledger.
-  A human can audit what the system did and why it stopped.
-- **Proven self-healing** — 8 recorded drill reports capture the CI-failure
-  repair path, including 2 end-to-end autonomous passes with zero human
-  intervention after the break push. Earlier reports include partial and
-  manual-resume runs while the workflow trigger was hardened. A human-owned
-  kill switch (`PIPELINE_HEALING_ENABLED`) can still halt repair.
-
-The architecture separates the human control plane from the AI execution lane.
-Scaling AI-generated changes safely means the control plane must be
-human-owned, explicit, and auditable — not implicit in agent prompts that drift
-under load.
 
 ## System Loop
 

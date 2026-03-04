@@ -8,7 +8,7 @@
 
 prd-to-prod's current pipeline flow is: PRD → prd-decomposer → issues → repo-assist → PR → review → merge. The gap is between PRD intake and decomposition — there is no structured architecture planning step. The decomposer creates issues from PRD requirements using heuristics (infrastructure first, features second, tests last), but no agent explicitly decides *what architecture* should support the PRD before work begins.
 
-WSPass (a competing submission for the Wealthsimple AI Builder program) demonstrated genuine depth in this area: a multi-step planner that produces a structured `architecture_pack.json` with requirements, entities, components, tradeoffs, and decomposition order. Their planning agents are real orchestrations (509-line planner, 4,144-line LLM client) — not wrappers.
+A comparable project demonstrated genuine depth in this area: a multi-step planner that produces a structured `architecture_pack.json` with requirements, entities, components, tradeoffs, and decomposition order. Their planning agents are real orchestrations (509-line planner, 4,144-line LLM client) — not wrappers.
 
 This design brings that planning depth into prd-to-prod, implemented natively in gh-aw rather than via external Anthropic API calls.
 

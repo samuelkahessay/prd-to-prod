@@ -31,7 +31,7 @@ Every repair attempt tracks 7 stages: `ci_failure` → `issue_created` → `auto
 
 ## Key Evidence: Drill #8
 
-The panel drill. Executed 2026-03-02, live-polled from start to finish.
+The final drill. Executed 2026-03-02, live-polled from start to finish.
 
 - **Failure injected**: 15:20:07 UTC
 - **Issue created**: 15:21:03 UTC (56s detection)

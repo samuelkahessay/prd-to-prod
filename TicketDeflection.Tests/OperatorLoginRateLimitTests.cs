@@ -21,10 +21,10 @@ public class OperatorLoginRateLimitTests
 
         var html = await client.GetStringAsync("/operator/login");
 
-        Assert.Contains("reviewer demo access", html);
+        Assert.Contains("demo access", html);
         Assert.Contains("public read-only", html);
-        Assert.Contains("panel-reviewer", html);
-        Assert.Contains("panel-demo", html);
+        Assert.Contains("demo-operator", html);
+        Assert.Contains("passphrase", html);
     }
 
     [Fact]

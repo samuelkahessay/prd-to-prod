@@ -12,8 +12,7 @@ violations in freetext, code, diffs, and logs. The service auto-blocks clear
 violations, issues advisories for low-risk patterns, and escalates ambiguous
 findings to a human operator. The human boundary is structural:
 `HUMAN_REQUIRED` response payloads omit the remediation field entirely — it
-does not exist in the schema. This is the submission specimen for the
-Wealthsimple AI Builder application.
+does not exist in the schema.
 
 ## Tech Stack
 
