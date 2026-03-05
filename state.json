@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-05T10:45:33Z",
-  "run_id": "22714180464",
+  "last_run": "2026-03-05T10:51:52Z",
+  "run_id": "22714383850",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 - C#/.NET 10)",
@@ -18,21 +18,15 @@
     "359": "closed",
     "362": "closed",
     "382": "closed",
-    "384": "closed"
-  },
-  "open_issues": {
-    "388": "in-progress-pr-390-open-awaiting-review"
+    "384": "closed",
+    "388": "in-progress-pr-390-approved-auto-merge-armed"
   },
   "open_prs": [
-    {"issue": 388, "branch": "repo-assist/issue-388-refactor-ticketresponse-helper-30788d0c681d9820", "title": "[Pipeline] Refactor: extract shared TicketResponse mapping to TicketDtos.cs", "pr": 390, "status": "open-awaiting-review"},
-    {"pr": 389, "title": "Refactor: extract shared ToResponse extension method", "author": "Copilot-SWE", "issue": 388, "status": "open-duplicate-non-pipeline"}
-  ],
-  "resolved_this_run": [
-    {"issue": 382, "pr": 386, "merged_by": "samuelkahessay", "note": "PR #386 merged, issue #382 closed"}
+    {"issue": 388, "branch": "repo-assist/issue-388-refactor-ticketresponse-helper-30788d0c681d9820", "title": "[Pipeline] Refactor: extract shared TicketResponse mapping to TicketDtos.cs", "pr": 390, "status": "approved-auto-merge-armed"}
   ],
   "aw_issues_triaged": ["364-no-op-runs-system-managed"],
   "nav_items": ["overview (/)", "operator (/operator)", "pipeline (/pipeline)", "compliance (/compliance)"],
   "pipeline_status": "on-track",
-  "notes": "PR #386 merged (issue #382 closed). PR #390 open for issue #388 (refactor TicketResponse), awaiting review. PR #389 is a non-pipeline duplicate from Copilot SWE agent. [aw] issue #364 is system-managed no-op tracker.",
+  "notes": "PR #390 (issue #388 refactor) APPROVED, CI passing, auto-merge armed. [aw] issue #364 is system-managed no-op tracker. No new implementable issues.",
   "backlog_cursor": 388
 }
