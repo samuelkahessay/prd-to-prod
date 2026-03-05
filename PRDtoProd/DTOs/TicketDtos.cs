@@ -19,7 +19,7 @@ public record TicketResponse(
     DateTime UpdatedAt
 );
 
-public static class TicketMappingExtensions
+public static class TicketExtensions
 {
     public static TicketResponse ToResponse(this Ticket t) => new(
         t.Id, t.Title, t.Description,
