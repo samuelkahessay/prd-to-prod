@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-05T06:11:59Z",
-  "run_id": "22704904480",
+  "last_run": "2026-03-05T06:17:09Z",
+  "run_id": "22704999982",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 - C#/.NET 10)",
@@ -16,19 +16,18 @@
     "346": "closed",
     "347": "closed",
     "359": "closed",
-    "362": "closed"
+    "362": "closed",
+    "384": "closed"
   },
   "open_issues": {
-    "382": "in-progress-pr-386-approved-blocked-sensitive-review",
-    "384": "in-progress-pr-387-awaiting-review-dispatch"
+    "382": "in-progress-pr-386-approved-blocked-sensitive-review"
   },
   "open_prs": [
-    {"issue": 382, "branch": "repo-assist/issue-382-mobile-responsiveness-6e443ac865bd3005", "title": "[Pipeline] Mobile responsiveness: fix layout issues on Compliance, Operator, and Activity pages", "pr": 386, "status": "approved-pending-sensitive-review"},
-    {"issue": 384, "branch": "repo-assist/issue-384-prevent-x-axis-scroll-3b80ba7e07f1da83", "title": "[Pipeline] Fix: prevent horizontal (x-axis) page scrolling on mobile", "pr": 387, "status": "open-awaiting-review"}
+    {"issue": 382, "branch": "repo-assist/issue-382-mobile-responsiveness-6e443ac865bd3005", "title": "[Pipeline] Mobile responsiveness: fix layout issues on Compliance, Operator, and Activity pages", "pr": 386, "status": "approved-blocked-sensitive-review"}
   ],
   "aw_issues_triaged": ["364-no-op-runs-system-managed"],
   "nav_items": ["overview (/)", "operator (/operator)", "pipeline (/pipeline)", "compliance (/compliance)"],
   "pipeline_status": "at-risk",
-  "notes": "PR #386 for #382 is approved but blocked on sensitive-review (owner must /approve-sensitive). PR #387 for #384 is open and awaiting review dispatch (anti-cascade suppresses auto-trigger).",
-  "backlog_cursor": 384
+  "notes": "PR #386 for #382 is APPROVED (review status=success) but blocked on sensitive-review (owner must /approve-sensitive). PR #387 for #384 was merged, issue #384 closed. No other implementable issues.",
+  "backlog_cursor": 382
 }
