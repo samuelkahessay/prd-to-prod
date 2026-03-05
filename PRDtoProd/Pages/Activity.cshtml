@@ -16,6 +16,12 @@
         align-items: start;
     }
     .log-line:last-child { border-bottom: none; }
+    @@media (max-width: 480px) {
+        .log-line {
+            grid-template-columns: 1fr;
+            gap: 4px;
+        }
+    }
     .log-ts {
         color: var(--dim);
         font-size: 0.7rem;
