@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-05T02:41:31Z",
-  "run_id": "22699700974",
+  "last_run": "2026-03-05T05:50:54Z",
+  "run_id": "22704343975",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 - C#/.NET 10)",
@@ -19,13 +19,16 @@
     "362": "closed"
   },
   "open_issues": {
-    "375": "bug-transient-azure-deployment-timeout-investigated",
-    "376": "ci-failure-doctor-azure-startup-informational"
+    "382": "in-progress-pr-created-mobile-responsiveness",
+    "383": "in-progress-pr-created-hero-heading-fix"
   },
-  "open_prs": [],
+  "open_prs": [
+    {"issue": 383, "branch": "repo-assist/issue-383-hero-heading-fix", "title": "Hero heading fix: balance line wrapping on all viewports"},
+    {"issue": 382, "branch": "repo-assist/issue-382-mobile-responsiveness", "title": "Mobile responsiveness: fix layout issues on Compliance, Operator, and Activity pages"}
+  ],
   "aw_issues_triaged": ["364-no-op-runs-system-managed"],
   "nav_items": ["overview (/)", "operator (/operator)", "pipeline (/pipeline)", "compliance (/compliance)"],
-  "pipeline_status": "at-risk-deployment-failure",
-  "notes": "Issue #375 is a transient Azure App Service startup timeout, not a code failure. Investigated in run 22697591730. Issue #376 is a CI Failure Doctor auto-generated analysis (labeled 'cookie', not pipeline). No implementable issues remain. Run 07 is functionally complete. Awaiting archive or new PRD.",
-  "backlog_cursor": 376
+  "pipeline_status": "on-track",
+  "notes": "Run 07 Compliance Scan Service is complete. Two new informal pipeline issues created by samuelkahessay: #383 (hero heading fix) and #382 (mobile responsiveness). PRs created in this run. Issues labeled in-progress.",
+  "backlog_cursor": 383
 }
