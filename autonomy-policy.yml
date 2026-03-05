@@ -9,8 +9,8 @@ defaults:
 
 principles:
   - AI can execute inside policy, but it cannot redefine policy.
-  - Any change that expands system authority or blast radius is human_required.
-  - Control-plane changes remain human-owned even when application work is autonomous.
+  - Any change that expands system authority or scope of impact is human_required.
+  - Changes to workflow rules and routing remain human-owned even when application work is autonomous.
 
 actions:
   - action: issue_decomposition
@@ -149,7 +149,7 @@ actions:
   - action: workflow_file_change
     scope: Modify GitHub workflow definitions or agent instructions that change autonomous behavior.
     default_mode: human_required
-    requires_human_reason: Workflow changes alter the control plane and can widen blast radius across the repo.
+    requires_human_reason: Workflow changes alter the control plane and can widen scope of impact across the repo.
     allowed_targets:
       - .github/workflows/**
       - .github/*.md
@@ -178,7 +178,7 @@ actions:
   - action: deploy_policy_change
     scope: Change deployment destinations, deployment workflows, or environment routing.
     default_mode: human_required
-    requires_human_reason: Deployment policy changes can affect live systems and widen operational blast radius.
+    requires_human_reason: Deployment policy changes can affect live systems and widen operational scope of impact.
     allowed_targets:
       - .deploy-profile
       - Azure App Service configuration
@@ -201,7 +201,7 @@ actions:
     evidence_required:
       - Human approval naming the new scope
       - Required checks before and after the change
-      - Blast-radius assessment
+      - Scope-of-impact assessment
 
   - action: branch_protection_change
     scope: Change branch protection, rulesets, or required checks on protected branches.

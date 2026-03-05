@@ -113,7 +113,7 @@ For **JavaScript/TypeScript** projects:
 For **Go** projects:
 - Use `any` instead of `interface{}`
 - Follow console formatting for CLI output
-- Use semantic type aliases for domain concepts
+- Use type aliases that name domain concepts (e.g., `UserID` instead of `string`)
 - Prefer small, focused files (200-500 lines ideal)
 - Use table-driven tests with descriptive names
 

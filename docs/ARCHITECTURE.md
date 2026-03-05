@@ -2,9 +2,9 @@
 
 ## System Thesis
 
-`prd-to-prod` is a policy-bounded AI execution system for software delivery.
+`prd-to-prod` is an AI-powered software delivery system with clear human boundaries.
 The current repository contains 26 workflow YAML files, but the useful mental
-model is not a flat count. It is a control plane plus a bounded execution lane.
+model is not a flat count. It is a set of routing/safety workflows plus AI agent workflows.
 
 - Humans own intent, policy, escalation rules, and authority expansion.
 - gh-aw agents handle the work that requires judgment.
@@ -33,7 +33,7 @@ flowchart LR
   O --- F
 ```
 
-## Human-Owned Control Plane
+## What Humans Control
 
 The AI lane is intentionally bounded. The following remain human-owned:
 
@@ -70,7 +70,7 @@ See `docs/plans/2026-03-03-architecture-planning-pipeline-design.md` for full de
 
 ## Workflow Groups
 
-### 1. Ingress and Routing
+### 1. Entry Points and Routing
 
 These workflows decide what enters the autonomous lane and when.
 
@@ -80,10 +80,10 @@ These workflows decide what enters the autonomous lane and when.
 | `auto-dispatch.yml` | Accepts `pipeline` issues, classifies actionability, debounces, and dispatches `repo-assist` |
 | `auto-dispatch-requeue.yml` | Starts the next deferred issue after the current `repo-assist` run finishes |
 
-Key property: ingress is centralized. `pipeline` is the lane marker; actionability
+Key property: the entry point is centralized. `pipeline` is the lane marker; actionability
 is decided inside the workflow rather than scattered across label combinations.
 
-### 2. Execution Lane
+### 2. Agent Workflows
 
 These workflows perform the bounded AI work.
 
@@ -93,7 +93,7 @@ These workflows perform the bounded AI work.
 | `pr-review-agent.lock.yml` | Reviews the full diff against acceptance criteria and policy, then posts `[PIPELINE-VERDICT]` |
 | `pr-review-submit.yml` | Parses verdicts, submits formal reviews, enforces the merge gate, and arms auto-merge only inside policy |
 
-Key property: the execution lane is real, but not unrestricted. The merge gate is
+Key property: the agent workflow lane is real, but not unrestricted. The merge gate is
 where policy becomes operational.
 
 ### 3. Delivery and Recovery
@@ -188,7 +188,7 @@ The human/AI boundary is explicit in code and policy.
 ### Policy artifact
 
 [`autonomy-policy.yml`](../autonomy-policy.yml) classifies actions as
-`autonomous` or `human_required`. Unknown actions fail closed.
+`autonomous` or `human_required`. Unknown actions stop and ask a human.
 
 ### Merge gate
 
@@ -199,7 +199,7 @@ autonomous lane.
 ### Sensitive-path approval
 
 Some app changes are intentionally allowed only with explicit human approval.
-That approval path is narrower than general control-plane edits and exists so
+That approval path is narrower than general human-controlled edits and exists so
 the system can stop, wait, and resume without pretending the boundary does not
 exist.
 

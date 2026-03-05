@@ -6,10 +6,10 @@
 
 ## Summary
 
-A Next.js 14 dashboard that visualizes the agentic pipeline itself — interactive
+A Next.js 14 dashboard that visualizes the autonomous pipeline itself — interactive
 simulator, timeline replay of real GitHub data, and forensic inspection of agent
 decisions and failure patterns. 10 features decomposed from the PRD, all
-autonomously implemented, reviewed, and merged on the pipeline-generated path.
+autonomously implemented, reviewed, and merged on the pipeline path.
 32 Vitest tests. Deployed to Vercel.
 
 ## Tech Stack
@@ -47,7 +47,7 @@ Framer Motion, @octokit/rest, Vitest + @testing-library/react
 
 | PR | Fix |
 |----|-----|
-| [#54](https://github.com/samuelkahessay/prd-to-prod/pull/54) | Watchdog orphaned-issue parsing (shell word-splitting) |
+| [#54](https://github.com/samuelkahessay/prd-to-prod/pull/54) | Watchdog orphaned-issue parsing (shell word-splitting — a bug where shell commands break on spaces in variable values) |
 | [#55](https://github.com/samuelkahessay/prd-to-prod/pull/55) | PR reviewer dispatch (review summary shell leak) |
 | [#56](https://github.com/samuelkahessay/prd-to-prod/pull/56) | Shell injection hardening + Octokit type fix |
 | [#58](https://github.com/samuelkahessay/prd-to-prod/pull/58) | Simulator graph scaling (agent-created from issue #57) |
@@ -66,7 +66,7 @@ Framer Motion, @octokit/rest, Vitest + @testing-library/react
   using `GITHUB_TOKEN` don't propagate events, which is why we need the
   dedicated `close-issues.yml` workflow instead of relying on GitHub's
   built-in `Closes #N`.
-- **Concurrency group isolation matters**: `close-issues` needed its own
+- **Concurrency group isolation (separate job queues so runs don't cancel each other) matters**: `close-issues` needed its own
   `close-issues-${{ PR_NUMBER }}` group separate from `pr-reviewer` to avoid
   being cancelled by overlapping runs.
 

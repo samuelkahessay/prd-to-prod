@@ -6,7 +6,7 @@ category.
 Those products are increasingly capable. They now cover far more than prompt to
 UI: backend generation, auth, deploy, integrations, testing, and workspace
 features. But they still optimize for **building an app from prompts**.
-`prd-to-prod` optimizes for **operating a software delivery system**.
+`prd-to-prod` optimizes for **running a delivery pipeline with clear rules about what AI can and can't do**.
 
 That distinction matters. The hard part is no longer proving that AI can write
 code. The hard part is deciding who can do what, under which identity, through
@@ -74,10 +74,10 @@ This matters because the honest answer to "what does this compete with?" is
 Based on the current product docs, no single product appears to package the
 exact combination `prd-to-prod` is demonstrating:
 
-- A **repo-owned control plane** where orchestration, gates, and escalation live
+- A **repo-owned routing and safety rules** setup where orchestration, gates, and escalation live
   in checked-in workflows instead of a vendor dashboard.
 - A **machine-readable autonomy policy** in
-  [`autonomy-policy.yml`](../autonomy-policy.yml) that fails closed and can gate
+  [`autonomy-policy.yml`](../autonomy-policy.yml) that stops and asks a human when it encounters something unrecognized, and can gate
   file-level authority.
 - **Identity-separated delivery** where builder and reviewer are distinct actors
   inside the same GitHub-native loop.
@@ -87,7 +87,7 @@ exact combination `prd-to-prod` is demonstrating:
   review to bounded merge to first-line repair.
 
 That is the positioning: `prd-to-prod` is not a better prompt-to-app machine.
-It is a clearer example of a policy-bounded delivery system.
+It is a clearer example of a delivery system with enforced limits.
 
 ## Where prd-to-prod Is Stronger
 
@@ -121,7 +121,7 @@ delivery control plane itself is explicit, bounded, and inspectable.
 App builders prove AI can generate software.
 
 `prd-to-prod` argues that the more interesting problem is whether AI can operate
-a delivery loop with policy boundaries, identity separation, bounded autonomy,
+a delivery loop with policy boundaries, identity separation, clear limits on what the AI can do,
 and durable evidence.
 
 That is a harder claim, and it is the one this repo is trying to earn.

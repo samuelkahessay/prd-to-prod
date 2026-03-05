@@ -1,7 +1,7 @@
 # Agents Configuration
 
 ## Project Overview
-This repository is managed by an agentic pipeline. Issues are created from PRDs
+This repository is managed by an autonomous pipeline. Issues are created from PRDs
 by the prd-decomposer workflow, and implemented by the repo-assist workflow.
 
 ## Coding Standards

@@ -107,8 +107,8 @@ Assess findings to identify true code duplication:
 
 **Duplication Types**:
 - **Exact Duplication**: Identical code blocks in multiple locations
-- **Structural Duplication**: Same logic with minor variations (different variable names, etc.)
-- **Functional Duplication**: Different implementations of the same functionality
+- **Structural Duplication** (same logic with minor variations): Different variable names, formatting, etc., but identical logic
+- **Functional Duplication** (different code doing the same thing): Different implementations of the same functionality
 - **Copy-Paste Programming**: Similar code blocks that could be extracted into shared utilities
 
 **Assessment Criteria**:

@@ -172,7 +172,7 @@ Before posting the architecture plan, verify:
 - [ ] Tech stack matches the deploy profile and PRD requirements
 - [ ] Components cover all PRD features — nothing is missing
 - [ ] Data model is complete with all entities and relationships
-- [ ] Decomposition order respects dependencies (infrastructure before features, features before tests)
+- [ ] Implementation sequence respects dependencies (infrastructure before features, features before tests)
 - [ ] Patterns reference existing codebase conventions where applicable
 - [ ] Risks section includes at least one risk with a concrete mitigation
 - [ ] JSON artifact validates against the schema and contains all required fields

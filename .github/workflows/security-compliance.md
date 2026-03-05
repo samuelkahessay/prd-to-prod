@@ -66,7 +66,7 @@ tools:
 
 - ✅ 100% of critical vulnerabilities fixed
 - ✅ 95%+ of high vulnerabilities fixed
-- ✅ All fixes documented with CVE references
+- ✅ All fixes documented with CVE (Common Vulnerabilities and Exposures) references
 - ✅ Audit trail in repo-memory for compliance
 - ✅ Final report delivered to CISO 1 week before audit
 
@@ -184,7 +184,7 @@ For each vulnerability (up to ${{ github.event.inputs.max_issues }}):
 
 **CVE**: CVE-XXXX-XXXXX
 **Severity**: [Critical/High/Medium]
-**CVSS Score**: X.X
+**CVSS (Common Vulnerability Scoring System) Score**: X.X
 **Repository**: [org]/[repo]
 **Package**: [package-name]@[version]
 

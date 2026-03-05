@@ -1,7 +1,7 @@
 # Showcase
 
-Each entry below is a PRD that was fed to the agentic pipeline and autonomously
-implemented on the pipeline-generated path — from issue decomposition through
+Each entry below is a PRD (product requirements document) that was fed to the autonomous pipeline and autonomously
+implemented on the pipeline path — from issue decomposition through
 code review and pipeline PR merge.
 
 These showcase runs demonstrate the autonomous path. Human-authored PRs in this

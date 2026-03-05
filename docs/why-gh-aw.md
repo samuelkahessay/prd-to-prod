@@ -45,8 +45,8 @@ choices compared to running an LLM directly inside handwritten YAML with broad
 permissions:
 
 - read-only by default
-- sanitized write channels for issues, comments, and PRs
-- sandboxed execution and tool allowlisting
+- controlled outputs (agents can only create issues, comments, and PRs through approved channels)
+- isolated runtime where agents can only use approved tools
 - network isolation
 - SHA-pinned dependencies in compiled output
 - compile-time validation
@@ -55,9 +55,9 @@ permissions:
 ## The core distinction
 
 GitHub Actions is a deterministic control plane. You define explicit steps and
-state transitions. gh-aw is an agentic execution engine. It is useful when the
-job requires reading context, choosing an approach, and generating work rather
-than following a fixed script.
+state transitions. gh-aw is a tool that runs AI agents — they read context, make decisions, and
+produce work. It is useful when the job requires reading context, choosing an
+approach, and generating work rather than following a fixed script.
 
 ```
 GitHub Actions: trigger → route → validate → enforce → deploy
@@ -72,7 +72,7 @@ wrong tool. This repo uses both because they solve different problems.
 
 The rule is:
 
-**deterministic workflows own authority; gh-aw owns bounded execution.**
+**fixed workflows handle routing and safety; gh-aw handles the work that needs judgment.**
 
 ### Standard GitHub Actions
 
@@ -80,7 +80,7 @@ These workflows are routing, guard logic, deploy, and state transitions.
 
 | Workflow | Purpose |
 |---|---|
-| `auto-dispatch.yml` | Ingress guard: accepts `pipeline` issues, classifies actionability, debounces, dispatches |
+| `auto-dispatch.yml` | Entry gate: accepts `pipeline` issues, classifies actionability, debounces, dispatches |
 | `auto-dispatch-requeue.yml` | Picks up the next deferred issue |
 | `pr-review-submit.yml` | Parses verdicts, enforces the merge gate, arms auto-merge only inside policy |
 | `dotnet-ci.yml`, `ci-node.yml`, `ci-docker.yml` | Deterministic CI |
@@ -112,7 +112,7 @@ redefine it.
 
 ## Why gh-aw makes sense here
 
-### 1. It closes the judgment gap
+### 1. It closes the judgment gap (the space between what automation can decide and what requires interpretation)
 
 CI/CD has long automated build, test, and deploy. It did not automate turning a
 natural-language spec into a scoped implementation plan and a concrete PR. gh-aw
@@ -168,8 +168,8 @@ demo.
 
 ## The bottom line
 
-gh-aw is not a replacement for GitHub Actions. In this repo it is the bounded
-execution layer inside a human-owned control plane. Actions keep the authority,
+gh-aw is not a replacement for GitHub Actions. In this repo it is the part that
+does the AI work, inside a system where humans own the rules. Actions keep the authority,
 state transitions, and merge boundary deterministic. gh-aw handles the work that
 requires reading, reasoning, and generating.
 

@@ -37,7 +37,7 @@ Workflows may optionally include:
 - **Workflow Creation**: Design secure, validated agentic workflows with proper triggers, tools, and permissions
 - **Workflow Debugging**: Analyze logs, identify missing tools, investigate failures, and fix configuration issues
 - **Version Upgrades**: Migrate workflows to new gh-aw versions, apply codemods, fix breaking changes
-- **Component Design**: Create reusable shared workflow components that wrap MCP servers
+- **Component Design**: Create reusable shared workflow components that wrap MCP (Model Context Protocol) servers
 
 ## How to Use
 
@@ -161,10 +161,10 @@ gh aw compile --validate
 - **Natural Language Workflows**: Write workflows in markdown with YAML frontmatter
 - **AI Engine Support**: Copilot, Claude, Codex, or custom engines
 - **MCP Server Integration**: Connect to Model Context Protocol servers for tools
-- **Safe Outputs**: Structured communication between AI and GitHub API
+- **Safe Outputs** (validated channels for agents to interact with the GitHub API)
 - **Strict Mode**: Security-first validation and sandboxing
 - **Shared Components**: Reusable workflow building blocks
-- **Repo Memory**: Persistent git-backed storage for agents
+- **Repo Memory** (persistent git-backed storage agents can read between runs)
 - **Sandboxed Execution**: All workflows run in the Agent Workflow Firewall (AWF) sandbox, enabling full `bash` and `edit` tools by default
 
 ## Important Notes

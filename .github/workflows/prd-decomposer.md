@@ -57,7 +57,7 @@ If the instructions above contain a URL or file path, fetch/read that content as
 
 1. **Read the PRD carefully.** Understand the full scope before creating any issues.
 
-2. **Extract the authoritative contract before decomposing.** Capture every in-scope normative requirement that must survive decomposition. Normative requirements include:
+2. **Extract the authoritative contract before decomposing.** Capture every in-scope normative requirement (the exact, non-negotiable details from the spec: endpoint paths, HTTP status codes, field names, counts, thresholds, exact UI text) that must survive decomposition. Normative requirements include:
    - Exact endpoint paths, HTTP methods, query parameters, and status codes
    - Exact enum members, field names, response payload fields, and API signatures
    - Exact counts, minimums, thresholds, caps, and default values
@@ -73,7 +73,7 @@ If the instructions above contain a URL or file path, fetch/read that content as
 
 4. **Identify task dependencies.** Some tasks must be done before others (e.g., scaffold before features, features before tests).
 
-5. **Create atomic issues.** Each issue should be:
+5. **Create self-contained issues (each completable independently).** Each issue should be:
    - Completable by one developer in 1-4 hours
    - Self-contained with all context needed to implement
    - Testable with clear acceptance criteria
@@ -93,7 +93,7 @@ If the instructions above contain a URL or file path, fetch/read that content as
 
 8. **Create issues in dependency order:** infrastructure first, then core features, then dependent features, then tests/docs last.
 
-9. **Use valid `temporary_id` values** for cross-referencing issues. Format: `aw_` + 3-8 alphanumeric chars (A-Za-z0-9 only). Use short codes like `aw_task1`, `aw_task2`, `aw_feat01`. Do NOT use `aw_create_task` or `aw_scaffold_project`. Reference dependencies with `#aw_task1` syntax.
+9. **Use valid `temporary_id` values** (a reference ID for linking issues before they get real GitHub numbers) for cross-referencing issues. Format: `aw_` + 3-8 alphanumeric chars (A-Za-z0-9 only). Use short codes like `aw_task1`, `aw_task2`, `aw_feat01`. Do NOT use `aw_create_task` or `aw_scaffold_project`. Reference dependencies with `#aw_task1` syntax.
 
 10. **Self-contained acceptance criteria.** Each issue's acceptance criteria must ONLY reference files, functions, and artifacts that will be created or modified IN THAT ISSUE. Do not include criteria that depend on artifacts from other issues — those belong on the issue that creates the artifact. If a feature spans multiple issues, each issue's criteria cover only its portion.
 
@@ -130,9 +130,9 @@ Fall back to current behavior — use heuristic ordering and infer architecture 
 
 Before planning issues, inspect the repository state and determine whether the PRD is:
 
-- **Greenfield** — a new app or service should be scaffolded
-- **Enhancement** — the PRD extends or reworks the application already in the repo
-- **Migration** — the PRD intentionally replaces the current stack or app foundation
+- **Greenfield** — a new app or service should be scaffolded (building from scratch)
+- **Enhancement** — the PRD extends or reworks the application already in the repo (adding to an existing app)
+- **Migration** — the PRD intentionally replaces the current stack or app foundation (replacing the stack)
 
 Use the repo contents as evidence. Existing application directories, solution files, runtime configs, and deployed app assets are strong signals that this is an enhancement run unless the PRD explicitly says to replace them.
 

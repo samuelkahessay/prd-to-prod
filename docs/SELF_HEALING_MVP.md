@@ -2,7 +2,7 @@
 
 ## What This Runbook Covers
 
-This document covers the bounded self-healing sub-loop inside `prd-to-prod`.
+This document covers the automatic repair system inside `prd-to-prod`.
 It does not describe the entire system. It documents the repair path for the
 current `.NET + Azure App Service` lane and the controls around it.
 
@@ -18,12 +18,12 @@ This runbook applies only to the pipeline-generated path.
 - Approved `[Pipeline]` PRs can be auto-merged by `pr-review-submit`.
 - Human-authored PRs still run through review and CI, but remain manual by
   default.
-- Self-healing means retry, redispatch, repair, escalation, and cleanup of
-  bounded pipeline incidents.
+- Self-healing means retry, redispatch (send the issue to the next available agent run), repair, escalation, and cleanup of
+  pipeline incidents.
 - Self-healing does not mean rollback automation, broad infrastructure mutation,
   or automatic merge of arbitrary approved PRs.
 
-The control plane remains human-owned:
+Humans still control:
 
 - workflow definitions
 - `autonomy-policy.yml`
@@ -75,7 +75,7 @@ control:
 
 - unset or `true`: autonomous healing stays enabled
 - `false`: review submission and failure detection still run, but autonomous
-  remediation and pipeline auto-merge are paused
+  auto-repair and pipeline auto-merge are paused
 
 When paused, workflows still record incident state and escalation evidence. They
 do not auto-dispatch `repo-assist`, repost repair commands, or arm pipeline PR
@@ -130,8 +130,7 @@ clear reason to mutate the live branch:
 bash scripts/self-healing-drill.sh run main_build_syntax
 ```
 
-This intentionally pushes a broken commit to `main` and relies on the bounded
-repair loop to recover it.
+This intentionally pushes a broken commit to `main` and relies on the repair loop to fix it.
 
 ## Observable Evidence
 
