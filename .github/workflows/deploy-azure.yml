@@ -60,7 +60,7 @@ jobs:
           az webapp config appsettings set \
             --name prd-to-prod \
             --resource-group prd-to-prod-rg \
-            --settings WEBSITE_RUN_FROM_PACKAGE=1 \
+            --settings WEBSITE_RUN_FROM_PACKAGE=1 ASPNETCORE_URLS=http://+:8080 \
             --output none
           az webapp deploy \
             --name prd-to-prod \
