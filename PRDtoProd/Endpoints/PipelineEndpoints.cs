@@ -16,11 +16,7 @@ public static class PipelineEndpoints
     {
         var result = await pipeline.ProcessTicket(request.Title, request.Description, request.Source, db);
 
-        var ticketResponse = new TicketResponse(
-            result.Ticket.Id, result.Ticket.Title, result.Ticket.Description,
-            result.Category, result.Severity, result.Ticket.Status.ToString(),
-            result.Ticket.Resolution, result.Ticket.Source,
-            result.Ticket.CreatedAt, result.Ticket.UpdatedAt);
+        var ticketResponse = result.Ticket.ToResponse();
 
         var response = new SubmitResponse(
             ticketResponse,

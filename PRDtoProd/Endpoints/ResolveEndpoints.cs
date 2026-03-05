@@ -35,11 +35,7 @@ public static class ResolveEndpoints
             .Take(3)
             .ToList();
 
-        var ticketResponse = new TicketResponse(
-            ticket.Id, ticket.Title, ticket.Description,
-            ticket.Category.ToString(), ticket.Severity.ToString(), ticket.Status.ToString(),
-            ticket.Resolution, ticket.Source, ticket.CreatedAt, ticket.UpdatedAt
-        );
+        var ticketResponse = ticket.ToResponse();
 
         return TypedResults.Ok(new ResolveResponse(ticketResponse, matches));
     }
