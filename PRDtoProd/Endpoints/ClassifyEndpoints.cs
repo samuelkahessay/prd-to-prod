@@ -21,10 +21,6 @@ public static class ClassifyEndpoints
         classifier.ClassifyTicket(ticket);
         await db.SaveChangesAsync();
 
-        return TypedResults.Ok(new TicketResponse(
-            ticket.Id, ticket.Title, ticket.Description,
-            ticket.Category.ToString(), ticket.Severity.ToString(), ticket.Status.ToString(),
-            ticket.Resolution, ticket.Source, ticket.CreatedAt, ticket.UpdatedAt
-        ));
+        return TypedResults.Ok(ticket.ToResponse());
     }
 }

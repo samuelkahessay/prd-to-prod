@@ -36,7 +36,7 @@ public static class TicketEndpoints
         db.Tickets.Add(ticket);
         await db.SaveChangesAsync();
 
-        var response = ToResponse(ticket);
+        var response = ticket.ToResponse();
         return TypedResults.Created($"/api/tickets/{ticket.Id}", response);
     }
 
@@ -51,7 +51,7 @@ public static class TicketEndpoints
         if (category is not null && Enum.TryParse<TicketCategory>(category, true, out var categoryEnum))
             query = query.Where(t => t.Category == categoryEnum);
 
-        var tickets = await query.Select(t => ToResponse(t)).ToListAsync();
+        var tickets = await query.Select(t => t.ToResponse()).ToListAsync();
         return TypedResults.Ok(tickets);
     }
 
@@ -61,7 +61,7 @@ public static class TicketEndpoints
         var ticket = await db.Tickets.FindAsync(id);
         return ticket is null
             ? TypedResults.NotFound()
-            : TypedResults.Ok(ToResponse(ticket));
+            : TypedResults.Ok(ticket.ToResponse());
     }
 
     private static async Task<Results<Ok<TicketResponse>, NotFound>> UpdateTicket(
@@ -75,7 +75,7 @@ public static class TicketEndpoints
         ticket.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
-        return TypedResults.Ok(ToResponse(ticket));
+        return TypedResults.Ok(ticket.ToResponse());
     }
 
     private static async Task<Results<NoContent, NotFound>> DeleteTicket(
@@ -89,9 +89,4 @@ public static class TicketEndpoints
         return TypedResults.NoContent();
     }
 
-    private static TicketResponse ToResponse(Ticket t) => new(
-        t.Id, t.Title, t.Description,
-        t.Category.ToString(), t.Severity.ToString(), t.Status.ToString(),
-        t.Resolution, t.Source, t.CreatedAt, t.UpdatedAt
-    );
 }
