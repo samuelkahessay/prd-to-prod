@@ -51,8 +51,8 @@ public static class TicketEndpoints
         if (category is not null && Enum.TryParse<TicketCategory>(category, true, out var categoryEnum))
             query = query.Where(t => t.Category == categoryEnum);
 
-        var tickets = await query.ToListAsync();
-        return TypedResults.Ok(tickets.Select(t => t.ToResponse()).ToList());
+        var tickets = await query.Select(t => t.ToResponse()).ToListAsync();
+        return TypedResults.Ok(tickets);
     }
 
     private static async Task<Results<Ok<TicketResponse>, NotFound>> GetTicket(
@@ -88,4 +88,5 @@ public static class TicketEndpoints
         await db.SaveChangesAsync();
         return TypedResults.NoContent();
     }
+
 }
