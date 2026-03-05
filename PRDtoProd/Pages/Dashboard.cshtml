@@ -119,7 +119,8 @@
 
     <div class="mb-8">
         <div class="text-xs text-dim mb-2">// deflection metrics — system output</div>
-        <h1 class="font-sans text-3xl font-bold text-white">Mission Control</h1>
+        <h1 class="font-sans text-3xl font-bold text-white">Ticket Deflection</h1>
+        <p class="text-dim text-sm mt-2">Automated ticket resolution. No human in the loop for matched tickets.</p>
     </div>
 
     <div class="metrics-bar flex items-stretch mb-8" aria-label="Key metrics">
@@ -130,10 +131,11 @@
         <div class="metric-item flex-1">
             <div class="metric-lbl">deflection rate</div>
             <div id="resolutionRate" class="metric-val-lg metric-val-green mt-1" aria-live="polite">—</div>
+            <div class="text-dim" style="font-size: 0.6rem; margin-top: 4px;">% resolved without human review</div>
         </div>
         <div class="metric-item flex-1">
             <div class="metric-lbl">escalated</div>
-            <div id="escalated" class="metric-val-lg metric-val-red mt-1" aria-live="polite">—</div>
+            <a href="/operator" id="escalated" class="metric-val-lg metric-val-red mt-1" style="text-decoration: none;" aria-live="polite">—</a>
         </div>
     </div>
 

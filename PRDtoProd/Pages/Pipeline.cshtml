@@ -309,6 +309,9 @@
             Live GitHub pipeline state and historical run playback. Switch between real-time state
             and step-through replays of completed pipeline runs. Use <kbd class="text-white">&larr;</kbd> <kbd class="text-white">&rarr;</kbd> arrow keys in replay mode.
         </p>
+        <p class="text-xs mt-2" style="color: var(--dim); border-left: 2px solid var(--border); padding-left: 10px;">
+            Live GitHub pipeline state. Runs are real — this repo builds itself.
+        </p>
     </div>
 
     <!-- Mode Selector -->
@@ -325,7 +328,10 @@
     <div id="replayControls" class="panel p-4 mb-6 hidden">
         <div class="flex items-center justify-between flex-wrap gap-3">
             <div>
-                <div class="text-xs text-dim uppercase tracking-widest">replaying</div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="badge badge-amber" style="font-size:0.6rem;letter-spacing:0.12em;">REPLAY</span>
+                    <div class="text-xs text-dim uppercase tracking-widest">verified pipeline run</div>
+                </div>
                 <div id="replayRunName" class="text-white font-bold text-lg"></div>
             </div>
             <div class="flex items-center gap-2">
@@ -355,11 +361,11 @@
         </div>
         <div class="metric-slot">
             <div id="metricVal3" class="metric-val" aria-live="polite">0</div>
-            <div id="metricLbl3" class="metric-lbl">deferred</div>
+            <div id="metricLbl3" class="metric-lbl">deferred <span style="opacity:0.6">(rate-limited)</span></div>
         </div>
         <div class="metric-slot">
             <div id="metricVal4" class="metric-val" aria-live="polite">0</div>
-            <div id="metricLbl4" class="metric-lbl">repairs</div>
+            <div id="metricLbl4" class="metric-lbl">repairs <span style="opacity:0.6">(self-heals)</span></div>
         </div>
         <div class="metric-slot">
             <div id="metricVal5" class="metric-val" aria-live="polite">0</div>

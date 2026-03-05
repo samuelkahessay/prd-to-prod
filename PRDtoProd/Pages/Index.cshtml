@@ -27,34 +27,36 @@
         grid-template-columns: 1fr;
         gap: 48px;
         align-items: start;
-        padding: 64px 0 40px;
+        padding: 72px 0 48px;
     }
     @@media (min-width: 768px) {
         .hero-grid {
             grid-template-columns: 3fr 2fr;
+            gap: 64px;
+            padding: 104px 0 64px;
         }
     }
 
     .hero-headline {
         font-family: var(--mono);
-        font-size: clamp(1.6rem, 3.5vw, 2rem);
+        font-size: clamp(2rem, 5vw, 3.2rem);
         font-weight: 700;
         color: var(--text);
-        line-height: 1.2;
-        letter-spacing: -0.01em;
-        margin-bottom: 16px;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        margin-bottom: 24px;
     }
 
     .hero-sub {
         color: var(--dim);
         font-family: var(--sans);
-        font-size: 0.875rem;
-        line-height: 1.6;
-        max-width: 520px;
-        margin-bottom: 12px;
+        font-size: 1rem;
+        line-height: 1.65;
+        max-width: 540px;
+        margin-bottom: 14px;
     }
     .hero-sub:last-of-type {
-        margin-bottom: 28px;
+        margin-bottom: 32px;
     }
     .hero-sub a {
         color: var(--accent);
@@ -73,9 +75,9 @@
         display: inline-flex;
         align-items: center;
         font-family: var(--mono);
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         font-weight: 600;
-        padding: 12px 24px;
+        padding: 14px 28px;
         border: 1px solid var(--accent);
         color: var(--bg);
         background: var(--accent);
@@ -91,9 +93,9 @@
         display: inline-flex;
         align-items: center;
         font-family: var(--mono);
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         font-weight: 600;
-        padding: 12px 24px;
+        padding: 14px 28px;
         border: 1px solid var(--border);
         color: var(--dim);
         background: transparent;
@@ -111,13 +113,13 @@
         display: flex;
         flex-direction: column;
         font-family: var(--mono);
-        font-size: 0.7rem;
+        font-size: 0.8rem;
     }
     .pipeline-stage {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 10px 14px;
+        gap: 14px;
+        padding: 14px 18px;
         border: 1px solid var(--border);
         border-bottom: none;
         background: rgba(22, 27, 34, 0.6);
@@ -143,7 +145,7 @@
         color: var(--text);
         font-weight: 600;
         flex-shrink: 0;
-        min-width: 90px;
+        min-width: 108px;
     }
     .pipeline-arrow {
         color: var(--border);
@@ -151,31 +153,18 @@
     }
     .pipeline-desc {
         color: var(--dim);
-        font-size: 0.65rem;
-    }
-
-    /* Evidence line */
-    .evidence-line {
-        font-family: var(--mono);
-        font-size: 0.75rem;
-        color: var(--dim);
-        padding: 14px 0;
-        border-top: 1px solid var(--border);
-        border-bottom: 1px solid var(--border);
-        letter-spacing: 0.02em;
-        margin-bottom: 40px;
-    }
-    .evidence-line strong {
-        color: #79c0ff;
-        font-weight: 700;
+        font-size: 0.72rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     /* Callout cards (shared structure) */
     .callout-card {
         background: #161b22;
         border: 1px solid var(--border);
-        padding: 20px 24px;
-        margin-bottom: 40px;
+        padding: 24px 28px;
+        margin-bottom: 48px;
     }
     .callout-card-label {
         font-family: var(--mono);
@@ -212,34 +201,6 @@
         color: var(--text);
     }
 
-    /* Boundary stop variant */
-    .callout-boundary {
-        border-left: 3px solid var(--red);
-    }
-    .callout-boundary .callout-card-label {
-        color: var(--red);
-    }
-    .callout-boundary .boundary-summary {
-        font-family: var(--sans);
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: var(--text);
-        line-height: 1.4;
-        margin-bottom: 10px;
-    }
-    .callout-boundary .boundary-meta {
-        font-family: var(--mono);
-        font-size: 0.7rem;
-        color: var(--dim);
-        line-height: 1.6;
-    }
-    .callout-boundary .boundary-meta span {
-        color: var(--red);
-    }
-    .callout-boundary .callout-card-links a {
-        color: var(--dim);
-    }
-
     /* Integration variant */
     .callout-integration {
         border-left: 3px solid var(--accent);
@@ -251,29 +212,34 @@
         color: var(--accent);
     }
 
-    /* Footer */
-    .landing-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 24px 0;
-        border-top: 1px solid var(--border);
-        font-size: 0.7rem;
-        color: var(--dim);
-        flex-wrap: wrap;
-        gap: 12px;
+    /* Entrance & delight animations */
+    @@keyframes blink {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0; }
     }
-    .landing-footer a {
-        color: var(--dim);
-        text-decoration: none;
-        transition: color 0.15s;
+    @@keyframes ctaPulse {
+        0%, 100% { box-shadow: none; }
+        50%       { box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.18); }
     }
-    .landing-footer a:hover {
-        color: var(--text);
+    .cursor-blink::after {
+        content: '█';
+        color: var(--accent);
+        font-size: 0.4em;
+        margin-left: 3px;
+        vertical-align: 0.15em;
+        line-height: 0;
+        animation: blink 1.2s step-end infinite;
     }
-    .footer-links {
-        display: flex;
-        gap: 16px;
+    .cta-arrow {
+        display: inline-block;
+        margin-left: 6px;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .hero-cta-primary:hover .cta-arrow {
+        transform: translateX(3px);
+    }
+    .cta-pulse-once {
+        animation: ctaPulse 0.8s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     /* Reduced motion */
@@ -282,8 +248,13 @@
         .hero-cta-primary,
         .hero-cta-secondary,
         .callout-card-links a,
-        .landing-footer a {
+        .cta-arrow,
+        .cta-pulse-once {
             transition: none;
+            animation: none;
+        }
+        .cursor-blink::after {
+            animation: none;
         }
     }
 </style>
@@ -294,22 +265,20 @@
     <!-- Hero -->
     <section class="hero-grid" aria-labelledby="hero-heading">
         <div>
-            <h1 id="hero-heading" class="hero-headline">
-                PRD to deployed code.<br />No human in the loop.
+            <h1 id="hero-heading" class="hero-headline cursor-blink">
+                PRD to deployed code.<br />AI builds. Humans decide what ships.
             </h1>
             <p class="hero-sub">
                 An autonomous delivery pipeline powered by
                 <a href="https://github.com/github/gh-aw" target="_blank" rel="noopener noreferrer">gh-aw</a>.
                 Write a product spec as a GitHub issue. AI agents decompose, implement,
-                review, and ship it — while humans keep control over policy and what the
-                system is allowed to do.
+                review, and ship it — stopping when a decision requires human judgment.
             </p>
             <p class="hero-sub">
-                The interesting part is not code generation. It is the full operating
-                loop and the explicit place where the system stops.
+                The interesting part isn't code generation. It's the automated loop — and where it stops.
             </p>
             <div class="hero-ctas">
-                <a href="/pipeline" class="hero-cta-primary">View Pipeline</a>
+                <a href="/pipeline" class="hero-cta-primary">View Pipeline<span class="cta-arrow" aria-hidden="true">→</span></a>
                 <a href="https://github.com/samuelkahessay/prd-to-prod" target="_blank" rel="noopener noreferrer" class="hero-cta-secondary">GitHub</a>
             </div>
         </div>
@@ -325,7 +294,7 @@
                 <span class="pipeline-num">02</span>
                 <span class="pipeline-name">DECOMPOSE</span>
                 <span class="pipeline-arrow">&#8594;</span>
-                <span class="pipeline-desc">Break spec into ordered sub-issues</span>
+                <span class="pipeline-desc">Break spec into ordered tasks</span>
             </div>
             <div class="pipeline-stage">
                 <span class="pipeline-num">03</span>
@@ -337,7 +306,7 @@
                 <span class="pipeline-num">04</span>
                 <span class="pipeline-name">REVIEW</span>
                 <span class="pipeline-arrow">&#8594;</span>
-                <span class="pipeline-desc">Diff against spec and policy</span>
+                <span class="pipeline-desc">Check against spec and policy</span>
             </div>
             <div class="pipeline-stage">
                 <span class="pipeline-num">05</span>
@@ -348,37 +317,13 @@
         </div>
     </section>
 
-    <!-- Evidence -->
-    <div class="evidence-line">
-        <strong>@Model.TotalRuns</strong> pipeline runs · <strong>@Model.TotalIssues+</strong> issues resolved · <strong>@Model.TotalPrs+</strong> PRs merged · <strong>12m</strong> avg PRD-to-PR
-    </div>
-
-    <!-- Hard Boundary Stop -->
-    @if (Model.BoundaryStop is not null)
-    {
-        <section aria-labelledby="boundary-heading">
-            <div class="callout-card callout-boundary">
-                <div class="callout-card-label">The system stopped here</div>
-                <h2 id="boundary-heading" class="boundary-summary">@Model.BoundaryStop.Summary</h2>
-                <div class="boundary-meta">
-                    action: <span>@Model.BoundaryStop.RequestedAction</span><br />
-                    outcome: <span>@Model.BoundaryStop.Outcome</span><br />
-                    reason: @(Model.BoundaryStop.PolicyResult.Reason ?? "human review required")
-                </div>
-                <div class="callout-card-links">
-                    <a href="/operator">See all decisions on /operator &#8594;</a>
-                </div>
-            </div>
-        </section>
-    }
-
-    <!-- Latest Integration -->
+    <!-- Integration (subordinate) -->
     <section aria-labelledby="integration-heading">
-        <div class="callout-card callout-integration">
-            <div class="callout-card-label">New Integration</div>
-            <h2 id="integration-heading" class="callout-card-title">meeting-to-main</h2>
-            <div class="callout-card-desc">
-                WorkIQ MCP &#8594; prd-to-prod. Meeting transcript in, merged PR out.
+        <div class="callout-card callout-integration" style="padding: 20px 28px; opacity: 0.85;">
+            <div class="callout-card-label" style="font-size: 0.6rem;">// built on top</div>
+            <h2 id="integration-heading" class="callout-card-title" style="font-size: 1rem;">meeting-to-main</h2>
+            <div class="callout-card-desc" style="font-size: 0.85rem;">
+                Meeting transcript in, merged PR out — built on top of prd-to-prod using WorkIQ.
             </div>
             <div class="callout-card-links">
                 <a href="https://github.com/samuelkahessay/meeting-to-main" target="_blank" rel="noopener noreferrer">Repo &#8599;</a>
@@ -386,14 +331,91 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <div class="landing-footer">
-        <span>prd-to-prod — autonomous delivery pipeline. Built by Samuel Kahessay.</span>
-        <div class="footer-links">
-            <a href="https://github.com/samuelkahessay/prd-to-prod" target="_blank" rel="noopener noreferrer">GitHub</a>
-            <a href="/operator">/operator</a>
-            <a href="https://github.com/github/gh-aw" target="_blank" rel="noopener noreferrer">gh-aw</a>
-        </div>
-    </div>
 
 </div>
+
+@section Scripts {
+<script>
+(function () {
+    // Console easter egg — always runs
+    try {
+        console.log('\n%c prd-to-prod', 'color:#58a6ff;font-family:monospace;font-size:20px;font-weight:700');
+        console.log('%c Autonomous delivery pipeline. Running in production.\n If you\'re reading this, you\'d fit right in.\n\n \u2192 github.com/samuelkahessay/prd-to-prod\n', 'color:#8b949e;font-family:monospace;font-size:12px');
+    } catch(e) {}
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var ease = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+    var heading    = document.getElementById('hero-heading');
+    var subs       = document.querySelectorAll('.hero-sub');
+    var ctas       = document.querySelector('.hero-ctas');
+    var stages     = document.querySelectorAll('.pipeline-stage');
+    var card       = document.querySelector('.callout-card');
+    var ctaPrimary = document.querySelector('.hero-cta-primary');
+
+    function hide(el, tx, ty) {
+        if (!el) return;
+        el.style.opacity = '0';
+        el.style.transform = 'translate(' + (tx || 0) + 'px,' + (ty || 0) + 'px)';
+    }
+
+    hide(heading, 0, 14);
+    subs.forEach(function(el) { hide(el, 0, 14); });
+    hide(ctas, 0, 14);
+    stages.forEach(function(el) { hide(el, 10, 0); });
+    hide(card, 0, 10);
+
+    function animIn(el, delay, dur) {
+        if (!el) return;
+        dur = dur || 600;
+        setTimeout(function() {
+            el.style.transition = 'opacity ' + dur + 'ms ' + ease + ', transform ' + dur + 'ms ' + ease;
+            el.style.opacity = '1';
+            el.style.transform = 'translate(0,0)';
+            setTimeout(function() { el.style.transition = ''; }, dur + 60);
+        }, delay);
+    }
+
+    // Hero stagger
+    animIn(heading, 60);
+    subs.forEach(function(el, i) { animIn(el, 160 + i * 80); });
+    animIn(ctas, 160 + subs.length * 80 + 70);
+
+    // Pipeline boot sequence — stages slide in like a terminal loading
+    var pStart = 300;
+    stages.forEach(function(el, i) { animIn(el, pStart + i * 110, 480); });
+
+    // Integration card
+    animIn(card, pStart + stages.length * 110 + 120);
+
+    // Pipeline sweep — stages light up in sequence like a live status check
+    var sweepStart = pStart + stages.length * 110 + 520;
+    stages.forEach(function(el, i) {
+        var isShip = i === stages.length - 1;
+        setTimeout(function() {
+            el.style.transition = 'background 0.2s ease, border-color 0.2s ease';
+            el.style.background = isShip ? 'rgba(63,185,80,0.07)' : 'rgba(88,166,255,0.06)';
+            if (isShip) el.style.borderColor = 'rgba(63,185,80,0.4)';
+            setTimeout(function() {
+                el.style.transition = 'background 0.45s ease, border-color 0.45s ease';
+                el.style.background = '';
+                el.style.borderColor = '';
+                setTimeout(function() { el.style.transition = ''; }, 500);
+            }, 320);
+        }, sweepStart + i * 180);
+    });
+
+    // Subtle CTA pulse after sweep — directs attention to the primary action
+    var sweepEnd = sweepStart + stages.length * 180 + 350;
+    setTimeout(function() {
+        if (ctaPrimary) {
+            ctaPrimary.classList.add('cta-pulse-once');
+            ctaPrimary.addEventListener('animationend', function() {
+                ctaPrimary.classList.remove('cta-pulse-once');
+            }, { once: true });
+        }
+    }, sweepEnd);
+}());
+</script>
+}

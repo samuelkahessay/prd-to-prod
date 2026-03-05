@@ -20,7 +20,6 @@ public class NavigationLayoutTests : IClassFixture<WebApplicationFactory<Program
 
         Assert.Contains("status-bar-brand-row", html);
         Assert.Contains("status-bar-links", html);
-        Assert.Contains("href=\"/operator\"", html);
         Assert.Contains("href=\"/pipeline\"", html);
     }
 

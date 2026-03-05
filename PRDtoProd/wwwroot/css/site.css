@@ -94,7 +94,7 @@ h1, h2, h3, .font-sans { font-family: var(--sans); }
     transition: border-color 0.2s, color 0.2s;
 }
 .nav-link:hover { border-color: var(--border); color: var(--accent); }
-.nav-link.active { border-color: var(--border); color: var(--accent); }
+.nav-link.active { border-color: var(--accent); color: var(--text); background: rgba(88, 166, 255, 0.08); }
 
 @media (max-width: 640px) {
     .status-bar {

@@ -210,6 +210,7 @@
                 <div>
                     <div class="text-xs text-dim uppercase tracking-widest mb-1">blocked actions</div>
                     <h2 id="blocked-heading" class="font-sans text-xl font-bold text-white">Human-required refusals</h2>
+                    <p class="text-dim text-xs mt-1">System refused. Hard policy wall.</p>
                 </div>
                 <span class="badge badge-red">@Model.Queue.Blocked.Count blocked</span>
             </div>
@@ -252,6 +253,7 @@
                 <div>
                     <div class="text-xs text-dim uppercase tracking-widest mb-1">human queue</div>
                     <h2 id="queued-heading" class="font-sans text-xl font-bold text-white">Waiting on an operator</h2>
+                    <p class="text-dim text-xs mt-1">System paused. Awaiting human sign-off before acting.</p>
                 </div>
                 <span class="badge badge-amber">@Model.Queue.QueuedForHuman.Count queued</span>
             </div>
@@ -297,6 +299,7 @@
                 <div>
                     <div class="text-xs text-dim uppercase tracking-widest mb-1">escalated decisions</div>
                     <h2 id="escalated-heading" class="font-sans text-xl font-bold text-white">Escalated beyond initial routing</h2>
+                    <p class="text-dim text-xs mt-1">Something went wrong. Human triage required.</p>
                 </div>
                 <span class="badge badge-amber">@Model.EscalatedDecisions.Count escalated</span>
             </div>
@@ -330,7 +333,7 @@
 
     <div class="grid lg:grid-cols-[1fr_1.25fr] gap-6">
         <section class="panel panel-green p-5" aria-labelledby="autonomous-heading">
-            <details>
+            <details open>
                 <summary class="flex items-center justify-between mb-4 cursor-pointer list-none" style="list-style: none;">
                     <div>
                         <div class="text-xs text-dim uppercase tracking-widest mb-1">autonomous lane</div>
@@ -469,7 +472,7 @@
         <div class="mt-6 pt-4" style="border-top: 1px solid var(--border);">
             <details>
                 <summary class="text-xs text-dim uppercase tracking-widest mb-3 cursor-pointer list-none" style="list-style: none;">
-                    decision trail (@Model.DecisionTrail.Count entries)
+                    Show evidence trail (@Model.DecisionTrail.Count entries)
                 </summary>
                 @foreach (var decision in Model.DecisionTrail)
                 {

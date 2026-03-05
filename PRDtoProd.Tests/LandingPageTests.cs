@@ -39,11 +39,10 @@ public class LandingPageTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
-    public async Task LandingPage_ContainsOperatorAndPipelineLinks()
+    public async Task LandingPage_ContainsPipelineLink()
     {
         var client = _factory.CreateClient();
         var html = await client.GetStringAsync("/");
-        Assert.Contains("href=\"/operator\"", html);
         Assert.Contains("href=\"/pipeline\"", html);
     }
 
@@ -53,16 +52,6 @@ public class LandingPageTests : IClassFixture<WebApplicationFactory<Program>>
         var client = _factory.CreateClient();
         var html = await client.GetStringAsync("/");
         Assert.Contains("gh-aw", html);
-    }
-
-    [Fact]
-    public async Task LandingPage_ContainsEvidenceStrip()
-    {
-        var client = _factory.CreateClient();
-        var html = await client.GetStringAsync("/");
-        Assert.Contains("pipeline runs", html);
-        Assert.Contains("issues resolved", html);
-        Assert.Contains("PRs merged", html);
     }
 
     [Fact]
