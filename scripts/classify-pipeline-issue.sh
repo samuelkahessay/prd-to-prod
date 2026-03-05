@@ -28,9 +28,6 @@ elif [[ "$TITLE" == PRD:* ]]; then
 elif has_label "report"; then
   ACTIONABLE=false
   REASON="report_issue"
-elif ! printf '%s' "$LABELS_JSON" | jq -e 'any(.[]; . == "bug" or . == "docs" or . == "feature" or . == "infra" or . == "test")' >/dev/null; then
-  ACTIONABLE=false
-  REASON="missing_actionable_label"
 fi
 
 jq -n \
