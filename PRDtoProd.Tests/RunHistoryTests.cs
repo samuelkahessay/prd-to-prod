@@ -29,11 +29,9 @@ public class RunHistoryTests
             {
                 TestFactoryExtensions.ReplaceDbWithInMemory(services, $"TestDb_{Guid.NewGuid()}");
 
-                // Remove the real ShowcaseService and replace with stub
-                var descriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(IShowcaseService));
-                if (descriptor != null)
-                    services.Remove(descriptor);
+                // Remove all IShowcaseService registrations and replace with stub
+                foreach (var d in services.Where(d => d.ServiceType == typeof(IShowcaseService)).ToList())
+                    services.Remove(d);
 
                 services.AddSingleton<IShowcaseService>(new StubShowcaseService(runs));
             });
@@ -65,7 +63,11 @@ public class RunHistoryTests
         var client = factory.CreateClient();
         var html = await client.GetStringAsync("/");
 
-        Assert.Contains("0 pipeline runs", html);
+        // The evidence strip renders value and label in separate divs:
+        // <div class="evidence-val">0</div>
+        // <div class="evidence-lbl">pipeline runs</div>
+        Assert.Contains("pipeline runs", html);
+        Assert.Contains("class=\"evidence-val\">0<", html);
     }
 
     [Fact]
