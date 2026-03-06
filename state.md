@@ -1,28 +1,37 @@
-# Pipeline State — 2026-03-06 (Run 22759842705)
+# Pipeline State — 2026-03-06 (Run 22759958353)
 
 ## Last Run
-- Workflow run: 22759842705
-- Date: 2026-03-06T10:41:18Z
+- Workflow run: 22759958353
+- Date: 2026-03-06T10:45:36Z
 
-## Run 07 — Compliance Scan Service: **COMPLETE** ✅ (enhancement PR in review)
+## Run 07 — Compliance Scan Service: **COMPLETE** ✅
 
-### Post-Run Enhancement Issues
+### All Issues
 | Issue | Title | Status |
 |-------|-------|--------|
-| #396 | Duplicate tokenization logic in ResolveEndpoints/MatchingService | ⏳ PR #398 in review (CI pending) |
+| #340 | Add Compliance Domain Models and Enums | ✅ Merged (PR #348) |
+| #341 | Extend DbContext and Add Compliance Demo Seed Data | ✅ Merged (PR #349) |
+| #342 | Implement Static Compliance Rule Library | ✅ Merged (PR #350) |
+| #343 | Implement Compliance Scan Engine Service | ✅ Merged (PR #351) |
+| #344 | Implement Compliance API Endpoints | ✅ Merged (PR #352) |
+| #345 | Create Compliance Dashboard Razor Page at /compliance | ✅ Merged (PR #353) |
+| #346 | Add Compliance Link to Navigation and Landing Page | ✅ Merged (PR #354) |
+| #347 | Add Tests for Compliance Scan Service | ✅ Merged (PR #355) |
+| #359 | NavigationLayoutTests: Assert 4 nav items | ✅ Merged (PR #361) |
+| #362 | Trim shared navigation to 4 pages | ✅ Merged (PR #363) |
+| #396 | Consolidate tokenization (ResolveEndpoints/MatchingService) | ✅ Merged (PR #398) |
 
-### Open PRs
-| PR | Title | Status |
-|----|-------|--------|
-| #398 | [Pipeline] Consolidate tokenization logic into MatchingService | CI pending (created 2026-03-06T10:38) |
-| #397 | Refactor: Eliminate duplicate tokenization (Copilot SWE agent) | Human review pending |
-| #393 | Restore evidence strip + RunHistoryTests (Copilot SWE agent) | Human review pending |
-
-### [aw] Issue Triage
-- [aw] #395: Triaged (run 22759503819) — pipeline tried to push to non-[Pipeline] PR #393. Root cause comment added. Issue still open (no close tool available).
-- [aw] #364: System-managed no-op tracker. Do not close.
+### Status
+- 0 open implementable pipeline issues
+- 0 open pipeline PRs
+- 0 actionable [aw] issues (#395 fully triaged, #364 is system-managed no-op tracker)
+- Pipeline: **COMPLETE**
 
 ### Next Actions
-1. Wait for CI on PR #398
-2. Once CI passes and review approves, PR #398 auto-merges
-3. After #396 closed, archive Run 07: `scripts/archive-run.sh`
+1. Archive Run 07: `scripts/archive-run.sh` to tag v7.0.0 and create showcase entry `07-compliance-scan-service`
+2. Close PRD tracking issue #339 after demo recording
+3. Ready for next PRD drop
+
+### Non-Pipeline PRs (Human/Agent, do not modify)
+- PR #393: Restore evidence strip (Copilot SWE agent)
+- PR #397: Refactor duplicate tokenization (Copilot SWE agent)
