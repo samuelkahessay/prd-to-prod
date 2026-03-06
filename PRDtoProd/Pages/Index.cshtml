@@ -358,11 +358,11 @@
             <div class="evidence-lbl">pipeline runs</div>
         </div>
         <div class="evidence-item">
-            <div class="evidence-val">@(Model.TotalIssues > 0 ? $"{Model.TotalIssues}+" : "0")</div>
+            <div class="evidence-val">@Html.Raw(Model.TotalIssues > 0 ? $"{Model.TotalIssues}+" : "0")</div>
             <div class="evidence-lbl">issues resolved</div>
         </div>
         <div class="evidence-item">
-            <div class="evidence-val">@(Model.TotalPrs > 0 ? $"{Model.TotalPrs}+" : "0")</div>
+            <div class="evidence-val">@Html.Raw(Model.TotalPrs > 0 ? $"{Model.TotalPrs}+" : "0")</div>
             <div class="evidence-lbl">PRs merged</div>
         </div>
         <div class="evidence-item">
