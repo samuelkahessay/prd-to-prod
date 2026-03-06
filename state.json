@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-06T10:52:16Z",
-  "run_id": "22760214221",
+  "last_run": "2026-03-06T11:15:30Z",
+  "run_id": "22761009970",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 - C#/.NET 10)",
@@ -21,11 +21,12 @@
     "384": "closed",
     "388": "closed",
     "396": "closed",
-    "399": "in-progress"
+    "399": "closed",
+    "402": "in-progress"
   },
-  "open_prs": ["repo-assist/issue-399-fix-runhistory-tests"],
-  "aw_issues_triaged": ["364-no-op-runs-system-managed", "395-triaged-pr393-already-merged"],
+  "open_prs": ["repo-assist/issue-402-fix-evidencestrip-html-encoding"],
+  "aw_issues_triaged": ["364-no-op-runs-system-managed", "395-root-cause-resolved", "401-ci-doctor-pre-agent-resolved"],
   "pipeline_status": "at-risk-ci-failure",
-  "notes": "Issue #399 (CI failure: RunHistoryTests) addressed with new PR on branch repo-assist/issue-399-fix-runhistory-tests. Two test fixes: (1) EvidenceStrip_ShowsZeroWhenNoRuns assertion corrected (value+label in separate divs), (2) CreateFactory stub registration made robust with Where+ToList loop. [aw] #395 triaged: previous run tried to push to non-Pipeline PR #393 which was already merged - root cause is resolved. [aw] #364 is system-managed no-op tracker.",
-  "backlog_cursor": 399
+  "notes": "Issue #402 (CI failure: EvidenceStrip_TotalsMatchAggregatedData) fixed: Razor @(...) HTML-encodes '+' as '&#x2B;', so test searching for '10+' fails. Fix: use @Html.Raw(...) for TotalIssues and TotalPrs in Index.cshtml. All 165 tests pass. PR created on branch repo-assist/issue-402-fix-evidencestrip-html-encoding. [aw] #401 (CI Doctor pre-agent failure) and #395 (push rejected) both triaged and commented.",
+  "backlog_cursor": 402
 }
