@@ -1,23 +1,27 @@
-# Pipeline State — 2026-03-05
+# Pipeline State — 2026-03-06
 
 ## Last Run
-- Workflow run: 22713823909
-- Date: 2026-03-05T10:35:34Z
+- Workflow run: 22759503819
+- Date: 2026-03-06T10:30:45Z
 
-## Run 07 — Compliance Scan Service: **COMPLETE** ✅ (enhancement issues in review)
+## Run 07 — Compliance Scan Service: **COMPLETE** ✅ (enhancement issue in review)
 
-### Post-Run Enhancement Issues (owner-created)
+### Post-Run Enhancement Issues
 | Issue | Title | Status |
 |-------|-------|--------|
-| #382 | Mobile responsiveness / UI | ⏳ PR #386 APPROVED, blocked on `sensitive-review` |
-| #388 | Duplicate Code: Refactor TicketResponse construction | ⏳ PR opened, awaiting review |
+| #396 | Duplicate tokenization logic in ResolveEndpoints/MatchingService | ⏳ PR opened this run |
 
-### Status
-- 2 open pipeline issues (#382, #388)
-- 2 open PRs (#386, new PR for #388)
-- 0 actionable [aw] issues (#364 is system-managed no-op tracker)
-- Pipeline: **AT_RISK** (PR #386 blocked on sensitive-review; PR for #388 awaiting review)
+### Open PRs
+| PR | Title | Status |
+|----|-------|--------|
+| #393 | Restore evidence strip + RunHistoryTests (Copilot SWE agent) | Human review pending |
+| PR for #396 | [Pipeline] Consolidate tokenization logic into MatchingService | In review |
+
+### Triage
+- [aw] #395: false failure — previous run tried to push to non-[Pipeline] PR #393. Commented + closed.
+- [aw] #364: system-managed no-op tracker, ignore.
 
 ### Next Actions
-1. Repo owner: comment `/approve-sensitive` on PR #386 to unblock merge
-2. PR for #388 needs review (refactor: extract shared ToResponse extension)
+1. Merge PR for #396 when approved
+2. Merge/close PR #393 (human decision)
+3. Archive Run 07 when ready: `scripts/archive-run.sh`
