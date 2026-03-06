@@ -1,8 +1,8 @@
-# Pipeline State — 2026-03-06 (Run 22760214221)
+# Pipeline State — 2026-03-06 (Run 22761536859)
 
 ## Last Run
-- Workflow run: 22760214221
-- Date: 2026-03-06T10:52:16Z
+- Workflow run: 22761536859
+- Date: 2026-03-06T11:31:18Z
 
 ## Run 07 — Compliance Scan Service: **AT RISK** ⚠️
 
@@ -20,18 +20,20 @@
 | #359 | NavigationLayoutTests: Assert 4 nav items | ✅ Merged (PR #361) |
 | #362 | Trim shared navigation to 4 pages | ✅ Merged (PR #363) |
 | #396 | Consolidate tokenization | ✅ Merged (PR #398) |
-| **#399** | **CI Build Failure: RunHistoryTests** | **🔄 In Progress (PR created)** |
+| #399 | CI Build Failure: RunHistoryTests | ✅ Merged (PR #400) |
+| **#402** | **CI Build Failure: EvidenceStrip_TotalsMatchAggregatedData** | **🔄 In Progress (PR #404 open, CI pending)** |
 
 ### Current Work
-- PR created on branch `repo-assist/issue-399-fix-runhistory-tests` for issue #399
-- Fixes: corrected EvidenceStrip_ShowsZeroWhenNoRuns assertion + robust stub registration in CreateFactory
+- PR #404 open on branch `repo-assist/issue-402-fix-evidencestrip-html-encoding-9f65ed4265b124fc`
+- Fix: @Html.Raw(...) for TotalIssues and TotalPrs in Index.cshtml to prevent HTML-encoding of '+'
 
 ### [aw] Issues
-- #364: System-managed no-op tracker (ignore)
-- #395: Triaged — previous run tried to push to non-[Pipeline] PR #393 (already merged). Issue can be closed.
+- #364: System-managed no-op tracker (do not close)
+- #395: Triaged — root cause resolved, awaiting human closure
+- #401: Triaged — pre-agent transient failure, root cause (issue #402) has a fix PR, awaiting human closure
 
 ### Next Actions
-1. Wait for PR on issue #399 to be reviewed and merged
-2. Close [aw] #395 (root cause resolved — PR #393 was already merged)
-3. After #399 fix merges, CI should be green again
+1. Wait for PR #404 CI to pass and be reviewed
+2. After PR #404 merges and CI is green, close issue #402
+3. Close [aw] #395 and #401 (root causes resolved)
 4. Archive Run 07: `scripts/archive-run.sh` to tag v7.0.0
