@@ -203,4 +203,90 @@ public class MatchingServiceTests
         Assert.Equal(TicketStatus.Escalated, ticket.Status);
         Assert.True(score < 0.3, $"Expected score < 0.3 for escalated ticket, got {score}");
     }
+
+    [Fact]
+    public void GetTopMatches_ReturnsRankedMatches()
+    {
+        using var context = CreateContext();
+        SeedPasswordArticle(context);
+        context.KnowledgeArticles.Add(new KnowledgeArticle
+        {
+            Id = Guid.NewGuid(),
+            Title = "Billing FAQ",
+            Content = "Your invoice can be found in the billing portal.",
+            Tags = "billing,invoice,payment",
+            Category = TicketCategory.Other
+        });
+        context.SaveChanges();
+
+        var ticket = new Ticket
+        {
+            Title = "forgot password",
+            Description = "",
+            Status = TicketStatus.New
+        };
+
+        var service = CreateService();
+        var articles = context.KnowledgeArticles.ToList();
+        var matches = service.GetTopMatches(ticket, articles);
+
+        // At least one match with a non-zero score
+        Assert.NotEmpty(matches);
+        // The password-related article should outscore the billing article
+        Assert.Equal("Password Reset Guide", matches[0].Title);
+        // Results should be ordered descending by score
+        for (int i = 1; i < matches.Count; i++)
+            Assert.True(matches[i - 1].Score >= matches[i].Score);
+    }
+
+    [Fact]
+    public void GetTopMatches_NoMatchingArticle_ReturnsEmpty()
+    {
+        using var context = CreateContext();
+        SeedPasswordArticle(context);
+
+        var ticket = new Ticket
+        {
+            Title = "zxqvbnm asdfgh",
+            Description = "",
+            Status = TicketStatus.New
+        };
+
+        var service = CreateService();
+        var articles = context.KnowledgeArticles.ToList();
+        var matches = service.GetTopMatches(ticket, articles);
+
+        Assert.Empty(matches);
+    }
+
+    [Fact]
+    public void GetTopMatches_RespectsTopN()
+    {
+        using var context = CreateContext();
+        for (int i = 0; i < 5; i++)
+        {
+            context.KnowledgeArticles.Add(new KnowledgeArticle
+            {
+                Id = Guid.NewGuid(),
+                Title = $"Password Article {i}",
+                Content = $"password reset login email account guide {i}",
+                Tags = "password,reset",
+                Category = TicketCategory.AccountIssue
+            });
+        }
+        context.SaveChanges();
+
+        var ticket = new Ticket
+        {
+            Title = "forgot password reset login",
+            Description = "",
+            Status = TicketStatus.New
+        };
+
+        var service = CreateService();
+        var articles = context.KnowledgeArticles.ToList();
+        var matches = service.GetTopMatches(ticket, articles, topN: 2);
+
+        Assert.Equal(2, matches.Count);
+    }
 }

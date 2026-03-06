@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using PRDtoProd.Data;
+using PRDtoProd.DTOs;
 using PRDtoProd.Models;
 
 namespace PRDtoProd.Services;
@@ -49,6 +50,27 @@ public class MatchingService
         }
 
         return (bestScore, bestArticle);
+    }
+
+    public IReadOnlyList<ArticleMatch> GetTopMatches(Ticket ticket, IEnumerable<KnowledgeArticle> articles, int topN = 3)
+    {
+        var ticketTokens = Tokenize($"{ticket.Title} {ticket.Description}");
+        return articles
+            .Select(a => new ArticleMatch(
+                a.Id, a.Title,
+                Jaccard(ticketTokens, Tokenize($"{a.Content} {a.Tags}"))))
+            .Where(m => m.Score > 0)
+            .OrderByDescending(m => m.Score)
+            .Take(topN)
+            .ToList();
+    }
+
+    private static double Jaccard(HashSet<string> a, HashSet<string> b)
+    {
+        if (a.Count == 0 && b.Count == 0) return 0;
+        var intersection = a.Intersect(b).Count();
+        var union = a.Union(b).Count();
+        return intersection / (double)union;
     }
 
     private static readonly char[] _punctuation =
