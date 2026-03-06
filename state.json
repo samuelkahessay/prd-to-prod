@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-06T11:36:04Z",
-  "run_id": "22761659528",
+  "last_run": "2026-03-06T13:12:41Z",
+  "run_id": "22764882483",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 - C#/.NET 10)",
@@ -26,8 +26,8 @@
   },
   "open_prs": [],
   "pr_numbers": {"402": 404},
-  "aw_issues_triaged": ["364-no-op-runs-system-managed", "395-fully-resolved", "401-fully-resolved"],
+  "aw_issues_triaged": ["364-no-op-runs-system-managed", "395-fully-resolved-awaiting-human-closure", "401-closed"],
   "pipeline_status": "complete",
-  "notes": "PR #404 merged. Issue #402 closed. CI green on main (sha 19771938). [aw] #395 and #401 are fully triaged and ready for human closure. Run 07 is COMPLETE. Ready for archive with scripts/archive-run.sh.",
+  "notes": "Run 07 COMPLETE. CI green on main. All 165 tests passing. [aw] #395 fully triaged (awaiting human closure). [aw] #401 closed by github-actions[bot] at 2026-03-06T13:11. PR #397 is a non-pipeline Copilot SWE PR for issue #396 (refactoring). Pipeline ready for archive with scripts/archive-run.sh.",
   "backlog_cursor": 402
 }
