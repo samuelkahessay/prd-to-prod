@@ -23,9 +23,8 @@ public static class ResolveEndpoints
         matcher.ResolveTicket(ticket, db);
         await db.SaveChangesAsync();
 
-        // Compute confidence scores for response via the service layer
         var articles = db.KnowledgeArticles.ToList();
-        var matches = matcher.GetTopMatches(ticket, articles).ToList();
+        var matches = matcher.GetTopMatches(ticket, articles);
 
         var ticketResponse = ticket.ToResponse();
 
