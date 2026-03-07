@@ -65,9 +65,14 @@ closer set today is:
   coding tool. Background agents and Bugbot can run remotely, open PRs, and
   iterate on code with checks and statuses, but the product center of gravity is
   still task execution rather than repo-owned delivery governance.
+- [Mendral](https://www.mendral.com/) — the closest CI-focused repair product.
+  Mendral automates CI failure diagnosis, flaky test detection, and fix PR
+  generation. Its self-healing loop overlaps directly with `prd-to-prod`'s CI
+  repair phase, but scopes to pipeline failures rather than the full delivery
+  governance loop.
 
 This matters because the honest answer to "what does this compete with?" is
-**not** "Lovable." It is "parts of Factory, Devin, GitHub, and Cursor."
+**not** "Lovable." It is "parts of Factory, Devin, GitHub, Cursor, and Mendral."
 
 ## What None Of Those Gives You By Default
 

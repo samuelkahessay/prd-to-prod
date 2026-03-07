@@ -7,275 +7,251 @@
 
 @section Styles {
 <style>
+    /* Specific Pipeline Styles */
     .warning {
-        border: 1px solid rgba(245, 166, 35, 0.3);
-        background: rgba(245, 166, 35, 0.08);
-        color: var(--amber);
+        border: 2px solid var(--color-warning);
+        background: var(--color-bg-base);
+        color: var(--color-warning);
+        padding: var(--sp-md);
+        margin-bottom: var(--sp-xl);
+        font-family: var(--mono);
+        text-transform: uppercase;
+        font-size: var(--fs-sm);
+        letter-spacing: 0.05em;
     }
     .stage-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1px;
+        background: var(--color-border);
+        border: 1px solid var(--color-border);
     }
     .stage-node {
-        position: relative;
-        min-height: 118px;
-        padding: 16px;
+        background: var(--color-bg-base);
+        padding: var(--sp-lg);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
     }
-    .stage-node::after {
-        content: "";
-        position: absolute;
-        top: 28px;
-        right: -14px;
-        width: 14px;
-        border-top: 1px dashed rgba(0, 170, 255, 0.25);
-    }
-    .stage-node:last-child::after { display: none; }
     .stage-count {
-        font-size: 2rem;
+        font-family: var(--sans);
+        font-size: 2.5rem;
+        font-weight: 800;
         line-height: 1;
-        color: #e8edf5;
-        margin-bottom: 8px;
+        letter-spacing: -0.05em;
+        color: var(--color-text-primary);
+        margin-bottom: var(--sp-sm);
     }
     .status-pill {
         display: inline-block;
-        font-size: 0.65rem;
-        padding: 3px 8px;
-        border: 1px solid var(--border);
+        font-family: var(--mono);
+        font-size: var(--fs-xs);
+        padding: 4px 8px;
+        border: 1px solid var(--color-border-heavy);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.15em;
+        font-weight: 800;
+        transition: all 0.3s var(--ease-out-expo);
     }
     .status-pill.active {
-        color: var(--green);
-        border-color: rgba(61, 220, 132, 0.3);
-        background: rgba(61, 220, 132, 0.08);
+        color: var(--color-success);
+        border-color: var(--color-success-border);
+        background: var(--color-bg-base);
     }
     .status-pill.idle {
-        color: var(--dim);
-        background: rgba(255, 255, 255, 0.03);
+        color: var(--color-text-dim);
+        background: var(--color-bg-base);
     }
-    .chip {
-        display: inline-block;
-        margin-right: 8px;
-        margin-bottom: 6px;
-        padding: 2px 8px;
-        border: 1px solid var(--border);
-        font-size: 0.68rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-    }
-    .chip-queue { color: var(--amber); }
-    .chip-implementation { color: var(--accent); }
-    .chip-review { color: #d4d8ff; }
-    .chip-deploy { color: var(--green); }
-    .chip-ops { color: #ff9bd7; }
 
     /* Mode selector */
     .mode-btn {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 6px 14px;
-        border: 1px solid var(--border);
-        background: transparent;
-        color: var(--dim);
-        font-size: 0.72rem;
+        gap: var(--sp-sm);
+        padding: var(--sp-sm) var(--sp-md);
+        border: 1px solid var(--color-border-heavy);
+        background: var(--color-bg-base);
+        color: var(--color-text-dim);
+        font-family: var(--mono);
+        font-size: var(--fs-sm);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.1em;
         cursor: pointer;
-        transition: all 0.15s;
-        font-family: inherit;
+        transition: none;
     }
     .mode-btn:hover {
-        border-color: var(--accent);
-        color: var(--accent);
+        border-color: var(--color-accent);
+        color: var(--color-accent);
     }
     .mode-btn.active {
-        border-color: var(--accent);
-        color: var(--accent);
-        background: rgba(0, 170, 255, 0.08);
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+        background: var(--color-border);
     }
     .live-dot {
         display: inline-block;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--green);
-        animation: pulse 2s infinite;
-    }
-    @@keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.3; }
+        width: 8px;
+        height: 8px;
+        background: var(--color-success);
     }
 
     /* Replay controls */
     .ctrl-btn {
-        padding: 5px 12px;
-        border: 1px solid var(--border);
-        background: transparent;
-        color: var(--dim);
-        font-size: 0.75rem;
+        padding: var(--sp-sm) var(--sp-md);
+        border: 1px solid var(--color-border-heavy);
+        background: var(--color-bg-base);
+        color: var(--color-text-primary);
+        font-family: var(--mono);
+        font-size: var(--fs-sm);
+        text-transform: uppercase;
         cursor: pointer;
-        font-family: inherit;
-        transition: all 0.15s;
     }
     .ctrl-btn:hover {
-        border-color: var(--accent);
-        color: var(--accent);
+        border-color: var(--color-accent);
+        color: var(--color-accent);
     }
     .ctrl-btn.accent {
-        color: var(--green);
-        border-color: rgba(61, 220, 132, 0.3);
+        color: var(--color-success);
+        border-color: var(--color-success-border);
     }
     .ctrl-btn.accent:hover {
-        background: rgba(61, 220, 132, 0.08);
+        background: var(--color-border);
     }
 
-    /* Event log */
+    /* Event log timeline */
+    .event-log {
+        height: 32rem;
+        overflow-y: auto;
+        overflow-anchor: none;
+        border: 1px solid var(--color-border);
+        background: var(--color-bg-base);
+    }
     .event-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 8px 10px;
-        border-left: 2px solid var(--border);
-        transition: all 0.15s;
+        display: grid;
+        grid-template-columns: 8px 60px 120px auto;
+        gap: var(--sp-md);
+        align-items: center;
+        padding: var(--sp-md) var(--sp-md);
+        border-bottom: 1px solid var(--color-border);
+        transition: all 0.4s var(--ease-out-expo);
+        border-left: 4px solid transparent;
+        margin-left: -4px; /* offset the border so it perfectly aligns */
     }
     .event-item.current {
-        border-left-color: var(--accent);
-        background: rgba(0, 170, 255, 0.06);
+        background: var(--color-bg-inset);
+        border-left: 4px solid var(--color-accent);
+        padding-left: var(--sp-md);
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .event-item:hover {
+        background: var(--color-bg-elevated);
+        border-left-color: var(--color-border-heavy);
     }
     .event-item.upcoming {
-        opacity: 0.35;
+        opacity: 0.3;
+        filter: grayscale(1);
     }
     .event-marker {
-        flex-shrink: 0;
         width: 8px;
         height: 8px;
-        border-radius: 50%;
-        margin-top: 4px;
+        background: var(--color-border-heavy);
     }
-    .event-marker.issue_created { background: var(--amber); }
-    .event-marker.pr_opened { background: var(--accent); }
-    .event-marker.review_approved, .event-marker.review_commented { background: #d4d8ff; }
-    .event-marker.pr_merged { background: var(--green); }
+    .event-marker.issue_created { background: var(--color-warning); }
+    .event-marker.pr_opened { background: var(--color-accent); }
+    .event-marker.review_approved, .event-marker.review_commented { background: var(--color-text-dim); }
+    .event-marker.pr_merged { background: var(--color-success); }
+    
     .event-time {
-        flex-shrink: 0;
-        width: 44px;
-        font-size: 0.68rem;
-        color: var(--dim);
-        font-variant-numeric: tabular-nums;
+        font-family: var(--mono);
+        font-size: var(--fs-xs);
+        color: var(--color-text-dim);
     }
     .event-type {
-        flex-shrink: 0;
-        width: 110px;
-        font-size: 0.68rem;
+        font-family: var(--mono);
+        font-size: var(--fs-xs);
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
-    .event-type.issue_created { color: var(--amber); }
-    .event-type.pr_opened { color: var(--accent); }
-    .event-type.review_approved, .event-type.review_commented { color: #d4d8ff; }
-    .event-type.pr_merged { color: var(--green); }
+    .event-type.issue_created { color: var(--color-warning); }
+    .event-type.pr_opened { color: var(--color-accent); }
+    .event-type.review_approved, .event-type.review_commented { color: var(--color-text-dim); }
+    .event-type.pr_merged { color: var(--color-success); }
 
-    /* Current event highlight */
     .current-event-box {
-        border: 1px solid rgba(0, 170, 255, 0.2);
-        background: rgba(0, 170, 255, 0.04);
-        padding: 14px 16px;
+        border: 2px solid var(--color-accent);
+        background: var(--color-bg-inset);
+        padding: var(--sp-2xl); /* Massive padding for impact */
+        margin-bottom: var(--sp-xl);
+        animation: event-reveal 0.6s var(--ease-out-expo);
     }
-    .event-log {
-        height: 24rem;
-        overflow-y: auto;
-        overflow-anchor: none;
+    
+    @@keyframes event-reveal {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     /* Run history table */
     .run-row {
         display: grid;
-        grid-template-columns: 40px 1fr 1fr 60px 60px 80px;
-        gap: 12px;
+        grid-template-columns: 60px 2fr 1.5fr 80px 80px 100px;
+        gap: var(--sp-md);
         align-items: center;
-        padding: 10px 12px;
-        border-bottom: 1px solid var(--border);
+        padding: var(--sp-md) var(--sp-lg);
+        border-bottom: 1px solid var(--color-border);
         cursor: pointer;
-        transition: background 0.15s;
     }
     .run-row:hover {
-        background: rgba(0, 170, 255, 0.04);
+        background: var(--color-border);
     }
     .run-row-header {
-        color: var(--dim);
-        font-size: 0.65rem;
+        font-family: var(--mono);
+        color: var(--color-text-tertiary);
+        font-size: var(--fs-xs);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.1em;
         cursor: default;
+        border-bottom: 2px solid var(--color-border-heavy);
     }
     .run-row-header:hover {
         background: transparent;
     }
     .run-num {
-        color: var(--accent);
-        font-variant-numeric: tabular-nums;
-    }
-
-    /* Compact metrics bar */
-    .metrics-compact {
-        display: flex;
-        align-items: stretch;
-        background: rgba(4, 10, 20, 0.7);
-        border: 1px solid var(--border);
-        border-top: 2px solid var(--accent);
-        overflow-x: auto;
-    }
-    .metric-slot {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 16px;
-        min-width: 0;
-        flex: 1;
-    }
-    .metric-slot + .metric-slot {
-        border-left: 1px solid var(--border);
+        color: var(--color-accent);
+        font-family: var(--mono);
     }
 
     /* Two-column layout */
     .pipeline-columns {
         display: grid;
-        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-        gap: 24px;
+        grid-template-columns: 1.5fr 1fr;
+        gap: var(--sp-2xl);
         align-items: start;
-    }
-    .pipeline-left,
-    .pipeline-right {
-        min-width: 0;
     }
     .pipeline-right {
         position: sticky;
-        top: 1rem;
-    }
-    .pipeline-left .stage-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .pipeline-left .stage-node::after {
-        display: none;
+        top: var(--sp-2xl);
     }
 
     /* Activity feed */
     .feed-item {
-        padding: 8px 10px;
-        border-left: 3px solid var(--border);
+        padding: var(--sp-md);
+        border-bottom: 1px solid var(--color-border);
+        border-left: 4px solid var(--color-border-heavy);
+        transition: background 0.3s var(--ease-out-expo), padding-left 0.3s var(--ease-out-expo);
     }
-    .feed-item + .feed-item {
-        margin-top: 2px;
+    .feed-item:hover {
+        background: var(--color-bg-elevated);
+        padding-left: var(--sp-lg); /* Push item to the right subtly */
     }
-    .feed-item.feed-issue { border-left-color: var(--amber); }
-    .feed-item.feed-pr { border-left-color: var(--accent); }
-    .feed-item.feed-run { border-left-color: var(--green); }
+    .feed-item.feed-issue { border-left-color: var(--color-warning); }
+    .feed-item.feed-pr { border-left-color: var(--color-accent); }
+    .feed-item.feed-run { border-left-color: var(--color-success); }
     .sidebar-feed {
         max-height: 60vh;
         overflow-y: auto;
+        border: 1px solid var(--color-border);
+        margin-top: 2px;
     }
 
     @@media (max-width: 1024px) {
@@ -286,93 +262,98 @@
             position: static;
         }
     }
-    @@media (max-width: 900px) {
-        .stage-grid { grid-template-columns: 1fr 1fr; }
-        .stage-node::after { display: none; }
-        .run-row { grid-template-columns: 40px 1fr 60px 60px; }
-        .run-row > :nth-child(3) { display: none; }
-        .run-row > :nth-child(6) { display: none; }
+    @@media (max-width: 768px) {
+        .run-row {
+            grid-template-columns: 50px 1fr 80px 80px;
+        }
+        .run-row > :nth-child(3), .run-row > :nth-child(6) {
+            display: none;
+        }
+        .event-item {
+            grid-template-columns: 8px 60px 1fr;
+        }
+        .event-item > .event-type {
+            display: none;
+        }
     }
-    @@media (max-width: 640px) {
-        .stage-grid { grid-template-columns: 1fr; }
-        .run-row { grid-template-columns: 40px 1fr 60px; }
-        .run-row > :nth-child(4) { display: none; }
+    .hidden {
+        display: none !important;
     }
 </style>
 }
 
-<div class="max-w-7xl mx-auto px-4 py-10">
-    <div class="mb-8">
-        <div class="text-xs text-dim mb-2 uppercase tracking-widest">// pipeline state &mdash; live &amp; historical</div>
-        <h1 class="font-sans text-3xl font-bold text-white mb-3">Pipeline</h1>
-        <p class="max-w-3xl text-sm leading-relaxed text-dim">
+<div>
+    <div style="margin-bottom: var(--sp-2xl);">
+        <div class="section-label">// pipeline state &mdash; live &amp; historical</div>
+        <h1>Pipeline</h1>
+        <p class="text-dim" style="max-width: 800px; margin-top: var(--sp-md); font-size: var(--fs-lg);">
             Live GitHub pipeline state and historical run playback. Switch between real-time state
-            and step-through replays of completed pipeline runs. Use <kbd class="text-white">&larr;</kbd> <kbd class="text-white">&rarr;</kbd> arrow keys in replay mode.
+            and step-through replays of completed pipeline runs. Use <kbd style="font-family: var(--mono); border: 1px solid var(--color-border); padding: 0 4px;">&larr;</kbd> <kbd style="font-family: var(--mono); border: 1px solid var(--color-border); padding: 0 4px;">&rarr;</kbd> arrow keys in replay mode.
         </p>
-        <p class="text-xs mt-2" style="color: var(--dim); border-left: 2px solid var(--border); padding-left: 10px;">
+        <p style="font-family: var(--mono); color: var(--color-text-dim); border-left: 2px solid var(--color-border-heavy); padding-left: var(--sp-sm); margin-top: var(--sp-sm); font-size: var(--fs-sm);">
             Live GitHub pipeline state. Runs are real — this repo builds itself.
         </p>
     </div>
 
     <!-- Mode Selector -->
-    <div id="modeSelector" class="flex flex-wrap gap-2 mb-6" role="tablist">
+    <div id="modeSelector" class="flex-row" style="flex-wrap: wrap; margin-bottom: var(--sp-xl);" role="tablist">
         <button class="mode-btn active" data-mode="live" onclick="switchMode('live')" role="tab" aria-selected="true">
             <span class="live-dot"></span> LIVE
         </button>
     </div>
 
     <!-- Warning Box (live mode) -->
-    <div id="warningBox" class="warning p-4 mb-6 hidden" role="alert"></div>
+    <div id="warningBox" class="warning hidden" role="alert"></div>
 
     <!-- Replay Controls (replay mode) -->
-    <div id="replayControls" class="panel p-4 mb-6 hidden">
-        <div class="flex items-center justify-between flex-wrap gap-3">
+    <div id="replayControls" style="border: 1px solid var(--color-border); padding: var(--sp-lg); margin-bottom: var(--sp-xl);" class="hidden">
+        <div class="flex-row justify-between" style="flex-wrap: wrap; gap: var(--sp-md);">
             <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="badge badge-amber" style="font-size:0.6rem;letter-spacing:0.12em;">REPLAY</span>
-                    <div class="text-xs text-dim uppercase tracking-widest">verified pipeline run</div>
+                <div class="flex-row" style="gap: var(--sp-sm); margin-bottom: var(--sp-xs);">
+                    <span class="badge badge-amber">REPLAY</span>
+                    <div class="section-label">verified pipeline run</div>
                 </div>
-                <div id="replayRunName" class="text-white font-bold text-lg"></div>
+                <div id="replayRunName" style="font-family: var(--sans); font-size: var(--fs-xl); font-weight: 800;"></div>
             </div>
-            <div class="flex items-center gap-2">
-                <span id="replayStepLabel" class="text-dim text-sm mr-2">step 0 / 0</span>
+            <div class="flex-row" style="gap: var(--sp-sm);">
+                <span id="replayStepLabel" class="metric-lbl" style="margin-right: var(--sp-md);">step 0 / 0</span>
                 <button class="ctrl-btn" onclick="prevStep()" title="Previous step (←)">&#9664;</button>
                 <button class="ctrl-btn" onclick="nextStep()" title="Next step (→)">&#9654;</button>
                 <button class="ctrl-btn" onclick="resetReplay()" title="Reset to start">&#8634;</button>
                 <button class="ctrl-btn accent" onclick="switchMode('live')">&#9679; LIVE</button>
             </div>
         </div>
-        <div id="replayStats" class="flex flex-wrap gap-4 mt-3 text-xs text-dim"></div>
+        <div id="replayStats" class="flex-row" style="flex-wrap: wrap; gap: var(--sp-lg); margin-top: var(--sp-md); font-family: var(--mono); font-size: var(--fs-sm); color: var(--color-text-dim);"></div>
     </div>
 
     <!-- Metrics (compact bar) -->
-    <div id="metricsRow" class="metrics-compact mb-6" aria-label="Pipeline metrics">
-        <div class="metric-slot">
+    <div id="metricsRow" class="data-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: var(--sp-2xl);" aria-label="Pipeline metrics">
+        <div class="data-cell">
             <div id="metricVal0" class="metric-val" aria-live="polite">0</div>
             <div id="metricLbl0" class="metric-lbl">actionable issues</div>
         </div>
-        <div class="metric-slot">
-            <div id="metricVal1" class="metric-val" aria-live="polite">0</div>
-            <div id="metricLbl1" class="metric-lbl">open prs</div>
+        <div class="data-cell data-cell-accent">
+            <div id="metricVal1" class="metric-val text-accent" aria-live="polite">0</div>
+            <div id="metricLbl1" class="metric-lbl text-accent">open prs</div>
         </div>
-        <div class="metric-slot">
-            <div id="metricVal2" class="metric-val" aria-live="polite">0</div>
-            <div id="metricLbl2" class="metric-lbl">active runs</div>
+        <div class="data-cell data-cell-green">
+            <div id="metricVal2" class="metric-val metric-val-green" aria-live="polite">0</div>
+            <div id="metricLbl2" class="metric-lbl text-green">active runs</div>
         </div>
-        <div class="metric-slot">
-            <div id="metricVal3" class="metric-val" aria-live="polite">0</div>
-            <div id="metricLbl3" class="metric-lbl">deferred <span style="opacity:0.6">(rate-limited)</span></div>
+        <div class="data-cell data-cell-amber">
+            <div id="metricVal3" class="metric-val metric-val-amber" aria-live="polite">0</div>
+            <div id="metricLbl3" class="metric-lbl text-amber">deferred <span style="opacity:0.5">(rate-limited)</span></div>
         </div>
-        <div class="metric-slot">
-            <div id="metricVal4" class="metric-val" aria-live="polite">0</div>
-            <div id="metricLbl4" class="metric-lbl">repairs <span style="opacity:0.6">(self-heals)</span></div>
+        <div class="data-cell data-cell-red">
+            <div id="metricVal4" class="metric-val metric-val-red" aria-live="polite">0</div>
+            <div id="metricLbl4" class="metric-lbl text-red">repairs <span style="opacity:0.5">(self-heals)</span></div>
         </div>
-        <div class="metric-slot">
+        <div class="data-cell">
             <div id="metricVal5" class="metric-val" aria-live="polite">0</div>
             <div id="metricLbl5" class="metric-lbl">merge armed</div>
         </div>
-        <div class="metric-slot">
-            <div id="metricVal6" class="text-white text-sm truncate">loading</div>
+        <div class="data-cell">
+            <div id="metricVal6" style="font-family: var(--mono); font-size: var(--fs-md); letter-spacing: -0.02em; padding-top: 8px;">loading</div>
             <div id="metricLbl6" class="metric-lbl">mode</div>
         </div>
     </div>
@@ -382,48 +363,60 @@
         <!-- Left Column -->
         <div class="pipeline-left">
             <!-- Stage Grid -->
-            <section class="panel p-5 mb-6" aria-labelledby="stage-heading">
-                <div class="flex items-center justify-between mb-4">
+            <section aria-labelledby="stage-heading" style="margin-bottom: var(--sp-3xl);">
+                <div class="section-header">
                     <div>
-                        <div class="text-xs text-dim uppercase tracking-widest mb-1">stage map</div>
-                        <h2 id="stage-heading" class="font-sans text-2xl font-bold text-white">Current pipeline flow</h2>
+                        <div class="section-label">// stage map</div>
+                        <h2 id="stage-heading">Current pipeline flow</h2>
                     </div>
-                    <div id="updatedAt" class="text-xs text-dim">updated: pending</div>
+                    <div id="updatedAt" class="metric-lbl">updated: pending</div>
                 </div>
                 <div id="stageGrid" class="stage-grid" aria-live="polite"></div>
             </section>
 
-            <!-- Live Content (left side — detailed cards) -->
+            <!-- Live Content (left side) -->
             <div id="liveContent">
-                <section class="panel p-5 mb-6" aria-labelledby="issue-heading">
-                    <div class="text-xs text-dim uppercase tracking-widest mb-2">open actionable pipeline issues</div>
-                    <h2 id="issue-heading" class="font-sans text-xl font-bold text-white mb-4">Issue queue</h2>
-                    <div id="issueList" class="text-sm text-dim" aria-live="polite">Loading issues...</div>
+                <section aria-labelledby="issue-heading" style="margin-bottom: var(--sp-2xl);">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-label">// open actionable pipeline issues</div>
+                            <h2 id="issue-heading">Issue queue</h2>
+                        </div>
+                    </div>
+                    <div id="issueList" style="display: grid; grid-template-columns: 1fr; gap: 0;" aria-live="polite">Loading issues...</div>
                 </section>
 
-                <section class="panel p-5 mb-6" aria-labelledby="pr-heading">
-                    <div class="text-xs text-dim uppercase tracking-widest mb-2">open pipeline prs</div>
-                    <h2 id="pr-heading" class="font-sans text-xl font-bold text-white mb-4">Pull requests</h2>
-                    <div id="prList" class="text-sm text-dim" aria-live="polite">Loading pull requests...</div>
+                <section aria-labelledby="pr-heading" style="margin-bottom: var(--sp-2xl);">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-label">// open pipeline prs</div>
+                            <h2 id="pr-heading">Pull requests</h2>
+                        </div>
+                    </div>
+                    <div id="prList" style="display: grid; grid-template-columns: 1fr; gap: 0;" aria-live="polite">Loading pull requests...</div>
                 </section>
 
-                <section class="panel p-5" aria-labelledby="run-heading">
-                    <div class="text-xs text-dim uppercase tracking-widest mb-2">actions in progress</div>
-                    <h2 id="run-heading" class="font-sans text-xl font-bold text-white mb-4">Workflow runs</h2>
-                    <div id="runList" class="text-sm text-dim" aria-live="polite">Loading workflow runs...</div>
+                <section aria-labelledby="run-heading">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-label">// actions in progress</div>
+                            <h2 id="run-heading">Workflow runs</h2>
+                        </div>
+                    </div>
+                    <div id="runList" style="display: grid; grid-template-columns: 1fr; gap: 0;" aria-live="polite">Loading workflow runs...</div>
                 </section>
             </div>
 
             <!-- Replay Content (left side — current event highlight) -->
             <div id="replayContent" class="hidden">
                 <div id="currentEventBox" class="current-event-box hidden">
-                    <div class="flex items-center gap-3 mb-2">
+                    <div class="flex-row" style="gap: var(--sp-md); margin-bottom: var(--sp-sm);">
                         <span id="currentEventMarker" class="event-marker"></span>
-                        <span id="currentEventType" class="event-type text-sm"></span>
-                        <span id="currentEventItem" class="text-accent text-sm"></span>
+                        <span id="currentEventType" class="event-type"></span>
+                        <span id="currentEventItem" style="font-family: var(--mono); font-size: var(--fs-sm); color: var(--color-accent);"></span>
                     </div>
-                    <div id="currentEventTitle" class="text-white"></div>
-                    <div id="currentEventTime" class="text-dim text-xs mt-1"></div>
+                    <div id="currentEventTitle" style="font-family: var(--sans); font-size: var(--fs-lg); font-weight: 700;"></div>
+                    <div id="currentEventTime" style="font-family: var(--mono); font-size: var(--fs-xs); color: var(--color-text-dim); margin-top: var(--sp-sm);"></div>
                 </div>
             </div>
         </div>
@@ -432,29 +425,41 @@
         <div class="pipeline-right">
             <!-- Live Sidebar: Activity Feed -->
             <div id="liveSidebar">
-                <section class="panel p-5">
-                    <div class="text-xs text-dim uppercase tracking-widest mb-2">activity</div>
-                    <h2 class="font-sans text-lg font-bold text-white mb-4">Live feed</h2>
-                    <div id="liveFeed" class="sidebar-feed text-sm text-dim">Loading...</div>
+                <section>
+                    <div class="section-header" style="border-bottom-color: var(--color-accent);">
+                        <div>
+                            <div class="section-label">// activity</div>
+                            <h2>Live feed</h2>
+                        </div>
+                    </div>
+                    <div id="liveFeed" class="sidebar-feed">Loading...</div>
                 </section>
             </div>
 
             <!-- Replay Sidebar: Event Timeline -->
             <div id="replaySidebar" class="hidden">
-                <section class="panel p-5">
-                    <div class="text-xs text-dim uppercase tracking-widest mb-2">event timeline</div>
-                    <h2 class="font-sans text-xl font-bold text-white mb-4">Pipeline activity</h2>
-                    <div id="eventLog" class="event-log text-sm"></div>
+                <section>
+                    <div class="section-header">
+                        <div>
+                            <div class="section-label">// event timeline</div>
+                            <h2>Pipeline activity</h2>
+                        </div>
+                    </div>
+                    <div id="eventLog" class="event-log"></div>
                 </section>
             </div>
         </div>
     </div>
 
     <!-- Run History Table -->
-    <section class="panel p-5 mt-8" aria-labelledby="history-heading">
-        <div class="text-xs text-dim uppercase tracking-widest mb-2">completed pipeline runs</div>
-        <h2 id="history-heading" class="font-sans text-xl font-bold text-white mb-4">Run history</h2>
-        <div id="runHistory" class="text-sm text-dim">Loading runs...</div>
+    <section aria-labelledby="history-heading" style="margin-top: var(--sp-3xl);">
+        <div class="section-header">
+            <div>
+                <div class="section-label">// completed pipeline runs</div>
+                <h2 id="history-heading">Run history</h2>
+            </div>
+        </div>
+        <div id="runHistory" style="border: 1px solid var(--color-border);">Loading runs...</div>
     </section>
 </div>
 
@@ -495,7 +500,7 @@
     function renderStages(stages) {
         const grid = document.getElementById('stageGrid');
         grid.innerHTML = stages.map(stage => `
-            <div class="panel stage-node">
+            <div class="stage-node">
                 <div class="metric-lbl">${escapeHtml(stage.label)}</div>
                 <div class="stage-count">${stage.count}</div>
                 <span class="status-pill ${stage.status === 'active' ? 'active' : 'idle'}">${escapeHtml(stage.status)}</span>
@@ -507,27 +512,27 @@
         const repairStages = ['repair_requested', 'incident_open'];
         const deferredStages = ['dispatch_deferred'];
         if (repairStages.includes(issue.stage))
-            return `<span class="chip" style="color:var(--red);border-color:rgba(248,81,73,0.3)">${escapeHtml(issue.stageLabel)}</span>`;
+            return `<span class="badge badge-red">${escapeHtml(issue.stageLabel)}</span>`;
         if (deferredStages.includes(issue.stage))
-            return `<span class="chip" style="color:var(--amber);border-color:rgba(245,166,35,0.3)">${escapeHtml(issue.stageLabel)}</span>`;
-        return `<span class="chip chip-queue">${escapeHtml(issue.stageLabel)}</span>`;
+            return `<span class="badge badge-amber">${escapeHtml(issue.stageLabel)}</span>`;
+        return `<span class="badge badge-blue">${escapeHtml(issue.stageLabel)}</span>`;
     }
 
     function renderIssues(issues) {
         const list = document.getElementById('issueList');
         if (!issues.length) {
-            list.innerHTML = '<div class="text-dim">No active actionable pipeline issues.</div>';
+            list.innerHTML = '<div class="empty-state">No active actionable pipeline issues.</div>';
             return;
         }
         list.innerHTML = issues.map(issue => `
-            <div class="record">
-                <div class="flex items-center justify-between gap-3">
-                    <a class="text-accent hover:underline" href="${issue.url}" target="_blank" rel="noopener noreferrer">#${issue.number}</a>
+            <div class="log-record" style="grid-template-columns: 1fr;">
+                <div class="flex-row justify-between" style="width: 100%; margin-bottom: var(--sp-xs);">
+                    <a class="code-pill" href="${issue.url}" target="_blank" rel="noopener noreferrer">#${issue.number}</a>
                     ${issueStageChip(issue)}
                 </div>
-                <div class="text-white mt-2">${escapeHtml(issue.title)}</div>
-                <div class="text-dim text-xs mt-2">labels: ${escapeHtml(issue.labels.join(', '))}</div>
-                ${issue.linkedPullRequestUrl ? `<div class="text-dim text-xs mt-1">linked pr: <a class="text-accent hover:underline" href="${issue.linkedPullRequestUrl}" target="_blank" rel="noopener noreferrer">#${issue.linkedPullRequestNumber}</a></div>` : ''}
+                <div class="log-record-title">${escapeHtml(issue.title)}</div>
+                <div class="log-record-meta" style="margin-top: var(--sp-xs);">labels: ${escapeHtml(issue.labels.join(', '))}</div>
+                ${issue.linkedPullRequestUrl ? `<div class="log-record-meta">linked pr: <a style="color: var(--color-accent); text-decoration: underline;" href="${issue.linkedPullRequestUrl}" target="_blank" rel="noopener noreferrer">#${issue.linkedPullRequestNumber}</a></div>` : ''}
             </div>
         `).join('');
     }
@@ -551,21 +556,21 @@
     function renderPullRequests(prs) {
         const list = document.getElementById('prList');
         if (!prs.length) {
-            list.innerHTML = '<div class="text-dim">No open pipeline pull requests.</div>';
+            list.innerHTML = '<div class="empty-state">No open pipeline pull requests.</div>';
             return;
         }
         list.innerHTML = prs.map(pr => {
             const gate = mergeGateReason(pr);
             return `
-            <div class="record">
-                <div class="flex items-center justify-between gap-3">
-                    <a class="text-accent hover:underline" href="${pr.url}" target="_blank" rel="noopener noreferrer">#${pr.number}</a>
-                    <span class="chip chip-review">${escapeHtml(pr.stageLabel)}</span>
+            <div class="log-record" style="grid-template-columns: 1fr;">
+                <div class="flex-row justify-between" style="width: 100%; margin-bottom: var(--sp-xs);">
+                    <a class="code-pill" href="${pr.url}" target="_blank" rel="noopener noreferrer">#${pr.number}</a>
+                    <span class="badge badge-blue">${escapeHtml(pr.stageLabel)}</span>
                 </div>
-                <div class="text-white mt-2">${escapeHtml(pr.title)}</div>
-                <div class="${gate.cls} text-xs mt-2" style="font-weight:600">${gate.text}</div>
-                <div class="text-dim text-xs mt-1">ci: ${escapeHtml(pr.ciState)} · review: ${escapeHtml(pr.reviewState)} · branch: ${escapeHtml(pr.headBranch)}</div>
-                ${pr.linkedIssueNumber ? `<div class="text-dim text-xs mt-1">linked issue: #${pr.linkedIssueNumber}</div>` : ''}
+                <div class="log-record-title">${escapeHtml(pr.title)}</div>
+                <div class="${gate.cls}" style="font-family: var(--sans); font-size: var(--fs-xs); margin-top: var(--sp-xs);">${gate.text}</div>
+                <div class="log-record-meta" style="margin-top: var(--sp-xs);">ci: ${escapeHtml(pr.ciState)} · review: ${escapeHtml(pr.reviewState)} · branch: ${escapeHtml(pr.headBranch)}</div>
+                ${pr.linkedIssueNumber ? `<div class="log-record-meta">linked issue: #${pr.linkedIssueNumber}</div>` : ''}
             </div>`;
         }).join('');
     }
@@ -573,16 +578,16 @@
     function renderRuns(runs) {
         const list = document.getElementById('runList');
         if (!runs.length) {
-            list.innerHTML = '<div class="text-dim">No workflow runs in progress.</div>';
+            list.innerHTML = '<div class="empty-state">No workflow runs in progress.</div>';
             return;
         }
         list.innerHTML = runs.map(run => `
-            <div class="record">
-                <div class="flex items-center justify-between gap-3">
-                    <a class="text-accent hover:underline" href="${run.url}" target="_blank" rel="noopener noreferrer">${escapeHtml(run.name)}</a>
-                    <span class="${stageChipClass[run.stage] || 'chip'}">${escapeHtml(run.stageLabel)}</span>
+            <div class="log-record" style="grid-template-columns: 1fr;">
+                <div class="flex-row justify-between" style="width: 100%; margin-bottom: var(--sp-xs);">
+                    <a class="code-pill" href="${run.url}" target="_blank" rel="noopener noreferrer" style="font-family: var(--sans);">${escapeHtml(run.name)}</a>
+                    <span class="badge ${run.stage === 'queue' ? 'badge-amber' : 'badge-blue'}">${escapeHtml(run.stageLabel)}</span>
                 </div>
-                <div class="text-dim text-xs mt-2">event: ${escapeHtml(run.event)} · branch: ${escapeHtml(run.headBranch || 'n/a')} · actor: ${escapeHtml(run.triggeringActor || 'n/a')}</div>
+                <div class="log-record-meta" style="margin-top: var(--sp-xs);">event: ${escapeHtml(run.event)} · branch: ${escapeHtml(run.headBranch || 'n/a')} · actor: ${escapeHtml(run.triggeringActor || 'n/a')}</div>
             </div>
         `).join('');
     }
@@ -637,21 +642,21 @@
         });
 
         if (!items.length) {
-            feed.innerHTML = '<div class="text-dim">No active items.</div>';
+            feed.innerHTML = '<div class="empty-state">No active items.</div>';
             return;
         }
 
         feed.innerHTML = items.map(item => {
             const borderCls = item.type === 'issue' ? 'feed-issue' : item.type === 'pr' ? 'feed-pr' : 'feed-run';
             const id = item.type === 'run'
-                ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline text-xs">${escapeHtml(item.name)}</a>`
-                : `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline text-xs">#${item.number}</a>`;
-            const title = item.title ? `<div class="text-white text-xs mt-1 truncate">${escapeHtml(item.title)}</div>` : '';
+                ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="code-pill" style="font-family: var(--sans);">${escapeHtml(item.name)}</a>`
+                : `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="code-pill">#${item.number}</a>`;
+            const title = item.title ? `<div class="log-record-title" style="margin-top: var(--sp-xs); font-size: var(--fs-sm); font-weight: 500;">${escapeHtml(item.title)}</div>` : '';
             const gateInfo = item.gate ? `<div class="${item.gate.cls}" style="font-size:0.65rem;margin-top:2px">${item.gate.text}</div>` : '';
             return `<div class="feed-item ${borderCls}">
-                <div class="flex items-center justify-between">
+                <div class="flex-row justify-between" style="width: 100%;">
                     ${id}
-                    <span class="text-dim" style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.05em">${escapeHtml(item.type)}</span>
+                    <span style="font-family: var(--mono); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-dim);">${escapeHtml(item.type)}</span>
                 </div>
                 ${title}${gateInfo}
             </div>`;
@@ -783,7 +788,7 @@
         document.getElementById('currentEventType').className = `event-type ${evt.event}`;
         document.getElementById('currentEventType').textContent = eventLabels[evt.event] || evt.event;
         const prefix = evt.event.startsWith('pr_') || evt.event.startsWith('review_') ? 'PR' : 'Issue';
-        document.getElementById('currentEventItem').innerHTML = `<a href="${GITHUB_REPO}/${prefix === 'PR' ? 'pull' : 'issues'}/${evt.item}" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">#${evt.item}</a>`;
+        document.getElementById('currentEventItem').innerHTML = `<a href="${GITHUB_REPO}/${prefix === 'PR' ? 'pull' : 'issues'}/${evt.item}" target="_blank" rel="noopener noreferrer" class="code-pill" style="color: var(--color-accent); text-decoration: none;">#${evt.item}</a>`;
         document.getElementById('currentEventTitle').textContent = cleanTitle(evt.title);
         document.getElementById('currentEventTime').textContent = ts.toISOString().replace('T', ' ').replace('Z', ' UTC');
 
@@ -802,8 +807,8 @@
                 <span class="event-marker ${evt.event}"></span>
                 <span class="event-time">${time}</span>
                 <span class="event-type ${evt.event}">${eventLabels[evt.event] || evt.event}</span>
-                <a href="${GITHUB_REPO}/${prefix}/${evt.item}" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">#${evt.item}</a>
-                <span class="text-dim ml-1 truncate">${escapeHtml(cleanTitle(evt.title))}</span>
+                <a href="${GITHUB_REPO}/${prefix}/${evt.item}" target="_blank" rel="noopener noreferrer" class="code-pill" style="font-size: var(--fs-xs);">#${evt.item}</a>
+                <span style="font-family: var(--sans); font-size: var(--fs-xs); color: var(--color-text-primary); margin-left: var(--sp-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(cleanTitle(evt.title))}</span>
             </div>`;
         }).join('');
 
@@ -919,7 +924,7 @@
     function renderRunHistory(runs) {
         const el = document.getElementById('runHistory');
         if (!runs.length) {
-            el.innerHTML = '<div class="text-dim">No completed runs found.</div>';
+            el.innerHTML = '<div class="empty-state">No completed runs found.</div>';
             return;
         }
         const header = `<div class="run-row run-row-header">
@@ -928,11 +933,11 @@
         const rows = runs.map(run => `
             <div class="run-row" onclick="switchMode('${escapeHtml(run.slug)}')" title="Replay ${escapeHtml(run.name)}">
                 <span class="run-num">${String(run.number).padStart(2, '0')}</span>
-                <span class="text-white">${escapeHtml(run.name)}</span>
-                <span class="text-dim">${escapeHtml(run.tech_stack)}</span>
-                <span class="text-dim" style="font-variant-numeric:tabular-nums">${run.issues}</span>
-                <span class="text-dim" style="font-variant-numeric:tabular-nums">${run.prs}</span>
-                <span class="text-dim">${escapeHtml(run.date)}</span>
+                <span style="font-family: var(--sans); font-weight: 700;">${escapeHtml(run.name)}</span>
+                <span style="color: var(--color-text-dim); font-size: var(--fs-xs);">${escapeHtml(run.tech_stack)}</span>
+                <span style="color: var(--color-text-dim); font-size: var(--fs-sm); font-family: var(--mono);">${run.issues}</span>
+                <span style="color: var(--color-text-dim); font-size: var(--fs-sm); font-family: var(--mono);">${run.prs}</span>
+                <span style="color: var(--color-text-dim); font-size: var(--fs-xs);">${escapeHtml(run.date)}</span>
             </div>
         `).join('');
         el.innerHTML = header + rows;

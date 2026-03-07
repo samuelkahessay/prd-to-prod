@@ -22,391 +22,205 @@
 @section Styles {
 <style>
     /* Hero layout */
-    .hero-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 48px;
-        align-items: start;
-        padding: 72px 0 48px;
-    }
-    @@media (min-width: 768px) {
-        .hero-grid {
-            grid-template-columns: 3fr 2fr;
-            gap: 64px;
-            padding: 104px 0 64px;
-        }
+    .hero-container {
+        padding-top: var(--sp-xk);
+        padding-bottom: var(--sp-xl);
     }
 
     .hero-headline {
-        font-family: var(--mono);
-        font-size: clamp(2rem, 5vw, 3.2rem);
-        font-weight: 700;
-        color: var(--text);
-        line-height: 1.15;
-        letter-spacing: -0.02em;
-        margin-bottom: 24px;
-        text-wrap: balance;
+        font-size: var(--fs-hero);
+        font-family: var(--sans);
+        font-weight: 800;
+        line-height: 0.85;
+        letter-spacing: -0.05em;
+        text-transform: uppercase;
+        color: var(--color-text-primary);
+        max-width: 1100px;
+        margin-bottom: var(--sp-2xl);
     }
 
-    .hero-sub {
-        color: var(--dim);
-        font-family: var(--sans);
-        font-size: 1rem;
-        line-height: 1.65;
-        max-width: 540px;
-        margin-bottom: 14px;
-    }
-    .hero-sub:last-of-type {
-        margin-bottom: 32px;
-    }
-    .hero-sub a {
-        color: var(--accent);
-        text-decoration: none;
-    }
-    .hero-sub a:hover {
-        text-decoration: underline;
+    .hero-summary {
+        font-family: var(--mono);
+        font-size: var(--fs-lg);
+        color: var(--color-text-secondary);
+        line-height: 1.4;
+        max-width: 700px;
+        margin-bottom: var(--sp-xl);
     }
 
     .hero-ctas {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
-    }
-    .hero-cta-primary {
-        display: inline-flex;
-        align-items: center;
-        font-family: var(--mono);
-        font-size: 0.85rem;
-        font-weight: 600;
-        padding: 14px 28px;
-        border: 1px solid var(--accent);
-        color: var(--bg);
-        background: var(--accent);
-        text-decoration: none;
-        transition: background 0.15s, border-color 0.15s;
-        letter-spacing: 0.03em;
-    }
-    .hero-cta-primary:hover {
-        background: #79c0ff;
-        border-color: #79c0ff;
-    }
-    .hero-cta-secondary {
-        display: inline-flex;
-        align-items: center;
-        font-family: var(--mono);
-        font-size: 0.85rem;
-        font-weight: 600;
-        padding: 14px 28px;
-        border: 1px solid var(--border);
-        color: var(--dim);
-        background: transparent;
-        text-decoration: none;
-        transition: border-color 0.15s, color 0.15s;
-        letter-spacing: 0.03em;
-    }
-    .hero-cta-secondary:hover {
-        border-color: var(--accent);
-        color: var(--text);
+        gap: var(--sp-md);
+        margin-top: var(--sp-2xl);
     }
 
-    /* Pipeline schematic */
+    /* Utilitarian Pipeline Schematic */
     .pipeline-schematic {
-        display: flex;
-        flex-direction: column;
-        font-family: var(--mono);
-        font-size: 0.8rem;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        border: 2px solid var(--color-border-heavy);
+        background: var(--color-bg-base);
     }
+    
     .pipeline-stage {
-        display: flex;
+        display: grid;
+        grid-template-columns: 40px auto 1fr;
         align-items: center;
-        gap: 14px;
-        padding: 14px 18px;
-        border: 1px solid var(--border);
-        border-bottom: none;
-        background: rgba(22, 27, 34, 0.6);
-        transition: border-color 0.2s;
+        gap: var(--sp-md);
+        padding: var(--sp-md);
+        border-bottom: 1px solid var(--color-border-faint);
+        transition: background 0.2s ease-out-expo, color 0.2s ease-out-expo;
     }
     .pipeline-stage:last-child {
-        border-bottom: 1px solid var(--border);
+        border-bottom: none;
     }
+    
     .pipeline-stage:hover {
-        border-color: rgba(88, 166, 255, 0.3);
+        background: var(--color-text-primary);
+        color: var(--color-bg-base);
     }
-    .pipeline-stage:hover + .pipeline-stage {
-        border-top-color: rgba(88, 166, 255, 0.3);
+    
+    .pipeline-stage:hover .pipeline-num,
+    .pipeline-stage:hover .pipeline-name,
+    .pipeline-stage:hover .pipeline-desc {
+        color: var(--color-bg-base);
     }
+
     .pipeline-num {
-        color: var(--border);
-        font-size: 0.6rem;
-        font-weight: 700;
-        width: 16px;
-        flex-shrink: 0;
+        font-family: var(--mono);
+        font-weight: 800;
+        font-size: var(--fs-xs);
+        color: var(--color-text-tertiary);
     }
     .pipeline-name {
-        color: var(--text);
-        font-weight: 600;
-        flex-shrink: 0;
-        min-width: 108px;
-    }
-    .pipeline-arrow {
-        color: var(--border);
-        flex-shrink: 0;
+        font-family: var(--mono);
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: var(--fs-sm);
+        letter-spacing: 0.1em;
+        color: var(--color-text-primary);
     }
     .pipeline-desc {
-        color: var(--dim);
-        font-size: 0.72rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-family: var(--sans);
+        font-size: var(--fs-xs);
+        color: var(--color-text-secondary);
+        text-align: right;
     }
 
-    /* Callout cards (shared structure) */
-    .callout-card {
-        background: #161b22;
-        border: 1px solid var(--border);
-        padding: 24px 28px;
-        margin-bottom: 48px;
-    }
-    .callout-card-label {
-        font-family: var(--mono);
-        font-size: 0.6rem;
-        font-weight: 700;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-    }
-    .callout-card-title {
-        font-family: var(--mono);
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 4px;
-    }
-    .callout-card-desc {
-        color: var(--dim);
-        font-size: 0.8rem;
-        line-height: 1.5;
-    }
-    .callout-card-links {
-        margin-top: 12px;
-        display: flex;
-        gap: 16px;
-    }
-    .callout-card-links a {
-        font-family: var(--mono);
-        font-size: 0.7rem;
-        text-decoration: none;
-        transition: color 0.15s;
-    }
-    .callout-card-links a:hover {
-        color: var(--text);
-    }
-
-    /* Integration variant */
-    .callout-integration {
-        border-left: 3px solid var(--accent);
-    }
-    .callout-integration .callout-card-label {
-        color: var(--accent);
-    }
-    .callout-integration .callout-card-links a {
-        color: var(--accent);
-    }
-
-    /* Entrance & delight animations */
-    @@keyframes blink {
-        0%, 100% { opacity: 1; }
-        50%       { opacity: 0; }
-    }
-    @@keyframes ctaPulse {
-        0%, 100% { box-shadow: none; }
-        50%       { box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.18); }
-    }
+    /* Cursor */
     .cursor-blink::after {
         content: '█';
-        color: var(--accent);
-        font-size: 0.4em;
-        margin-left: 3px;
-        vertical-align: 0.15em;
-        line-height: 0;
-        animation: blink 1.2s step-end infinite;
-    }
-    .cta-arrow {
-        display: inline-block;
-        margin-left: 6px;
-        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .hero-cta-primary:hover .cta-arrow {
-        transform: translateX(3px);
-    }
-    .cta-pulse-once {
-        animation: ctaPulse 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        color: var(--color-text-primary);
+        animation: blink 1s step-end infinite;
+        vertical-align: text-bottom;
     }
 
-    /* Evidence strip */
-    .evidence-strip {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0;
-        border: 1px solid var(--border);
-        margin-bottom: 48px;
-    }
-    .evidence-item {
-        flex: 1 1 120px;
-        padding: 18px 24px;
-        border-right: 1px solid var(--border);
-        text-align: center;
-    }
-    .evidence-item:last-child {
-        border-right: none;
-    }
-    .evidence-val {
-        font-family: var(--mono);
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: var(--text);
-        line-height: 1;
-        margin-bottom: 6px;
-    }
-    .evidence-lbl {
-        font-family: var(--mono);
-        font-size: 0.6rem;
-        color: var(--dim);
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-    }
-
-    /* Reduced motion */
-    @@media (prefers-reduced-motion: reduce) {
-        .pipeline-stage,
-        .hero-cta-primary,
-        .hero-cta-secondary,
-        .callout-card-links a,
-        .cta-arrow,
-        .cta-pulse-once {
-            transition: none;
-            animation: none;
-        }
-        .cursor-blink::after {
-            animation: none;
-        }
+    @@keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
     }
 </style>
 }
 
-<div style="max-width: 1100px; margin: 0 auto; padding: 0 24px;">
-
+<div>
     <!-- Hero -->
-    <section class="hero-grid" aria-labelledby="hero-heading">
-        <div>
-            <h1 id="hero-heading" class="hero-headline cursor-blink">
-                PRD to deployed code. AI builds. Humans decide what ships.
-            </h1>
-            <p class="hero-sub">
-                An autonomous delivery pipeline powered by
-                <a href="https://github.com/github/gh-aw" target="_blank" rel="noopener noreferrer">gh-aw</a>.
-                Write a product spec as a GitHub issue. AI agents decompose, implement,
-                review, and ship it — stopping when a decision requires human judgment.
-            </p>
-            <p class="hero-sub">
-                The interesting part isn't code generation. It's the automated loop — and where it stops.
-            </p>
-            <div class="hero-ctas">
-                <a href="/pipeline" class="hero-cta-primary">View Pipeline<span class="cta-arrow" aria-hidden="true">→</span></a>
-                <a href="https://github.com/samuelkahessay/prd-to-prod" target="_blank" rel="noopener noreferrer" class="hero-cta-secondary">GitHub</a>
-            </div>
-        </div>
-
-        <div class="pipeline-schematic" aria-label="Pipeline stages">
-            <div class="pipeline-stage">
-                <span class="pipeline-num">01</span>
-                <span class="pipeline-name" style="color: var(--accent);">INPUT</span>
-                <span class="pipeline-arrow">&#8594;</span>
-                <span class="pipeline-desc">Human intent + acceptance criteria</span>
-            </div>
-            <div class="pipeline-stage">
-                <span class="pipeline-num">02</span>
-                <span class="pipeline-name">DECOMPOSE</span>
-                <span class="pipeline-arrow">&#8594;</span>
-                <span class="pipeline-desc">Break spec into ordered tasks</span>
-            </div>
-            <div class="pipeline-stage">
-                <span class="pipeline-num">03</span>
-                <span class="pipeline-name">IMPLEMENT</span>
-                <span class="pipeline-arrow">&#8594;</span>
-                <span class="pipeline-desc">Write code, open PRs</span>
-            </div>
-            <div class="pipeline-stage">
-                <span class="pipeline-num">04</span>
-                <span class="pipeline-name">REVIEW</span>
-                <span class="pipeline-arrow">&#8594;</span>
-                <span class="pipeline-desc">Check against spec and policy</span>
-            </div>
-            <div class="pipeline-stage">
-                <span class="pipeline-num">05</span>
-                <span class="pipeline-name" style="color: var(--green);">SHIP</span>
-                <span class="pipeline-arrow">&#8594;</span>
-                <span class="pipeline-desc">Merge, deploy, or escalate</span>
-            </div>
+    <section class="hero-container" aria-labelledby="hero-heading">
+        <h1 id="hero-heading" class="hero-headline cursor-blink">
+            PRD to deployed<br/>code. AI builds.<br/>Humans decide.
+        </h1>
+        <p class="hero-summary">
+            An autonomous delivery pipeline powered by
+            <a href="https://github.com/github/gh-aw" target="_blank" rel="noopener noreferrer">gh-aw</a>.
+            Write a product spec as a GitHub issue. AI agents decompose, implement,
+            review, and ship it — stopping when a decision requires human judgment.
+        </p>
+        <div class="hero-ctas">
+            <a href="/pipeline" class="btn-primary">View Pipeline &rarr;</a>
+            <a href="https://github.com/samuelkahessay/prd-to-prod" target="_blank" rel="noopener noreferrer" class="btn-secondary">GitHub Repository</a>
         </div>
     </section>
 
     <!-- Evidence strip -->
-    <section aria-label="Pipeline statistics" class="evidence-strip">
-        <div class="evidence-item">
-            <div class="evidence-val">@Model.TotalRuns</div>
-            <div class="evidence-lbl">pipeline runs</div>
+    <section aria-label="Pipeline statistics" class="data-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div class="data-cell">
+            <div class="metric-val">@Model.TotalRuns</div>
+            <div class="metric-lbl">pipeline runs</div>
         </div>
-        <div class="evidence-item">
-            <div class="evidence-val">@Html.Raw(Model.TotalIssues > 0 ? $"{Model.TotalIssues}+" : "0")</div>
-            <div class="evidence-lbl">issues resolved</div>
+        <div class="data-cell">
+            <div class="metric-val">@Html.Raw(Model.TotalIssues > 0 ? $"{Model.TotalIssues}+" : "0")</div>
+            <div class="metric-lbl">issues resolved</div>
         </div>
-        <div class="evidence-item">
-            <div class="evidence-val">@Html.Raw(Model.TotalPrs > 0 ? $"{Model.TotalPrs}+" : "0")</div>
-            <div class="evidence-lbl">PRs merged</div>
+        <div class="data-cell data-cell-accent">
+            <div class="metric-val">@Html.Raw(Model.TotalPrs > 0 ? $"{Model.TotalPrs}+" : "0")</div>
+            <div class="metric-lbl">PRs merged</div>
         </div>
-        <div class="evidence-item">
-            <div class="evidence-val">~3d</div>
-            <div class="evidence-lbl">avg PRD-to-PR</div><!-- static benchmark; no per-run timing data yet -->
-        </div>
-    </section>
-
-    <!-- Integration (subordinate) -->
-    <section aria-labelledby="integration-heading">
-        <div class="callout-card callout-integration" style="padding: 20px 28px; opacity: 0.85;">
-            <div class="callout-card-label" style="font-size: 0.6rem;">// built on top</div>
-            <h2 id="integration-heading" class="callout-card-title" style="font-size: 1rem;">meeting-to-main</h2>
-            <div class="callout-card-desc" style="font-size: 0.85rem;">
-                Meeting transcript in, merged PR out — built on top of prd-to-prod using WorkIQ.
-            </div>
-            <div class="callout-card-links">
-                <a href="https://github.com/samuelkahessay/meeting-to-main" target="_blank" rel="noopener noreferrer">Repo &#8599;</a>
-            </div>
+        <div class="data-cell">
+            <div class="metric-val">~3d</div>
+            <div class="metric-lbl">avg PRD-to-PR</div>
         </div>
     </section>
+    <div class="divider"></div>
 
+    <!-- Pipeline schematic -->
+    <ol class="pipeline-schematic" aria-label="Pipeline stages">
+        <li class="pipeline-stage">
+            <span class="pipeline-num">01</span>
+            <span class="pipeline-name">INPUT</span>
+            <span class="pipeline-desc">Human intent + criteria</span>
+        </li>
+        <li class="pipeline-stage">
+            <span class="pipeline-num">02</span>
+            <span class="pipeline-name">DECOMPOSE</span>
+            <span class="pipeline-desc">Break spec into tasks</span>
+        </li>
+        <li class="pipeline-stage">
+            <span class="pipeline-num">03</span>
+            <span class="pipeline-name">IMPLEMENT</span>
+            <span class="pipeline-desc">Write code, open PRs</span>
+        </li>
+        <li class="pipeline-stage">
+            <span class="pipeline-num">04</span>
+            <span class="pipeline-name">REVIEW</span>
+            <span class="pipeline-desc">Check spec and policy</span>
+        </li>
+        <li class="pipeline-stage">
+            <span class="pipeline-num">05</span>
+            <span class="pipeline-name">SHIP</span>
+            <span class="pipeline-desc">Merge, deploy, escalate</span>
+        </li>
+    </ol>
+
+    <!-- Integration -->
+    <section aria-labelledby="integration-heading" style="margin-top: var(--sp-md);">
+        <p id="integration-heading" style="font-family: var(--mono); font-size: var(--fs-xs); color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.1em;">
+            // integration &mdash;
+            <span style="color: var(--color-text-secondary);">meeting-to-main</span>:
+            meeting transcript in, merged PR out.
+            <a href="https://github.com/samuelkahessay/meeting-to-main" target="_blank" rel="noopener noreferrer" style="color: var(--color-accent); text-decoration: underline; text-underline-offset: 3px;">repo &rarr;</a>
+        </p>
+    </section>
 
 </div>
 
 @section Scripts {
 <script>
 (function () {
-    // Console easter egg — always runs
+    // Console easter egg
     try {
-        console.log('\n%c prd-to-prod', 'color:#58a6ff;font-family:monospace;font-size:20px;font-weight:700');
-        console.log('%c Autonomous delivery pipeline. Running in production.\n If you\'re reading this, you\'d fit right in.\n\n \u2192 github.com/samuelkahessay/prd-to-prod\n', 'color:#8b949e;font-family:monospace;font-size:12px');
+        console.log('\n%c prd-to-prod', 'color:#e6edf3;font-family:monospace;font-size:20px;font-weight:800');
+        console.log('%c Autonomous delivery pipeline. Running in production.\n \u2192 github.com/samuelkahessay/prd-to-prod\n', 'color:#7d8590;font-family:monospace;font-size:12px');
     } catch(e) {}
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    var ease = 'cubic-bezier(0.16, 1, 0.3, 1)';
+    var ease = 'cubic-bezier(0.19, 1, 0.22, 1)'; // Expo out
 
     var heading    = document.getElementById('hero-heading');
-    var subs       = document.querySelectorAll('.hero-sub');
+    var subs       = document.querySelectorAll('.hero-summary');
     var ctas       = document.querySelector('.hero-ctas');
     var stages     = document.querySelectorAll('.pipeline-stage');
-    var card       = document.querySelector('.callout-card');
-    var ctaPrimary = document.querySelector('.hero-cta-primary');
 
     function hide(el, tx, ty) {
         if (!el) return;
@@ -414,62 +228,33 @@
         el.style.transform = 'translate(' + (tx || 0) + 'px,' + (ty || 0) + 'px)';
     }
 
-    hide(heading, 0, 14);
-    subs.forEach(function(el) { hide(el, 0, 14); });
-    hide(ctas, 0, 14);
-    stages.forEach(function(el) { hide(el, 10, 0); });
-    hide(card, 0, 10);
+    // Hide elements for entrance
+    hide(heading, 0, 20);
+    subs.forEach(function(el) { hide(el, 0, 20); });
+    hide(ctas, 0, 20);
+    stages.forEach(function(el) { hide(el, 20, 0); });
 
     function animIn(el, delay, dur) {
         if (!el) return;
-        dur = dur || 600;
+        dur = dur || 1000; // Even slower, dramatic Brutalist drop-in
         setTimeout(function() {
-            el.style.transition = 'opacity ' + dur + 'ms ' + ease + ', transform ' + dur + 'ms ' + ease;
+            el.style.transition = 'opacity ' + dur + 'ms var(--ease-out-expo), transform ' + dur + 'ms var(--ease-out-expo)';
             el.style.opacity = '1';
             el.style.transform = 'translate(0,0)';
-            setTimeout(function() { el.style.transition = ''; }, dur + 60);
+            // Do not clear transition so CSS hover works safely, just let it override
         }, delay);
     }
 
-    // Hero stagger
-    animIn(heading, 60);
-    subs.forEach(function(el, i) { animIn(el, 160 + i * 80); });
-    animIn(ctas, 160 + subs.length * 80 + 70);
+    // Brutalist stagger
+    animIn(heading, 100);
+    subs.forEach(function(el, i) { animIn(el, 200 + i * 100); });
+    animIn(ctas, 300 + subs.length * 100);
 
-    // Pipeline boot sequence — stages slide in like a terminal loading
-    var pStart = 300;
-    stages.forEach(function(el, i) { animIn(el, pStart + i * 110, 480); });
-
-    // Integration card
-    animIn(card, pStart + stages.length * 110 + 120);
-
-    // Pipeline sweep — stages light up in sequence like a live status check
-    var sweepStart = pStart + stages.length * 110 + 520;
-    stages.forEach(function(el, i) {
-        var isShip = i === stages.length - 1;
-        setTimeout(function() {
-            el.style.transition = 'background 0.2s ease, border-color 0.2s ease';
-            el.style.background = isShip ? 'rgba(63,185,80,0.07)' : 'rgba(88,166,255,0.06)';
-            if (isShip) el.style.borderColor = 'rgba(63,185,80,0.4)';
-            setTimeout(function() {
-                el.style.transition = 'background 0.45s ease, border-color 0.45s ease';
-                el.style.background = '';
-                el.style.borderColor = '';
-                setTimeout(function() { el.style.transition = ''; }, 500);
-            }, 320);
-        }, sweepStart + i * 180);
+    // Stagger pipeline
+    var pStart = 400;
+    stages.forEach(function(el, i) { 
+        animIn(el, pStart + i * 80, 600); 
     });
-
-    // Subtle CTA pulse after sweep — directs attention to the primary action
-    var sweepEnd = sweepStart + stages.length * 180 + 350;
-    setTimeout(function() {
-        if (ctaPrimary) {
-            ctaPrimary.classList.add('cta-pulse-once');
-            ctaPrimary.addEventListener('animationend', function() {
-                ctaPrimary.classList.remove('cta-pulse-once');
-            }, { once: true });
-        }
-    }, sweepEnd);
 }());
 </script>
 }
