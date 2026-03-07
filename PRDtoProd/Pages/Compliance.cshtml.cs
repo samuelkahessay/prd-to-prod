@@ -26,15 +26,7 @@ public class ComplianceModel : PageModel
 
     public async Task OnGetAsync()
     {
-        // SQLite cannot translate DateTimeOffset ORDER BY, so decision ordering happens in memory.
-        var latestDecisions = (await _db.ComplianceDecisions
-            .AsNoTracking()
-            .Select(d => new { d.ScanId, d.Decision, d.DecidedAt })
-            .ToListAsync())
-            .GroupBy(d => d.ScanId)
-            .ToDictionary(
-                g => g.Key,
-                g => g.OrderByDescending(d => d.DecidedAt).First().Decision);
+        var latestDecisions = await ComplianceQueries.GetLatestDecisionLookupAsync(_db);
 
         var approvedScanIds = latestDecisions
             .Where(kv => kv.Value == ComplianceDecisionType.Approved)

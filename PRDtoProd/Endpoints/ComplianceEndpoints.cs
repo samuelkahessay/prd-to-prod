@@ -62,19 +62,7 @@ public static class ComplianceEndpoints
 
     private static async Task<IResult> GetAllScans(TicketDbContext db)
     {
-        // SQLite cannot translate DateTimeOffset ORDER BY, so timestamp ordering happens in memory.
-        var decisions = await db.ComplianceDecisions
-            .AsNoTracking()
-            .Select(d => new { d.ScanId, d.Decision, d.DecidedAt })
-            .ToListAsync();
-        var decisionLookup = decisions
-            .GroupBy(d => d.ScanId)
-            .ToDictionary(
-                g => g.Key,
-                g => g
-                    .OrderByDescending(d => d.DecidedAt)
-                    .Select(d => (ComplianceDecisionType?)d.Decision)
-                    .FirstOrDefault());
+        var decisionLookup = await ComplianceQueries.GetLatestDecisionLookupAsync(db);
 
         var scans = await db.ComplianceScans
             .AsNoTracking()
