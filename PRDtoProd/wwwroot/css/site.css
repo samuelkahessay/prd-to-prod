@@ -204,6 +204,11 @@ a {
     color: var(--color-bg-base);
     background: var(--color-text-primary);
 }
+.status-bar-links {
+    flex-wrap: wrap;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
 
 /* ===== Brutalist Footer ===== */
 .site-footer {
@@ -254,7 +259,7 @@ a {
 .data-cell-red { border-top: 4px solid var(--color-danger); }
 
 /* ===== Metrics Typography ===== */
-.metric-val {
+.metric-val, .evidence-val {
     font-family: var(--mono);
     color: var(--color-text-primary);
     font-size: var(--fs-3xl);
