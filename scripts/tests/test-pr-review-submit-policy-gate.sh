@@ -19,6 +19,8 @@ grep -F "Skipping autonomous merge for PR classification:" "$WORKFLOW" >/dev/nul
 grep -F "Autonomous merge blocked by autonomy policy." "$WORKFLOW" >/dev/null
 grep -F "bug\" or . == \"docs\" or . == \"test\"" "$WORKFLOW" >/dev/null
 grep -F "startsWith(github.event.comment.body, '/approve_sensitive')" "$WORKFLOW" >/dev/null
+grep -F 'COMMENT_URL=$(gh api "/repos/${REPO}/issues/comments/${COMMENT_ID}"' "$WORKFLOW" >/dev/null
+grep -F 'See the full Pipeline Review Agent verdict in [the linked comment]' "$WORKFLOW" >/dev/null
 grep -F 'Cannot use \`/approve-sensitive\` here.' "$WORKFLOW" >/dev/null
 grep -F 'no active \`sensitive_app_change\` policy match' "$WORKFLOW" >/dev/null
 grep -F 'BLOCKING_ACTION="$ACTION"' "$WORKFLOW" >/dev/null

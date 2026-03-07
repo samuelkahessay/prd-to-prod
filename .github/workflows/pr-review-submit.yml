@@ -139,6 +139,8 @@ jobs:
           # Fetch the comment body via API to avoid direct shell exposure to user content
           COMMENT_BODY=$(gh api "/repos/${REPO}/issues/comments/${COMMENT_ID}" \
             --jq '.body')
+          COMMENT_URL=$(gh api "/repos/${REPO}/issues/comments/${COMMENT_ID}" \
+            --jq '.html_url')
 
           # Extract verdict — default to REQUEST_CHANGES if not parseable (fail-safe)
           VERDICT=$(echo "$COMMENT_BODY" | grep -oP '\*\*VERDICT:\s*\K(APPROVE|REQUEST_CHANGES)' | head -1 || echo "")
@@ -162,12 +164,10 @@ jobs:
             | head -1 || true)
           echo "issue_number=${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
 
-          # Build review body from the agent comment (strip the marker line)
-          REVIEW_BODY=$(echo "$COMMENT_BODY" | grep -v '^\[PIPELINE-VERDICT\]' | sed '/./,$!d')
           if [ "$VERDICT" = "APPROVE" ]; then
-            REVIEW_BODY="## Pipeline Review — Approved"$'\n\n'"${REVIEW_BODY}"$'\n\n'"---"$'\n'"*Submitted by Pipeline Review Submit (github-actions[bot]).*"
+            REVIEW_BODY="## Pipeline Review — Approved"$'\n\n'"See the full Pipeline Review Agent verdict in [the linked comment](${COMMENT_URL})."$'\n\n'"**Summary**: ${SUMMARY}"$'\n\n'"---"$'\n'"*Submitted by Pipeline Review Submit (github-actions[bot]).*"
           else
-            REVIEW_BODY="## Pipeline Review — Changes Requested"$'\n\n'"${REVIEW_BODY}"$'\n\n'"---"$'\n'"*Submitted by Pipeline Review Submit (github-actions[bot]).*"
+            REVIEW_BODY="## Pipeline Review — Changes Requested"$'\n\n'"See the full Pipeline Review Agent verdict in [the linked comment](${COMMENT_URL})."$'\n\n'"**Summary**: ${SUMMARY}"$'\n\n'"---"$'\n'"*Submitted by Pipeline Review Submit (github-actions[bot]).*"
           fi
 
           # Submit the formal review as github-actions[bot] (via GITHUB_TOKEN)
