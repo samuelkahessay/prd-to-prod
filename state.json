@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-07T10:25:00Z",
-  "run_id": "22797191122",
+  "last_run": "2026-03-07T19:26:36Z",
+  "run_id": "22805615359",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 - C#/.NET 10)",
@@ -11,16 +11,15 @@
     "344": "closed", "345": "closed", "346": "closed", "347": "closed",
     "359": "closed", "362": "closed", "382": "closed", "384": "closed",
     "388": "closed", "396": "closed", "399": "closed", "402": "closed",
-    "406": "pr-open"
+    "406": "closed",
+    "411": "pr-open"
   },
-  "open_prs": ["new-pipeline-pr-for-406", "397", "407"],
+  "open_prs": ["pr-for-411"],
   "pr_notes": {
-    "397": "Copilot SWE agent PR - not [Pipeline] - fixes #396, awaiting human merge",
-    "407": "Copilot SWE agent WIP PR - not [Pipeline] - for #406, has no code (empty 'Initial plan' commit), superseded by [Pipeline] PR",
-    "pipeline-406": "Created [Pipeline] PR for issue #406. Build OK (0 errors), 165 tests passed."
+    "pr-for-411": "Created [Pipeline] PR for issue #411 (CI fix). 6 failing tests fixed. All 165 tests passing."
   },
   "aw_issues_triaged": ["364-no-op-runs-system-managed"],
   "pipeline_status": "on-track",
-  "notes": "Run 07 original issues complete. Issue #406 implemented: ComplianceQueries.cs created, both callers updated, null-safety fixed. [Pipeline] PR opened for review. 165 tests passing.",
-  "backlog_cursor": 406
+  "notes": "Run 07 original issues complete. Issue #411 implemented: fix 6 failing CI tests by aligning source with test contracts (event-log height, evidence-val class, nav status-bar classes, Operator headings). All 165 tests passing.",
+  "backlog_cursor": 411
 }
