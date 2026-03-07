@@ -27,12 +27,12 @@
 
     <nav aria-label="Main navigation" class="sys-nav">
         <div class="sys-nav-inner flex-row">
-            <div class="sys-brand">
+            <div class="sys-brand status-bar-brand-row">
                 <span class="sys-title">@(ViewData["NavTitle"] ?? "PRD-TO-PROD")</span>
                 <span class="sys-divider" aria-hidden="true">&nbsp;|&nbsp;</span>
                 <a href="https://github.com/samuelkahessay/prd-to-prod" target="_blank" rel="noopener noreferrer" class="sys-nav-link" aria-label="View source on GitHub">GitHub</a>
             </div>
-            <div class="sys-links" role="list">
+            <div class="sys-links status-bar-links" role="list">
                 @foreach (var item in navItems)
                 {
                     <a href="@item.Href" class="sys-nav-link @(path == item.Href ? "active" : "")">@item.Label</a>

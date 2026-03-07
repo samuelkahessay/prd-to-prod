@@ -188,7 +188,7 @@
             <div class="section-header">
                 <div>
                     <div class="section-label">// blocked actions</div>
-                    <h2 id="blocked-heading">Human-Required Refusals</h2>
+                    <h2 id="blocked-heading">Human-required refusals</h2>
                 </div>
                 <span class="badge badge-red">@Model.Queue.Blocked.Count BLOCKED</span>
             </div>
@@ -226,7 +226,7 @@
             <div class="section-header">
                 <div>
                     <div class="section-label">// human queue</div>
-                    <h2 id="queued-heading">Waiting on Operator</h2>
+                    <h2 id="queued-heading">Waiting on an operator</h2>
                 </div>
                 <span class="badge badge-amber">@Model.Queue.QueuedForHuman.Count QUEUED</span>
             </div>
@@ -289,7 +289,7 @@
                 <summary class="section-header" style="cursor: pointer; list-style: none;">
                     <div>
                         <div class="section-label">// autonomous lane</div>
-                        <h2 id="autonomous-heading">Recent Autonomous</h2>
+                        <h2 id="autonomous-heading">Recent autonomous actions</h2>
                     </div>
                     <span class="badge badge-green">@Model.Queue.RecentAutonomous.Count ACTED</span>
                 </summary>
@@ -351,7 +351,7 @@
         <div class="section-header">
             <div>
                 <div class="section-label">// past runs</div>
-                <h2 id="past-runs-heading">Historical Runs</h2>
+                <h2 id="past-runs-heading">Past Runs</h2>
             </div>
             <span class="badge badge-blue">@Model.DrillRuns.Count RUNS</span>
         </div>
@@ -384,6 +384,10 @@
                             </div>
                             <div class="log-record-meta">
                                 <span class="code-pill">@run.DrillType</span>
+                                @if (!string.IsNullOrEmpty(run.FailureSignature))
+                                {
+                                    <span class="code-pill">@run.FailureSignature</span>
+                                }
                                 <span style="margin-left: var(--sp-md);">
                                     @stageSummary.CompletedCount/@totalStages complete 
                                     (@durationText)
@@ -429,7 +433,7 @@
         <div style="margin-top: var(--sp-2xl);">
             <details>
                 <summary class="section-label" style="cursor: pointer; list-style: none;">
-                    [+] Show evidence trail (@Model.DecisionTrail.Count entries)
+                    [+] Show decision trail (@Model.DecisionTrail.Count entries)
                 </summary>
                 <div style="border-left: 2px solid var(--color-border-heavy); padding-left: var(--sp-md); margin-top: var(--sp-md); display: flex; flex-direction: column; gap: var(--sp-md);">
                     @foreach (var decision in Model.DecisionTrail)
