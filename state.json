@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-03-07T01:34:05Z",
-  "run_id": "22789030438",
+  "last_run": "2026-03-07T09:50:43Z",
+  "run_id": "22796763396",
   "current_prd": {
     "issue": 339,
     "title": "PRD: Compliance Scan Service (Run 07 - C#/.NET 10)",
@@ -25,9 +25,9 @@
     "402": "closed"
   },
   "open_prs": ["397"],
-  "pr_notes": {"397": "Human-authored refactor PR, approved with auto-merge armed"},
+  "pr_notes": {"397": "Human-authored refactor PR (not [Pipeline]), no agent action needed"},
   "aw_issues_triaged": ["364-no-op-runs-system-managed"],
   "pipeline_status": "complete",
-  "notes": "Run 07 COMPLETE. CI green on main. All 165+ tests passing. PR #397 (non-pipeline) approved and auto-merge armed. [aw] #364 is system-managed no-op tracker. Pipeline ready for archive with scripts/archive-run.sh.",
+  "notes": "Run 07 COMPLETE. CI green on main. All 13 pipeline issues closed. PR #397 is human-authored. [aw] #364 is system-managed no-op tracker. Pipeline ready for archive.",
   "backlog_cursor": 402
 }
