@@ -39,9 +39,12 @@ done
 CHECKS=(
   "bash scripts/tests/test-auto-dispatch.sh"
   "bash scripts/tests/test-check-autonomy-policy.sh"
+  "bash scripts/tests/test-ci-failure-resolve.sh"
   "bash scripts/tests/test-ci-failure-context.sh"
   "bash scripts/tests/test-classify-pipeline-issue.sh"
   "bash scripts/tests/test-classify-pipeline-pr.sh"
+  "bash scripts/tests/test-duplicate-code-detector.sh"
+  "bash scripts/tests/test-extract-linked-issue-numbers.sh"
   "bash scripts/tests/test-log-decision.sh"
   "bash scripts/tests/test-pipeline-watchdog.sh"
   "bash scripts/tests/test-patch-pr-review-agent-lock.sh"

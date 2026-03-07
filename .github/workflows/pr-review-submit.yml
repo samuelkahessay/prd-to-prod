@@ -82,6 +82,7 @@ jobs:
             scripts/healing-control.sh
             scripts/check-autonomy-policy.sh
             scripts/classify-pipeline-pr.sh
+            scripts/extract-linked-issue-numbers.sh
             autonomy-policy.yml
           sparse-checkout-cone-mode: false
 
@@ -156,9 +157,8 @@ jobs:
           PR_TITLE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title --jq '.title')
           echo "pr_title=${PR_TITLE}" >> "$GITHUB_OUTPUT"
 
-          # Extract linked issue number from PR body via jq (zero shell exposure to body)
-          ISSUE_NUMBER=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body \
-            --jq '[.body | scan("(?i)(?:close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#(\\d+)")] | first | .[]? // empty' \
+          ISSUE_NUMBER=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body --jq '.body // ""' \
+            | bash scripts/extract-linked-issue-numbers.sh "$REPO" \
             | head -1 || true)
           echo "issue_number=${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
 
@@ -439,7 +439,8 @@ jobs:
                   if ! printf '%s' "$pr" | bash scripts/classify-pipeline-pr.sh | jq -e '.pipeline_pr == true' >/dev/null; then
                     continue
                   fi
-                  if printf '%s' "$pr" | jq -e --arg issue "$ISSUE_NUMBER" '(.body // "") | test("(?i)(close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#" + $issue + "\\b")' >/dev/null; then
+                  CANDIDATE_BODY=$(printf '%s' "$pr" | jq -r '.body // ""')
+                  if printf '%s' "$CANDIDATE_BODY" | bash scripts/extract-linked-issue-numbers.sh "$REPO" | grep -qx "$ISSUE_NUMBER"; then
                     echo "$CANDIDATE_NUMBER"
                   fi
                 done
@@ -544,6 +545,7 @@ jobs:
             scripts/healing-control.sh
             scripts/check-autonomy-policy.sh
             scripts/classify-pipeline-pr.sh
+            scripts/extract-linked-issue-numbers.sh
             autonomy-policy.yml
           sparse-checkout-cone-mode: false
 
@@ -603,9 +605,8 @@ jobs:
           PR_TITLE=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json title --jq '.title')
           echo "pr_title=${PR_TITLE}" >> "$GITHUB_OUTPUT"
 
-          # Extract linked issue number from PR body
-          ISSUE_NUMBER=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body \
-            --jq '[.body | scan("(?i)(?:close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#(\\d+)")] | first | .[]? // empty' \
+          ISSUE_NUMBER=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body --jq '.body // ""' \
+            | bash scripts/extract-linked-issue-numbers.sh "$REPO" \
             | head -1 || true)
           echo "issue_number=${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
 
@@ -815,8 +816,8 @@ jobs:
             echo "PR #${PR_NUMBER} merged. Closing linked issues."
             TARGET="${ISSUE_NUMBER:-}"
             if [ -z "$TARGET" ]; then
-              TARGET=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body \
-                --jq '[.body | scan("(?i)(?:close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#(\\d+)")] | first | .[]? // empty' \
+              TARGET=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body --jq '.body // ""' \
+                | bash scripts/extract-linked-issue-numbers.sh "$REPO" \
                 | head -1 || true)
             fi
             if [ -n "$TARGET" ]; then
@@ -835,8 +836,8 @@ jobs:
             echo "::warning::Merge not observed within 120s for PR #${PR_NUMBER}."
             TARGET="${ISSUE_NUMBER:-}"
             if [ -z "$TARGET" ]; then
-              TARGET=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body \
-                --jq '[.body | scan("(?i)(?:close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#(\\d+)")] | first | .[]? // empty' \
+              TARGET=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body --jq '.body // ""' \
+                | bash scripts/extract-linked-issue-numbers.sh "$REPO" \
                 | head -1 || true)
             fi
             if [ -n "$TARGET" ]; then
@@ -865,8 +866,8 @@ jobs:
 
           TARGET="${ISSUE_NUMBER:-}"
           if [ -z "$TARGET" ]; then
-            TARGET=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body \
-              --jq '[.body | scan("(?i)(?:close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#(\\d+)")] | first | .[]? // empty' \
+            TARGET=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body --jq '.body // ""' \
+              | bash scripts/extract-linked-issue-numbers.sh "$REPO" \
               | head -1 || true)
           fi
           if [ -z "$TARGET" ]; then
@@ -891,7 +892,8 @@ jobs:
                   if ! printf '%s' "$pr" | bash scripts/classify-pipeline-pr.sh | jq -e '.pipeline_pr == true' >/dev/null; then
                     continue
                   fi
-                  if printf '%s' "$pr" | jq -e --arg issue "$TARGET" '(.body // "") | test("(?i)(close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#" + $issue + "\\b")' >/dev/null; then
+                  CANDIDATE_BODY=$(printf '%s' "$pr" | jq -r '.body // ""')
+                  if printf '%s' "$CANDIDATE_BODY" | bash scripts/extract-linked-issue-numbers.sh "$REPO" | grep -qx "$TARGET"; then
                     echo "$CANDIDATE_NUMBER"
                   fi
                 done
@@ -984,7 +986,7 @@ jobs:
     if: |
       github.event_name == 'issue_comment' &&
       github.event.issue.pull_request != null &&
-      startsWith(github.event.comment.body, '/approve-sensitive') &&
+      (startsWith(github.event.comment.body, '/approve-sensitive') || startsWith(github.event.comment.body, '/approve_sensitive')) &&
       github.event.comment.user.login == github.repository_owner
 
     concurrency:

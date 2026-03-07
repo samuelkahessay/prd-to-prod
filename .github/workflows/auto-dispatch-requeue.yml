@@ -93,7 +93,8 @@ jobs:
           fi
 
           OPEN_PRS=$(gh pr list --repo "$REPO" --state open --limit 100 --json body 2>/dev/null || echo '[]')
-          LINKED_ISSUES=$(printf '%s' "$OPEN_PRS" | jq -r '[.[] | (.body // "") | scan("(?i)(?:close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#(\\d+)")] | .[][]? ' 2>/dev/null || true)
+          LINKED_ISSUES=$(printf '%s' "$OPEN_PRS" | jq -r '.[].body // empty' 2>/dev/null \
+            | bash scripts/extract-linked-issue-numbers.sh "$REPO" || true)
           PIPELINE_ISSUES=$(gh issue list --repo "$REPO" --label pipeline --state open --limit 200 \
             --json number,title,createdAt,labels 2>/dev/null || echo '[]')
 

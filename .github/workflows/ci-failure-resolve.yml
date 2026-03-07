@@ -10,6 +10,8 @@ on:
   workflow_run:
     workflows: [".NET CI", "Node CI", "Docker CI", "Deploy Router", "Deploy to Azure"]
     types: [completed]
+  pull_request:
+    types: [closed]
 
 permissions:
   contents: read
@@ -18,13 +20,13 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: "ci-failure-resolve-${{ github.event.workflow_run.id }}"
+  group: "ci-failure-resolve-${{ github.event.workflow_run.id || github.event.pull_request.number || github.run_id }}"
   cancel-in-progress: false
 
 jobs:
   resolve-failure:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
     timeout-minutes: 10
     steps:
       - name: Checkout repository helpers
@@ -200,6 +202,7 @@ jobs:
   close-cookie-issues:
     runs-on: ubuntu-latest
     if: >-
+      github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_branch == 'main'
     timeout-minutes: 5
@@ -223,4 +226,84 @@ jobs:
             gh issue close "$ISSUE_NUMBER" --repo "$REPO" \
               --comment "CI is green on main (${SUCCESS_RUN_URL}). Closing diagnostic issue as resolved." || \
               echo "::warning::Failed to close cookie issue #${ISSUE_NUMBER}"
+          done
+
+  close-pr-incidents-on-success:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    timeout-minutes: 5
+    steps:
+      - name: Close PR-scoped CI incident issues on successful CI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SUCCESS_RUN_URL: ${{ github.event.workflow_run.html_url }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          PULL_REQUESTS_JSON: ${{ toJson(github.event.workflow_run.pull_requests) }}
+        run: |
+          set -euo pipefail
+
+          PR_NUMBER=$(printf '%s' "$PULL_REQUESTS_JSON" | jq -r '.[0].number // empty')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "Successful CI run is not attached to a PR. No PR-scoped incidents to close."
+            exit 0
+          fi
+
+          PR_JSON=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json state,headRefOid 2>/dev/null || echo '{}')
+          PR_STATE=$(printf '%s' "$PR_JSON" | jq -r '.state // ""')
+          CURRENT_HEAD_SHA=$(printf '%s' "$PR_JSON" | jq -r '.headRefOid // ""')
+
+          if [ "$PR_STATE" = "OPEN" ] && [ -n "$CURRENT_HEAD_SHA" ] && [ "$CURRENT_HEAD_SHA" != "$HEAD_SHA" ]; then
+            echo "Successful run head ${HEAD_SHA} is stale versus PR head ${CURRENT_HEAD_SHA}. Leaving incidents open."
+            exit 0
+          fi
+
+          ISSUES=$(gh issue list --repo "$REPO" --state open --label ci-failure --limit 200 --json number,title \
+            | jq -r --arg pr "$PR_NUMBER" '.[] | select(.title | test("^\\[CI Incident\\](?: Escalation:)? PR #" + $pr + "\\b")) | .number')
+
+          if [ -z "$ISSUES" ]; then
+            echo "No open PR-scoped CI incidents found for PR #${PR_NUMBER}."
+            exit 0
+          fi
+
+          for ISSUE_NUMBER in $ISSUES; do
+            echo "Closing PR-scoped CI incident #${ISSUE_NUMBER}..."
+            gh issue close "$ISSUE_NUMBER" --repo "$REPO" \
+              --comment "CI recovered for PR #${PR_NUMBER} on ${SUCCESS_RUN_URL}. Closing PR-scoped incident as resolved." || \
+              echo "::warning::Failed to close PR-scoped CI incident #${ISSUE_NUMBER}"
+          done
+
+  close-pr-incidents-on-pr-close:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    timeout-minutes: 5
+    steps:
+      - name: Close PR-scoped CI incident issues when the PR closes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_MERGED: ${{ github.event.pull_request.merged }}
+        run: |
+          set -euo pipefail
+
+          ISSUES=$(gh issue list --repo "$REPO" --state open --label ci-failure --limit 200 --json number,title \
+            | jq -r --arg pr "$PR_NUMBER" '.[] | select(.title | test("^\\[CI Incident\\](?: Escalation:)? PR #" + $pr + "\\b")) | .number')
+
+          if [ -z "$ISSUES" ]; then
+            echo "No open PR-scoped CI incidents found for PR #${PR_NUMBER}."
+            exit 0
+          fi
+
+          if [ "$PR_MERGED" = "true" ]; then
+            COMMENT="PR #${PR_NUMBER} merged (${PR_URL}). Closing PR-scoped incident as stale."
+          else
+            COMMENT="PR #${PR_NUMBER} closed without merge (${PR_URL}). Closing PR-scoped incident as stale."
+          fi
+
+          for ISSUE_NUMBER in $ISSUES; do
+            echo "Closing PR-scoped CI incident #${ISSUE_NUMBER}..."
+            gh issue close "$ISSUE_NUMBER" --repo "$REPO" --comment "$COMMENT" || \
+              echo "::warning::Failed to close PR-scoped CI incident #${ISSUE_NUMBER}"
           done

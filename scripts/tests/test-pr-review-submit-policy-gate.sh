@@ -8,6 +8,7 @@ ruby -e 'require "yaml"; YAML.load_file(ARGV[0]); puts "yaml-ok"' "$WORKFLOW" >/
 
 grep -F "scripts/check-autonomy-policy.sh" "$WORKFLOW" >/dev/null
 grep -F "scripts/classify-pipeline-pr.sh" "$WORKFLOW" >/dev/null
+grep -F "scripts/extract-linked-issue-numbers.sh" "$WORKFLOW" >/dev/null
 grep -F "autonomy-policy.yml" "$WORKFLOW" >/dev/null
 grep -F "policy_artifact_change" "$WORKFLOW" >/dev/null
 grep -F "workflow_file_change" "$WORKFLOW" >/dev/null
@@ -17,6 +18,7 @@ grep -F "AUTO_FOLLOW_UP_ALLOWED" "$WORKFLOW" >/dev/null
 grep -F "Skipping autonomous merge for PR classification:" "$WORKFLOW" >/dev/null
 grep -F "Autonomous merge blocked by autonomy policy." "$WORKFLOW" >/dev/null
 grep -F "bug\" or . == \"docs\" or . == \"test\"" "$WORKFLOW" >/dev/null
+grep -F "startsWith(github.event.comment.body, '/approve_sensitive')" "$WORKFLOW" >/dev/null
 grep -F 'Cannot use \`/approve-sensitive\` here.' "$WORKFLOW" >/dev/null
 grep -F 'no active \`sensitive_app_change\` policy match' "$WORKFLOW" >/dev/null
 grep -F 'BLOCKING_ACTION="$ACTION"' "$WORKFLOW" >/dev/null

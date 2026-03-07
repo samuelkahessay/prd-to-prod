@@ -12,6 +12,7 @@ on:
     types: [closed]
 
 permissions:
+  contents: read
   issues: write
   pull-requests: read
 
@@ -25,6 +26,12 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
     steps:
+      - name: Checkout workflow helpers
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/extract-linked-issue-numbers.sh
+          sparse-checkout-cone-mode: false
+
       - name: Close linked issues
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -32,9 +39,8 @@ jobs:
           PR_NUMBER="${{ github.event.pull_request.number }}"
           REPO="${{ github.repository }}"
 
-          # Extract issue numbers entirely within jq — zero shell exposure to PR body
-          ISSUES=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body \
-            --jq '[.body | scan("(?i)(?:closes|close|fix|fixes|resolve|resolves)\\s+#(\\d+)")] | .[][] ')
+          ISSUES=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body --jq '.body // ""' \
+            | bash scripts/extract-linked-issue-numbers.sh "$REPO")
 
           if [ -z "$ISSUES" ]; then
             echo "No issue-closing references found in PR #${PR_NUMBER} body."

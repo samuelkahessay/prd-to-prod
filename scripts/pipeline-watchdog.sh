@@ -44,6 +44,10 @@ read_marker_field() {
   printf '%s\n' "$body" | sed -n "s/^${field}=//p" | head -1
 }
 
+extract_linked_issue_numbers() {
+  bash "$SCRIPT_DIR/extract-linked-issue-numbers.sh" "$REPO"
+}
+
 find_marker_comment() {
   local item_number=$1
   local marker=$2
@@ -344,8 +348,8 @@ while IFS= read -r PR_ROW; do
     continue
   fi
 
-  ISSUE_NUM=$(gh pr view "$PR_NUM" --repo "$REPO" --json body \
-    --jq '[.body | scan("(?i)(?:close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#(\\d+)")] | first | .[]? // empty' | head -1 || true)
+  ISSUE_NUM=$(gh pr view "$PR_NUM" --repo "$REPO" --json body --jq '.body // ""' \
+    | extract_linked_issue_numbers | head -1 || true)
   if [ -z "$ISSUE_NUM" ]; then
     echo "::warning::PR #${PR_NUM} has no linked issue — cannot dispatch fix"
     continue
@@ -364,8 +368,8 @@ echo "=== Checking for orphaned issues ==="
 PIPELINE_ISSUES=$(gh issue list --repo "$REPO" --label pipeline --state open --json number,title,updatedAt,labels)
 LINKED_ISSUES=$(printf '%s' "$PIPELINE_PRS" | jq -r '.[].number' | while read -r PR_N; do
   [ -z "$PR_N" ] && continue
-  gh pr view "$PR_N" --repo "$REPO" --json body \
-    --jq '[.body | scan("(?i)(?:close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#(\\d+)")] | .[][]' 2>/dev/null || true
+  gh pr view "$PR_N" --repo "$REPO" --json body --jq '.body // ""' 2>/dev/null \
+    | extract_linked_issue_numbers || true
 done | sort -u)
 
 while IFS= read -r ISSUE_ROW; do
@@ -408,8 +412,8 @@ echo "=== Checking for superseded PRs ==="
 while IFS= read -r PR_ROW; do
   [ -z "$PR_ROW" ] && continue
   PR_NUM=$(printf '%s' "$PR_ROW" | jq -r '.number')
-  LINKED_ISSUE=$(gh pr view "$PR_NUM" --repo "$REPO" --json body \
-    --jq '[.body | scan("(?i)(?:close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#(\\d+)")] | first | .[]? // empty' | head -1 || true)
+  LINKED_ISSUE=$(gh pr view "$PR_NUM" --repo "$REPO" --json body --jq '.body // ""' \
+    | extract_linked_issue_numbers | head -1 || true)
   if [ -z "$LINKED_ISSUE" ]; then
     echo "PR #${PR_NUM}: no linked issue. Skipping."
     continue
@@ -422,7 +426,19 @@ while IFS= read -r PR_ROW; do
   fi
 
   MERGED_PR=$(gh pr list --repo "$REPO" --state merged --json number,title,body \
-    --jq "[.[] | select(.number != ${PR_NUM} and (.title | startswith(\"[Pipeline]\")) and (.body | test(\"(?i)(close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\\\s+#${LINKED_ISSUE}\\\\b\")))] | first | .number // empty" | head -1 || true)
+    | jq -rc '.[]' \
+    | while read -r pr; do
+        CANDIDATE_NUM=$(printf '%s' "$pr" | jq -r '.number')
+        [ "$CANDIDATE_NUM" = "$PR_NUM" ] && continue
+        if ! printf '%s' "$pr" | jq -e '(.title // "") | startswith("[Pipeline]")' >/dev/null; then
+          continue
+        fi
+        CANDIDATE_BODY=$(printf '%s' "$pr" | jq -r '.body // ""')
+        if printf '%s' "$CANDIDATE_BODY" | extract_linked_issue_numbers | grep -qx "$LINKED_ISSUE"; then
+          echo "$CANDIDATE_NUM"
+          break
+        fi
+      done | head -1 || true)
   if [ -z "$MERGED_PR" ]; then
     echo "PR #${PR_NUM}: issue #${LINKED_ISSUE} closed but no merged [Pipeline] PR found. Skipping."
     continue

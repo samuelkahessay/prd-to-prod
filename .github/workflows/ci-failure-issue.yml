@@ -386,7 +386,9 @@ jobs:
             exit 0
           fi
 
-          LINKED_ISSUE=$(printf '%s' "$PR_JSON" | jq -r '[.body | scan("(?i)(?:close[ds]?|fix(?:e[ds])?|resolve[ds]?)\\s+#(\\d+)")] | first | .[]? // empty' | head -1)
+          LINKED_ISSUE=$(printf '%s' "$PR_JSON" | jq -r '.body // ""' \
+            | bash scripts/extract-linked-issue-numbers.sh "$REPO" \
+            | head -1 || true)
           if [ -z "$LINKED_ISSUE" ]; then
             TITLE="[CI Incident] PR #${PR_NUMBER} CI Failure: ${SHORT_SUMMARY}"
             BODY=$(render_incident_body \
