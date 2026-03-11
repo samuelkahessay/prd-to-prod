@@ -833,68 +833,71 @@ Retry count is tracked via a reserved HTML comment block in the CI failure issue
 
 ## 6. Migration Plan (High-Level)
 
+**Execution status as of 2026-03-11:** The repo has completed the core consolidation work, scaffold export, v2 issue routing, gap-analysis wiring, schema validation, sub-issue linking, and deterministic CI failure classification. Local contract verification is green via `bash scripts/verify-v2-contracts.sh`. The major remaining slices are post-deploy validation (`validate-deployment.yml` + deploy/close gating), category-aware downstream routing in `auto-dispatch.yml`, live end-to-end smoke tests against a real target repo/deployment, and the operator console.
+
 ### Phase 1: Create the single maintained source repo
-- Move `extraction/`, `trigger/`, `mocks/` into prd-to-prod
-- Port scaffold-only assets from the legacy template repo into prd-to-prod:
+- [x] Move `extraction/`, `trigger/`, `mocks/` into prd-to-prod
+- [x] Port scaffold-only assets from the legacy template repo into prd-to-prod:
   `studio/`, `setup.sh`, `setup-verify.sh`, `README.template.md`, and any
   template-owned docs/config needed by the exported scaffold
-- Verify v1 greenfield flow works end-to-end from the consolidated repo
-- Archive meeting-to-main repo
+- [ ] Verify v1 greenfield flow works end-to-end from the consolidated repo
+- [ ] Archive meeting-to-main repo
 
 ### Phase 1b: Operator Console
-- Create `console/` directory with server, orchestrator, routes, and static files
-- Add `console/` to `scaffold/template-manifest.yml` forbidden_paths
-- Wire orchestrator to spawn `extraction/extract-prd.sh` for v1 mode
-- Test: operator starts console, fills form, sees PRD extraction stream in browser
+- [ ] Create `console/` directory with server, orchestrator, routes, and static files
+- [ ] Add `console/` to `scaffold/template-manifest.yml` forbidden_paths
+- [ ] Wire orchestrator to spawn `extraction/extract-prd.sh` for v1 mode
+- [ ] Test: operator starts console, fills form, sees PRD extraction stream in browser
 - **Prerequisite:** Phase 1 complete (`extraction/` and `trigger/` must be in prd-to-prod)
 - **Independent of:** Phase 2 (scaffold export) and Phase 3 (v2 routing)
 - Console gains v2 support (mode toggle, target repo input, gap analysis rendering) in Phase 3 after v2 routing is built
 
 ### Phase 2: Build scaffold export and retarget bootstrap
-- Create `scaffold/template-manifest.yml`
-- Create `scaffold/export-scaffold.sh`
-- Create `scaffold/leak-test.sh` and `scaffold/bootstrap-test.sh`
-- Add `render` support for `autonomy-policy.yml`, `.deploy-profile`, `AGENTS.md`
-- Verify exported scaffold matches current legacy template contents
-- Adapt `push-to-pipeline.sh` to seed from `dist/scaffold/` instead of the legacy template source
-- Keep a temporary fallback to the legacy template source only until scaffold smoke runs pass
-- Archive prd-to-prod-template repo
+- [x] Create `scaffold/template-manifest.yml`
+- [x] Create `scaffold/export-scaffold.sh`
+- [x] Create `scaffold/leak-test.sh` and `scaffold/bootstrap-test.sh`
+- [x] Add `render` support for `autonomy-policy.yml`, `.deploy-profile`, `AGENTS.md`
+- [x] Verify exported scaffold matches current legacy template contents
+- [x] Adapt `push-to-pipeline.sh` to seed from `dist/scaffold/` instead of the legacy template source
+- [ ] Keep a temporary fallback to the legacy template source only until scaffold smoke runs pass
+- [ ] Archive prd-to-prod-template repo
 
 ### Phase 3: Build v2 routing
-- Create `extraction/run.sh` (unified entry point with `--mode` and `TARGET_REPO`)
-- Create `extraction/classify.sh`
-- Create `extraction/extract-issues.sh` and `extraction/prompt-issues.md`
-- Create `extraction/analyze-target.sh` (two-stage gap analysis orchestrator)
-- Create `extraction/prompt-file-selector.md` (Stage 1 prompt)
-- Create `extraction/prompt-gap-analysis.md` (Stage 2 prompt, adapted from meeting-2-code MIT)
-- Wire into `extraction/run.sh` between extract-issues and push-to-existing
-- Create `trigger/push-to-existing.sh` with idempotency checks
-- Test v2 flow against a real repo with WorkIQ transcript
-- Test gap analysis against a real repo with known structure
-- Test degraded mode: pipeline completes when analysis fails or times out
-- Create `extraction/schemas/` with JSON schema files for all LLM outputs
-- Create `extraction/validate-schema.sh` (generic JSON schema validation helper)
-- Wire schema validation into extract-issues.sh, analyze-target.sh
-- Create `extraction/validate-deployment.sh` (evidence collection + AI verification)
-- Create `extraction/prompt-validate-claim.md` (adversarial QA prompt)
-- Create `.github/workflows/validate-deployment.yml` (dispatched by deploy-router)
-- Wire close-issues.yml to gate on validation pass
-- Create `scripts/classify-ci-failure.sh` (deterministic failure classifier)
-- Update ci-failure-issue.yml to call classifier, add category to title/labels
-- Update auto-dispatch.yml for category-aware routing
-- Update activate-decomposed-issues.yml and push-to-existing.sh for sub-issue linking
-- Test validation against a deployed smoke app with known acceptance criteria
-- Test degraded mode: pipeline completes when validation infrastructure fails
-- Test error classification with sample CI failure logs from each category
-- Wire orchestrator to spawn `extraction/run.sh` for unified v1/v2 mode
-- Add v2-specific progress rendering (gap analysis rows, per-requirement progress)
-- Add target repo input and mode toggle to form
+- [x] Create `extraction/run.sh` (unified entry point with `--mode` and `TARGET_REPO`)
+- [x] Create `extraction/classify.sh`
+- [x] Create `extraction/extract-issues.sh` and `extraction/prompt-issues.md`
+- [x] Create `extraction/analyze-target.sh` (two-stage gap analysis orchestrator)
+- [ ] Create `extraction/prompt-file-selector.md` (Stage 1 prompt)
+- [ ] Create `extraction/prompt-gap-analysis.md` (Stage 2 prompt, adapted from meeting-2-code MIT)
+- [x] Wire into `extraction/run.sh` between extract-issues and push-to-existing
+- [x] Create `trigger/push-to-existing.sh` with idempotency checks
+- [ ] Test v2 flow against a real repo with WorkIQ transcript
+- [ ] Test gap analysis against a real repo with known structure
+- [x] Test degraded mode: pipeline completes when analysis fails or times out
+- [x] Create `extraction/schemas/` with JSON schema files for all LLM outputs
+- [x] Create `extraction/validate-schema.sh` (generic JSON schema validation helper)
+- [x] Wire schema validation into extract-issues.sh, analyze-target.sh
+- [x] Create `extraction/validate-deployment.sh` (evidence collection + AI verification)
+- [ ] Create `extraction/prompt-validate-claim.md` (adversarial QA prompt)
+- [ ] Create `.github/workflows/validate-deployment.yml` (dispatched by deploy-router)
+- [ ] Wire close-issues.yml to gate on validation pass
+- [x] Create `scripts/classify-ci-failure.sh` (deterministic failure classifier)
+- [x] Update ci-failure-issue.yml to call classifier, add category to title/labels
+- [ ] Update auto-dispatch.yml for category-aware routing
+- [x] Update `push-to-existing.sh` for sub-issue linking
+- [ ] Update `activate-decomposed-issues.yml` for sub-issue linking parity
+- [ ] Test validation against a deployed smoke app with known acceptance criteria
+- [ ] Test degraded mode: pipeline completes when validation infrastructure fails
+- [x] Test error classification with sample CI failure logs from each category
+- [ ] Wire orchestrator to spawn `extraction/run.sh` for unified v1/v2 mode
+- [ ] Add v2-specific progress rendering (gap analysis rows, per-requirement progress)
+- [ ] Add target repo input and mode toggle to form
 
 ### Phase 4: CI integration
-- Add scaffold export as a CI step on prd-to-prod pushes to main
-- Leak test runs on every PR
-- Bootstrap test runs on scaffold-relevant file changes
-- Optionally: auto-publish scaffold to export branch or separate repo on green
+- [x] Add scaffold export as a CI step on prd-to-prod pushes to main
+- [x] Leak test runs on every PR
+- [x] Bootstrap test runs on scaffold-relevant file changes
+- [ ] Optionally: auto-publish scaffold to export branch or separate repo on green
 
 ---
 
@@ -910,21 +913,21 @@ Retry count is tracked via a reserved HTML comment block in the CI failure issue
 
 ## 8. Success Criteria
 
-- [ ] Single repo (prd-to-prod) contains all pipeline infrastructure
-- [ ] `scaffold/export-scaffold.sh` produces a scaffold that passes leak test + bootstrap test
+- [x] Single repo (prd-to-prod) contains all pipeline infrastructure
+- [x] `scaffold/export-scaffold.sh` produces a scaffold that passes leak test + bootstrap test
 - [ ] v1 greenfield flow works end-to-end from consolidated repo (transcript → deployed app)
-- [ ] v2 existing-product flow creates properly shaped issues in target repo
+- [x] v2 existing-product flow creates properly shaped issues in target repo
 - [ ] v2 issues trigger auto-dispatch and complete through repo-assist → review → merge → deploy
 - [ ] No manual sync between repos — editing a workflow in prd-to-prod is the only action needed
-- [ ] Scaffold is reconstructable: delete dist/scaffold/, rerun export, get identical output
+- [x] Scaffold is reconstructable: delete dist/scaffold/, rerun export, get identical output
 - [ ] Gap analysis enriches v2 issues with specific file citations from target repo
-- [ ] Gap analysis degrades gracefully: pipeline completes even when all analyses fail
+- [x] Gap analysis degrades gracefully: pipeline completes even when all analyses fail
 - [ ] Post-deployment validation runs automatically after deploy-router succeeds
 - [ ] Validation failures create repair issues that re-enter the pipeline
 - [ ] Validation degrades gracefully: pipeline completes when validation infra fails
-- [ ] LLM output schema validation catches malformed output before downstream corruption
+- [x] LLM output schema validation catches malformed output before downstream corruption
 - [ ] CI failure classification routes auth/infra errors differently from code errors
-- [ ] Sub-issues are natively linked to parent via GitHub API (with body-text fallback)
+- [x] Sub-issues are natively linked to parent via GitHub API (with body-text fallback)
 - [ ] Non-technical user can trigger v1 pipeline from browser without touching terminal
 - [ ] Real-time SSE streaming shows pipeline progress stage-by-stage
 - [ ] Preflight checks prevent launch when required credentials are missing
