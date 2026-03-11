@@ -110,7 +110,7 @@ Supporting workflows handle the glue: dispatching issues to agents, converting r
 
 ## What's Been Built With It
 
-Everything below was built by the pipeline itself — not hand-coded. Running it against real work also produced 28 self-healing drill reports and 14 upstream bug fixes merged into [gh-aw](https://github.com/github/gh-aw) (as of 2026-03-05).
+Everything below was built by the pipeline itself — not hand-coded. Running it against real work also produced 27 self-healing drill reports and 14 upstream bug fixes merged into [gh-aw](https://github.com/github/gh-aw) (as of 2026-03-11).
 
 ### Apps
 
@@ -132,6 +132,7 @@ See [`showcase/`](showcase/) for run manifests, PR lists, and timelines.
 | [`v0.51.6`](https://github.com/github/gh-aw/releases/tag/v0.51.6) | [#19158](https://github.com/github/gh-aw/issues/19158) `gh aw checks --json` collapses optional failures into top-level state, [#19020](https://github.com/github/gh-aw/issues/19020) Auto-merge gating ignores non-required deployment statuses |
 | [`v0.53.0`](https://github.com/github/gh-aw/releases/tag/v0.53.0) | [#19476](https://github.com/github/gh-aw/issues/19476) `push_repo_memory` has no retry/backoff on concurrent pushes, [#19475](https://github.com/github/gh-aw/issues/19475) `get_current_branch` leaks stderr outside git repos, [#19474](https://github.com/github/gh-aw/issues/19474) Unconditional agent-output download causes ENOENT noise, [#19473](https://github.com/github/gh-aw/issues/19473) Copilot engine fallback uses `--model` flag instead of `COPILOT_MODEL` env var |
 | [`v0.53.3`](https://github.com/github/gh-aw/releases/tag/v0.53.3) | [#19605](https://github.com/github/gh-aw/issues/19605) `handle_create_pr_error` crashes conclusion job on API failure, [#19606](https://github.com/github/gh-aw/issues/19606) Transient search failure creates duplicate No-Op Runs issues, [#19607](https://github.com/github/gh-aw/issues/19607) Recompile-needed issues missing `agentic-workflows` label |
+| [`v0.56.1`](https://github.com/github/gh-aw/releases/tag/v0.56.1) | [#20035](https://github.com/github/gh-aw/issues/20035) `safe-outputs` handler failures never escalated to `core.setFailed()`, [#20031](https://github.com/github/gh-aw/issues/20031) `dispatch-workflow` validation is compile-order dependent, [#20030](https://github.com/github/gh-aw/issues/20030) `on.bots` matching fails for `<slug>` vs `<slug>[bot]` identities |
 
 ## Quick Start
 

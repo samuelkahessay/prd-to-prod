@@ -36,7 +36,7 @@
     }
     .stage-count {
         font-family: var(--sans);
-        font-size: 2.5rem;
+        font-size: var(--fs-2xl);
         font-weight: 800;
         line-height: 1;
         letter-spacing: -0.05em;
@@ -286,12 +286,9 @@
     <div style="margin-bottom: var(--sp-2xl);">
         <div class="section-label">// pipeline state &mdash; live &amp; historical</div>
         <h1>Pipeline</h1>
-        <p class="text-dim" style="max-width: 800px; margin-top: var(--sp-md); font-size: var(--fs-lg);">
-            Live GitHub pipeline state and historical run playback. Switch between real-time state
-            and step-through replays of completed pipeline runs. Use <kbd style="font-family: var(--mono); border: 1px solid var(--color-border); padding: 0 4px;">&larr;</kbd> <kbd style="font-family: var(--mono); border: 1px solid var(--color-border); padding: 0 4px;">&rarr;</kbd> arrow keys in replay mode.
-        </p>
-        <p style="font-family: var(--mono); color: var(--color-text-dim); border-left: 2px solid var(--color-border-heavy); padding-left: var(--sp-sm); margin-top: var(--sp-sm); font-size: var(--fs-sm);">
-            Live GitHub pipeline state. Runs are real — this repo builds itself.
+        <p class="text-dim" style="max-width: 700px; margin-top: var(--sp-sm); font-size: var(--fs-base);">
+            Live pipeline state and historical run playback. Runs are real — this repo builds itself.
+            Use <kbd style="font-family: var(--mono); border: 1px solid var(--color-border); padding: 0 4px;">&larr;</kbd> <kbd style="font-family: var(--mono); border: 1px solid var(--color-border); padding: 0 4px;">&rarr;</kbd> keys in replay mode.
         </p>
     </div>
 
@@ -624,6 +621,26 @@
         renderPullRequests(snapshot.pullRequests);
         renderRuns(snapshot.activeRuns);
         renderLiveFeed(snapshot);
+        renderIdleBanner(snapshot);
+    }
+
+    function renderIdleBanner(snapshot) {
+        const existing = document.getElementById('idleBanner');
+        const isIdle = !snapshot.issues.length && !snapshot.pullRequests.length && !snapshot.activeRuns.length;
+        if (!isIdle) {
+            if (existing) existing.remove();
+            return;
+        }
+        if (existing) return; // already shown
+        const banner = document.createElement('div');
+        banner.id = 'idleBanner';
+        banner.style.cssText = 'border: 1px solid var(--color-border); padding: var(--sp-xl); margin-bottom: var(--sp-xl); text-align: center;';
+        banner.innerHTML = `
+            <div style="font-family: var(--mono); font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-dim); margin-bottom: var(--sp-sm);">pipeline idle</div>
+            <div style="font-family: var(--sans); color: var(--color-text-primary); font-size: var(--fs-base);">No active issues, PRs, or workflow runs right now. Scroll down to <strong>Run History</strong> to replay a completed pipeline run.</div>
+        `;
+        const liveContent = document.getElementById('liveContent');
+        liveContent.parentNode.insertBefore(banner, liveContent);
     }
 
     function renderLiveFeed(snapshot) {
@@ -678,7 +695,20 @@
             renderLiveSnapshot(snapshot);
         } catch (error) {
             renderWarnings([error.message || 'Failed to load live pipeline snapshot.'], 'unauthenticated');
+            // Clear loading states so the page doesn't look broken
+            clearLoadingStates();
         }
+    }
+
+    function clearLoadingStates() {
+        const issueList = document.getElementById('issueList');
+        const prList = document.getElementById('prList');
+        const runList = document.getElementById('runList');
+        const liveFeed = document.getElementById('liveFeed');
+        if (issueList.textContent.includes('Loading')) issueList.innerHTML = '<div class="empty-state">No active actionable pipeline issues.</div>';
+        if (prList.textContent.includes('Loading')) prList.innerHTML = '<div class="empty-state">No open pipeline pull requests.</div>';
+        if (runList.textContent.includes('Loading')) runList.innerHTML = '<div class="empty-state">No workflow runs in progress.</div>';
+        if (liveFeed.textContent.includes('Loading')) liveFeed.innerHTML = '<div class="empty-state">No active items.</div>';
     }
 
     function startLivePolling() {
