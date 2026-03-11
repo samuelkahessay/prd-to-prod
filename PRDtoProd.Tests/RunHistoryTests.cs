@@ -67,7 +67,7 @@ public class RunHistoryTests
         // <div class="evidence-val">0</div>
         // <div class="evidence-lbl">pipeline runs</div>
         Assert.Contains("pipeline runs", html);
-        Assert.Contains("class=\"evidence-val\">0<", html);
+        Assert.Contains("class=\"metric-val\">0<", html);
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class RunHistoryTests
         var html = await client.GetStringAsync("/");
 
         Assert.Contains("pipeline runs", html);
-        Assert.Contains("avg PRD-to-PR", html);
+        Assert.Contains("fastest PRD-to-ship", html);
     }
 
     [Fact]
