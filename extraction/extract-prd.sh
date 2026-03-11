@@ -33,17 +33,56 @@ ALLOWED_STACKS="${ALLOWED_STACKS:-"- Node.js + TypeScript + Express (API routes 
 
 export DEPLOY_PLATFORM ALLOWED_STACKS
 
-# Step 1: WorkIQ extraction (or mock)
-# Use live WorkIQ by setting WORKIQ_LIVE=true:
-#   WORKIQ_LIVE=true ./extraction/extract-prd.sh "my meeting query"
-echo "[1/3] Fetching meeting data via WorkIQ..."
-if [ "${WORKIQ_LIVE:-}" = "true" ]; then
-  WORKIQ_OUTPUT=$(npx tsx "$PROJECT_ROOT/extraction/workiq-client.ts" "${1:-Product Sync}")
-  echo "      Using live WorkIQ MCP"
-else
-  WORKIQ_OUTPUT=$(cat "$PROJECT_ROOT/mocks/workiq-response.txt")
-  echo "      Using mock WorkIQ data"
-fi
+resolve_meeting_input() {
+  local raw_arg="${1:-}"
+  local stdin_content=""
+
+  if [ "${WORKIQ_LIVE:-}" = "true" ]; then
+    WORKIQ_OUTPUT=$(npx tsx "$PROJECT_ROOT/extraction/workiq-client.ts" "${raw_arg:-Product Sync}")
+    INPUT_SOURCE="live WorkIQ MCP"
+    return 0
+  fi
+
+  if [ -n "$raw_arg" ] && [ -f "$raw_arg" ]; then
+    WORKIQ_OUTPUT=$(cat "$raw_arg")
+    INPUT_SOURCE="provided notes file"
+    return 0
+  fi
+
+  if [ -n "$raw_arg" ]; then
+    WORKIQ_OUTPUT="$raw_arg"
+    INPUT_SOURCE="provided notes blurb"
+    return 0
+  fi
+
+  if [ ! -t 0 ]; then
+    stdin_content=$(cat)
+    if [ -n "${stdin_content//[$'\t\r\n ']}" ]; then
+      WORKIQ_OUTPUT="$stdin_content"
+      INPUT_SOURCE="stdin notes"
+      return 0
+    fi
+  fi
+
+  if [ -f "$PROJECT_ROOT/mocks/workiq-response.txt" ]; then
+    WORKIQ_OUTPUT=$(cat "$PROJECT_ROOT/mocks/workiq-response.txt")
+    INPUT_SOURCE="mock WorkIQ data"
+    return 0
+  fi
+
+  echo "FAIL: No meeting input provided. Pass a notes file, pipe raw text to stdin, provide an inline blurb, or set WORKIQ_LIVE=true." >&2
+  exit 1
+}
+
+# Step 1: Meeting input collection
+# Supported modes:
+#   WORKIQ_LIVE=true ./extraction/extract-prd.sh "meeting query"
+#   ./extraction/extract-prd.sh notes.txt
+#   ./extraction/extract-prd.sh "Build a lightweight incident dashboard ..."
+#   printf 'notes...' | ./extraction/extract-prd.sh
+echo "[1/3] Collecting meeting input..."
+resolve_meeting_input "${1:-}"
+echo "      Using $INPUT_SOURCE"
 
 # Step 2: PRD extraction via LLM
 echo "[2/3] Extracting PRD from meeting transcript..."

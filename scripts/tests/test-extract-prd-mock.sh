@@ -151,4 +151,24 @@ if (cd "$TMPDIR" && env -u OPENROUTER_API_KEY HOME=/nonexistent bash extraction/
 fi
 echo "Test 3 passed: missing API key fails fast"
 
+# ── Test 4: Inline notes blurb bypasses WorkIQ and still extracts ────────
+
+INLINE_NOTES="Build a small habit tracker API with Node.js, TypeScript, and Express. Users can create habits and mark them complete."
+rm -f "$TMPDIR/generated-prd.md"
+if ! (cd "$TMPDIR" && bash extraction/extract-prd.sh "$INLINE_NOTES" >"$TMPDIR/stdout-inline.log" 2>"$TMPDIR/stderr-inline.log"); then
+  echo "FAIL: Test 4: inline notes input should succeed" >&2
+  cat "$TMPDIR/stderr-inline.log" >&2
+  exit 1
+fi
+
+grep -q "Using provided notes blurb" "$TMPDIR/stdout-inline.log" || {
+  echo "FAIL: Test 4: expected inline notes mode to be reported" >&2
+  exit 1
+}
+[ -f "$TMPDIR/generated-prd.md" ] || {
+  echo "FAIL: Test 4: generated-prd.md missing after inline notes input" >&2
+  exit 1
+}
+echo "Test 4 passed: inline notes input is supported"
+
 echo "extract-prd-mock tests passed"

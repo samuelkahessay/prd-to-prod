@@ -977,10 +977,15 @@ console/
 
 **Landing page (`/`):**
 1. Preflight checks display on load (green/red per item): `OPENROUTER_API_KEY`, `gh` auth, `COPILOT_GITHUB_TOKEN`, `VERCEL_TOKEN`, WorkIQ
-2. Two inputs: **Meeting name** (free text) + **Mode toggle** (New Product / Existing Product)
-3. If Existing Product: **Target repo** input (`owner/repo`)
-4. Mock mode checkbox (offline dev — uses `mocks/` fixtures)
-5. **"Ship the Meeting"** button (disabled if preflight fails)
+2. **Input source toggle**: `WorkIQ query` or `Notes / raw text`
+3. If `WorkIQ query`: **Meeting name/query** input (free text)
+4. If `Notes / raw text`: large textarea for pasted notes, transcript fragments, or a short project blurb
+5. **Mode toggle** (New Product / Existing Product)
+6. If Existing Product: **Target repo** input (`owner/repo`)
+7. Mock mode checkbox (offline dev — uses `mocks/` fixtures)
+8. **"Ship the Meeting"** button (disabled if preflight fails)
+
+**Console input contract:** WorkIQ is preferred when explicitly selected and configured, but it is not required. The operator can always paste plain meeting notes, bullet points, or raw transcript text. The console passes that text directly to `extract-prd.sh` / `run.sh` without requiring WorkIQ-shaped structure.
 
 **Progress page (`/run/:id`):**
 
