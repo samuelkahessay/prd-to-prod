@@ -27,6 +27,7 @@ include:
   - scripts/extract-failure-context.sh
   - scripts/extract-linked-issue-numbers.sh
   - scripts/render-ci-repair-command.sh
+  - scripts/resolve-deployment-url.sh
   - scripts/pipeline-watchdog.sh
   - scripts/bootstrap.sh
   - scripts/patch-pr-review-agent-lock.sh

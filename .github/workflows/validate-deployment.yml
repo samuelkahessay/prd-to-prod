@@ -1,0 +1,148 @@
+name: "Validate Deployment"
+
+on:
+  workflow_call:
+    inputs:
+      profile:
+        required: true
+        type: string
+      issue_numbers:
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: "validate-deployment-${{ github.sha }}"
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    if: inputs.issue_numbers != ''
+    env:
+      REPO: ${{ github.repository }}
+      ISSUE_NUMBERS: ${{ inputs.issue_numbers }}
+      PROFILE: ${{ inputs.profile }}
+      DEPLOYMENT_URL: ${{ vars.DEPLOYMENT_URL }}
+      VERCEL_PROJECT_PRODUCTION_URL: ${{ vars.VERCEL_PROJECT_PRODUCTION_URL }}
+      AZURE_WEBAPP_URL: ${{ vars.AZURE_WEBAPP_URL }}
+      AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+    steps:
+      - name: Checkout workflow helpers
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            extraction/validate-deployment.sh
+            extraction/validate-schema.sh
+            extraction/schemas/validation-result.json
+            scripts/resolve-deployment-url.sh
+          sparse-checkout-cone-mode: false
+
+      - name: Resolve deployment URL
+        id: resolve
+        run: |
+          URL=$(bash scripts/resolve-deployment-url.sh "$PROFILE" || true)
+          echo "deployment_url=${URL}" >> "$GITHUB_OUTPUT"
+          if [ -z "$URL" ]; then
+            echo "No deployment URL resolved for profile $PROFILE; validation will be skipped."
+          else
+            echo "Resolved deployment URL: $URL"
+          fi
+
+      - name: Select issues requiring validation
+        id: issues
+        run: |
+          REQUIRED=""
+          IFS=',' read -r -a ISSUE_ARRAY <<< "$ISSUE_NUMBERS"
+          for ISSUE_NUM in "${ISSUE_ARRAY[@]}"; do
+            ISSUE_NUM=$(printf '%s' "$ISSUE_NUM" | xargs)
+            [ -n "$ISSUE_NUM" ] || continue
+            LABELS=$(gh issue view "$ISSUE_NUM" --repo "$REPO" --json labels --jq '[.labels[].name] | join(",")' 2>/dev/null || echo "")
+            if printf '%s' "$LABELS" | grep -Eq '(^|,)(feature|bug|test|docs)(,|$)'; then
+              REQUIRED="${REQUIRED:+$REQUIRED,}$ISSUE_NUM"
+            fi
+          done
+          echo "required=${REQUIRED}" >> "$GITHUB_OUTPUT"
+
+      - name: Skip when validation is not applicable
+        if: steps.issues.outputs.required == ''
+        run: echo "No linked issues require deployment validation."
+
+      - name: Skip when deployment URL is unavailable
+        if: steps.issues.outputs.required != '' && steps.resolve.outputs.deployment_url == ''
+        run: |
+          IFS=',' read -r -a ISSUE_ARRAY <<< "${{ steps.issues.outputs.required }}"
+          for ISSUE_NUM in "${ISSUE_ARRAY[@]}"; do
+            ISSUE_NUM=$(printf '%s' "$ISSUE_NUM" | xargs)
+            [ -n "$ISSUE_NUM" ] || continue
+            gh issue comment "$ISSUE_NUM" --repo "$REPO" \
+              --body "Post-deploy validation skipped: no deployment URL is configured for profile \`$PROFILE\`."
+          done
+
+      - name: Run deployment validation
+        id: validate
+        if: steps.issues.outputs.required != '' && steps.resolve.outputs.deployment_url != ''
+        run: |
+          set +e
+          DEPLOYMENT_URL="${{ steps.resolve.outputs.deployment_url }}" \
+          ISSUE_NUMBERS="${{ steps.issues.outputs.required }}" \
+          REPO="$REPO" \
+          bash extraction/validate-deployment.sh > validation-result.json
+          RC=$?
+          set -e
+          echo "exit_code=${RC}" >> "$GITHUB_OUTPUT"
+          echo "verdict=$(jq -r '.verdict' validation-result.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Comment validation pass and close issues
+        if: steps.validate.outputs.verdict == 'PASS'
+        run: |
+          BODY=$(cat validation-result.json)
+          IFS=',' read -r -a ISSUE_ARRAY <<< "${{ steps.issues.outputs.required }}"
+          for ISSUE_NUM in "${ISSUE_ARRAY[@]}"; do
+            ISSUE_NUM=$(printf '%s' "$ISSUE_NUM" | xargs)
+            [ -n "$ISSUE_NUM" ] || continue
+            gh issue comment "$ISSUE_NUM" --repo "$REPO" \
+              --body "Post-deploy validation passed for \`${{ steps.resolve.outputs.deployment_url }}\`.\n\n\`\`\`json\n$BODY\n\`\`\`"
+            STATE=$(gh issue view "$ISSUE_NUM" --repo "$REPO" --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
+            if [ "$STATE" = "OPEN" ]; then
+              gh issue close "$ISSUE_NUM" --repo "$REPO" \
+                -c "Closed automatically after successful post-deploy validation."
+            fi
+          done
+
+      - name: Comment validation infra failure
+        if: steps.validate.outputs.exit_code == '2'
+        run: |
+          BODY=$(cat validation-result.json)
+          IFS=',' read -r -a ISSUE_ARRAY <<< "${{ steps.issues.outputs.required }}"
+          for ISSUE_NUM in "${ISSUE_ARRAY[@]}"; do
+            ISSUE_NUM=$(printf '%s' "$ISSUE_NUM" | xargs)
+            [ -n "$ISSUE_NUM" ] || continue
+            gh issue comment "$ISSUE_NUM" --repo "$REPO" \
+              --body "Post-deploy validation infrastructure failed; leaving the issue open for follow-up.\n\n\`\`\`json\n$BODY\n\`\`\`"
+          done
+
+      - name: Create validation repair issue
+        if: steps.validate.outputs.verdict == 'FAIL' && steps.validate.outputs.exit_code != '2'
+        run: |
+          BODY=$(cat validation-result.json)
+          FIRST_ISSUE=$(printf '%s' "${{ steps.issues.outputs.required }}" | cut -d',' -f1 | xargs)
+          SOURCE_TITLE=$(gh issue view "$FIRST_ISSUE" --repo "$REPO" --json title --jq '.title' 2>/dev/null || echo "Validation target")
+          gh issue create --repo "$REPO" \
+            --title "[Pipeline] Validation Failure: $SOURCE_TITLE" \
+            --label pipeline \
+            --label bug \
+            --body "## Validation Failure\n\nSource issue: #$FIRST_ISSUE\nDeployment URL: \`${{ steps.resolve.outputs.deployment_url }}\`\n\n\`\`\`json\n$BODY\n\`\`\`"
+          IFS=',' read -r -a ISSUE_ARRAY <<< "${{ steps.issues.outputs.required }}"
+          for ISSUE_NUM in "${ISSUE_ARRAY[@]}"; do
+            ISSUE_NUM=$(printf '%s' "$ISSUE_NUM" | xargs)
+            [ -n "$ISSUE_NUM" ] || continue
+            gh issue comment "$ISSUE_NUM" --repo "$REPO" \
+              --body "Post-deploy validation failed for \`${{ steps.resolve.outputs.deployment_url }}\`. A repair issue was opened."
+          done

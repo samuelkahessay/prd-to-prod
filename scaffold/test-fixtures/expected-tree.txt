@@ -42,6 +42,7 @@ dist/scaffold/.github/workflows/repo-assist.md
 dist/scaffold/.github/workflows/security-compliance.lock.yml
 dist/scaffold/.github/workflows/security-compliance.md
 dist/scaffold/.github/workflows/shared/reporting.md
+dist/scaffold/.github/workflows/validate-deployment.yml
 dist/scaffold/.gitignore
 dist/scaffold/AGENTS.md
 dist/scaffold/LICENSE
@@ -68,6 +69,7 @@ dist/scaffold/scripts/monitor-pipeline.sh
 dist/scaffold/scripts/patch-pr-review-agent-lock.sh
 dist/scaffold/scripts/pipeline-watchdog.sh
 dist/scaffold/scripts/render-ci-repair-command.sh
+dist/scaffold/scripts/resolve-deployment-url.sh
 dist/scaffold/scripts/run-lifecycle-lib.sh
 dist/scaffold/scripts/start-run.sh
 dist/scaffold/scripts/tests/fixtures/push-to-existing/expected-second-body.md
@@ -84,6 +86,7 @@ dist/scaffold/scripts/tests/test-classify-pipeline-issue.sh
 dist/scaffold/scripts/tests/test-classify-pipeline-pr.sh
 dist/scaffold/scripts/tests/test-classify-transcript.sh
 dist/scaffold/scripts/tests/test-demo-preflight.sh
+dist/scaffold/scripts/tests/test-deploy-validation-wiring.sh
 dist/scaffold/scripts/tests/test-duplicate-code-detector.sh
 dist/scaffold/scripts/tests/test-export-scaffold.sh
 dist/scaffold/scripts/tests/test-extract-linked-issue-numbers.sh
@@ -104,6 +107,7 @@ dist/scaffold/scripts/tests/test-push-to-existing-golden.sh
 dist/scaffold/scripts/tests/test-push-to-existing.sh
 dist/scaffold/scripts/tests/test-push-to-pipeline-dryrun.sh
 dist/scaffold/scripts/tests/test-render-ci-repair-command.sh
+dist/scaffold/scripts/tests/test-resolve-deployment-url.sh
 dist/scaffold/scripts/tests/test-retry-state.sh
 dist/scaffold/scripts/tests/test-run-lifecycle-lib.sh
 dist/scaffold/scripts/tests/test-self-healing-drill-dispatch-substate.sh
