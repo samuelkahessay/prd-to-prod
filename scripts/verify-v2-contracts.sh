@@ -21,8 +21,10 @@ V2_CHECKS=(
   "bash scripts/tests/test-classify-transcript.sh"
   "bash scripts/tests/test-extraction-run.sh"
   "bash scripts/tests/test-push-to-existing.sh"
+  "bash scripts/tests/test-push-to-existing-golden.sh"
   # Phase 5
   "bash scripts/tests/test-no-stale-references.sh"
+  "bash scripts/tests/test-retry-state.sh"
   # Phase 6
   "bash scripts/tests/test-final-validation-matrix.sh"
 )

@@ -13,6 +13,32 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+      - name: Install gh-aw extension
+        run: |
+          gh extension install github/gh-aw || gh extension upgrade github/gh-aw
+      - name: Verify v2 contracts
+        run: |
+          if [[ -d scaffold && -d extraction ]]; then
+            bash scripts/tests/test-manifest-completeness.sh
+            bash scripts/tests/test-manifest-parse.sh
+            bash scripts/tests/test-export-scaffold.sh
+            bash scripts/tests/test-leak-test.sh
+            bash scripts/tests/test-bootstrap-test.sh
+            bash scripts/tests/test-validate-prd.sh
+            bash scripts/tests/test-validate-schema.sh
+            bash scripts/tests/test-classify-transcript.sh
+            bash scripts/tests/test-extraction-run.sh
+            bash scripts/tests/test-push-to-existing.sh
+            bash scripts/tests/test-push-to-existing-golden.sh
+            bash scripts/tests/test-retry-state.sh
+            bash scripts/tests/test-final-validation-matrix.sh
+          else
+            echo "Skipping source-repo v2 contract checks"
+          fi
       - name: Test pipeline PR classification
         run: bash scripts/tests/test-classify-pipeline-pr.sh
       - name: Test pr-review-agent lock patch script
