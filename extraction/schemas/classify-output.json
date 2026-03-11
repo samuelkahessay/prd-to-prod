@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["classification", "confidence", "signals", "product_match"],
+  "properties": {
+    "classification": { "type": "string", "enum": ["greenfield", "existing"] },
+    "confidence": { "type": "string", "enum": ["high", "low"] },
+    "signals": { "type": "array", "items": { "type": "string" } },
+    "product_match": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

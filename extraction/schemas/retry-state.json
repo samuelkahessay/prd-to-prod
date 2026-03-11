@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["retry_count", "max_retries", "last_error"],
+  "properties": {
+    "retry_count": { "type": "integer", "minimum": 0 },
+    "max_retries": { "type": "integer", "minimum": 1 },
+    "last_error": { "type": "string" },
+    "first_failure_at": { "type": "string" },
+    "last_failure_at": { "type": "string" }
+  },
+  "additionalProperties": false
+}

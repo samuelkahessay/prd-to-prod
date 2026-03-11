@@ -1,0 +1,167 @@
+{
+  "source": "microsoft_teams_meeting",
+  "meeting": {
+    "title": "Product Sync — Team Availability Service",
+    "date": "2026-03-03T15:00:00Z",
+    "duration_minutes": 28,
+    "participants": ["Alice Chen (PM)", "Bob Rivera (Eng)", "Carol Wu (Design)"],
+    "recording_available": true
+  },
+  "transcript": [
+    {
+      "speaker": "Alice Chen (PM)",
+      "timestamp": "00:00:08",
+      "text": "Okay, we're recording. So today I want to nail down the scope for the Team Availability Service. You both saw the one-pager I sent Friday. The basic idea: a lightweight REST API where people can set their availability — in office, remote, OOO, deep focus — and teammates can look up who's where. Think of it as a 'where is everyone?' service."
+    },
+    {
+      "speaker": "Bob Rivera (Eng)",
+      "timestamp": "00:00:32",
+      "text": "Yeah, I read through it. Honestly, it's overdue. Right now people just update their Slack status and half the team doesn't bother. You never actually know who's heads-down versus who's just not responding."
+    },
+    {
+      "speaker": "Carol Wu (Design)",
+      "timestamp": "00:00:48",
+      "text": "From a design side, I've been wanting to build a team dashboard that shows everyone's current status at a glance. Like a grid — name, status, little colored dot. Green for in-office, blue for remote, yellow for deep-focus, gray for OOO. Is the API going to support that kind of query?"
+    },
+    {
+      "speaker": "Alice Chen (PM)",
+      "timestamp": "00:01:06",
+      "text": "That's exactly the primary use case. We need a single endpoint that returns every team member's current status. Let's walk through the endpoints. I've got five. GET /team/:teamId/availability — that's Carol's dashboard query. GET /users/:userId/availability for one person's schedule for the week. POST /users/:userId/availability to create a new entry. PUT /users/:userId/availability/:id to update an existing one. And DELETE /users/:userId/availability/:id to cancel."
+    },
+    {
+      "speaker": "Bob Rivera (Eng)",
+      "timestamp": "00:01:45",
+      "text": "Clean. And each availability entry is what — userId, a status enum, start time, end time, optional note?"
+    },
+    {
+      "speaker": "Alice Chen (PM)",
+      "timestamp": "00:01:55",
+      "text": "Right. Status is one of four values: in-office, remote, ooo, or deep-focus. Plus that optional note field. Like you might set deep-focus 2 to 4pm with a note saying 'working on auth migration, ping only if urgent.'"
+    },
+    {
+      "speaker": "Carol Wu (Design)",
+      "timestamp": "00:02:10",
+      "text": "Love the note field. I can show it as a tooltip on the status badge. Now the team endpoint — that needs to compute each person's current status, right? Not just dump raw entries."
+    },
+    {
+      "speaker": "Bob Rivera (Eng)",
+      "timestamp": "00:02:24",
+      "text": "Yeah, there should be a computed currentStatus field on each user in that response. Given the current server time, what's their active status right now. If nothing matches, I'd return null. Don't assume — if someone hasn't set anything, we just don't know."
+    },
+    {
+      "speaker": "Carol Wu (Design)",
+      "timestamp": "00:02:40",
+      "text": "That works. I'll show a gray 'no status' indicator in the UI for null."
+    },
+    {
+      "speaker": "Alice Chen (PM)",
+      "timestamp": "00:02:47",
+      "text": "Good. Now here's a question I want to get ahead of — overlapping time ranges. What if someone sets deep-focus from 2 to 4pm, but they already have remote set from 9 to 5?"
+    },
+    {
+      "speaker": "Bob Rivera (Eng)",
+      "timestamp": "00:03:02",
+      "text": "We could try to do some kind of interval merge, split the ranges — but that gets complicated fast. My vote: latest entry wins. If you have remote 9 to 5 and then add deep-focus 2 to 4, at 3pm your status is deep-focus because that entry was created more recently. Both entries stay in storage. If you want to clean up the old one, you DELETE it explicitly."
+    },
+    {
+      "speaker": "Alice Chen (PM)",
+      "timestamp": "00:03:28",
+      "text": "Simple rule, easy to explain. No merging, no splitting. Most recently created entry covering the current time wins. I like it."
+    },
+    {
+      "speaker": "Carol Wu (Design)",
+      "timestamp": "00:03:38",
+      "text": "That's actually easier to design around. I was worried about having to show some weird merged timeline."
+    },
+    {
+      "speaker": "Bob Rivera (Eng)",
+      "timestamp": "00:03:47",
+      "text": "So — tech stack. Actually, I've been playing with Hono lately and it's incredibly fast. Way lighter than Express. We could get better performance out of the gate and—"
+    },
+    {
+      "speaker": "Alice Chen (PM)",
+      "timestamp": "00:03:58",
+      "text": "Let me stop you there. I know Hono is the shiny new thing, but half the team hasn't used it. Express plus TypeScript is what we've standardized on. Let's not introduce a new framework for a v1 service."
+    },
+    {
+      "speaker": "Bob Rivera (Eng)",
+      "timestamp": "00:04:10",
+      "text": "Fair. Express it is. TypeScript, Vitest for testing. For storage, in-memory — just a Map keyed by availability entry ID. Same repository pattern we used on the last service so we can swap in a real database later."
+    },
+    {
+      "speaker": "Alice Chen (PM)",
+      "timestamp": "00:04:28",
+      "text": "Perfect. Now let me bring up something from the product backlog — recurring schedules. Like, 'I'm remote every Tuesday and Thursday.' Should we support that?"
+    },
+    {
+      "speaker": "Bob Rivera (Eng)",
+      "timestamp": "00:04:40",
+      "text": "That's a can of worms. You need recurrence rules, exception handling, 'except this one Thursday I'm in the office' — it's basically building a calendar engine."
+    },
+    {
+      "speaker": "Alice Chen (PM)",
+      "timestamp": "00:04:52",
+      "text": "Yeah, you're right. Let's explicitly cut that from v1. No recurring schedules. You set individual time ranges, that's it. If you're remote every Tuesday, you create a new entry each week. Manual but simple."
+    },
+    {
+      "speaker": "Carol Wu (Design)",
+      "timestamp": "00:05:04",
+      "text": "What about timezone handling? If someone on the east coast sets 9 to 5, and someone on the west coast queries the team endpoint—"
+    },
+    {
+      "speaker": "Bob Rivera (Eng)",
+      "timestamp": "00:05:14",
+      "text": "UTC. Everything is UTC. All times stored as UTC, all times returned as UTC. Let the frontend handle display conversion. If we start doing timezone math on the server, we're going to regret it. I've been down that road."
+    },
+    {
+      "speaker": "Alice Chen (PM)",
+      "timestamp": "00:05:28",
+      "text": "Agreed. UTC everywhere on the backend. So let me also list the explicit out-of-scope items. No auth — handled by the API gateway. No calendar sync with Google or Outlook. No push notifications when someone changes status. No recurring schedules. And no timezone conversion."
+    },
+    {
+      "speaker": "Bob Rivera (Eng)",
+      "timestamp": "00:05:52",
+      "text": "Someone's going to ask about Google Calendar sync on day one, guaranteed."
+    },
+    {
+      "speaker": "Alice Chen (PM)",
+      "timestamp": "00:05:58",
+      "text": "And we'll say it's on the v2 roadmap. For non-functionals — we need to handle up to 50 team members per team. Response times under 100 milliseconds. With in-memory storage that should be trivial, but I want it documented as a target."
+    },
+    {
+      "speaker": "Bob Rivera (Eng)",
+      "timestamp": "00:06:14",
+      "text": "Fifty users, in-memory Map, no I/O — we'll be under 10ms honestly. The 100ms target is generous. I'll add a response time header so we can track it."
+    },
+    {
+      "speaker": "Carol Wu (Design)",
+      "timestamp": "00:06:27",
+      "text": "Quick thing — for the individual user endpoint, GET /users/:userId/availability, you said it returns the week's schedule. Is that the current calendar week, or rolling seven days from now?"
+    },
+    {
+      "speaker": "Bob Rivera (Eng)",
+      "timestamp": "00:06:40",
+      "text": "Rolling seven days. Calendar week is ambiguous — does the week start Sunday or Monday? Rolling seven days from the current UTC timestamp is unambiguous."
+    },
+    {
+      "speaker": "Alice Chen (PM)",
+      "timestamp": "00:06:52",
+      "text": "Rolling seven days, good call. Alright, let me recap. We're building a Team Availability API — Express, TypeScript, Vitest. Five endpoints: team-level GET, user-level GET, POST, PUT, DELETE. Status enum is in-office, remote, ooo, deep-focus. Time ranges with optional notes. Current status is computed server-side, latest entry wins for overlaps. In-memory storage keyed by entry ID. All times UTC. Out of scope: auth, calendar sync, notifications, recurring schedules, timezone conversion. NFRs: 50 team members, sub-100ms responses. Everyone aligned?"
+    },
+    {
+      "speaker": "Bob Rivera (Eng)",
+      "timestamp": "00:07:28",
+      "text": "Aligned. I'll have the project scaffolded tonight and the GET endpoints working by tomorrow afternoon."
+    },
+    {
+      "speaker": "Carol Wu (Design)",
+      "timestamp": "00:07:36",
+      "text": "Aligned. I'll start on the team dashboard mockups now that I know the API shape. Let's check in again Wednesday."
+    },
+    {
+      "speaker": "Alice Chen (PM)",
+      "timestamp": "00:07:43",
+      "text": "Wednesday works. Thanks both — we're done."
+    }
+  ]
+}
