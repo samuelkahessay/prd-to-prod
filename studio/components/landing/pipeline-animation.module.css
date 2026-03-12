@@ -1,0 +1,40 @@
+.wrap {
+  position: relative;
+}
+.canvas {
+  display: block;
+  width: 100%;
+  height: 520px;
+}
+.strip {
+  display: flex;
+  gap: 0;
+}
+.chip {
+  flex: 1;
+  padding: 10px 10px 8px;
+  border-top: 2.5px solid var(--rule);
+  transition: border-color 300ms, background 300ms;
+}
+.chipTitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+  transition: color 300ms;
+}
+.active {
+  border-top-color: var(--accent);
+  background: oklch(94% 0.02 255 / 0.5);
+}
+.active .chipTitle {
+  color: var(--ink-mid);
+}
+.healActive {
+  border-top-color: var(--heal);
+  background: oklch(95% 0.02 30 / 0.5);
+}
+.healActive .chipTitle {
+  color: var(--ink-mid);
+}

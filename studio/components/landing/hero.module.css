@@ -1,9 +1,9 @@
 .hero {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 48px;
   padding: 80px 48px 60px;
-  align-items: start;
+  align-items: center;
 }
 .text {
   padding-top: 40px;
@@ -49,43 +49,6 @@
   text-underline-offset: 3px;
 }
 .animation {
-  background: oklch(94% 0.005 75);
-  border: 1px solid var(--rule);
-  aspect-ratio: 4/3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   position: relative;
   overflow: hidden;
-}
-.placeholderText {
-  font-size: 13px;
-  color: var(--ink-faint);
-  font-style: italic;
-}
-.actLabels {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  border-top: 1px solid var(--rule);
-}
-.actLabels span {
-  flex: 1;
-  text-align: center;
-  padding: 10px 0;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  border-right: 1px solid var(--rule);
-}
-.actLabels span:last-child {
-  border-right: none;
-}
-.actActive {
-  color: var(--accent) !important;
-  background: var(--accent-wash);
 }

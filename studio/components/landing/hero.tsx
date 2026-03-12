@@ -1,6 +1,5 @@
+import { PipelineAnimation } from "./pipeline-animation";
 import styles from "./hero.module.css";
-
-const ACTS = ["Brief", "Plan", "Build", "Ship", "Heal"];
 
 export function Hero() {
   return (
@@ -20,14 +19,7 @@ export function Hero() {
         </div>
       </div>
       <div className={styles.animation}>
-        <span className={styles.placeholderText}>5-act pipeline animation</span>
-        <div className={styles.actLabels}>
-          {ACTS.map((act, i) => (
-            <span key={act} className={i === 0 ? styles.actActive : undefined}>
-              {act}
-            </span>
-          ))}
-        </div>
+        <PipelineAnimation />
       </div>
     </section>
   );
