@@ -1,0 +1,69 @@
+<h2>Which visual direction for the operator console?</h2>
+<p class="subtitle">Your current console is warm and editorial. Daniel's is dark with ambient orbs. Pick the vibe — we'll refine from there.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:2rem;background:linear-gradient(135deg,#0d1117 0%,#161b22 50%,#1a1f2b 100%);color:#c9d1d9;font-family:'JetBrains Mono',monospace;border-radius:12px 12px 0 0;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.2em;color:#58a6ff;margin-bottom:12px;">Operator Console</div>
+      <div style="font-size:28px;font-weight:700;font-family:Inter,sans-serif;line-height:1.1;margin-bottom:16px;color:#e6edf3;">Ship a meeting<br>from a query.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;">
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;">
+          <div style="font-size:10px;color:#8b949e;">gh cli</div>
+          <div style="color:#3fb950;font-size:13px;margin-top:4px;">● ready</div>
+        </div>
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;">
+          <div style="font-size:10px;color:#8b949e;">workiq</div>
+          <div style="color:#3fb950;font-size:13px;margin-top:4px;">● ready</div>
+        </div>
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;">
+          <div style="font-size:10px;color:#8b949e;">tokens</div>
+          <div style="color:#f0883e;font-size:13px;margin-top:4px;">● warning</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Dark Terminal</h3>
+      <p>GitHub-native dark theme. Monospace accents, status-driven color, feels like a DevOps dashboard. Matches the pipeline's identity as infrastructure.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:2rem;background:linear-gradient(135deg,#0a0a0f 0%,#12121a 50%,#0f0f18 100%);color:#a0a0b8;font-family:Inter,sans-serif;border-radius:12px 12px 0 0;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-40px;left:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(99,102,241,0.15) 0%,transparent 70%);"></div>
+      <div style="position:absolute;bottom:-60px;right:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(168,85,247,0.1) 0%,transparent 70%);"></div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.2em;color:#818cf8;margin-bottom:12px;position:relative;">Operator Console</div>
+      <div style="font-size:28px;font-weight:700;line-height:1.1;margin-bottom:16px;color:#e4e4ed;position:relative;">Ship a meeting<br>from a query.</div>
+      <div style="display:flex;gap:8px;margin-top:12px;position:relative;">
+        <div style="background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);border-radius:999px;padding:6px 14px;font-size:12px;color:#a5b4fc;">● Extract</div>
+        <div style="background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);border-radius:999px;padding:6px 14px;font-size:12px;color:#6b7280;">○ Analyze</div>
+        <div style="background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);border-radius:999px;padding:6px 14px;font-size:12px;color:#6b7280;">○ Build</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Ambient Dark</h3>
+      <p>Closer to Daniel's vibe — gradient orbs, glass morphism, indigo/purple accents. Feels premium and modern. Phase pills show pipeline progress.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:2rem;background:linear-gradient(180deg,#faf9f7 0%,#f3f1ed 100%);color:#2c2418;font-family:'Iowan Old Style',Palatino,Georgia,serif;border-radius:12px 12px 0 0;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;width:80px;height:3px;background:linear-gradient(90deg,#c05830,transparent);"></div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.18em;color:#8a7e6b;margin-bottom:12px;">Operator Console</div>
+      <div style="font-size:28px;font-weight:400;line-height:1.05;margin-bottom:16px;color:#2c2418;">Ship a meeting<br>from a query.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+        <div style="background:rgba(255,255,255,0.7);border:1px solid #ddd5c8;border-radius:12px;padding:12px;font-family:'Avenir Next',sans-serif;font-size:13px;">
+          <div style="font-weight:700;margin-bottom:4px;">Preflight</div>
+          <div style="color:#8a7e6b;">3/3 checks passed</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.7);border:1px solid #ddd5c8;border-radius:12px;padding:12px;font-family:'Avenir Next',sans-serif;font-size:13px;">
+          <div style="font-weight:700;margin-bottom:4px;">Last run</div>
+          <div style="color:#4a8c5c;">Completed 2m ago</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Editorial Polish</h3>
+      <p>Keep your current warm direction but level up the polish — better spacing, refined cards, subtle animations. More Stripe docs than GitHub dark.</p>
+    </div>
+  </div>
+</div>

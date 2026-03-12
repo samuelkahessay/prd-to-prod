@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Console Direction — Editorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f8f7f4;
+    color: #1a1a1a;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .frame-label {
+    position: fixed;
+    top: 16px;
+    right: 20px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #999;
+    z-index: 100;
+  }
+
+  /* ── Landing Page Mockup ── */
+  .mockup-landing {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 40px 60px;
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 100px;
+  }
+
+  .wordmark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: #1a1a1a;
+  }
+
+  .top-nav {
+    display: flex;
+    gap: 28px;
+    font-size: 13px;
+    color: #888;
+  }
+
+  .top-nav span:hover { color: #1a1a1a; cursor: pointer; }
+
+  .hero-block {
+    margin-bottom: 80px;
+  }
+
+  .hero-block h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(3rem, 6vw, 5.2rem);
+    font-weight: 400;
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    color: #1a1a1a;
+    max-width: 14ch;
+    margin-bottom: 28px;
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    line-height: 1.7;
+    color: #666;
+    max-width: 48ch;
+    margin-bottom: 36px;
+  }
+
+  .launch-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .btn-primary {
+    background: #1a1a1a;
+    color: #f8f7f4;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 120ms ease, opacity 120ms ease;
+  }
+  .btn-primary:hover { transform: translateY(-1px); opacity: 0.88; }
+
+  .btn-ghost {
+    background: transparent;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 120ms ease, color 120ms ease;
+  }
+  .btn-ghost:hover { border-color: #1a1a1a; color: #1a1a1a; }
+
+  /* ── Preflight Strip ── */
+  .preflight-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: #e8e6e1;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 60px;
+  }
+
+  .pf-cell {
+    background: #f8f7f4;
+    padding: 24px 20px;
+  }
+
+  .pf-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #999;
+    margin-bottom: 8px;
+  }
+
+  .pf-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot.green { background: #34a853; }
+  .dot.amber { background: #d4a017; }
+  .dot.red { background: #c53929; }
+
+  /* ── Form Panel ── */
+  .form-section {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 60px;
+    margin-bottom: 80px;
+  }
+
+  .form-label-col h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .form-label-col p {
+    font-size: 14px;
+    color: #888;
+    line-height: 1.6;
+  }
+
+  .form-fields {
+    display: grid;
+    gap: 24px;
+  }
+
+  .field-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #999;
+    margin-bottom: 8px;
+  }
+
+  .field-group input[type="text"],
+  .field-group textarea {
+    width: 100%;
+    border: 1px solid #e0ded9;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: #1a1a1a;
+    background: #fff;
+    transition: border-color 120ms ease;
+  }
+  .field-group input:focus,
+  .field-group textarea:focus {
+    outline: none;
+    border-color: #1a1a1a;
+  }
+
+  .field-group textarea {
+    resize: vertical;
+    min-height: 140px;
+  }
+
+  .pill-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .pill {
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid #e0ded9;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: all 120ms ease;
+  }
+  .pill.active,
+  .pill:hover {
+    border-color: #1a1a1a;
+    color: #1a1a1a;
+    background: #f0efec;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    border: none;
+    border-top: 1px solid #e8e6e1;
+    margin: 0 0 60px;
+  }
+
+  /* ── Run Progress Mockup ── */
+  .progress-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 40px 80px;
+  }
+
+  .progress-section h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    margin-bottom: 32px;
+  }
+
+  .stage-track {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: #e8e6e1;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 40px;
+  }
+
+  .stage {
+    background: #f8f7f4;
+    padding: 28px 24px;
+    position: relative;
+  }
+
+  .stage.active {
+    background: #fff;
+  }
+
+  .stage.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #1a1a1a;
+  }
+
+  .stage.done::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #34a853;
+  }
+
+  .stage-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #bbb;
+    margin-bottom: 6px;
+  }
+
+  .stage-name {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .stage-status {
+    font-size: 12px;
+    color: #888;
+  }
+
+  /* ── Event Log ── */
+  .event-log {
+    border: 1px solid #e8e6e1;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .log-entry {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0efec;
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 16px;
+    font-size: 13px;
+  }
+
+  .log-entry:last-child { border-bottom: none; }
+
+  .log-time {
+    font-family: 'JetBrains Mono', monospace;
+    color: #bbb;
+    font-size: 12px;
+  }
+
+  .log-msg { color: #444; }
+  .log-msg.artifact { color: #1a1a1a; font-weight: 600; }
+
+  /* ── Section Label ── */
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #bbb;
+    margin-bottom: 48px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e8e6e1;
+  }
+</style>
+</head>
+<body>
+  <div class="frame-label">Mockup — Operator Console</div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- LANDING PAGE                                        -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="mockup-landing">
+    <div class="top-bar">
+      <div class="wordmark">prd-to-prod</div>
+      <div class="top-nav">
+        <span>Console</span>
+        <span>History</span>
+        <span>Docs</span>
+      </div>
+    </div>
+
+    <div class="hero-block">
+      <h1>Ship a meeting into production.</h1>
+      <p class="hero-sub">
+        Paste a query, a transcript fragment, or raw notes. The pipeline extracts requirements, creates issues, and dispatches agents — then heals itself when things break.
+      </p>
+      <div class="launch-row">
+        <button class="btn-primary">New run</button>
+        <button class="btn-ghost">View history</button>
+      </div>
+    </div>
+
+    <div class="preflight-strip">
+      <div class="pf-cell">
+        <div class="pf-label">GitHub CLI</div>
+        <div class="pf-value"><span class="dot green"></span> authenticated</div>
+      </div>
+      <div class="pf-cell">
+        <div class="pf-label">WorkIQ</div>
+        <div class="pf-value"><span class="dot green"></span> connected</div>
+      </div>
+      <div class="pf-cell">
+        <div class="pf-label">Pipeline token</div>
+        <div class="pf-value"><span class="dot green"></span> valid</div>
+      </div>
+      <div class="pf-cell">
+        <div class="pf-label">Self-heal</div>
+        <div class="pf-value"><span class="dot green"></span> active</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">Launch Configuration</div>
+
+    <div class="form-section">
+      <div class="form-label-col">
+        <h2>Choose your input</h2>
+        <p>WorkIQ pulls from a meeting directly. Raw text accepts anything — bullet points, transcript fragments, or a blunt description of what needs to be built.</p>
+      </div>
+      <div class="form-fields">
+        <div class="field-group">
+          <label>Input source</label>
+          <div class="pill-row">
+            <div class="pill active">WorkIQ query</div>
+            <div class="pill">Raw text</div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Meeting query</label>
+          <input type="text" placeholder="Product Sync, February roadmap, customer review...">
+        </div>
+        <div class="field-group">
+          <label>Pipeline mode</label>
+          <div class="pill-row">
+            <div class="pill active">New product</div>
+            <div class="pill">Existing product</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;">
+          <button class="btn-primary">Ship the meeting</button>
+          <label style="font-size:13px;color:#999;display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" style="accent-color:#1a1a1a;"> Mock mode
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- RUN PROGRESS (below, as if scrolled to)             -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div style="background:#fff;border-top:1px solid #e8e6e1;padding-top:60px;">
+    <div class="progress-section">
+      <div class="section-label">Run Progress — active</div>
+
+      <h2>Live execution stream</h2>
+      <p style="color:#888;font-size:15px;margin-bottom:40px;max-width:52ch;">
+        Stages advance as the shell pipeline emits progress. Artifacts appear the moment they're discovered.
+      </p>
+
+      <div class="stage-track">
+        <div class="stage done">
+          <div class="stage-num">01</div>
+          <div class="stage-name">Extract</div>
+          <div class="stage-status">Completed in 14s</div>
+        </div>
+        <div class="stage active">
+          <div class="stage-num">02</div>
+          <div class="stage-name">Analyze</div>
+          <div class="stage-status">Gap analysis running...</div>
+        </div>
+        <div class="stage">
+          <div class="stage-num">03</div>
+          <div class="stage-name">Build</div>
+          <div class="stage-status">Waiting</div>
+        </div>
+      </div>
+
+      <div class="event-log">
+        <div class="log-entry">
+          <div class="log-time">18:07:14</div>
+          <div class="log-msg">[1/3] Extracting requirements from meeting notes</div>
+        </div>
+        <div class="log-entry">
+          <div class="log-time">18:07:22</div>
+          <div class="log-msg artifact">PIPELINE_REPO=samuelkahessay/contoso-redesign</div>
+        </div>
+        <div class="log-entry">
+          <div class="log-time">18:07:28</div>
+          <div class="log-msg">[2/3] Running gap analysis against target repository</div>
+        </div>
+        <div class="log-entry">
+          <div class="log-time">18:07:31</div>
+          <div class="log-msg">Comparing 4 requirements against existing codebase...</div>
+        </div>
+        <div class="log-entry">
+          <div class="log-time">18:07:38</div>
+          <div class="log-msg">Identified 3 implementation gaps, creating issues</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator Console — prd-to-prod</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,400&family=Outfit:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Tokens ── */
+  :root {
+    --bg: oklch(96% 0.008 75);
+    --paper: oklch(99% 0.004 75);
+    --ink: oklch(18% 0.015 55);
+    --ink-2: oklch(42% 0.012 55);
+    --ink-3: oklch(62% 0.01 55);
+    --rule: oklch(88% 0.012 65);
+    --rule-light: oklch(93% 0.008 65);
+    --accent: oklch(52% 0.14 38);
+    --accent-hover: oklch(46% 0.14 38);
+    --good: oklch(58% 0.12 155);
+    --warn: oklch(62% 0.14 85);
+    --bad: oklch(52% 0.16 28);
+
+    --display: 'Fraunces', 'Georgia', serif;
+    --body: 'Outfit', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 48px;
+    --space-2xl: 80px;
+    --space-3xl: 120px;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+
+  html {
+    font-kerning: normal;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--body);
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--ink);
+    background: var(--bg);
+    overflow-x: hidden;
+  }
+
+  /* ── Entrance Animations ── */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .anim {
+    animation: rise 700ms var(--ease-out-expo) both;
+    animation-delay: calc(var(--i, 0) * 80ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .anim { animation: fade-in 200ms ease-out both; }
+  }
+
+  /* ── Page Shell ── */
+  .page {
+    width: min(1140px, calc(100vw - 3rem));
+    margin: 0 auto;
+  }
+
+  /* ── Top Bar ── */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-lg) 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .wordmark {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: var(--space-lg);
+  }
+
+  .nav-links a {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ink-3);
+    text-decoration: none;
+    transition: color 150ms;
+  }
+  .nav-links a:hover { color: var(--ink); }
+
+  /* ── Hero ── */
+  .hero {
+    padding: var(--space-3xl) 0 var(--space-2xl);
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: var(--space-2xl);
+    align-items: end;
+  }
+
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(3.2rem, 5.5vw, 5rem);
+    font-weight: 300;
+    font-style: normal;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    max-width: 16ch;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+
+  .hero-aside {
+    padding-bottom: 0.4rem;
+  }
+
+  .hero-aside p {
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+    line-height: 1.7;
+    max-width: 38ch;
+  }
+
+  /* ── Preflight — horizontal datum line ── */
+  .preflight {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .pf-item {
+    flex: 1;
+    padding: var(--space-md) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .pf-item + .pf-item {
+    padding-left: var(--space-lg);
+    border-left: 1px solid var(--rule-light);
+  }
+
+  .pf-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .pf-dot.ok { background: var(--good); }
+  .pf-dot.warn { background: var(--warn); }
+  .pf-dot.fail { background: var(--bad); }
+
+  .pf-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-3);
+  }
+
+  .pf-val {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--ink-2);
+  }
+
+  /* ── Form Section ── */
+  .form-zone {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin-top: var(--space-2xl);
+  }
+
+  .form-intro {
+    padding-right: var(--space-2xl);
+    padding-top: var(--space-xs);
+  }
+
+  .form-intro .overline {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-3);
+    margin-bottom: var(--space-md);
+  }
+
+  .form-intro h2 {
+    font-family: var(--display);
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    font-weight: 300;
+    line-height: 1.05;
+    margin-bottom: var(--space-lg);
+  }
+
+  .form-intro p {
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+    line-height: 1.7;
+    max-width: 36ch;
+  }
+
+  .form-fields {
+    border-left: 1px solid var(--rule);
+    padding-left: var(--space-2xl);
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-3);
+    margin-bottom: var(--space-sm);
+  }
+
+  .field input[type="text"],
+  .field textarea {
+    width: 100%;
+    border: 1px solid var(--rule);
+    border-radius: 0;
+    padding: 14px 16px;
+    font-family: var(--body);
+    font-size: 0.9375rem;
+    color: var(--ink);
+    background: var(--paper);
+    transition: border-color 150ms;
+  }
+
+  .field input:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--ink);
+  }
+
+  .field textarea {
+    resize: vertical;
+    min-height: 160px;
+    line-height: 1.6;
+  }
+
+  .pill-group {
+    display: flex;
+    gap: 0;
+  }
+
+  .pill-group .pill {
+    padding: 10px 20px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    font-family: var(--body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition: all 120ms var(--ease-out-quart);
+  }
+
+  .pill-group .pill:first-child { border-radius: 0; }
+  .pill-group .pill:last-child { border-left: 0; border-radius: 0; }
+
+  .pill-group .pill.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding-top: var(--space-sm);
+  }
+
+  .btn-ship {
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    padding: 14px 32px;
+    font-family: var(--body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: transform 120ms var(--ease-out-quart), background 120ms;
+  }
+  .btn-ship:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+  }
+
+  .mock-toggle {
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .mock-toggle input { accent-color: var(--ink); }
+
+  /* ── Divider ── */
+  .section-break {
+    border: none;
+    margin: var(--space-2xl) 0;
+    position: relative;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .section-break::after {
+    content: attr(data-label);
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    background: var(--bg);
+    padding-right: var(--space-md);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-3);
+  }
+
+  /* ── Run Progress ── */
+  .progress-zone {
+    margin-top: var(--space-xl);
+    margin-bottom: var(--space-3xl);
+  }
+
+  .progress-zone h2 {
+    font-family: var(--display);
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    font-weight: 300;
+    line-height: 1.05;
+    margin-bottom: var(--space-sm);
+  }
+
+  .progress-zone > p {
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+    margin-bottom: var(--space-xl);
+    max-width: 52ch;
+  }
+
+  /* Stage track — horizontal timeline */
+  .stage-track {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin-bottom: var(--space-xl);
+  }
+
+  .stage {
+    padding: var(--space-lg) 0;
+    border-top: 2px solid var(--rule);
+    position: relative;
+  }
+
+  .stage + .stage { padding-left: var(--space-lg); }
+
+  .stage[data-state="done"] { border-top-color: var(--good); }
+  .stage[data-state="active"] { border-top-color: var(--ink); }
+
+  .stage[data-state="active"]::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 0;
+    width: 60%;
+    height: 2px;
+    background: var(--ink);
+    animation: progress-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes progress-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .stage-num {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    color: var(--ink-3);
+    margin-bottom: 4px;
+  }
+
+  .stage-name {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    margin-bottom: 2px;
+  }
+
+  .stage-detail {
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+
+  /* Event log — columnar newspaper style */
+  .log {
+    border-top: 1px solid var(--rule);
+  }
+
+  .log-row {
+    display: grid;
+    grid-template-columns: 72px auto 1fr;
+    gap: var(--space-md);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule-light);
+    font-size: 0.8125rem;
+    align-items: baseline;
+  }
+
+  .log-row:last-child { border-bottom: 1px solid var(--rule); }
+
+  .log-time {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .log-badge {
+    font-family: var(--mono);
+    font-size: 0.625rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+
+  .log-badge.info { background: var(--rule-light); color: var(--ink-2); }
+  .log-badge.artifact { background: oklch(92% 0.04 155); color: oklch(38% 0.08 155); }
+  .log-badge.progress { background: oklch(92% 0.03 250); color: oklch(42% 0.08 250); }
+
+  .log-msg {
+    color: var(--ink-2);
+  }
+
+  .log-msg.highlight {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* ── Self-Heal Strip ── */
+  .heal-strip {
+    margin-top: var(--space-2xl);
+    margin-bottom: var(--space-3xl);
+    padding: var(--space-xl) 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--space-xl);
+  }
+
+  .heal-stat .stat-value {
+    font-family: var(--display);
+    font-size: 2.8rem;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .heal-stat .stat-label {
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+    margin-top: var(--space-sm);
+    max-width: 22ch;
+    line-height: 1.5;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .hero {
+      grid-template-columns: 1fr;
+      padding: var(--space-2xl) 0 var(--space-xl);
+      gap: var(--space-lg);
+    }
+
+    .form-zone {
+      grid-template-columns: 1fr;
+    }
+
+    .form-fields {
+      border-left: none;
+      padding-left: 0;
+      border-top: 1px solid var(--rule);
+      padding-top: var(--space-xl);
+    }
+
+    .form-intro {
+      padding-right: 0;
+    }
+
+    .heal-strip {
+      grid-template-columns: 1fr;
+      gap: var(--space-lg);
+    }
+
+    .preflight {
+      flex-direction: column;
+    }
+
+    .pf-item + .pf-item {
+      padding-left: 0;
+      border-left: none;
+      border-top: 1px solid var(--rule-light);
+      padding-top: var(--space-sm);
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Top Bar -->
+  <div class="top-bar anim" style="--i:0">
+    <div class="wordmark">prd-to-prod</div>
+    <div class="nav-links">
+      <a href="#">Console</a>
+      <a href="#">History</a>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1 class="anim" style="--i:1">
+      Ship a meeting<br>
+      <em>into production.</em>
+    </h1>
+    <div class="hero-aside anim" style="--i:2">
+      <p>Paste a query, a transcript, or raw notes. The pipeline extracts, creates issues, dispatches agents — and heals itself when things break.</p>
+    </div>
+  </section>
+
+  <!-- Preflight -->
+  <div class="preflight anim" style="--i:3">
+    <div class="pf-item">
+      <span class="pf-dot ok"></span>
+      <span class="pf-label">gh cli</span>
+      <span class="pf-val">authenticated</span>
+    </div>
+    <div class="pf-item">
+      <span class="pf-dot ok"></span>
+      <span class="pf-label">workiq</span>
+      <span class="pf-val">connected</span>
+    </div>
+    <div class="pf-item">
+      <span class="pf-dot ok"></span>
+      <span class="pf-label">pipeline token</span>
+      <span class="pf-val">valid</span>
+    </div>
+    <div class="pf-item">
+      <span class="pf-dot ok"></span>
+      <span class="pf-label">self-heal</span>
+      <span class="pf-val">active</span>
+    </div>
+  </div>
+
+  <!-- Form Section -->
+  <div class="form-zone">
+    <div class="form-intro anim" style="--i:4">
+      <div class="overline">Launch</div>
+      <h2>Choose your input and let the pipeline run.</h2>
+      <p>WorkIQ pulls from a meeting directly. Raw text accepts anything — bullet points, transcript fragments, or a blunt description of what to build.</p>
+    </div>
+    <div class="form-fields anim" style="--i:5">
+      <div class="field">
+        <label>Input source</label>
+        <div class="pill-group">
+          <button class="pill active">WorkIQ</button>
+          <button class="pill">Raw text</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Meeting query</label>
+        <input type="text" placeholder="Product Sync, February roadmap, customer review...">
+      </div>
+      <div class="field">
+        <label>Pipeline mode</label>
+        <div class="pill-group">
+          <button class="pill active">New product</button>
+          <button class="pill">Existing</button>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-ship">Ship the meeting</button>
+        <label class="mock-toggle">
+          <input type="checkbox">
+          Mock mode
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Run Progress -->
+  <hr class="section-break" data-label="Run in progress">
+
+  <div class="progress-zone">
+    <h2 class="anim" style="--i:6">Live execution stream</h2>
+    <p class="anim" style="--i:7">Stages advance as the shell pipeline emits. Artifacts surface the moment they're found.</p>
+
+    <div class="stage-track anim" style="--i:8">
+      <div class="stage" data-state="done">
+        <div class="stage-num">01</div>
+        <div class="stage-name">Extract</div>
+        <div class="stage-detail">14s</div>
+      </div>
+      <div class="stage" data-state="active">
+        <div class="stage-num">02</div>
+        <div class="stage-name">Analyze</div>
+        <div class="stage-detail">running</div>
+      </div>
+      <div class="stage" data-state="pending">
+        <div class="stage-num">03</div>
+        <div class="stage-name">Build</div>
+        <div class="stage-detail">queued</div>
+      </div>
+    </div>
+
+    <div class="log anim" style="--i:9">
+      <div class="log-row">
+        <span class="log-time">18:07:14</span>
+        <span class="log-badge progress">step</span>
+        <span class="log-msg">[1/3] Extracting requirements from meeting notes</span>
+      </div>
+      <div class="log-row">
+        <span class="log-time">18:07:22</span>
+        <span class="log-badge artifact">artifact</span>
+        <span class="log-msg highlight">PIPELINE_REPO = samuelkahessay/contoso-redesign</span>
+      </div>
+      <div class="log-row">
+        <span class="log-time">18:07:28</span>
+        <span class="log-badge progress">step</span>
+        <span class="log-msg">[2/3] Running gap analysis against target repository</span>
+      </div>
+      <div class="log-row">
+        <span class="log-time">18:07:31</span>
+        <span class="log-badge info">info</span>
+        <span class="log-msg">Comparing 4 requirements against existing codebase</span>
+      </div>
+      <div class="log-row">
+        <span class="log-time">18:07:38</span>
+        <span class="log-badge info">info</span>
+        <span class="log-msg">Identified 3 implementation gaps, creating issues</span>
+      </div>
+      <div class="log-row">
+        <span class="log-time">18:07:44</span>
+        <span class="log-badge artifact">artifact</span>
+        <span class="log-msg highlight">PIPELINE_TRACKING_ISSUE = #247</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Self-heal evidence -->
+  <div class="heal-strip anim" style="--i:10">
+    <div class="heal-stat">
+      <div class="stat-value">7</div>
+      <div class="stat-label">Self-healed failures since deploy</div>
+    </div>
+    <div class="heal-stat">
+      <div class="stat-value">12m</div>
+      <div class="stat-label">Median time from break to merged fix</div>
+    </div>
+    <div class="heal-stat">
+      <div class="stat-value">0</div>
+      <div class="stat-label">Human interventions required</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

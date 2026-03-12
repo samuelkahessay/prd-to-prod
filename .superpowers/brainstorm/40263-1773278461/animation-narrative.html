@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animation Narrative Structure</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f5f2;
+    --ink: #2a2520;
+    --ink2: #5e574f;
+    --ink3: #8e877f;
+    --ink4: #b5afa8;
+    --rule: #e2ddd6;
+    --accent: #4a6fd8;
+    --accentW: #e8edf8;
+    --good: #3d9a6a;
+    --goodW: #e5f4ec;
+    --heal: #c45a3c;
+    --healW: #fae8e3;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    padding: 40px;
+  }
+  h2 {
+    font-size: 1.6rem;
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    color: var(--ink3);
+    font-size: 0.95rem;
+    margin-bottom: 40px;
+    max-width: 60ch;
+    line-height: 1.6;
+  }
+
+  /* Timeline */
+  .timeline {
+    position: relative;
+    display: flex;
+    gap: 0;
+    margin-bottom: 60px;
+  }
+  .act {
+    flex: 1;
+    padding: 20px 16px;
+    border-top: 3px solid var(--rule);
+    position: relative;
+  }
+  .act.active-act {
+    border-top-color: var(--accent);
+  }
+  .act.heal-act {
+    border-top-color: var(--heal);
+  }
+  .act-num {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink4);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .act-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+  .act-desc {
+    font-size: 0.8rem;
+    color: var(--ink3);
+    line-height: 1.5;
+  }
+  .act-time {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink4);
+    margin-top: 8px;
+  }
+
+  /* Live preview canvas */
+  .preview-container {
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .preview-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink4);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 400px;
+  }
+
+  .act-indicator {
+    position: absolute;
+    bottom: 12px;
+    left: 16px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--ink3);
+    background: rgba(247,245,242,0.9);
+    padding: 4px 10px;
+    border-radius: 3px;
+  }
+
+  /* Notes */
+  .notes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 40px;
+  }
+  .note {
+    padding: 20px;
+    border-top: 2px solid var(--rule);
+  }
+  .note h4 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink3);
+    margin-bottom: 8px;
+  }
+  .note p {
+    font-size: 0.875rem;
+    color: var(--ink2);
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<h2>The pipeline story, in 5 acts</h2>
+<p class="subtitle">Each act plays sequentially in a ~18 second loop. The density builds as work fans out, then converges at review/deploy. The self-heal loop is the dramatic climax.</p>
+
+<!-- Act timeline -->
+<div class="timeline">
+  <div class="act active-act">
+    <div class="act-num">Act 1</div>
+    <div class="act-title">Chaos → Clarity</div>
+    <div class="act-desc">Scattered particles (noisy meeting data) drift in from the left. They converge and compress into a single clean node: the PRD.</div>
+    <div class="act-time">0s – 3s</div>
+  </div>
+  <div class="act active-act">
+    <div class="act-num">Act 2</div>
+    <div class="act-title">Fan-out</div>
+    <div class="act-desc">PRD pulses, then splits into 4-5 issue particles that spread vertically. Each finds its own lane. Dependency lines connect them (some wait for others).</div>
+    <div class="act-time">3s – 6s</div>
+  </div>
+  <div class="act active-act">
+    <div class="act-num">Act 3</div>
+    <div class="act-title">Execution Wave</div>
+    <div class="act-desc">Issues get picked up in dependency order (not all at once). Each spawns a small burst (agent working). PRs appear as new particles heading toward Review. This is the dense phase — multiple agents working simultaneously.</div>
+    <div class="act-time">6s – 11s</div>
+  </div>
+  <div class="act active-act">
+    <div class="act-num">Act 4</div>
+    <div class="act-title">Converge → Deploy</div>
+    <div class="act-desc">PR particles converge at a Review gate (diamond). Brief pause (human approval moment). Then all flow together into a single Deploy node that pulses green.</div>
+    <div class="act-time">11s – 14s</div>
+  </div>
+  <div class="act heal-act">
+    <div class="act-num">Act 5</div>
+    <div class="act-title">Break → Heal</div>
+    <div class="act-desc">Deploy node flickers red. A failure particle drops down into the heal loop. It files a bug, spawns a fix agent, the fix travels back up through review and re-deploys. Green pulse. Loop restarts.</div>
+    <div class="act-time">14s – 18s</div>
+  </div>
+</div>
+
+<!-- Live preview -->
+<div class="preview-container">
+  <div class="preview-label">Live preview — narrative loop</div>
+  <canvas id="preview"></canvas>
+  <div class="act-indicator" id="act-label">Act 1 — Chaos → Clarity</div>
+</div>
+
+<!-- Design notes -->
+<div class="notes">
+  <div class="note">
+    <h4>Density curve</h4>
+    <p>Act 1 starts sparse (5-8 scattered particles). Act 3 is the peak (15-20 active particles across lanes). Act 4 converges back to few. The density itself tells the story — "a lot is happening in the middle."</p>
+  </div>
+  <div class="note">
+    <h4>Color mapping</h4>
+    <p>Meeting chaos = muted grey. PRD = blue (accent). Issues = blue dots with lane trails. Agents = small grey bursts. PRs = blue moving right. Review gate = pulsing diamond. Deploy = green. Heal loop = warm red/orange.</p>
+  </div>
+  <div class="note">
+    <h4>The "wow" moment</h4>
+    <p>Act 5. The deploy node going red, the failure particle dropping down, the fix racing back up — this is the moment that makes someone say "holy shit, it fixes itself." It should feel fast and decisive, not slow.</p>
+  </div>
+  <div class="note">
+    <h4>Idle state</h4>
+    <p>After the loop plays 2-3 times, it can settle into a gentle ambient mode with light particles flowing along the established paths. The narrative grabs attention; the ambient keeps it from being distracting.</p>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('preview');
+const dpr = window.devicePixelRatio || 1;
+let W, H;
+
+function resize() {
+  const rect = canvas.getBoundingClientRect();
+  W = rect.width;
+  H = rect.height;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const ctx = canvas.getContext('2d');
+
+const COL = {
+  ink: '#2a2520', ink2: '#5e574f', ink3: '#8e877f', ink4: '#b5afa8',
+  rule: '#e2ddd6', accent: '#4a6fd8', accentW: '#e8edf8',
+  good: '#3d9a6a', goodW: '#e5f4ec',
+  heal: '#c45a3c', healW: '#fae8e3', bg: '#f7f5f2',
+  chaos: '#c4bdb5',
+};
+
+// Timing
+const LOOP_DURATION = 18;
+const ACTS = [
+  { name: 'Chaos → Clarity', start: 0, end: 3 },
+  { name: 'Fan-out', start: 3, end: 6 },
+  { name: 'Execution Wave', start: 6, end: 11 },
+  { name: 'Converge → Deploy', start: 11, end: 14 },
+  { name: 'Break → Heal', start: 14, end: 18 },
+];
+
+// Key positions (normalized 0-1)
+const POS = {
+  // Main horizontal lane
+  entryX: 0.02,
+  prdX: 0.18,   prdY: 0.42,
+  // Issue lanes (fan out vertically)
+  issueX: 0.32,
+  issueLanes: [0.18, 0.32, 0.46, 0.60, 0.74],
+  // Agent work zone
+  agentX: 0.50,
+  // PR convergence
+  prX: 0.65,
+  // Review gate
+  reviewX: 0.76, reviewY: 0.42,
+  // Deploy
+  deployX: 0.90, deployY: 0.42,
+  // Heal loop
+  healDropY: 0.85,
+  healFixX: 0.55,
+};
+
+// Particle system
+let particles = [];
+let time = 0;
+let lastFrame = performance.now();
+
+class Particle {
+  constructor(x, y, opts = {}) {
+    this.x = x; this.y = y;
+    this.targetX = opts.targetX ?? x;
+    this.targetY = opts.targetY ?? y;
+    this.vx = opts.vx ?? 0;
+    this.vy = opts.vy ?? 0;
+    this.r = opts.r ?? 3;
+    this.color = opts.color ?? COL.chaos;
+    this.alpha = opts.alpha ?? 1;
+    this.trail = [];
+    this.maxTrail = opts.maxTrail ?? 12;
+    this.life = opts.life ?? Infinity;
+    this.age = 0;
+    this.type = opts.type ?? 'default';
+    this.easing = opts.easing ?? 0.04;
+    this.settled = false;
+    this.waitUntil = opts.waitUntil ?? 0;
+  }
+
+  update(dt) {
+    this.age += dt;
+    if (this.age < this.waitUntil) return;
+
+    // Trail
+    this.trail.push({ x: this.x, y: this.y });
+    if (this.trail.length > this.maxTrail) this.trail.shift();
+
+    // Ease toward target
+    const dx = this.targetX - this.x;
+    const dy = this.targetY - this.y;
+    this.x += dx * this.easing + this.vx * dt;
+    this.y += dy * this.easing + this.vy * dt;
+
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+      this.settled = true;
+    }
+
+    // Fade based on life
+    if (this.life !== Infinity) {
+      const remaining = this.life - this.age;
+      if (remaining < 0.5) this.alpha = Math.max(0, remaining / 0.5);
+    }
+  }
+
+  draw(ctx) {
+    if (this.age < this.waitUntil) return;
+    if (this.alpha <= 0) return;
+
+    // Trail
+    if (this.trail.length > 1) {
+      for (let i = 1; i < this.trail.length; i++) {
+        const a = (i / this.trail.length) * 0.25 * this.alpha;
+        ctx.beginPath();
+        ctx.arc(this.trail[i].x, this.trail[i].y, this.r * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = this.color.replace(')', `,${a})`).replace('rgb', 'rgba');
+        ctx.fill();
+      }
+    }
+
+    // Main dot
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = this.color.replace(')', `,${this.alpha})`).replace('rgb', 'rgba');
+    ctx.fill();
+  }
+}
+
+// Convert hex to rgb string
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3), 16);
+  const g = parseInt(hex.slice(3,5), 16);
+  const b = parseInt(hex.slice(5,7), 16);
+  return `rgb(${r},${g},${b})`;
+}
+
+const colRgb = {
+  chaos: hexToRgb(COL.chaos),
+  accent: hexToRgb(COL.accent),
+  good: hexToRgb(COL.good),
+  heal: hexToRgb(COL.heal),
+  ink4: hexToRgb(COL.ink4),
+  ink3: hexToRgb(COL.ink3),
+};
+
+// Spawn schedules per act
+let spawned = {};
+
+function spawnAct1() {
+  if (spawned.act1) return;
+  spawned.act1 = true;
+  // 8-12 chaotic particles from left, converging to PRD position
+  for (let i = 0; i < 10; i++) {
+    const startX = POS.entryX * W + (Math.random() - 0.5) * W * 0.08;
+    const startY = POS.prdY * H + (Math.random() - 0.5) * H * 0.6;
+    particles.push(new Particle(startX, startY, {
+      targetX: POS.prdX * W + (Math.random() - 0.5) * 8,
+      targetY: POS.prdY * H + (Math.random() - 0.5) * 8,
+      r: 2 + Math.random() * 2,
+      color: colRgb.chaos,
+      maxTrail: 8,
+      easing: 0.02 + Math.random() * 0.02,
+      type: 'chaos',
+      vx: (Math.random() - 0.5) * 20,
+      vy: (Math.random() - 0.5) * 15,
+    }));
+  }
+}
+
+function spawnAct2() {
+  if (spawned.act2) return;
+  spawned.act2 = true;
+  // Remove chaos particles, create PRD node, then fan out to issues
+  particles = particles.filter(p => p.type !== 'chaos');
+
+  // PRD pulse particle
+  particles.push(new Particle(POS.prdX * W, POS.prdY * H, {
+    r: 7,
+    color: colRgb.accent,
+    type: 'prd',
+    maxTrail: 0,
+    life: 3,
+  }));
+
+  // Issue particles fan out
+  const numIssues = 5;
+  for (let i = 0; i < numIssues; i++) {
+    particles.push(new Particle(POS.prdX * W, POS.prdY * H, {
+      targetX: POS.issueX * W,
+      targetY: POS.issueLanes[i] * H,
+      r: 4,
+      color: colRgb.accent,
+      maxTrail: 15,
+      easing: 0.035,
+      type: 'issue',
+      waitUntil: i * 0.3,
+    }));
+  }
+}
+
+function spawnAct3() {
+  if (spawned.act3) return;
+  spawned.act3 = true;
+
+  // Dependency ordering: issues 0 and 1 go first, then 2, then 3 and 4
+  const depOrder = [0, 0.2, 1.2, 1.8, 2.0];
+
+  for (let i = 0; i < 5; i++) {
+    // Agent burst (small particles near issue)
+    for (let j = 0; j < 3; j++) {
+      particles.push(new Particle(POS.issueX * W, POS.issueLanes[i] * H, {
+        targetX: POS.agentX * W + (Math.random() - 0.5) * 20,
+        targetY: POS.issueLanes[i] * H + (Math.random() - 0.5) * 15,
+        r: 1.5 + Math.random(),
+        color: colRgb.ink4,
+        maxTrail: 6,
+        easing: 0.03,
+        type: 'agent',
+        waitUntil: depOrder[i] + j * 0.15,
+        life: 3,
+      }));
+    }
+
+    // PR particle → toward review
+    particles.push(new Particle(POS.agentX * W, POS.issueLanes[i] * H, {
+      targetX: POS.prX * W,
+      targetY: POS.issueLanes[i] * H,
+      r: 3.5,
+      color: colRgb.accent,
+      maxTrail: 18,
+      easing: 0.025,
+      type: 'pr',
+      waitUntil: depOrder[i] + 1.5,
+    }));
+  }
+}
+
+function spawnAct4() {
+  if (spawned.act4) return;
+  spawned.act4 = true;
+
+  // Converge PRs to review gate
+  const prs = particles.filter(p => p.type === 'pr');
+  prs.forEach((p, i) => {
+    p.targetX = POS.reviewX * W;
+    p.targetY = POS.reviewY * H;
+    p.easing = 0.05;
+  });
+
+  // After convergence, send to deploy
+  setTimeout(() => {
+    // Deploy particle
+    particles.push(new Particle(POS.reviewX * W, POS.reviewY * H, {
+      targetX: POS.deployX * W,
+      targetY: POS.deployY * H,
+      r: 7,
+      color: colRgb.good,
+      maxTrail: 20,
+      easing: 0.04,
+      type: 'deploy',
+    }));
+  }, 1200);
+}
+
+function spawnAct5() {
+  if (spawned.act5) return;
+  spawned.act5 = true;
+
+  // Deploy goes red
+  const deploy = particles.find(p => p.type === 'deploy');
+  if (deploy) {
+    deploy.color = colRgb.heal;
+  }
+
+  // Failure particle drops down
+  particles.push(new Particle(POS.deployX * W, POS.deployY * H, {
+    targetX: POS.deployX * W,
+    targetY: POS.healDropY * H,
+    r: 4,
+    color: colRgb.heal,
+    maxTrail: 15,
+    easing: 0.06,
+    type: 'failure',
+  }));
+
+  // Fix particle races back
+  setTimeout(() => {
+    particles.push(new Particle(POS.deployX * W, POS.healDropY * H, {
+      targetX: POS.healFixX * W,
+      targetY: POS.healDropY * H,
+      r: 3,
+      color: colRgb.heal,
+      maxTrail: 20,
+      easing: 0.05,
+      type: 'fix',
+    }));
+  }, 600);
+
+  // Fix goes up to review
+  setTimeout(() => {
+    particles.push(new Particle(POS.healFixX * W, POS.healDropY * H, {
+      targetX: POS.reviewX * W,
+      targetY: POS.reviewY * H,
+      r: 3.5,
+      color: colRgb.heal,
+      maxTrail: 20,
+      easing: 0.045,
+      type: 'heal-pr',
+    }));
+  }, 1400);
+
+  // Re-deploy green
+  setTimeout(() => {
+    const d = particles.find(p => p.type === 'deploy');
+    if (d) d.color = colRgb.good;
+    particles.push(new Particle(POS.reviewX * W, POS.reviewY * H, {
+      targetX: POS.deployX * W,
+      targetY: POS.deployY * H,
+      r: 5,
+      color: colRgb.good,
+      maxTrail: 15,
+      easing: 0.05,
+      type: 'redeploy',
+      life: 3,
+    }));
+  }, 2400);
+}
+
+// Static elements
+function drawStaticElements(currentAct) {
+  ctx.save();
+  ctx.scale(dpr, dpr);
+
+  // Faint grid lines for lanes (only during acts 2-4)
+  if (currentAct >= 1 && currentAct <= 3) {
+    ctx.strokeStyle = COL.rule;
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([2, 6]);
+    for (const ly of POS.issueLanes) {
+      const a = currentAct >= 1 ? Math.min(1, (time - 3) / 1) : 0;
+      ctx.globalAlpha = a * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(POS.issueX * W - 10, ly * H);
+      ctx.lineTo(POS.prX * W + 10, ly * H);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.setLineDash([]);
+  }
+
+  // PRD node (persistent after act 1)
+  if (currentAct >= 1) {
+    const pulseR = 8 + Math.sin(time * 3) * 2;
+    ctx.beginPath();
+    ctx.arc(POS.prdX * W, POS.prdY * H, pulseR, 0, Math.PI * 2);
+    ctx.fillStyle = COL.accentW;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(POS.prdX * W, POS.prdY * H, 5, 0, Math.PI * 2);
+    ctx.fillStyle = COL.accent;
+    ctx.fill();
+
+    ctx.font = `500 9px 'JetBrains Mono', monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = COL.ink3;
+    ctx.fillText('PRD', POS.prdX * W, POS.prdY * H - 16);
+  }
+
+  // Review gate (persistent after act 3)
+  if (currentAct >= 2) {
+    const gx = POS.reviewX * W;
+    const gy = POS.reviewY * H;
+    const gs = 8 + Math.sin(time * 2) * 1.5;
+    ctx.save();
+    ctx.translate(gx, gy);
+    ctx.rotate(Math.PI / 4);
+    ctx.strokeStyle = COL.accent;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(-gs, -gs, gs * 2, gs * 2);
+    ctx.restore();
+
+    ctx.font = `500 9px 'JetBrains Mono', monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = COL.ink3;
+    ctx.fillText('REVIEW', gx, gy - 16);
+
+    // "human gate" label
+    ctx.font = `400 8px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = COL.ink4;
+    ctx.fillText('human gate', gx, gy + 20);
+  }
+
+  // Deploy node (persistent after act 3)
+  if (currentAct >= 3) {
+    const dx = POS.deployX * W;
+    const dy = POS.deployY * H;
+    const isHealing = currentAct === 4 && time > 14 && time < 16.5;
+    const deployColor = isHealing ? COL.heal : COL.good;
+    const washColor = isHealing ? COL.healW : COL.goodW;
+
+    const pulseR = 10 + Math.sin(time * 4) * 2;
+    ctx.beginPath();
+    ctx.arc(dx, dy, pulseR, 0, Math.PI * 2);
+    ctx.fillStyle = washColor;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(dx, dy, 6, 0, Math.PI * 2);
+    ctx.fillStyle = deployColor;
+    ctx.fill();
+
+    ctx.font = `500 9px 'JetBrains Mono', monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = COL.ink3;
+    ctx.fillText('DEPLOY', dx, dy - 18);
+  }
+
+  // Heal loop path (faint, during act 5)
+  if (currentAct === 4) {
+    ctx.strokeStyle = COL.heal;
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.3;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(POS.deployX * W, POS.deployY * H + 12);
+    ctx.quadraticCurveTo(
+      POS.deployX * W + 10, POS.healDropY * H,
+      POS.healFixX * W, POS.healDropY * H
+    );
+    ctx.quadraticCurveTo(
+      POS.healFixX * W - 30, POS.healDropY * H - 30,
+      POS.reviewX * W, POS.reviewY * H + 12
+    );
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    ctx.font = `500 8px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = COL.heal;
+    ctx.globalAlpha = 0.5;
+    ctx.fillText('self-heal', (POS.deployX * W + POS.healFixX * W) / 2, POS.healDropY * H + 16);
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+}
+
+function getCurrentAct() {
+  const t = time % LOOP_DURATION;
+  for (let i = 0; i < ACTS.length; i++) {
+    if (t >= ACTS[i].start && t < ACTS[i].end) return i;
+  }
+  return 0;
+}
+
+function frame(now) {
+  const dt = Math.min((now - lastFrame) / 1000, 0.05);
+  lastFrame = now;
+  time += dt;
+
+  const loopTime = time % LOOP_DURATION;
+  const currentAct = getCurrentAct();
+
+  // Update act label
+  document.getElementById('act-label').textContent =
+    `Act ${currentAct + 1} — ${ACTS[currentAct].name}  (${loopTime.toFixed(1)}s / ${LOOP_DURATION}s)`;
+
+  // Spawn per act
+  if (currentAct === 0) spawnAct1();
+  if (currentAct === 1) spawnAct2();
+  if (currentAct === 2) spawnAct3();
+  if (currentAct === 3) spawnAct4();
+  if (currentAct === 4) spawnAct5();
+
+  // Reset on loop
+  if (loopTime < dt * 2 && time > 1) {
+    particles = [];
+    spawned = {};
+  }
+
+  // Clear
+  ctx.save();
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  // Draw static elements
+  ctx.restore();
+  drawStaticElements(currentAct);
+
+  // Update and draw particles
+  ctx.save();
+  ctx.scale(dpr, dpr);
+  for (const p of particles) {
+    p.update(dt);
+    p.draw(ctx);
+  }
+
+  // Remove dead particles
+  particles = particles.filter(p => p.alpha > 0 && p.age < (p.life || Infinity));
+
+  ctx.restore();
+  requestAnimationFrame(frame);
+}
+
+requestAnimationFrame(frame);
+</script>
+
+</body>
+</html>

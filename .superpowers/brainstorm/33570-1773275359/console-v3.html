@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator Console v3 — prd-to-prod</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(97.5% 0.004 75);
+    --paper: oklch(99.5% 0.002 75);
+    --ink: oklch(16% 0.01 55);
+    --ink-2: oklch(38% 0.008 55);
+    --ink-3: oklch(58% 0.006 55);
+    --ink-4: oklch(74% 0.005 55);
+    --rule: oklch(90% 0.006 65);
+    --accent: oklch(56% 0.1 255);
+    --accent-wash: oklch(94% 0.025 255);
+    --good: oklch(58% 0.1 155);
+    --good-wash: oklch(94% 0.025 155);
+    --warm-wash: oklch(94% 0.02 55);
+
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+
+  html {
+    font-kerning: normal;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--ink);
+    background: var(--bg);
+    overflow-x: hidden;
+  }
+
+  /* ── Animations ── */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .a {
+    animation: rise 650ms var(--ease-out-expo) both;
+    animation-delay: calc(var(--d, 0) * 70ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .a { animation: none; opacity: 1; }
+  }
+
+  /* ── Shell ── */
+  .page {
+    width: min(1080px, calc(100vw - 4rem));
+    margin: 0 auto;
+  }
+
+  /* ── Nav ── */
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 0;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  .nav-right {
+    display: flex;
+    gap: 32px;
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+  .nav-right a {
+    text-decoration: none;
+    color: inherit;
+    transition: color 120ms;
+  }
+  .nav-right a:hover { color: var(--ink); }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 120px 0 100px;
+  }
+
+  .hero h1 {
+    font-size: clamp(3rem, 5.8vw, 4.8rem);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    max-width: 18ch;
+    margin-bottom: 32px;
+  }
+
+  .hero h1 .hl {
+    background: var(--accent-wash);
+    padding: 0 0.15em;
+    border-radius: 4px;
+    font-weight: 400;
+  }
+
+  .hero-sub {
+    font-size: 1.0625rem;
+    color: var(--ink-2);
+    max-width: 52ch;
+    line-height: 1.7;
+    margin-bottom: 40px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border: none;
+    font-family: var(--sans);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: transform 100ms var(--ease-out-expo), opacity 100ms;
+  }
+  .btn:hover { transform: translateY(-1px); }
+
+  .btn-dark {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .btn-dark:hover { opacity: 0.88; }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
+  }
+  .btn-outline:hover { border-color: var(--ink-4); color: var(--ink); }
+
+  /* ── Preflight ── */
+  .preflight {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0;
+    margin-bottom: 120px;
+  }
+
+  .pf {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 24px 16px 0;
+    font-size: 0.8125rem;
+  }
+  .pf + .pf {
+    padding-left: 24px;
+    border-left: 1px solid var(--rule);
+  }
+
+  .pf-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .pf-dot.ok { background: var(--good); }
+  .pf-dot.warn { background: oklch(62% 0.14 85); }
+
+  .pf-name {
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+  .pf-status {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+
+  /* ── Numbered Section (OpenMatter thesis style) ── */
+  .numbered-section {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 0;
+    padding: 0 0 120px;
+  }
+
+  .section-num {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    color: var(--ink-4);
+    padding-top: 4px;
+  }
+
+  .section-body h2 {
+    font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+
+  .section-body > p {
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+    line-height: 1.7;
+    max-width: 48ch;
+    margin-bottom: 32px;
+  }
+
+  /* ── Form ── */
+  .form-grid {
+    display: grid;
+    gap: 24px;
+    max-width: 520px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-3);
+    margin-bottom: 8px;
+  }
+
+  .field input[type="text"],
+  .field textarea {
+    width: 100%;
+    border: 1px solid var(--rule);
+    border-radius: 0;
+    padding: 13px 16px;
+    font-family: var(--sans);
+    font-size: 0.9375rem;
+    color: var(--ink);
+    background: var(--paper);
+    transition: border-color 120ms;
+  }
+  .field input:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .field textarea {
+    resize: vertical;
+    min-height: 160px;
+    line-height: 1.6;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .tab {
+    padding: 10px 20px;
+    font-family: var(--sans);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ink-3);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 120ms;
+    margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 8px;
+  }
+
+  .mock-label {
+    font-size: 0.8125rem;
+    color: var(--ink-4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  /* ── Stage Track ── */
+  .stage-track {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin-bottom: 48px;
+  }
+
+  .stage {
+    padding: 24px 0 24px 0;
+    border-top: 2px solid var(--rule);
+    position: relative;
+  }
+  .stage + .stage { padding-left: 32px; }
+
+  .stage.done { border-top-color: var(--good); }
+  .stage.active { border-top-color: var(--ink); }
+  .stage.active::after {
+    content: '';
+    position: absolute;
+    top: -2px; left: 0;
+    width: 55%;
+    height: 2px;
+    background: var(--ink);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .stage-num {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    color: var(--ink-4);
+    margin-bottom: 4px;
+  }
+  .stage-title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    margin-bottom: 2px;
+  }
+  .stage-meta {
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+
+  /* ── Log ── */
+  .log {
+    border-top: 1px solid var(--rule);
+  }
+
+  .log-row {
+    display: grid;
+    grid-template-columns: 68px 1fr;
+    gap: 20px;
+    padding: 11px 0;
+    border-bottom: 1px solid oklch(94% 0.004 65);
+    font-size: 0.8125rem;
+    align-items: baseline;
+  }
+
+  .log-time {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--ink-4);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .log-text { color: var(--ink-2); }
+
+  .log-text .tag {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 3px;
+    margin-right: 8px;
+  }
+  .tag.artifact { background: var(--good-wash); color: var(--good); }
+  .tag.step { background: var(--accent-wash); color: var(--accent); }
+  .tag.info { background: oklch(94% 0.004 65); color: var(--ink-3); }
+
+  .log-text.strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ── Stats (OpenMatter-style huge numbers) ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    padding: 80px 0 120px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .stat + .stat { padding-left: 32px; }
+
+  .stat-num {
+    font-size: clamp(3rem, 5vw, 4.5rem);
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-label {
+    font-size: 0.875rem;
+    color: var(--ink-3);
+    max-width: 20ch;
+    line-height: 1.5;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .page { width: min(100vw - 2rem, 100%); }
+    .hero { padding: 80px 0 60px; }
+    .numbered-section { grid-template-columns: 1fr; }
+    .section-num { margin-bottom: 4px; }
+    .stage-track { grid-template-columns: 1fr; gap: 12px; }
+    .stage + .stage { padding-left: 0; }
+    .stats { grid-template-columns: 1fr; gap: 40px; }
+    .stat + .stat { padding-left: 0; }
+    .preflight { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Nav -->
+  <nav class="nav a" style="--d:0">
+    <div class="logo">prd-to-prod</div>
+    <div class="nav-right">
+      <a href="#">Console</a>
+      <a href="#">History</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1 class="a" style="--d:1">Ship a meeting <span class="hl">into production.</span></h1>
+    <p class="hero-sub a" style="--d:2">Paste a WorkIQ query, a transcript fragment, or raw notes. The pipeline extracts requirements, creates issues, dispatches agents — and <strong>heals itself when things break.</strong></p>
+    <div class="hero-actions a" style="--d:3">
+      <button class="btn btn-dark">New run</button>
+      <button class="btn btn-outline">Run history</button>
+    </div>
+  </section>
+
+  <!-- Preflight -->
+  <div class="preflight a" style="--d:4">
+    <div class="pf">
+      <span class="pf-dot ok"></span>
+      <span class="pf-name">gh cli</span>
+      <span class="pf-status">authenticated</span>
+    </div>
+    <div class="pf">
+      <span class="pf-dot ok"></span>
+      <span class="pf-name">workiq</span>
+      <span class="pf-status">connected</span>
+    </div>
+    <div class="pf">
+      <span class="pf-dot ok"></span>
+      <span class="pf-name">pipeline</span>
+      <span class="pf-status">token valid</span>
+    </div>
+    <div class="pf">
+      <span class="pf-dot ok"></span>
+      <span class="pf-name">self-heal</span>
+      <span class="pf-status">active</span>
+    </div>
+  </div>
+
+  <!-- 01 — Launch -->
+  <div class="numbered-section a" style="--d:5">
+    <div class="section-num">01</div>
+    <div class="section-body">
+      <h2>Choose your input and let the pipeline run.</h2>
+      <p>WorkIQ pulls from a meeting directly. Raw text accepts anything — bullet points, transcript fragments, or a blunt description of what to build.</p>
+      <div class="form-grid">
+        <div class="field">
+          <label>Input source</label>
+          <div class="tabs">
+            <button class="tab active">WorkIQ query</button>
+            <button class="tab">Raw text</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Meeting query</label>
+          <input type="text" placeholder="Product Sync, February roadmap, customer review...">
+        </div>
+        <div class="field">
+          <label>Pipeline mode</label>
+          <div class="tabs">
+            <button class="tab active">New product</button>
+            <button class="tab">Existing</button>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-dark">Ship the meeting</button>
+          <label class="mock-label">
+            <input type="checkbox"> Mock mode
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 — Progress -->
+  <div class="numbered-section a" style="--d:6">
+    <div class="section-num">02</div>
+    <div class="section-body">
+      <h2>Live execution stream.</h2>
+      <p>Stages advance as the shell pipeline emits. Artifacts surface the moment they're found.</p>
+
+      <div class="stage-track">
+        <div class="stage done">
+          <div class="stage-num">01</div>
+          <div class="stage-title">Extract</div>
+          <div class="stage-meta">14s</div>
+        </div>
+        <div class="stage active">
+          <div class="stage-num">02</div>
+          <div class="stage-title">Analyze</div>
+          <div class="stage-meta">running</div>
+        </div>
+        <div class="stage">
+          <div class="stage-num">03</div>
+          <div class="stage-title">Build</div>
+          <div class="stage-meta">queued</div>
+        </div>
+      </div>
+
+      <div class="log">
+        <div class="log-row">
+          <span class="log-time">18:07:14</span>
+          <span class="log-text"><span class="tag step">step</span>[1/3] Extracting requirements from meeting notes</span>
+        </div>
+        <div class="log-row">
+          <span class="log-time">18:07:22</span>
+          <span class="log-text strong"><span class="tag artifact">artifact</span>PIPELINE_REPO = samuelkahessay/contoso-redesign</span>
+        </div>
+        <div class="log-row">
+          <span class="log-time">18:07:28</span>
+          <span class="log-text"><span class="tag step">step</span>[2/3] Running gap analysis against target repository</span>
+        </div>
+        <div class="log-row">
+          <span class="log-time">18:07:31</span>
+          <span class="log-text"><span class="tag info">info</span>Comparing 4 requirements against existing codebase</span>
+        </div>
+        <div class="log-row">
+          <span class="log-time">18:07:38</span>
+          <span class="log-text"><span class="tag info">info</span>Identified 3 implementation gaps, creating issues</span>
+        </div>
+        <div class="log-row">
+          <span class="log-time">18:07:44</span>
+          <span class="log-text strong"><span class="tag artifact">artifact</span>PIPELINE_TRACKING_ISSUE = #247</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats a" style="--d:7">
+    <div class="stat">
+      <div class="stat-num">7</div>
+      <div class="stat-label">Self-healed failures since deploy</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">12m</div>
+      <div class="stat-label">Median time from break to merged fix</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">0</div>
+      <div class="stat-label">Human interventions required</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
