@@ -101,7 +101,14 @@ case "$1" in
         echo "name: repo-assist" > "$DEST/.github/workflows/repo-assist.lock.yml"
         echo "name: prd-decomposer" > "$DEST/.github/workflows/prd-decomposer.lock.yml"
         echo "name: pr-review-agent" > "$DEST/.github/workflows/pr-review-agent.lock.yml"
-        (cd "$DEST" && git init -q && git add -A && git commit -m "init" -q)
+        (
+          cd "$DEST" &&
+          git init -q &&
+          git config user.name "Codex Test" &&
+          git config user.email "codex-test@example.com" &&
+          git add -A &&
+          git commit -m "init" -q
+        )
         exit 0
         ;;
     esac
