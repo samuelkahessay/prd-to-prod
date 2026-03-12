@@ -31,6 +31,11 @@ for label in "pipeline:0075ca:Pipeline-managed issue" \
              "bug-intake:e4e669:Filed via bug-report template" \
              "agentic-workflows:ededed:Agentic workflow failure notification" \
              "ci-failure:C24E3F:Tracks active CI repair incidents on pull requests" \
+             "ci-auth:B60205:CI failure requires human credentials or secret repair" \
+             "ci-rate-limit:FBCA04:CI failure appears transient due to provider rate limits" \
+             "ci-timeout:D4C5F9:CI failure appears transient due to job timeout" \
+             "ci-infrastructure:5319E7:CI failure appears transient due to infrastructure instability" \
+             "needs-human:B60205:Requires human intervention rather than automated repair" \
              "repair-in-progress:D97706:Automated CI repair has been dispatched or is actively retrying" \
              "repair-escalated:B60205:Automated CI repair exhausted retries and needs human attention"; do
   IFS=: read -r name color desc <<< "$label"

@@ -1,0 +1,40 @@
+name: Pipeline Scripts CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pipeline-scripts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify v2 contracts
+        run: |
+          if [[ -d scaffold && -d extraction ]]; then
+            bash scripts/tests/test-manifest-completeness.sh
+            bash scripts/tests/test-manifest-parse.sh
+            bash scripts/tests/test-export-scaffold.sh
+            bash scripts/tests/test-leak-test.sh
+            bash scripts/tests/test-bootstrap-test.sh
+            bash scripts/tests/test-validate-prd.sh
+            bash scripts/tests/test-validate-schema.sh
+            bash scripts/tests/test-classify-transcript.sh
+            bash scripts/tests/test-extraction-run.sh
+            bash scripts/tests/test-push-to-existing.sh
+            bash scripts/tests/test-push-to-existing-golden.sh
+            bash scripts/tests/test-retry-state.sh
+            bash scripts/tests/test-final-validation-matrix.sh
+          else
+            echo "Skipping source-repo v2 contract checks"
+          fi
+      - name: Test pipeline PR classification
+        run: bash scripts/tests/test-classify-pipeline-pr.sh
+      - name: Test pr-review-agent lock patch script
+        run: bash scripts/tests/test-patch-pr-review-agent-lock.sh
+      - name: Test pr-review-agent activation bypass
+        run: bash scripts/tests/test-pr-review-agent-activation.sh

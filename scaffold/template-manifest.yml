@@ -1,0 +1,86 @@
+# template-manifest.yml — Defines what exports into the scaffold artifact
+#
+# Everything listed in `include` is copied to dist/scaffold/.
+# Everything listed in `forbidden_paths` must NOT appear in dist/scaffold/.
+# The leak-test validates the inverse: forbidden paths absent from output.
+
+version: 1
+
+include:
+  # ── Pipeline workflows ──
+  - .github/workflows/
+  - .github/deploy-profiles/
+  - .github/agents/agentic-workflows.agent.md
+  - .github/copilot-instructions.md
+  - .github/ISSUE_TEMPLATE/
+
+  # ── Dashboard ──
+  - studio/
+
+  # ── Scripts (runtime dependencies of workflows) ──
+  - scripts/healing-control.sh
+  - scripts/classify-ci-failure.sh
+  - scripts/classify-pipeline-issue.sh
+  - scripts/classify-pipeline-pr.sh
+  - scripts/check-autonomy-policy.sh
+  - scripts/extract-failure-context.sh
+  - scripts/extract-linked-issue-numbers.sh
+  - scripts/render-ci-repair-command.sh
+  - scripts/resolve-deployment-url.sh
+  - scripts/pipeline-watchdog.sh
+  - scripts/bootstrap.sh
+  - scripts/patch-pr-review-agent-lock.sh
+  - scripts/capture-run-data.sh
+  - scripts/start-run.sh
+  - scripts/archive-run.sh
+  - scripts/run-lifecycle-lib.sh
+  - scripts/verify-mvp.sh
+  - scripts/log-decision.sh
+  - scripts/monitor-pipeline.sh
+  - scripts/demo-preflight.sh
+  - scripts/tests/
+
+  # ── Docs (stable, exported) ──
+  - docs/ARCHITECTURE.md
+  - docs/SELF_HEALING_MVP.md
+  - docs/why-gh-aw.md
+  - docs/decision-ledger/README.md
+  - docs/prd/sample-prd.md
+
+  # ── Root files ──
+  - autonomy-policy.yml
+  - .deploy-profile
+  - AGENTS.md
+  - setup.sh
+  - setup-verify.sh
+  - vercel.json
+  - .gitignore
+  - LICENSE
+  - README.template.md
+
+forbidden_paths:
+  - console/
+  - docs/plans/
+  - extraction/
+  - trigger/
+  - PRDtoProd/
+  - PRDtoProd.Tests/
+  - drills/
+  - showcase/
+  - mocks/
+  - docs/prd/
+  - docs/internal/
+  - Dockerfile
+  - global.json
+  - CLAUDE.md
+
+exception_paths:
+  - docs/prd/sample-prd.md
+  - showcase/README.md
+
+render:
+  PROJECT_NAME: "my-project"
+  DEPLOY_PROFILE: "nextjs-vercel"
+
+rename:
+  README.template.md: README.md

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["category", "confidence", "summary", "suggested_action", "raw_error"],
+  "properties": {
+    "category": { "type": "string", "enum": ["build", "test", "auth", "rate-limit", "timeout", "infrastructure", "unknown"] },
+    "confidence": { "type": "string", "enum": ["high", "low"] },
+    "summary": { "type": "string", "minLength": 1 },
+    "suggested_action": { "type": "string", "enum": ["retry", "fix", "escalate"] },
+    "raw_error": { "type": "string" }
+  },
+  "additionalProperties": false
+}

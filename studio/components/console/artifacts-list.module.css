@@ -1,0 +1,5 @@
+.empty { font-size: 13px; color: var(--ink-faint); padding: 12px 0; }
+.list { border-top: 1px solid var(--rule); }
+.item { display: flex; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: 13px; }
+.key { font-family: var(--font-mono); font-size: 12px; color: var(--ink-muted); min-width: 200px; }
+.value { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }

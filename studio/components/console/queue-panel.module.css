@@ -1,0 +1,82 @@
+.panel {
+  padding: 20px 24px;
+  background: var(--heal-wash);
+  border: 1px solid oklch(88% 0.02 30);
+  border-top: 3px solid var(--heal);
+}
+.heading {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--heal);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+.item {
+  padding: 16px 0;
+  border-bottom: 1px solid oklch(90% 0.01 30);
+}
+.item:last-child {
+  border-bottom: none;
+}
+.event {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.reason {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+}
+.meta {
+  display: flex;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-bottom: 12px;
+}
+.policy {
+  color: var(--policy);
+}
+.time {
+  color: var(--ink-faint);
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+.approve {
+  padding: 6px 16px;
+  background: var(--good);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+}
+.reject {
+  padding: 6px 16px;
+  background: transparent;
+  color: var(--heal);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  border: 1px solid var(--heal);
+  cursor: pointer;
+}

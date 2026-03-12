@@ -30,13 +30,19 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       profile: ${{ steps.read.outputs.profile }}
+      issue_numbers: ${{ steps.read.outputs.issue_numbers }}
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: .deploy-profile
+          sparse-checkout: |
+            .deploy-profile
+            scripts/extract-linked-issue-numbers.sh
           sparse-checkout-cone-mode: false
 
       - id: read
+        env:
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          REPO: ${{ github.repository }}
         run: |
           if [ ! -f .deploy-profile ]; then
             echo "::error::No .deploy-profile found in repo root. Create one with the profile name (e.g., 'dotnet-azure')."
@@ -47,7 +53,9 @@ jobs:
             echo "::error::.deploy-profile is empty."
             exit 1
           fi
+          ISSUE_NUMBERS=$(printf '%s' "$HEAD_COMMIT_MESSAGE" | bash scripts/extract-linked-issue-numbers.sh "$REPO" | paste -sd, -)
           echo "profile=${PROFILE}" >> $GITHUB_OUTPUT
+          echo "issue_numbers=${ISSUE_NUMBERS}" >> $GITHUB_OUTPUT
           echo "Deploy profile: ${PROFILE}"
 
   deploy-azure:
@@ -66,4 +74,19 @@ jobs:
     needs: detect-profile
     if: needs.detect-profile.outputs.profile == 'docker-generic'
     uses: ./.github/workflows/deploy-docker.yml
+    secrets: inherit
+
+  validate-deployment:
+    needs: [detect-profile, deploy-azure, deploy-vercel, deploy-docker]
+    if: |
+      needs.detect-profile.outputs.issue_numbers != '' &&
+      (
+        needs.deploy-azure.result == 'success' ||
+        needs.deploy-vercel.result == 'success' ||
+        needs.deploy-docker.result == 'success'
+      )
+    uses: ./.github/workflows/validate-deployment.yml
+    with:
+      profile: ${{ needs.detect-profile.outputs.profile }}
+      issue_numbers: ${{ needs.detect-profile.outputs.issue_numbers }}
     secrets: inherit

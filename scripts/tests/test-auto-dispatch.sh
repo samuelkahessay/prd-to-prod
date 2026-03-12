@@ -15,5 +15,8 @@ fi
 
 grep -F "scripts/classify-pipeline-issue.sh" "$WORKFLOW" >/dev/null
 grep -F "steps.classify.outputs.actionable == 'true'" "$WORKFLOW" >/dev/null
+grep -F 'steps.classify.outputs.route == '\''needs_human'\''' "$WORKFLOW" >/dev/null
+grep -F 'steps.classify.outputs.route == '\''retry_with_backoff'\''' "$WORKFLOW" >/dev/null
+grep -F 'sleep "${{ steps.classify.outputs.backoff_seconds }}"' "$WORKFLOW" >/dev/null
 
 echo "auto-dispatch.yml tests passed"

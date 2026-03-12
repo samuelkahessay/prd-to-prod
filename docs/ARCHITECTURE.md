@@ -11,6 +11,51 @@ model is not a flat count. It is a set of routing/safety workflows plus AI agent
 - Standard GitHub Actions remain the deterministic authority layer for routing,
   merge enforcement, deploy, and incident state transitions.
 
+## Consolidation Target State
+
+prd-to-prod is consolidating from three repos into one source repo with an exported scaffold artifact. The system supports two operating modes:
+
+### Operating Modes
+
+1. **greenfield** — Meeting transcript → PRD → new repo provisioned from scaffold
+2. **existing** — Meeting transcript → issues filed into `TARGET_REPO`
+
+Mode selection is handled by `extraction/run.sh` via `--mode auto|greenfield|existing`. When `--mode auto` (default), the classifier analyzes the transcript and routes accordingly.
+
+### Ingress Layer (`extraction/`)
+
+| Script | Role |
+|---|---|
+| `run.sh` | Unified entrypoint — routes to greenfield or existing path |
+| `classify.sh` | Transcript classifier — returns `{classification, confidence, signals, product_match}` |
+| `extract-prd.sh` | Greenfield path — generates validated PRD from transcript |
+| `extract-issues.sh` | Existing path — extracts structured issues from transcript |
+| `validate.sh` | Structural PRD validation (sections, tech stack guard) |
+
+### Scaffold Export (`scaffold/`)
+
+The scaffold is a build artifact generated from `template-manifest.yml`, not a hand-maintained fork. The export pipeline:
+
+1. `export-scaffold.sh` — copies allowlisted paths, renders templates, compiles workflows
+2. `leak-test.sh` — verifies no forbidden paths (extraction/, trigger/, product code) leak into scaffold
+3. `bootstrap-test.sh` — smoke-tests the exported scaffold (file completeness, config validity)
+
+Output goes to `dist/scaffold/`, which is `.gitignore`d.
+
+### Trigger Layer (`trigger/`)
+
+| Script | Role |
+|---|---|
+| `push-to-pipeline.sh` | Greenfield — provisions new repo from `dist/scaffold/` |
+| `push-to-existing.sh` | Existing — creates `[Pipeline]` issues in `TARGET_REPO` |
+
+### Key Invariants
+
+- `TARGET_REPO` is required when `--mode existing` is set; omitting it fails fast
+- The scaffold never contains `extraction/`, `trigger/`, `PRDtoProd/`, or product-specific files
+- `classify.sh` is deterministic: same input always produces same output
+- Schema validation gates all inter-script data (JSON Schema files in `extraction/schemas/`)
+
 ## High-Level Flow
 
 ```mermaid

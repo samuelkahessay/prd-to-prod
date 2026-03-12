@@ -1,0 +1,45 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,900;1,400&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  --cream: oklch(97.5% 0.004 75);
+  --surface: oklch(96% 0.004 75);
+  --warm-white: oklch(99% 0.002 75);
+  --ink: oklch(16% 0.01 55);
+  --ink-mid: oklch(35% 0.01 55);
+  --ink-muted: oklch(50% 0.01 55);
+  --ink-faint: oklch(70% 0.008 55);
+  --accent: oklch(56% 0.1 255);
+  --accent-wash: oklch(94% 0.02 255);
+  --good: oklch(48% 0.12 155);
+  --good-wash: oklch(94% 0.03 155);
+  --heal: oklch(50% 0.14 30);
+  --heal-wash: oklch(95% 0.02 30);
+  --policy: oklch(52% 0.12 300);
+  --policy-wash: oklch(94% 0.03 300);
+  --rule: oklch(88% 0.008 75);
+  --rule-strong: oklch(78% 0.01 75);
+  --danger: oklch(50% 0.16 25);
+
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--cream);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

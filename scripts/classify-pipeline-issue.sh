@@ -13,6 +13,8 @@ has_label() {
 
 REASON="actionable"
 ACTIONABLE=true
+ROUTE="repo_assist"
+BACKOFF_SECONDS=0
 
 if ! has_label "pipeline"; then
   ACTIONABLE=false
@@ -28,16 +30,28 @@ elif [[ "$TITLE" == PRD:* ]]; then
 elif has_label "report"; then
   ACTIONABLE=false
   REASON="report_issue"
+elif has_label "needs-human" || has_label "ci-auth"; then
+  ACTIONABLE=false
+  REASON="needs_human_route"
+  ROUTE="needs_human"
+elif has_label "ci-rate-limit" || has_label "ci-timeout" || has_label "ci-infrastructure"; then
+  REASON="retryable_ci_issue"
+  ROUTE="retry_with_backoff"
+  BACKOFF_SECONDS=60
 fi
 
 jq -n \
   --arg title "$TITLE" \
   --arg reason "$REASON" \
+  --arg route "$ROUTE" \
   --argjson actionable "$ACTIONABLE" \
+  --argjson backoff_seconds "$BACKOFF_SECONDS" \
   --argjson labels "$LABELS_JSON" \
   '{
     actionable: $actionable,
     reason: $reason,
+    route: $route,
+    backoff_seconds: $backoff_seconds,
     title: $title,
     labels: $labels
   }'

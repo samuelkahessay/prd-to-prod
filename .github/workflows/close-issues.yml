@@ -29,7 +29,8 @@ jobs:
       - name: Checkout workflow helpers
         uses: actions/checkout@v4
         with:
-          sparse-checkout: scripts/extract-linked-issue-numbers.sh
+          sparse-checkout: |
+            scripts/extract-linked-issue-numbers.sh
           sparse-checkout-cone-mode: false
 
       - name: Close linked issues
@@ -48,6 +49,16 @@ jobs:
           fi
 
           for ISSUE_NUM in $ISSUES; do
+            LABELS=$(gh issue view "$ISSUE_NUM" --repo "$REPO" --json labels --jq '[.labels[].name] | join(",")' 2>/dev/null || echo "")
+            if printf '%s' "$LABELS" | grep -Eq '(^|,)pipeline(,|$)' && \
+               printf '%s' "$LABELS" | grep -Eq '(^|,)(feature|bug|test|docs)(,|$)'; then
+              gh issue comment "$ISSUE_NUM" --repo "$REPO" \
+                --body "Issue closure deferred pending post-deploy validation." >/dev/null || \
+                echo "::warning::Could not record validation deferral on issue #${ISSUE_NUM}"
+              echo "Deferred closing issue #${ISSUE_NUM} pending validation"
+              continue
+            fi
+
             STATE=$(gh issue view "$ISSUE_NUM" --repo "$REPO" --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
             if [ "$STATE" = "OPEN" ]; then
               gh issue close "$ISSUE_NUM" --repo "$REPO" \

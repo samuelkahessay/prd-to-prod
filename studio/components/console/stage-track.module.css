@@ -1,0 +1,11 @@
+.track { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin: 24px 0; }
+.stage { padding: 16px 12px; border-top: 3px solid var(--rule); }
+.name { font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 4px; }
+.label { font-size: 13px; color: var(--ink-muted); }
+.done { border-top-color: var(--good); }
+.done .name { color: var(--good); }
+.active { border-top-color: var(--accent); }
+.active .name { color: var(--accent); }
+.blocked { border-top-color: var(--heal); background: var(--heal-wash); }
+.blocked .name { color: var(--heal); }
+.pending { border-top-color: var(--rule); }

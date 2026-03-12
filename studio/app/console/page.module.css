@@ -1,0 +1,11 @@
+.consolePage {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.launchPanel {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 24px;
+  align-items: start;
+}

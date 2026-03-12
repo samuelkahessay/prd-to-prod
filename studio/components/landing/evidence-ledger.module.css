@@ -1,0 +1,110 @@
+.section {
+  padding: 0 48px;
+}
+.num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  margin-bottom: 16px;
+  letter-spacing: 0.04em;
+  display: block;
+}
+.heading {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+.subtitle {
+  font-size: 15px;
+  color: var(--ink-muted);
+  margin-bottom: 40px;
+  max-width: 520px;
+  line-height: 1.5;
+}
+.empty {
+  font-size: 14px;
+  color: var(--ink-faint);
+  padding: 20px 0;
+}
+.ledger {
+  border-top: 2px solid var(--ink);
+  max-width: 780px;
+}
+.header {
+  display: grid;
+  grid-template-columns: 120px 1fr 140px 100px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.row {
+  display: grid;
+  grid-template-columns: 120px 1fr 140px 100px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 14px;
+  align-items: baseline;
+  transition: background 0.15s ease;
+}
+.row:hover {
+  background: oklch(96% 0.004 75);
+}
+.featured {
+  background: oklch(95.5% 0.006 75);
+  border-bottom: 1px solid var(--rule-strong);
+}
+.time {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.event {
+  color: var(--ink);
+  font-weight: 400;
+}
+.ref {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  margin-left: 4px;
+  text-decoration: none;
+}
+.refHeal {
+  color: var(--heal);
+}
+.refPolicy {
+  color: var(--policy);
+}
+.duration {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.outcome {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+}
+.merged { color: var(--good); }
+.blocked { color: var(--heal); }
+.healed { color: var(--heal); }
+.live { color: var(--accent); }
+.drill { color: var(--ink-faint); }
+.footer {
+  padding: 14px 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.footer a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

@@ -1,0 +1,50 @@
+# Meeting Summary
+
+On March 3rd, Alice Chen (PM), Bob Rivera (Eng), and Carol Wu (Design) held a 28-minute product sync to define the scope of a new **Team Availability Service** -- a lightweight REST API that lets team members set and query availability status. The motivation is straightforward: the current approach of relying on Slack statuses is inconsistent, and the team needs a reliable, centralized way to answer "where is everyone right now?"
+
+The group walked through the full API surface (five endpoints), agreed on a data model with four status types and optional notes, and established clear rules for how overlapping time ranges are resolved. They also drew firm boundaries around what is explicitly out of scope for v1, including recurring schedules, calendar sync, push notifications, and authentication (which is handled externally by the API gateway).
+
+The tech stack was settled quickly -- Express with TypeScript and Vitest for testing, using in-memory storage behind a repository pattern so a real database can be swapped in later. Bob Rivera pushed briefly for Hono as a lighter-weight alternative, but Alice vetoed it on the grounds that the team hasn't standardized on it yet. Non-functional requirements were defined as supporting up to 50 team members per team with response times under 100 milliseconds.
+
+## Participants
+
+- **Alice Chen** -- Product Manager. Led the meeting, defined scope and endpoints, made final calls on what's in and out of v1.
+- **Bob Rivera** -- Engineer. Provided technical recommendations on overlap handling, storage approach, timezone strategy, and stack decisions.
+- **Carol Wu** -- Designer. Focused on how the API supports the team dashboard UI, asked clarifying questions about computed status and time range behavior.
+
+## Key Discussion Points
+
+- **API Endpoints**: Five REST endpoints were defined. `GET /team/:teamId/availability` returns every team member's current status (the primary use case for Carol's dashboard). `GET /users/:userId/availability` returns a single user's schedule for the next rolling seven days. `POST /users/:userId/availability` creates a new availability entry. `PUT /users/:userId/availability/:id` updates an existing entry. `DELETE /users/:userId/availability/:id` removes an entry.
+
+- **Data Model**: Each availability entry consists of a userId, a status enum, a start time, an end time, and an optional free-text note field. The status enum has exactly four values: `in-office`, `remote`, `ooo`, and `deep-focus`. The note field supports context like "working on auth migration, ping only if urgent."
+
+- **Computed Current Status**: The team endpoint must compute a `currentStatus` field for each user based on the current server time. If no availability entry covers the current time, the field returns `null` rather than assuming a default -- Carol will render this as a gray "no status" indicator in the UI.
+
+- **Overlap Resolution Rule**: Rather than attempting interval merging or splitting (which Bob flagged as complex), the team agreed on a simple rule: **most recently created entry wins**. If a user has "remote 9-5" and later adds "deep-focus 2-4pm," their status at 3pm is deep-focus because that entry was created more recently. Both entries remain in storage; cleanup requires an explicit DELETE.
+
+- **Timezone Strategy**: All times are stored and returned in UTC. No server-side timezone conversion. Frontend clients are responsible for display conversion. Bob emphasized this from experience -- server-side timezone math introduces significant complexity.
+
+- **Rolling Seven-Day Window**: The individual user endpoint returns availability for the next rolling seven days from the current UTC timestamp, not a calendar week (which would be ambiguous regarding week start day).
+
+- **Tech Stack**: Express + TypeScript with Vitest for testing. In-memory storage using a Map keyed by availability entry ID, following the same repository pattern from the team's previous service so a real database can be swapped in later. Bob's suggestion to use Hono was considered but rejected in favor of the team's existing standard.
+
+- **Out-of-Scope Items (v1)**: Authentication (handled by API gateway), Google/Outlook calendar sync, push notifications for status changes, recurring schedules (e.g., "remote every Tuesday"), and server-side timezone conversion. Calendar sync was acknowledged as a likely v2 feature.
+
+## Action Items
+
+- **Bob Rivera**: Scaffold the project tonight and have the GET endpoints working by tomorrow (March 4th) afternoon.
+- **Carol Wu**: Begin team dashboard mockups now that the API shape is confirmed.
+- **All**: Reconvene on Wednesday (March 5th) for a follow-up check-in.
+
+## Decisions Made
+
+- **Stack is Express + TypeScript + Vitest** -- Hono was explicitly rejected for v1 to avoid introducing an unfamiliar framework.
+- **Status enum is exactly four values**: `in-office`, `remote`, `ooo`, `deep-focus`.
+- **Overlap rule is "latest entry wins"** -- no interval merging or splitting. Most recently created entry covering the current time determines status.
+- **Current status returns `null` when no entry matches** -- the system does not assume or infer a default status.
+- **All times are UTC** -- no server-side timezone handling.
+- **User schedule endpoint uses a rolling seven-day window**, not a calendar week.
+- **In-memory storage (Map) with repository pattern** -- designed for easy database swap later.
+- **Recurring schedules are cut from v1** -- users must create individual entries manually.
+- **NFRs: 50 team members per team, sub-100ms response times.**
+- **No auth, no calendar sync, no push notifications in v1.**

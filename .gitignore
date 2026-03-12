@@ -10,6 +10,8 @@
 .env.*
 .claude/
 node_modules/
+console/data/*
+!console/data/.gitkeep
 dist/
 .next/
 .github/aw/
@@ -43,3 +45,5 @@ pipeline-page-*.png
 # Local tool state
 .playwright-mcp/
 .sisyphus/
+.superpowers/
+.worktrees/

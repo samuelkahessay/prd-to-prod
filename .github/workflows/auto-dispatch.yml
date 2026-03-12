@@ -60,9 +60,29 @@ jobs:
           CLASSIFICATION=$(printf '%s' "$ISSUE_JSON" | scripts/classify-pipeline-issue.sh)
           ACTIONABLE=$(printf '%s' "$CLASSIFICATION" | jq -r '.actionable')
           REASON=$(printf '%s' "$CLASSIFICATION" | jq -r '.reason')
+          ROUTE=$(printf '%s' "$CLASSIFICATION" | jq -r '.route')
+          BACKOFF_SECONDS=$(printf '%s' "$CLASSIFICATION" | jq -r '.backoff_seconds')
           echo "actionable=${ACTIONABLE}" >> "$GITHUB_OUTPUT"
           echo "reason=${REASON}" >> "$GITHUB_OUTPUT"
-          echo "Issue classification: actionable=${ACTIONABLE} reason=${REASON}"
+          echo "route=${ROUTE}" >> "$GITHUB_OUTPUT"
+          echo "backoff_seconds=${BACKOFF_SECONDS}" >> "$GITHUB_OUTPUT"
+          echo "Issue classification: actionable=${ACTIONABLE} reason=${REASON} route=${ROUTE} backoff_seconds=${BACKOFF_SECONDS}"
+
+      - name: Route needs-human issue
+        if: steps.healing.outputs.skip != 'true' && steps.classify.outputs.route == 'needs_human'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          LABELS=$(gh label list --repo "$REPO" --limit 200 --json name --jq '.[].name')
+          if printf '%s\n' "$LABELS" | grep -qx "needs-human"; then
+            gh issue edit "$ISSUE_NUMBER" --repo "$REPO" --add-label "needs-human" >/dev/null 2>&1 || \
+              echo "::warning::Could not add needs-human label to issue #${ISSUE_NUMBER}"
+          fi
+          gh issue comment "$ISSUE_NUMBER" --repo "$REPO" \
+            --body "Auto-dispatch routed this pipeline issue to \`needs-human\` because it carries a non-fixable CI auth/escalation label." >/dev/null || \
+            echo "::warning::Could not record needs-human routing comment on issue #${ISSUE_NUMBER}"
 
       - name: Skip non-actionable issue
         if: steps.healing.outputs.skip != 'true' && steps.classify.outputs.actionable != 'true'
@@ -72,6 +92,12 @@ jobs:
       - name: Debounce (let issue burst settle)
         if: steps.healing.outputs.skip != 'true' && steps.classify.outputs.actionable == 'true'
         run: sleep 15
+
+      - name: Apply retry backoff
+        if: steps.healing.outputs.skip != 'true' && steps.classify.outputs.actionable == 'true' && steps.classify.outputs.route == 'retry_with_backoff'
+        run: |
+          echo "Retryable CI issue detected; backing off for ${{ steps.classify.outputs.backoff_seconds }}s before dispatch."
+          sleep "${{ steps.classify.outputs.backoff_seconds }}"
 
       - name: Skip when repo-assist already active
         if: steps.healing.outputs.skip != 'true' && steps.classify.outputs.actionable == 'true'

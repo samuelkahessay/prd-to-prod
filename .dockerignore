@@ -1,0 +1,10 @@
+node_modules
+.worktrees
+.git
+studio/.next
+console/node_modules
+console/data
+console/test
+PRDtoProd
+PRDtoProd.Tests
+showcase

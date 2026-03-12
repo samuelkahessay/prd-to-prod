@@ -46,7 +46,9 @@ jobs:
       - name: Checkout workflow helpers
         uses: actions/checkout@v4
         with:
-          sparse-checkout: scripts/healing-control.sh
+          sparse-checkout: |
+            scripts/healing-control.sh
+            scripts/classify-ci-failure.sh
           sparse-checkout-cone-mode: false
           path: .workflow-helpers
 
@@ -100,6 +102,15 @@ jobs:
             local label=$1
             if has_label "$label"; then
               gh pr edit "$PR_NUMBER" --repo "$REPO" --remove-label "$label" >/dev/null 2>&1 || true
+            fi
+          }
+
+          add_issue_label() {
+            local issue_number=$1
+            local label=$2
+            if has_label "$label"; then
+              gh issue edit "$issue_number" --repo "$REPO" --add-label "$label" >/dev/null 2>&1 || \
+                echo "::warning::Could not add label '$label' to issue #${issue_number}"
             fi
           }
 
@@ -248,16 +259,26 @@ jobs:
               | jq -r --arg title "$title" '.[] | select(.title == $title) | .number' | head -1)
 
             if [ -n "$existing_issue" ]; then
+              if [ -n "${CATEGORY_LABEL:-}" ] && has_label "$CATEGORY_LABEL"; then
+                gh issue edit "$existing_issue" --repo "$REPO" --add-label "$CATEGORY_LABEL" >/dev/null 2>&1 || true
+              fi
+              if [ "${CLASSIFIER_ACTION:-fix}" = "escalate" ] && has_label "needs-human"; then
+                gh issue edit "$existing_issue" --repo "$REPO" --add-label "needs-human" >/dev/null 2>&1 || true
+              fi
               gh issue comment "$existing_issue" --repo "$REPO" --body "$body" >/dev/null || \
                 echo "::warning::Could not update existing incident issue #${existing_issue}"
               return
             fi
 
-            for label in automation bug ci-failure; do
+            for label in automation bug ci-failure "${CATEGORY_LABEL:-}"; do
+              [ -n "$label" ] || continue
               if has_label "$label"; then
                 issue_args+=(--label "$label")
               fi
             done
+            if [ "${CLASSIFIER_ACTION:-fix}" = "escalate" ] && has_label "needs-human"; then
+              issue_args+=(--label "needs-human")
+            fi
 
             gh issue create --repo "$REPO" --title "$title" --body "$body" "${issue_args[@]}" >/dev/null
           }
@@ -265,6 +286,21 @@ jobs:
           RAW_LOGS=$(gh run view "$RUN_ID" --repo "$REPO" --log-failed 2>&1 || true)
           if [ -z "$RAW_LOGS" ]; then
             RAW_LOGS="(no failed-step logs found — see run logs)"
+          fi
+
+          CLASSIFICATION_JSON=$(printf '%s' "$RAW_LOGS" | .workflow-helpers/scripts/classify-ci-failure.sh)
+          FAILURE_TYPE=$(printf '%s' "$CLASSIFICATION_JSON" | jq -r '.category')
+          CLASSIFIER_CONFIDENCE=$(printf '%s' "$CLASSIFICATION_JSON" | jq -r '.confidence')
+          CLASSIFIER_ACTION=$(printf '%s' "$CLASSIFICATION_JSON" | jq -r '.suggested_action')
+          CATEGORY_LABEL=""
+          if [ "$FAILURE_TYPE" != "unknown" ]; then
+            CATEGORY_LABEL="ci-${FAILURE_TYPE}"
+          fi
+
+          if [ "$CLASSIFIER_CONFIDENCE" != "high" ]; then
+            FAILURE_TYPE="unknown"
+            CATEGORY_LABEL="ci-unknown"
+            CLASSIFIER_ACTION="fix"
           fi
 
           # Get changed files for hypothesis generation (PR-only)
@@ -279,7 +315,6 @@ jobs:
           else
             FAILURE_JSON=$(printf '%s' "$RAW_LOGS" | scripts/extract-failure-context.sh)
           fi
-          FAILURE_TYPE=$(printf '%s' "$FAILURE_JSON" | jq -r '.failure_type')
           FAILURE_SIGNATURE=$(printf '%s' "$FAILURE_JSON" | jq -r '.failure_signature')
           FAILURE_SUMMARY=$(printf '%s' "$FAILURE_JSON" | jq -r '.summary')
           FAILURE_EXCERPT=$(printf '%s' "$FAILURE_JSON" | jq -r '.excerpt')
@@ -289,7 +324,7 @@ jobs:
 
           if [ -z "$PR_NUMBER" ]; then
             if [ "${HEALING_PAUSED:-false}" = "true" ]; then
-              TITLE="[CI Incident] ${HEAD_BRANCH} failure: ${SHORT_SUMMARY}"
+              TITLE="[CI Incident] ${HEAD_BRANCH} ${FAILURE_TYPE} failure: ${SHORT_SUMMARY}"
               BODY=$(render_incident_body \
                 "Autonomous healing is paused via PIPELINE_HEALING_ENABLED, so no auto-dispatchable pipeline repair issue was created." \
                 "- **Branch**: \`${HEAD_BRANCH}\`")
@@ -299,7 +334,18 @@ jobs:
               exit 0
             fi
 
-            TITLE="[Pipeline] CI Build Failure on main: ${SHORT_SUMMARY}"
+            if [ "$CLASSIFIER_ACTION" = "escalate" ]; then
+              TITLE="[CI Incident] main ${FAILURE_TYPE} failure: ${SHORT_SUMMARY}"
+              BODY=$(render_incident_body \
+                "The deterministic CI classifier marked this failure as requiring human intervention, so no repair issue was created." \
+                "- **Branch**: \`${HEAD_BRANCH}\`")
+              DRILL_ID=$(extract_drill_id)
+              BODY=$(append_drill_metadata "$BODY" "$DRILL_ID")
+              create_or_update_incident_issue "$TITLE" "$BODY"
+              exit 0
+            fi
+
+            TITLE="[Pipeline] CI Failure (${FAILURE_TYPE}): ${SHORT_SUMMARY}"
             BODY=$(printf '%s\n' \
               "## CI Build Failure on \`main\`" \
               "" \
@@ -319,7 +365,8 @@ jobs:
               "" \
               "> This issue was created automatically by the CI Failure Router workflow.")
             ISSUE_ARGS=()
-            for label in pipeline bug automation; do
+            for label in pipeline bug automation "${CATEGORY_LABEL:-}"; do
+              [ -n "$label" ] || continue
               if has_label "$label"; then
                 ISSUE_ARGS+=(--label "$label")
               fi
@@ -412,6 +459,23 @@ jobs:
           DETECTED_STATE=$(render_state_body detected "$LINKED_ISSUE" 1 "$FAILURE_TYPE" "$FAILURE_SIGNATURE" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
           upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$DETECTED_STATE"
           add_pr_label "ci-failure"
+          if [ -n "${CATEGORY_LABEL:-}" ]; then
+            add_pr_label "$CATEGORY_LABEL"
+          fi
+
+          if [ "$CLASSIFIER_ACTION" = "escalate" ]; then
+            ESCALATED_STATE=$(render_state_body escalated "$LINKED_ISSUE" 1 "$FAILURE_TYPE" "$FAILURE_SIGNATURE" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
+            upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
+            remove_pr_label "repair-in-progress"
+            add_pr_label "repair-escalated"
+            add_issue_label "$LINKED_ISSUE" "needs-human"
+            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} ${FAILURE_TYPE} failure"
+            BODY=$(render_incident_body \
+              "The deterministic CI classifier marked this failure as requiring human intervention, so no repair command was posted." \
+              "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`\n- **Linked Issue**: #${LINKED_ISSUE}")
+            create_or_update_incident_issue "$TITLE" "$BODY"
+            exit 0
+          fi
 
           if [ "${HEALING_PAUSED:-false}" = "true" ]; then
             ESCALATED_STATE=$(render_state_body escalated "$LINKED_ISSUE" 1 "$FAILURE_TYPE" "$FAILURE_SIGNATURE" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")

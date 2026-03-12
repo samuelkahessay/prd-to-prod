@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["title", "description", "acceptance_criteria", "type"],
+    "properties": {
+      "title": { "type": "string", "minLength": 1 },
+      "description": { "type": "string", "minLength": 1 },
+      "acceptance_criteria": {
+        "type": "array",
+        "minItems": 1,
+        "items": { "type": "string", "minLength": 1 }
+      },
+      "type": { "type": "string", "enum": ["feature", "bug", "test", "infra", "docs"] },
+      "dependencies": {
+        "type": "array",
+        "items": { "type": "integer", "minimum": 1 }
+      },
+      "technical_notes": {
+        "type": "object",
+        "properties": {
+          "current_state": { "type": "string" },
+          "gap": { "type": "string" },
+          "complexity": { "type": "string" },
+          "estimated_effort": { "type": "string" },
+          "implementation_steps": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "additionalProperties": false
+      },
+      "labels": { "type": "array", "items": { "type": "string" } },
+      "priority": { "type": "string", "enum": ["high", "medium", "low"] }
+    },
+    "additionalProperties": false
+  },
+  "minItems": 1
+}

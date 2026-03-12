@@ -1,0 +1,91 @@
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  padding: 80px 48px 60px;
+  align-items: start;
+}
+.text {
+  padding-top: 40px;
+}
+.headline {
+  font-size: clamp(52px, 6.5vw, 88px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  margin-bottom: 28px;
+}
+.line2 {
+  display: block;
+  color: var(--ink-mid);
+  font-weight: 300;
+  font-style: italic;
+}
+.subtitle {
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--ink-muted);
+  max-width: 420px;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+.ctaPrimary {
+  display: inline-block;
+  background: var(--ink);
+  color: var(--cream);
+  padding: 16px 32px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+}
+.ctaLink {
+  display: inline-block;
+  margin-left: 24px;
+  font-size: 14px;
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.animation {
+  background: oklch(94% 0.005 75);
+  border: 1px solid var(--rule);
+  aspect-ratio: 4/3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.placeholderText {
+  font-size: 13px;
+  color: var(--ink-faint);
+  font-style: italic;
+}
+.actLabels {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  border-top: 1px solid var(--rule);
+}
+.actLabels span {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-right: 1px solid var(--rule);
+}
+.actLabels span:last-child {
+  border-right: none;
+}
+.actActive {
+  color: var(--accent) !important;
+  background: var(--accent-wash);
+}
