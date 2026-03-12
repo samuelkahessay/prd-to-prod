@@ -45,3 +45,4 @@ pipeline-page-*.png
 # Local tool state
 .playwright-mcp/
 .sisyphus/
+.worktrees/
