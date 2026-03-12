@@ -7,6 +7,10 @@
     "dev": "node server.js"
   },
   "dependencies": {
+    "better-sqlite3": "^12.6.2",
     "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0"
   }
 }
