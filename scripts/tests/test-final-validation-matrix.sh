@@ -20,9 +20,9 @@ echo "=== Final Validation Matrix ==="
 run_check "console-structure" "bash scripts/tests/test-console-structure.sh"
 run_check "console-preflight" "bash scripts/tests/test-console-preflight.sh"
 run_check "console-server" "bash scripts/tests/test-console-server.sh"
-run_check "export-scaffold" "bash scaffold/export-scaffold.sh"
-run_check "leak-test" "bash scaffold/leak-test.sh"
-run_check "bootstrap-test" "bash scaffold/bootstrap-test.sh"
+run_check "export-scaffold" "bash scripts/tests/test-export-scaffold.sh"
+run_check "leak-test" "bash scripts/tests/test-leak-test.sh"
+run_check "bootstrap-test" "bash scripts/tests/test-bootstrap-test.sh"
 
 # Extraction contracts
 run_check "validate-prd" "bash scripts/tests/test-validate-prd.sh"

@@ -5,6 +5,40 @@ ROOT_DIR=$(cd "$(dirname "$0")/../.." && pwd)
 EXPORT_SCRIPT="$ROOT_DIR/scaffold/export-scaffold.sh"
 OUTPUT_DIR="$ROOT_DIR/dist/scaffold"
 
+TMPDIR=$(mktemp -d)
+cleanup() {
+  rm -rf "$TMPDIR"
+}
+trap cleanup EXIT
+
+mkdir -p "$TMPDIR/bin"
+cat > "$TMPDIR/bin/gh" <<'STUB'
+#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  aw)
+    case "${2:-}" in
+      --help) exit 0 ;;
+      compile)
+        mkdir -p .github/aw
+        printf '{"generated_by":"test-stub"}\n' > .github/aw/actions-lock.json
+        for source in .github/workflows/*.md; do
+          [ -f "$source" ] || continue
+          lock="${source%.md}.lock.yml"
+          printf 'compiled-from:%s\n' "$source" > "$lock"
+        done
+        exit 0
+        ;;
+    esac
+    ;;
+esac
+exit 0
+STUB
+chmod +x "$TMPDIR/bin/gh"
+ln -sf "$(command -v jq)" "$TMPDIR/bin/jq"
+ln -sf "$(command -v yq)" "$TMPDIR/bin/yq"
+export PATH="$TMPDIR/bin:$PATH"
+
 # RED guard
 if [ ! -x "$EXPORT_SCRIPT" ]; then
   echo "RED: $EXPORT_SCRIPT does not exist yet — test defines the contract" >&2
