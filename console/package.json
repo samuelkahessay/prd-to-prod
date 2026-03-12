@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "jest --verbose"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
