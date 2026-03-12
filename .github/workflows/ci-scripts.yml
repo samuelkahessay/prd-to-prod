@@ -1,4 +1,4 @@
-name: .NET CI
+name: Pipeline Scripts CI
 
 on:
   pull_request:
@@ -13,13 +13,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Install yq
-        run: |
-          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
-          sudo chmod +x /usr/local/bin/yq
-      - name: Install gh-aw extension
-        run: |
-          gh extension install github/gh-aw || gh extension upgrade github/gh-aw
       - name: Verify v2 contracts
         run: |
           if [[ -d scaffold && -d extraction ]]; then
@@ -45,37 +38,3 @@ jobs:
         run: bash scripts/tests/test-patch-pr-review-agent-lock.sh
       - name: Test pr-review-agent activation bypass
         run: bash scripts/tests/test-pr-review-agent-activation.sh
-
-  check-profile:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      should-run: ${{ steps.check.outputs.should-run }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: .deploy-profile
-          sparse-checkout-cone-mode: false
-      - id: check
-        run: |
-          PROFILE=$(cat .deploy-profile 2>/dev/null || echo "dotnet-azure")
-          if [[ "$PROFILE" == "dotnet-azure" ]]; then
-            echo "should-run=true" >> $GITHUB_OUTPUT
-          else
-            echo "should-run=false" >> $GITHUB_OUTPUT
-            echo "Skipping .NET CI — active profile is '${PROFILE}'"
-          fi
-
-  build-and-test:
-    needs: check-profile
-    if: needs.check-profile.outputs.should-run == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-      - run: dotnet restore PRDtoProd.sln
-      - run: dotnet build PRDtoProd.sln --no-restore
-      - run: dotnet test PRDtoProd.sln --no-build --verbosity normal
