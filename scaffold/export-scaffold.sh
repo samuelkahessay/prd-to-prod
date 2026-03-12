@@ -28,6 +28,7 @@ copy_path() {
     mkdir -p "$dest"
     (cd "$REPO_ROOT" && find "$src" -type f \
       ! -path "*/node_modules/*" \
+      ! -path "*/.next/*" \
       ! -path "*/.git/*" \
       ! -name ".DS_Store" \
       | while IFS= read -r file; do
