@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 
+const { createDatabase } = require("./lib/db");
 const { createEventStore } = require("./lib/event-store");
 const { createOrchestrator } = require("./lib/orchestrator");
 const { runPreflight } = require("./lib/preflight");
@@ -16,7 +17,8 @@ app.locals.projectRoot = path.resolve(__dirname, "..");
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: false }));
 
-const eventStore = createEventStore();
+const db = createDatabase(path.join(__dirname, "data"));
+const eventStore = createEventStore(db);
 const orchestrator = createOrchestrator({
   projectRoot: path.resolve(__dirname, ".."),
   dataDir: path.join(__dirname, "data"),

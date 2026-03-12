@@ -5,61 +5,27 @@ const crypto = require("crypto");
 const { spawn } = require("child_process");
 const readline = require("readline");
 
-const { ensureDataDir } = require("./event-store");
-
 function createOrchestrator({ projectRoot, dataDir, eventStore }) {
-  ensureDataDir(dataDir);
-  const historyPath = path.join(dataDir, "history.json");
-
-  function persistHistory() {
-    const runs = eventStore.listRuns().map((run) => ({
-      id: run.id,
-      createdAt: run.createdAt,
-      updatedAt: run.updatedAt,
-      status: run.status,
-      mode: run.mode,
-      inputSource: run.inputSource,
-      targetRepo: run.targetRepo || "",
-      summary: run.summary || "",
-    }));
-    fs.writeFileSync(historyPath, JSON.stringify(runs, null, 2));
-  }
-
-  function loadHistory() {
-    if (!fs.existsSync(historyPath)) {
-      return [];
-    }
-    try {
-      return JSON.parse(fs.readFileSync(historyPath, "utf8"));
-    } catch (_error) {
-      return [];
-    }
-  }
-
   function stageForStep(step) {
     if (step === 1) return "EXTRACT";
     if (step === 2) return "ANALYZE";
     return "BUILD";
   }
 
-  function appendEvent(runId, stage, type, data) {
+  function appendEvent(runId, stage, kind, data, type = "auto") {
     eventStore.appendEvent(runId, {
       id: crypto.randomUUID(),
       stage,
       type,
+      kind,
       data,
       timestamp: new Date().toISOString(),
     });
-    persistHistory();
   }
 
   return {
     listRuns() {
-      const liveRuns = eventStore.listRuns();
-      if (liveRuns.length > 0) {
-        return liveRuns;
-      }
-      return loadHistory();
+      return eventStore.listRuns();
     },
     startRun(payload) {
       const runId = crypto.randomUUID();
@@ -74,7 +40,6 @@ function createOrchestrator({ projectRoot, dataDir, eventStore }) {
         targetRepo: payload.targetRepo || "",
         summary: payload.summary || "",
       });
-      persistHistory();
 
       const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "prd-to-prod-console-"));
       let inputArg = "";
@@ -183,7 +148,6 @@ function createOrchestrator({ projectRoot, dataDir, eventStore }) {
           status: code === 0 ? "completed" : "failed",
           updatedAt: new Date().toISOString(),
         });
-        persistHistory();
         fs.rmSync(tempDir, { recursive: true, force: true });
       });
 
