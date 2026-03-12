@@ -39,7 +39,8 @@ app.use("/api", (req, res, next) => {
   next();
 });
 
-const db = createDatabase(path.join(__dirname, "data"));
+const dataDir = process.env.DATA_DIR || path.join(__dirname, "data");
+const db = createDatabase(dataDir);
 const eventStore = createEventStore(db);
 const orchestrator = createOrchestrator({
   projectRoot: path.resolve(__dirname, ".."),
@@ -55,6 +56,12 @@ registerQueueRoutes(app, { eventStore });
 registerRunDecisionRoutes(app, { eventStore });
 registerRunAuditRoutes(app, { eventStore });
 
-app.listen(port, "127.0.0.1", () => {
-  console.log(`Operator console listening on http://127.0.0.1:${port}`);
+// Health check for Fly.io / load balancers
+app.get("/healthz", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
+const host = process.env.HOST || "127.0.0.1";
+app.listen(port, host, () => {
+  console.log(`Operator console listening on http://${host}:${port}`);
 });
