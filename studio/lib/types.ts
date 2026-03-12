@@ -1,3 +1,5 @@
+export type RunMode = "new" | "greenfield" | "existing";
+
 // Run types
 export type RunStatus = "queued" | "running" | "completed" | "failed";
 
@@ -6,7 +8,7 @@ export interface Run {
   createdAt: string;
   updatedAt: string;
   status: RunStatus;
-  mode: "new" | "existing";
+  mode: RunMode;
   inputSource: "workiq" | "notes";
   targetRepo: string;
   summary: string;

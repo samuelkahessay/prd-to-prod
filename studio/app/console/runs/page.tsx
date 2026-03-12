@@ -1,11 +1,13 @@
 import { api } from "@/lib/api";
 import type { Run } from "@/lib/types";
 import { RunsTable } from "@/components/console/runs-table";
+import { cookies } from "next/headers";
 
 export default async function RunsPage() {
   let runs: Run[] = [];
   try {
-    runs = await api.listRuns();
+    const cookieHeader = (await cookies()).toString();
+    runs = await api.listRuns({ cookieHeader });
   } catch {
     // API unavailable
   }

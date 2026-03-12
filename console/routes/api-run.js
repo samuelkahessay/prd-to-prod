@@ -1,3 +1,5 @@
+const { isSupportedRunMode, normalizeRunMode } = require("../lib/run-mode");
+
 function registerRunRoutes(app, { orchestrator, eventStore }) {
   app.post("/api/run", (req, res) => {
     const { inputSource, query, notes, mode, targetRepo, mockMode } = req.body || {};
@@ -17,7 +19,16 @@ function registerRunRoutes(app, { orchestrator, eventStore }) {
       return;
     }
 
-    if (mode === "existing" && !targetRepo) {
+    if (!isSupportedRunMode(mode)) {
+      res.status(400).json({
+        error: "mode must be one of auto, new, greenfield, or existing",
+      });
+      return;
+    }
+
+    const normalizedMode = normalizeRunMode(mode);
+
+    if (normalizedMode === "existing" && !targetRepo) {
       res.status(400).json({ error: "targetRepo is required for existing mode" });
       return;
     }
@@ -26,7 +37,8 @@ function registerRunRoutes(app, { orchestrator, eventStore }) {
       inputSource,
       query,
       notes,
-      mode,
+      mode: normalizedMode,
+      displayMode: mode,
       targetRepo,
       mockMode: Boolean(mockMode),
       summary: query || (notes || "").slice(0, 140),

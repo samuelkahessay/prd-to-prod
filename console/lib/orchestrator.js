@@ -35,7 +35,7 @@ function createOrchestrator({ projectRoot, dataDir, eventStore }) {
         createdAt,
         updatedAt: createdAt,
         status: "queued",
-        mode: payload.mode,
+        mode: payload.displayMode || payload.mode,
         inputSource: payload.inputSource,
         targetRepo: payload.targetRepo || "",
         summary: payload.summary || "",

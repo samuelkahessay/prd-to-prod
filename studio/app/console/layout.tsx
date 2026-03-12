@@ -1,5 +1,6 @@
 import { ConsoleNav } from "@/components/console/console-nav";
 import { api } from "@/lib/api";
+import { cookies } from "next/headers";
 
 export default async function ConsoleLayout({
   children,
@@ -10,9 +11,10 @@ export default async function ConsoleLayout({
   let pipelineHealthy = true;
 
   try {
-    const queue = await api.getQueue();
+    const cookieHeader = (await cookies()).toString();
+    const queue = await api.getQueue({ cookieHeader });
     queueCount = queue.length;
-    const checks = await api.preflight();
+    const checks = await api.preflight({ cookieHeader });
     pipelineHealthy = checks.filter((c) => c.required).every((c) => c.present);
   } catch {
     // API unavailable — show degraded state

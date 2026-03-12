@@ -13,8 +13,26 @@ const BASE =
     ? process.env.API_URL || "http://127.0.0.1:3000"
     : "";
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { credentials: "include" });
+interface ApiRequestOptions {
+  cookieHeader?: string;
+}
+
+function buildHeaders(options?: ApiRequestOptions): HeadersInit | undefined {
+  if (!options?.cookieHeader) {
+    return undefined;
+  }
+
+  return {
+    cookie: options.cookieHeader,
+  };
+}
+
+async function get<T>(path: string, options?: ApiRequestOptions): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    credentials: "include",
+    headers: buildHeaders(options),
+    cache: "no-store",
+  });
   if (res.status === 401) {
     throw new Error("Unauthorized");
   }
@@ -24,11 +42,17 @@ async function get<T>(path: string): Promise<T> {
   return res.json();
 }
 
-async function post<T>(path: string, body: unknown): Promise<T> {
+async function post<T>(path: string, body: unknown, options?: ApiRequestOptions): Promise<T> {
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...(buildHeaders(options) || {}),
+  };
+
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     credentials: "include",
+    cache: "no-store",
     body: JSON.stringify(body),
   });
   if (res.status === 401) {
@@ -41,8 +65,8 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 }
 
 export const api = {
-  preflight: () =>
-    get<{ checks: PreflightCheck[] }>("/api/preflight").then((r) => r.checks),
+  preflight: (options?: ApiRequestOptions) =>
+    get<{ checks: PreflightCheck[] }>("/api/preflight", options).then((r) => r.checks),
 
   startRun: (payload: {
     inputSource: string;
@@ -51,11 +75,12 @@ export const api = {
     mode: string;
     targetRepo?: string;
     mockMode?: boolean;
-  }) => post<{ runId: string }>("/api/run", payload),
+  }, options?: ApiRequestOptions) => post<{ runId: string }>("/api/run", payload, options),
 
-  getRun: (id: string) => get<Run>(`/api/run/${id}`),
+  getRun: (id: string, options?: ApiRequestOptions) => get<Run>(`/api/run/${id}`, options),
 
-  listRuns: () => get<{ runs: Run[] }>("/api/runs").then((r) => r.runs),
+  listRuns: (options?: ApiRequestOptions) =>
+    get<{ runs: Run[] }>("/api/runs", options).then((r) => r.runs),
 
   streamRun: (id: string, onEvent: (event: unknown) => void) => {
     const source = new EventSource(`/api/run/${id}/stream`);
@@ -63,14 +88,14 @@ export const api = {
     return () => source.close();
   },
 
-  getQueue: () => get<QueueItem[]>("/api/queue"),
+  getQueue: (options?: ApiRequestOptions) => get<QueueItem[]>("/api/queue", options),
 
   resolveQueueItem: (id: string, resolution: "approved" | "rejected") =>
     post<QueueItem>(`/api/queue/${id}/resolve`, { resolution }),
 
-  getDecisions: (runId: string) =>
-    get<Decision[]>(`/api/run/${runId}/decisions`),
+  getDecisions: (runId: string, options?: ApiRequestOptions) =>
+    get<Decision[]>(`/api/run/${runId}/decisions`, options),
 
-  getAudit: (runId: string) =>
-    get<AuditEntry[]>(`/api/run/${runId}/audit`),
+  getAudit: (runId: string, options?: ApiRequestOptions) =>
+    get<AuditEntry[]>(`/api/run/${runId}/audit`, options),
 };

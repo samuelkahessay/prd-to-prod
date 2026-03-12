@@ -21,7 +21,7 @@ trap cleanup EXIT
 SERVER_PID=$!
 
 for _ in $(seq 1 20); do
-  if curl -fsS "http://127.0.0.1:$PORT/api/history" >/dev/null 2>&1; then
+  if curl -fsS "http://127.0.0.1:$PORT/api/runs" >/dev/null 2>&1; then
     break
   fi
   sleep 0.25
@@ -32,14 +32,14 @@ curl -fsS "http://127.0.0.1:$PORT/api/preflight" | jq -e '.checks | type == "arr
   exit 1
 }
 
-curl -fsS "http://127.0.0.1:$PORT/api/history" | jq -e '.runs | type == "array"' >/dev/null || {
-  echo "FAIL: /api/history must return a runs array" >&2
+curl -fsS "http://127.0.0.1:$PORT/api/runs" | jq -e '.runs | type == "array"' >/dev/null || {
+  echo "FAIL: /api/runs must return a runs array" >&2
   exit 1
 }
 
 STATUS=$(curl -s -o /tmp/prd-to-prod-console-run.json -w '%{http_code}' \
   -H 'Content-Type: application/json' \
-  -d '{"inputSource":"notes","mode":"greenfield"}' \
+  -d '{"inputSource":"notes","mode":"new"}' \
   "http://127.0.0.1:$PORT/api/run")
 
 [ "$STATUS" = "400" ] || {

@@ -7,8 +7,4 @@ console/data
 console/test
 PRDtoProd
 PRDtoProd.Tests
-*.md
-docs
-drills
-scripts
 showcase
