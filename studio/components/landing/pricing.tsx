@@ -8,26 +8,26 @@ export function Pricing() {
       <span className={styles.label}>Pricing</span>
       <h2 className={styles.heading}>Pricing</h2>
       <p className={styles.subtitle}>
-        Your first project is free — so you can see exactly what the pipeline
-        delivers before paying for anything.
+        The pipeline is open source. You're paying for compute, hosting,
+        and the operational expertise to keep it running.
       </p>
 
       <div className={styles.cards}>
-        {/* Card A — Offer A (primary) */}
+        {/* Card A — Managed runs (primary) */}
         <div className={`${styles.card} ${styles.cardPrimary}`}>
           <div className={styles.badge}>Most popular</div>
-          <p className={styles.cardLabel}>Send a PRD</p>
+          <p className={styles.cardLabel}>We run it for you</p>
           <div className={styles.price}>
-            $500<span className={styles.priceUnit}>–$2K</span>
+            $99<span className={styles.priceUnit}>–$499</span>
           </div>
-          <p className={styles.pricePer}>per project</p>
+          <p className={styles.pricePer}>per pipeline run</p>
 
           <ul className={styles.features}>
-            <li>✓ Deployed app on Vercel with live URL</li>
-            <li>✓ Real GitHub repo you own</li>
-            <li>✓ CI/CD pipeline included</li>
-            <li>✓ Production-grade code — reviewed, tested, merged</li>
-            <li>✓ Self-healing CI — failures get fixed automatically</li>
+            <li>✓ Send a PRD, get a deployed app</li>
+            <li>✓ All LLM compute included</li>
+            <li>✓ Deployed on Vercel with CI/CD</li>
+            <li>✓ Real repo you own — code, history, everything</li>
+            <li>✓ Self-healing CI included</li>
             <li className={styles.featureMuted}>~ 24–48 hour turnaround</li>
           </ul>
 
@@ -35,57 +35,63 @@ export function Pricing() {
             <p className={styles.tiersTitle}>Complexity tiers</p>
             <div className={styles.tier}>
               <span>Simple app / internal tool</span>
-              <span className={styles.tierPrice}>$500</span>
+              <span className={styles.tierPrice}>$99</span>
             </div>
             <div className={styles.tier}>
               <span>Multi-feature with integrations</span>
-              <span className={styles.tierPrice}>$1K–$1.5K</span>
+              <span className={styles.tierPrice}>$249</span>
             </div>
             <div className={styles.tier}>
               <span>Complex (auth, multiple APIs)</span>
-              <span className={styles.tierPrice}>$2K</span>
+              <span className={styles.tierPrice}>$499</span>
             </div>
           </div>
 
           <a href={MAILTO} className={styles.ctaPrimary}>Send your PRD →</a>
-          <p className={styles.subCta}>First project free — no card required</p>
+          <p className={styles.subCta}>First run free — no card required</p>
         </div>
 
-        {/* Card B — Offer B (secondary) */}
+        {/* Card B — Self-hosted (secondary) */}
         <div id="for-teams" className={styles.card}>
-          <p className={styles.cardLabel}>For engineering teams</p>
+          <p className={styles.cardLabel}>Run it yourself</p>
           <div className={styles.price}>
-            $2K<span className={styles.priceUnit}>–$5K</span>
+            $0
           </div>
-          <p className={styles.pricePer}>one-time setup</p>
+          <p className={styles.pricePer}>MIT licensed, forever</p>
 
           <ul className={styles.features}>
-            <li>✓ Autonomous pipeline on your repo</li>
-            <li>✓ Issues → agents → PRs → review → merge</li>
-            <li>✓ CI failure detection + self-healing loop</li>
-            <li>✓ Policy gates for human approval boundaries</li>
-            <li>✓ LLM-agnostic (Copilot, Claude, Codex, Gemini)</li>
-            <li className={styles.featureMuted}>~ 1 week setup</li>
+            <li>✓ Full pipeline source code</li>
+            <li>✓ Bring your own LLM (Copilot, Claude, Codex, Gemini)</li>
+            <li>✓ Deploy anywhere — your infra, your rules</li>
+            <li>✓ Self-healing, review agents, auto-dispatch</li>
+            <li>✓ Same code that runs our managed service</li>
           </ul>
 
           <div className={styles.tiers}>
-            <p className={styles.tiersTitle}>Setup tiers</p>
+            <p className={styles.tiersTitle}>You'll need</p>
             <div className={styles.tier}>
-              <span>Basic pipeline (build + review + merge)</span>
-              <span className={styles.tierPrice}>$2K</span>
+              <span>GitHub repo + Actions</span>
+              <span className={styles.tierPrice}>free</span>
             </div>
             <div className={styles.tier}>
-              <span>Full pipeline (+ CI self-healing)</span>
-              <span className={styles.tierPrice}>$3.5K</span>
+              <span>LLM access (Copilot, Claude, etc.)</span>
+              <span className={styles.tierPrice}>~$19/mo</span>
             </div>
             <div className={styles.tier}>
-              <span>Full + meeting-to-main integration</span>
-              <span className={styles.tierPrice}>$5K</span>
+              <span>Hosting (Vercel, Fly, etc.)</span>
+              <span className={styles.tierPrice}>~$0–20/mo</span>
             </div>
           </div>
 
-          <a href={MAILTO} className={styles.ctaOutline}>Get in touch →</a>
-          <p className={styles.subCta}>Optional ongoing support from $200/mo</p>
+          <a
+            href="https://github.com/samuelkahessay/prd-to-prod"
+            className={styles.ctaOutline}
+            target="_blank"
+            rel="noopener"
+          >
+            View on GitHub →
+          </a>
+          <p className={styles.subCta}>Optional support from $299/mo</p>
         </div>
       </div>
 

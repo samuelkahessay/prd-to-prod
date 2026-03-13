@@ -58,10 +58,14 @@ describe("Pricing", () => {
     render(<Pricing />);
     expect(screen.getByRole("heading", { name: "Pricing" })).toBeInTheDocument();
     expect(screen.getByText("Most popular")).toBeInTheDocument();
-    expect(screen.getByText("Send a PRD")).toBeInTheDocument();
-    expect(screen.getByText("For engineering teams")).toBeInTheDocument();
+    expect(screen.getByText("We run it for you")).toBeInTheDocument();
+    expect(screen.getByText("Run it yourself")).toBeInTheDocument();
     expect(screen.getByText("What's in scope today")).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: /Send your PRD →|Get in touch →/ })).toHaveLength(2);
+    expect(screen.getByRole("link", { name: "Send your PRD →" })).toHaveAttribute("href", MAILTO);
+    expect(screen.getByRole("link", { name: "View on GitHub →" })).toHaveAttribute(
+      "href",
+      "https://github.com/samuelkahessay/prd-to-prod",
+    );
   });
 });
 
