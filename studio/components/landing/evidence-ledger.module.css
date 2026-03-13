@@ -1,15 +1,6 @@
 .section {
   padding: 0 48px;
 }
-.num {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ink-faint);
-  margin-bottom: 16px;
-  letter-spacing: 0.04em;
-  display: block;
-}
 .heading {
   font-size: 36px;
   font-weight: 700;

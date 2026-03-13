@@ -26,7 +26,7 @@
 }
 .ctaLink {
   display: inline-block;
-  margin-left: 20px;
+  margin-top: 12px;
   font-size: 14px;
   color: var(--ink-muted);
   text-decoration: underline;
