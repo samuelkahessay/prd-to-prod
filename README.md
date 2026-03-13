@@ -24,8 +24,8 @@ Every step is visible in GitHub: issues, PRs, reviews, and workflow runs.
 
 ### We run it for you
 
-Send a PRD to [sam@skahessay.dev](mailto:sam@skahessay.dev). All LLM compute
-included. First run free.
+Send a PRD through the [landing page](https://prd-to-prod.vercel.app). All LLM
+compute included. First run free.
 
 | Complexity | Price |
 |---|---|
