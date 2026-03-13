@@ -2,22 +2,46 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { Hero } from "@/components/landing/hero";
+import { StickyNav } from "@/components/landing/sticky-nav";
 import { RunsTable } from "@/components/console/runs-table";
 import type { Run } from "@/lib/types";
 
 describe("Hero", () => {
   it("renders headline and CTA", () => {
     render(<Hero />);
-    expect(screen.getByText("Brief in.")).toBeInTheDocument();
-    expect(screen.getByText("Production out.")).toBeInTheDocument();
-    expect(screen.getByText("See it run")).toHaveAttribute("href", "/console");
+    expect(
+      screen.getByRole("heading", { name: "Send a PRD. Get a deployed app." })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Powered by GitHub Agentic Workflows")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Send your PRD →" })).toHaveAttribute(
+      "href",
+      "mailto:sam@skahessay.dev?subject=PRD%20Submission"
+    );
   });
 
-  it("renders all pipeline acts", () => {
+  it("renders pricing link and first-project messaging", () => {
     render(<Hero />);
-    for (const act of ["Brief", "Plan", "Build", "Ship", "Heal"]) {
-      expect(screen.getByText(act)).toBeInTheDocument();
-    }
+    expect(screen.getByRole("link", { name: "See pricing" })).toHaveAttribute(
+      "href",
+      "#pricing"
+    );
+    expect(screen.getByText(/First project free\./)).toBeInTheDocument();
+  });
+});
+
+describe("StickyNav", () => {
+  it("initializes as scrolled when mounted below the hero", () => {
+    Object.defineProperty(window, "scrollY", {
+      configurable: true,
+      writable: true,
+      value: 192,
+    });
+
+    render(<StickyNav />);
+
+    expect(screen.getByRole("navigation")).toHaveClass("scrolled");
   });
 });
 
