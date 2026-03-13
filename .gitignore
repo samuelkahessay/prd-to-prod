@@ -41,6 +41,14 @@ scripts/demo-video/
 pipeline-replay-screenshot.png
 landing-page-*.png
 pipeline-page-*.png
+openmatter-*.png
+factory-hero.png
+linkedin-posts-full.png
+
+# Tool artifacts
+.playwright-cli/
+output/
+generated-prd.md
 
 # Local tool state
 .playwright-mcp/
