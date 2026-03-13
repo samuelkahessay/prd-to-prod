@@ -13,7 +13,7 @@ export function Hero() {
       <p className={styles.subtitle}>
         Autonomous agents build, review, and deploy your app from your PRD.
         You get a live URL, a real repo with CI/CD, and code you own.
-        First project free.
+        Open source. First run free.
       </p>
       <div className={styles.actions}>
         <a href={MAILTO} className={styles.ctaPrimary}>Send your PRD →</a>

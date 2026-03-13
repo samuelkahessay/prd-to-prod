@@ -8,7 +8,7 @@ export function BottomCta() {
       <h2 className={styles.heading}>Ready to ship something?</h2>
       <p className={styles.body}>
         Send us a PRD, a rough brief, or even just an idea. We'll reply with
-        scope, timeline, and price. First project free.
+        scope, timeline, and price. Or fork the repo and run it yourself.
       </p>
       <a href={MAILTO} className={styles.ctaPrimary}>Send your PRD →</a>
       <a
