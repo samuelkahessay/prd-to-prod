@@ -1,6 +1,6 @@
 # Frontend Agent Design (WIP)
 
-Status: **In Progress** — frontmatter approved, prompt design pending.
+Status: **Implemented** — all pipeline infrastructure changes landed. Ready for live testing with a `frontend + pipeline` issue.
 
 ## Context
 

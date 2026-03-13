@@ -61,12 +61,16 @@ jobs:
           ACTIONABLE=$(printf '%s' "$CLASSIFICATION" | jq -r '.actionable')
           REASON=$(printf '%s' "$CLASSIFICATION" | jq -r '.reason')
           ROUTE=$(printf '%s' "$CLASSIFICATION" | jq -r '.route')
+          WORKFLOW_FILE=$(printf '%s' "$CLASSIFICATION" | jq -r '.workflow_file')
+          AGENT_COMMAND=$(printf '%s' "$CLASSIFICATION" | jq -r '.agent_command')
           BACKOFF_SECONDS=$(printf '%s' "$CLASSIFICATION" | jq -r '.backoff_seconds')
           echo "actionable=${ACTIONABLE}" >> "$GITHUB_OUTPUT"
           echo "reason=${REASON}" >> "$GITHUB_OUTPUT"
           echo "route=${ROUTE}" >> "$GITHUB_OUTPUT"
+          echo "workflow_file=${WORKFLOW_FILE}" >> "$GITHUB_OUTPUT"
+          echo "agent_command=${AGENT_COMMAND}" >> "$GITHUB_OUTPUT"
           echo "backoff_seconds=${BACKOFF_SECONDS}" >> "$GITHUB_OUTPUT"
-          echo "Issue classification: actionable=${ACTIONABLE} reason=${REASON} route=${ROUTE} backoff_seconds=${BACKOFF_SECONDS}"
+          echo "Issue classification: actionable=${ACTIONABLE} reason=${REASON} route=${ROUTE} workflow_file=${WORKFLOW_FILE} backoff_seconds=${BACKOFF_SECONDS}"
 
       - name: Route needs-human issue
         if: steps.healing.outputs.skip != 'true' && steps.classify.outputs.route == 'needs_human'
@@ -99,15 +103,16 @@ jobs:
           echo "Retryable CI issue detected; backing off for ${{ steps.classify.outputs.backoff_seconds }}s before dispatch."
           sleep "${{ steps.classify.outputs.backoff_seconds }}"
 
-      - name: Skip when repo-assist already active
+      - name: Skip when owning agent already active
         if: steps.healing.outputs.skip != 'true' && steps.classify.outputs.actionable == 'true'
         id: guard
         env:
           GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+          WORKFLOW_FILE: ${{ steps.classify.outputs.workflow_file }}
         run: |
           ACTIVE_RUNS=$(gh run list --repo "$REPO" \
-            --workflow repo-assist.lock.yml \
+            --workflow "$WORKFLOW_FILE" \
             --limit 20 \
             --json databaseId,status,url,createdAt \
             | jq '[.[] | select(.status == "in_progress" or .status == "queued")] | sort_by(.createdAt)')
@@ -118,7 +123,7 @@ jobs:
           echo "blocking_run_url=${BLOCKING_RUN_URL}" >> "$GITHUB_OUTPUT"
           if [ "$ACTIVE_COUNT" -gt 0 ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "repo-assist already queued/running; skipping dispatch."
+            echo "${WORKFLOW_FILE} already queued/running; skipping dispatch."
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
@@ -130,6 +135,8 @@ jobs:
           REPO: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           DISPATCH_WORKFLOW_RUN_ID: ${{ github.run_id }}
+          ROUTE: ${{ steps.classify.outputs.route }}
+          WORKFLOW_FILE: ${{ steps.classify.outputs.workflow_file }}
           BLOCKING_RUN_ID: ${{ steps.guard.outputs.blocking_run_id }}
           BLOCKING_RUN_URL: ${{ steps.guard.outputs.blocking_run_url }}
         run: |
@@ -139,46 +146,51 @@ jobs:
             'dispatch_workflow=Auto-Dispatch Pipeline Issues' \
             "dispatch_workflow_run_id=${DISPATCH_WORKFLOW_RUN_ID}" \
             "dispatch_workflow_run_url=https://github.com/${REPO}/actions/runs/${DISPATCH_WORKFLOW_RUN_ID}" \
+            "route=${ROUTE}" \
+            "workflow_file=${WORKFLOW_FILE}" \
             "blocking_repo_assist_run_id=${BLOCKING_RUN_ID}" \
             "blocking_repo_assist_run_url=${BLOCKING_RUN_URL}" \
+            "blocking_agent_run_id=${BLOCKING_RUN_ID}" \
+            "blocking_agent_run_url=${BLOCKING_RUN_URL}" \
             "deferred_at=${DEFERRED_AT}" \
             '-->' \
             '' \
-            'Self-healing audit marker: dispatch deferred while repo-assist was already active.')
+            "Self-healing audit marker: dispatch deferred while ${WORKFLOW_FILE} was already active.")
           gh issue comment "$ISSUE_NUMBER" --repo "$REPO" --body "$BODY" >/dev/null || \
             echo "::warning::Could not record deferred dispatch marker on issue #${ISSUE_NUMBER}"
 
-      - name: Dispatch repo-assist scheduled mode
+      - name: Dispatch owning agent
         if: steps.healing.outputs.skip != 'true' && steps.classify.outputs.actionable == 'true' && steps.guard.outputs.skip != 'true'
-        id: dispatch_repo_assist
+        id: dispatch_agent
         env:
           GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+          WORKFLOW_FILE: ${{ steps.classify.outputs.workflow_file }}
         run: |
           DISPATCHED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          gh workflow run repo-assist.lock.yml \
+          gh workflow run "$WORKFLOW_FILE" \
             --repo "$REPO"
 
-          REPO_ASSIST_RUN_ID=""
-          REPO_ASSIST_RUN_URL=""
+          AGENT_RUN_ID=""
+          AGENT_RUN_URL=""
           for attempt in $(seq 1 12); do
             RUN_JSON=$(gh run list --repo "$REPO" \
-              --workflow repo-assist.lock.yml \
+              --workflow "$WORKFLOW_FILE" \
               --event workflow_dispatch \
               --limit 20 \
-              --json databaseId,createdAt,url,displayTitle \
-              | jq --arg dispatched_at "$DISPATCHED_AT" '[.[] | select(.displayTitle == "Pipeline Repo Assist" and .createdAt >= $dispatched_at)] | sort_by(.createdAt) | last // {}')
-            REPO_ASSIST_RUN_ID=$(printf '%s' "$RUN_JSON" | jq -r '.databaseId // ""')
-            REPO_ASSIST_RUN_URL=$(printf '%s' "$RUN_JSON" | jq -r '.url // ""')
-            if [ -n "$REPO_ASSIST_RUN_ID" ]; then
+              --json databaseId,createdAt,url \
+              | jq --arg dispatched_at "$DISPATCHED_AT" '[.[] | select(.createdAt >= $dispatched_at)] | sort_by(.createdAt) | last // {}')
+            AGENT_RUN_ID=$(printf '%s' "$RUN_JSON" | jq -r '.databaseId // ""')
+            AGENT_RUN_URL=$(printf '%s' "$RUN_JSON" | jq -r '.url // ""')
+            if [ -n "$AGENT_RUN_ID" ]; then
               break
             fi
             sleep 5
           done
 
           echo "dispatched_at=${DISPATCHED_AT}" >> "$GITHUB_OUTPUT"
-          echo "repo_assist_run_id=${REPO_ASSIST_RUN_ID}" >> "$GITHUB_OUTPUT"
-          echo "repo_assist_run_url=${REPO_ASSIST_RUN_URL}" >> "$GITHUB_OUTPUT"
+          echo "agent_run_id=${AGENT_RUN_ID}" >> "$GITHUB_OUTPUT"
+          echo "agent_run_url=${AGENT_RUN_URL}" >> "$GITHUB_OUTPUT"
 
       - name: Record dispatch marker
         if: steps.healing.outputs.skip != 'true' && steps.classify.outputs.actionable == 'true' && steps.guard.outputs.skip != 'true'
@@ -187,20 +199,26 @@ jobs:
           REPO: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           DISPATCH_WORKFLOW_RUN_ID: ${{ github.run_id }}
-          REPO_ASSIST_RUN_ID: ${{ steps.dispatch_repo_assist.outputs.repo_assist_run_id }}
-          REPO_ASSIST_RUN_URL: ${{ steps.dispatch_repo_assist.outputs.repo_assist_run_url }}
-          DISPATCHED_AT: ${{ steps.dispatch_repo_assist.outputs.dispatched_at }}
+          ROUTE: ${{ steps.classify.outputs.route }}
+          WORKFLOW_FILE: ${{ steps.classify.outputs.workflow_file }}
+          AGENT_RUN_ID: ${{ steps.dispatch_agent.outputs.agent_run_id }}
+          AGENT_RUN_URL: ${{ steps.dispatch_agent.outputs.agent_run_url }}
+          DISPATCHED_AT: ${{ steps.dispatch_agent.outputs.dispatched_at }}
         run: |
           BODY=$(printf '%s\n' \
             '<!-- self-healing-dispatch:v1' \
             'dispatch_workflow=Auto-Dispatch Pipeline Issues' \
             "dispatch_workflow_run_id=${DISPATCH_WORKFLOW_RUN_ID}" \
             "dispatch_workflow_run_url=https://github.com/${REPO}/actions/runs/${DISPATCH_WORKFLOW_RUN_ID}" \
-            "repo_assist_run_id=${REPO_ASSIST_RUN_ID}" \
-            "repo_assist_run_url=${REPO_ASSIST_RUN_URL}" \
+            "route=${ROUTE}" \
+            "workflow_file=${WORKFLOW_FILE}" \
+            "repo_assist_run_id=${AGENT_RUN_ID}" \
+            "repo_assist_run_url=${AGENT_RUN_URL}" \
+            "agent_run_id=${AGENT_RUN_ID}" \
+            "agent_run_url=${AGENT_RUN_URL}" \
             "dispatched_at=${DISPATCHED_AT}" \
             '-->' \
             '' \
-            'Self-healing audit marker: repo-assist dispatched.')
+            "Self-healing audit marker: ${WORKFLOW_FILE} dispatched.")
           gh issue comment "$ISSUE_NUMBER" --repo "$REPO" --body "$BODY" >/dev/null || \
             echo "::warning::Could not record dispatch marker on issue #${ISSUE_NUMBER}"

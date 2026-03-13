@@ -14,6 +14,7 @@ REASONS=$(jq -cn \
   --arg author_login "$AUTHOR_LOGIN" \
   '[
     if ($head_ref_name | startswith("repo-assist/")) then "repo_assist_branch" else empty end,
+    if ($head_ref_name | startswith("frontend-agent/")) then "frontend_agent_branch" else empty end,
     if ($head_ref_name | startswith("copilot/")) then "copilot_branch" else empty end,
     if ($head_ref_name | startswith("code-simplifier/")) then "agentic_branch" else empty end,
     if ($head_ref_name | startswith("ci-doctor/")) then "agentic_branch" else empty end,

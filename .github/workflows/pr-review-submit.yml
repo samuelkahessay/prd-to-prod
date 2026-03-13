@@ -16,7 +16,7 @@
 #   3. Parses APPROVE or REQUEST_CHANGES from the comment body
 #   4. Submits the formal GitHub review as github-actions[bot]
 #   5. On APPROVE: marks draft PRs ready, enables auto-merge for [Pipeline] PRs
-#   6. Dispatches repo-assist for next cycle (APPROVE) or posts /repo-assist (REQUEST_CHANGES)
+#   6. Dispatches the owning agent for next cycle (APPROVE) or posts the owning agent command (REQUEST_CHANGES)
 #
 # Break-glass: workflow_dispatch allows manual review submission when the
 # comment-based flow is blocked (e.g., action_required on first-time contributor).
@@ -458,7 +458,7 @@ jobs:
               echo "::warning::Could not close PR #${DUP}"
           done
 
-      - name: Dispatch repo-assist for next cycle
+      - name: Dispatch owning agent for next cycle
         if: always() && steps.idempotency.outputs.skip != 'true' && steps.review.outputs.verdict != '' && steps.healing.outputs.enabled == 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
@@ -473,6 +473,16 @@ jobs:
         run: |
           VERDICT="$REVIEW_VERDICT"
           SUMMARY="$REVIEW_SUMMARY"
+
+          # Determine owning agent from PR labels
+          PR_LABELS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels --jq '[.labels[].name]' 2>/dev/null || echo '[]')
+          if printf '%s' "$PR_LABELS" | jq -e 'index("frontend")' >/dev/null 2>&1; then
+            AGENT_WORKFLOW="frontend-agent.lock.yml"
+            AGENT_COMMAND="/frontend-agent"
+          else
+            AGENT_WORKFLOW="repo-assist.lock.yml"
+            AGENT_COMMAND="/repo-assist"
+          fi
 
           OPEN_ISSUES=$(gh issue list --repo "$REPO" \
             --label pipeline --state open --json number,title,labels \
@@ -498,7 +508,7 @@ jobs:
             exit 0
           fi
 
-          echo "Review verdict: $VERDICT. Found $TOTAL open pipeline items."
+          echo "Review verdict: $VERDICT. Found $TOTAL open pipeline items. Owning agent: ${AGENT_COMMAND}"
 
           if [ "$VERDICT" = "APPROVE" ]; then
             if [ "$PIPELINE_PR" = "true" ] && [ "$POLICY_BLOCKED" = "true" ] && [ "$AUTO_FOLLOW_UP_ALLOWED" != "true" ]; then
@@ -506,19 +516,18 @@ jobs:
               exit 0
             fi
 
-            # APPROVE path: dispatch repo-assist in scheduled mode for next issue
-            gh workflow run repo-assist.lock.yml --repo "$REPO" || \
-              echo "::warning::Could not dispatch repo-assist"
+            # APPROVE path: dispatch owning agent in scheduled mode for next issue
+            gh workflow run "$AGENT_WORKFLOW" --repo "$REPO" || \
+              echo "::warning::Could not dispatch ${AGENT_WORKFLOW}"
           else
-            # REQUEST_CHANGES path: post /repo-assist on the linked issue so the
-            # agent enters Command Mode with specific fix instructions.
+            # REQUEST_CHANGES path: post owning agent command on the linked issue
             TARGET_ISSUE="${ISSUE_NUMBER:-}"
             if [ -n "$TARGET_ISSUE" ]; then
               gh issue comment "$TARGET_ISSUE" --repo "$REPO" \
-                --body "/repo-assist Fix review feedback on PR #${PR_NUMBER}. The reviewer said: ${SUMMARY}. Read the full review on PR #${PR_NUMBER}, implement all requested changes, push fixes to the PR branch, and comment what you changed." || \
-                echo "::warning::Could not post /repo-assist comment"
+                --body "${AGENT_COMMAND} Fix review feedback on PR #${PR_NUMBER}. The reviewer said: ${SUMMARY}. Read the full review on PR #${PR_NUMBER}, implement all requested changes, push fixes to the PR branch, and comment what you changed." || \
+                echo "::warning::Could not post ${AGENT_COMMAND} comment"
             else
-              echo "::warning::No linked issue found for PR #${PR_NUMBER} — cannot post /repo-assist"
+              echo "::warning::No linked issue found for PR #${PR_NUMBER} — cannot post ${AGENT_COMMAND}"
             fi
           fi
 
@@ -911,7 +920,7 @@ jobs:
               echo "::warning::Could not close PR #${DUP}"
           done
 
-      - name: Dispatch repo-assist for next cycle
+      - name: Dispatch owning agent for next cycle
         if: always() && steps.healing.outputs.enabled == 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
@@ -927,6 +936,16 @@ jobs:
         run: |
           VERDICT="${REVIEW_VERDICT:-$INPUT_VERDICT}"
           SUMMARY="$REVIEW_SUMMARY"
+
+          # Determine owning agent from PR labels
+          PR_LABELS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels --jq '[.labels[].name]' 2>/dev/null || echo '[]')
+          if printf '%s' "$PR_LABELS" | jq -e 'index("frontend")' >/dev/null 2>&1; then
+            AGENT_WORKFLOW="frontend-agent.lock.yml"
+            AGENT_COMMAND="/frontend-agent"
+          else
+            AGENT_WORKFLOW="repo-assist.lock.yml"
+            AGENT_COMMAND="/repo-assist"
+          fi
 
           OPEN_ISSUES=$(gh issue list --repo "$REPO" \
             --label pipeline --state open --json number,title,labels \
@@ -952,7 +971,7 @@ jobs:
             exit 0
           fi
 
-          echo "Review verdict: $VERDICT. Found $TOTAL open pipeline items."
+          echo "Review verdict: $VERDICT. Found $TOTAL open pipeline items. Owning agent: ${AGENT_COMMAND}"
 
           if [ "$VERDICT" = "APPROVE" ]; then
             if [ "$PIPELINE_PR" = "true" ] && [ "$POLICY_BLOCKED" = "true" ] && [ "$AUTO_FOLLOW_UP_ALLOWED" != "true" ]; then
@@ -960,16 +979,16 @@ jobs:
               exit 0
             fi
 
-            gh workflow run repo-assist.lock.yml --repo "$REPO" || \
-              echo "::warning::Could not dispatch repo-assist"
+            gh workflow run "$AGENT_WORKFLOW" --repo "$REPO" || \
+              echo "::warning::Could not dispatch ${AGENT_WORKFLOW}"
           else
             TARGET_ISSUE="${ISSUE_NUMBER:-}"
             if [ -n "$TARGET_ISSUE" ]; then
               gh issue comment "$TARGET_ISSUE" --repo "$REPO" \
-                --body "/repo-assist Fix review feedback on PR #${PR_NUMBER}. The reviewer said: ${SUMMARY}. Read the full review on PR #${PR_NUMBER}, implement all requested changes, push fixes to the PR branch, and comment what you changed." || \
-                echo "::warning::Could not post /repo-assist comment"
+                --body "${AGENT_COMMAND} Fix review feedback on PR #${PR_NUMBER}. The reviewer said: ${SUMMARY}. Read the full review on PR #${PR_NUMBER}, implement all requested changes, push fixes to the PR branch, and comment what you changed." || \
+                echo "::warning::Could not post ${AGENT_COMMAND} comment"
             else
-              echo "::warning::No linked issue found for PR #${PR_NUMBER} — cannot post /repo-assist"
+              echo "::warning::No linked issue found for PR #${PR_NUMBER} — cannot post ${AGENT_COMMAND}"
             fi
           fi
 

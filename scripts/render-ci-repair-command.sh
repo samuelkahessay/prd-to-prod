@@ -6,6 +6,7 @@ usage() {
 Usage: render-ci-repair-command.sh [options]
 
 Options:
+  --agent-command CMD    (default: /repo-assist)
   --pr-number N
   --linked-issue N
   --head-sha SHA
@@ -24,8 +25,11 @@ USAGE
   exit 1
 }
 
+AGENT_COMMAND="/repo-assist"
+
 while [ "$#" -gt 0 ]; do
   case "$1" in
+    --agent-command) AGENT_COMMAND="$2"; shift 2 ;;
     --pr-number) PR_NUMBER="$2"; shift 2 ;;
     --linked-issue) LINKED_ISSUE="$2"; shift 2 ;;
     --head-sha) HEAD_SHA="$2"; shift 2 ;;
@@ -71,7 +75,7 @@ HYPOTHESIS=${HYPOTHESIS:-}
 CORRELATED_FILES=${CORRELATED_FILES:-}
 
 printf '%s\n' \
-  "/repo-assist Repair CI failure for PR #${PR_NUMBER}." \
+  "${AGENT_COMMAND} Repair CI failure for PR #${PR_NUMBER}." \
   "" \
   "<!-- ci-repair-command:v1" \
   "pr_number=${PR_NUMBER}" \

@@ -124,7 +124,7 @@ In CI Repair Command Mode:
 
 ### General Command Mode
 
-If the instructions are non-empty and do **not** contain `ci-repair-command:v1`, follow the user's instructions instead of the normal workflow. Apply all the same guidelines (read AGENTS.md, run tests, use AI disclosure). If the issue's requirements are already satisfied by merged code, close the issue with a comment referencing the PR that resolved it — do not create a new PR. Skip the scheduled workflow and directly do what was requested. Then exit.
+If the instructions are non-empty and do **not** contain `ci-repair-command:v1`, follow the user's instructions instead of the normal workflow. **If the linked issue has a `frontend` label, exit immediately** — that issue belongs to the frontend agent lane and should not be worked by repo-assist. Apply all the same guidelines (read AGENTS.md, run tests, use AI disclosure). If the issue's requirements are already satisfied by merged code, close the issue with a comment referencing the PR that resolved it — do not create a new PR. Skip the scheduled workflow and directly do what was requested. Then exit.
 
 ## Architecture Context
 
@@ -222,7 +222,7 @@ Each run, work on 2-5 tasks from the list below. Use round-robin scheduling base
 
 ### Task 1: Implement Issues as Pull Requests
 
-1. List open issues labeled `pipeline` + (`feature`, `test`, `infra`, `docs`, or `bug`).
+1. List open issues labeled `pipeline` + (`feature`, `test`, `infra`, `docs`, or `bug`). **Skip issues labeled `frontend`** — those belong to the frontend agent lane.
 2. Sort by dependency order — skip issues whose dependencies (referenced in issue body) are not yet closed.
 3. For each implementable issue (check memory — skip if already attempted):
    a. Read the issue carefully, including acceptance criteria, `## PRD Traceability`, and technical notes. Then apply the **PRD Fidelity Protocol** before making any code changes.

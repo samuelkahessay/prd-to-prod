@@ -81,4 +81,44 @@ printf '%s' "$TRACKER_JSON" | jq -e '.reason == "prd_tracking_issue"' >/dev/null
 printf '%s' "$AUTH_JSON" | jq -e '.actionable == false and .route == "needs_human"' >/dev/null
 printf '%s' "$RETRY_JSON" | jq -e '.actionable == true and .route == "retry_with_backoff" and .backoff_seconds == 60' >/dev/null
 
+# Verify route metadata on default route
+printf '%s' "$ACTIONABLE_JSON" | jq -e '.workflow_file == "repo-assist.lock.yml"' >/dev/null
+printf '%s' "$ACTIONABLE_JSON" | jq -e '.agent_command == "/repo-assist"' >/dev/null
+
+# Test frontend route
+FRONTEND_ISSUE=$(cat <<'JSON'
+{
+  "title": "Fix mobile layout overflow",
+  "labels": [
+    { "name": "pipeline" },
+    { "name": "frontend" },
+    { "name": "bug" }
+  ]
+}
+JSON
+)
+
+FRONTEND_JSON=$(printf '%s' "$FRONTEND_ISSUE" | "$SCRIPT")
+printf '%s' "$FRONTEND_JSON" | jq -e '.actionable == true' >/dev/null
+printf '%s' "$FRONTEND_JSON" | jq -e '.route == "frontend_agent"' >/dev/null
+printf '%s' "$FRONTEND_JSON" | jq -e '.workflow_file == "frontend-agent.lock.yml"' >/dev/null
+printf '%s' "$FRONTEND_JSON" | jq -e '.agent_command == "/frontend-agent"' >/dev/null
+
+# Test frontend + needs-human → needs_human takes priority
+FRONTEND_BLOCKED_ISSUE=$(cat <<'JSON'
+{
+  "title": "Fix layout requiring manual review",
+  "labels": [
+    { "name": "pipeline" },
+    { "name": "frontend" },
+    { "name": "needs-human" }
+  ]
+}
+JSON
+)
+
+FRONTEND_BLOCKED_JSON=$(printf '%s' "$FRONTEND_BLOCKED_ISSUE" | "$SCRIPT")
+printf '%s' "$FRONTEND_BLOCKED_JSON" | jq -e '.actionable == false' >/dev/null
+printf '%s' "$FRONTEND_BLOCKED_JSON" | jq -e '.route == "needs_human"' >/dev/null
+
 echo "classify-pipeline-issue.sh tests passed"

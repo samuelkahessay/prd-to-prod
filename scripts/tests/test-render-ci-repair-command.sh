@@ -60,4 +60,28 @@ printf '%s' "$OUTPUT_WITH_DIFF" | grep -q '^### PR Diff$'
 printf '%s' "$OUTPUT_WITH_DIFF" | grep -q '^```diff$'
 printf '%s' "$OUTPUT_WITH_DIFF" | grep -q 'diff --git a/Foo.cs b/Foo.cs'
 
+# Test --agent-command with /frontend-agent
+OUTPUT_FRONTEND=$(
+  "$SCRIPT" \
+    --agent-command "/frontend-agent" \
+    --pr-number 173 \
+    --linked-issue 172 \
+    --head-sha fb3f6fc1e3e91007b1c43871187b709214ad83cc \
+    --head-branch frontend-agent/issue-172-fix-hero-overflow \
+    --failure-run-id 22510586524 \
+    --failure-run-url https://github.com/samuelkahessay/prd-to-prod/actions/runs/22510586524 \
+    --failure-type build \
+    --failure-signature cs0117-knowledgearticle-createdat \
+    --attempt-count 1 \
+    --failure-summary "error CS0117" \
+    --failure-excerpt "build error"
+)
+
+printf '%s' "$OUTPUT_FRONTEND" | grep -q '^/frontend-agent Repair CI failure for PR #173\.$'
+# Marker format stays the same regardless of agent command
+printf '%s' "$OUTPUT_FRONTEND" | grep -q '^<!-- ci-repair-command:v1$'
+
+# Test default (no --agent-command) still produces /repo-assist
+printf '%s' "$OUTPUT" | grep -q '^/repo-assist Repair CI failure for PR #173\.$'
+
 echo "render-ci-repair-command.sh tests passed"

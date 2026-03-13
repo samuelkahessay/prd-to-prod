@@ -64,6 +64,18 @@ HUMAN_PR=$(cat <<'JSON'
 JSON
 )
 
+FRONTEND_AGENT_PR=$(cat <<'JSON'
+{
+  "title": "[Pipeline] Fix hero section overflow",
+  "headRefName": "frontend-agent/issue-500-fix-hero-overflow",
+  "baseRefName": "main",
+  "author": {
+    "login": "samuelkahessay"
+  }
+}
+JSON
+)
+
 AGENTIC_BRANCHES=(
   "code-simplifier"
   "ci-doctor"
@@ -95,6 +107,11 @@ printf '%s' "$FEATURE_BRANCH_JSON" | jq -e '.reason == "not_main_target"' >/dev/
 
 printf '%s' "$HUMAN_JSON" | jq -e '.pipeline_pr == false' >/dev/null
 printf '%s' "$HUMAN_JSON" | jq -e '.reason == "no_pipeline_markers"' >/dev/null
+
+FRONTEND_AGENT_JSON=$(printf '%s' "$FRONTEND_AGENT_PR" | bash "$SCRIPT")
+printf '%s' "$FRONTEND_AGENT_JSON" | jq -e '.pipeline_pr == true' >/dev/null
+printf '%s' "$FRONTEND_AGENT_JSON" | jq -e '.reason == "frontend_agent_branch"' >/dev/null
+printf '%s' "$FRONTEND_AGENT_JSON" | jq -e '.reasons | index("frontend_agent_branch") != null' >/dev/null
 
 for branch_prefix in "${AGENTIC_BRANCHES[@]}"; do
   AGENTIC_PR=$(cat <<JSON

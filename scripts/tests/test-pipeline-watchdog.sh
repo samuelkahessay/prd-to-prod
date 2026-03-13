@@ -8,5 +8,13 @@ WORKFLOW="$ROOT_DIR/.github/workflows/pipeline-watchdog.yml"
 bash -n "$SCRIPT"
 
 grep -F "run: bash scripts/pipeline-watchdog.sh" "$WORKFLOW" >/dev/null
+grep -F "workflow_active_runs()" "$SCRIPT" >/dev/null
+grep -F "workflow_for_branch()" "$SCRIPT" >/dev/null
+grep -F "command_for_branch()" "$SCRIPT" >/dev/null
+
+if grep -F "Skipping watchdog actions." "$SCRIPT" >/dev/null; then
+  echo "FAIL: watchdog should not short-circuit all work when any agent is active" >&2
+  exit 1
+fi
 
 echo "pipeline-watchdog.sh tests passed"

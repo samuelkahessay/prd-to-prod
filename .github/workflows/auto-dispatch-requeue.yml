@@ -2,7 +2,7 @@ name: Auto-Dispatch Requeue
 
 on:
   workflow_run:
-    workflows: ["Pipeline Repo Assist"]
+    workflows: ["Pipeline Repo Assist", "Frontend Agent"]
     types: [completed]
   workflow_dispatch: {}
 
@@ -76,16 +76,14 @@ jobs:
             date -u -d "$iso_value" +%s 2>/dev/null || date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$iso_value" +%s 2>/dev/null || echo 0
           }
 
-          ACTIVE_RUNS=$(gh run list --repo "$REPO" \
-            --workflow repo-assist.lock.yml \
-            --limit 20 \
-            --json databaseId,status,url,createdAt \
-            | jq '[.[] | select(.status == "in_progress" or .status == "queued")]')
-          ACTIVE_COUNT=$(printf '%s' "$ACTIVE_RUNS" | jq 'length')
-          if [ "$ACTIVE_COUNT" -gt 0 ]; then
-            echo "repo-assist is already active (${ACTIVE_COUNT} run(s)); nothing to requeue."
-            exit 0
-          fi
+          workflow_active_count() {
+            local workflow_file=$1
+            gh run list --repo "$REPO" \
+              --workflow "$workflow_file" \
+              --limit 20 \
+              --json databaseId,status \
+              | jq '[.[] | select(.status == "in_progress" or .status == "queued")] | length'
+          }
 
           if [ -z "${GH_AW_GITHUB_TOKEN:-}" ]; then
             echo "::warning::GH_AW_GITHUB_TOKEN is unavailable; cannot re-dispatch via workflow_dispatch."
@@ -99,6 +97,8 @@ jobs:
             --json number,title,createdAt,labels 2>/dev/null || echo '[]')
 
           SELECTED_ISSUE=""
+          SELECTED_WORKFLOW=""
+          SELECTED_ROUTE=""
 
           while IFS= read -r ISSUE_ROW; do
             [ -z "$ISSUE_ROW" ] && continue
@@ -106,6 +106,8 @@ jobs:
 
             ISSUE_CLASSIFICATION=$(printf '%s' "$ISSUE_ROW" | scripts/classify-pipeline-issue.sh)
             ISSUE_ACTIONABLE=$(printf '%s' "$ISSUE_CLASSIFICATION" | jq -r '.actionable')
+            ISSUE_WORKFLOW=$(printf '%s' "$ISSUE_CLASSIFICATION" | jq -r '.workflow_file')
+            ISSUE_ROUTE=$(printf '%s' "$ISSUE_CLASSIFICATION" | jq -r '.route')
             if [ "$ISSUE_ACTIONABLE" != "true" ]; then
               ISSUE_REASON=$(printf '%s' "$ISSUE_CLASSIFICATION" | jq -r '.reason')
               echo "Issue #${ISSUE_NUM}: skipping non-actionable issue (${ISSUE_REASON})."
@@ -141,7 +143,15 @@ jobs:
               continue
             fi
 
+            ISSUE_ACTIVE=$(workflow_active_count "$ISSUE_WORKFLOW")
+            if [ "${ISSUE_ACTIVE:-0}" -gt 0 ]; then
+              echo "Issue #${ISSUE_NUM}: ${ISSUE_WORKFLOW} already active (${ISSUE_ACTIVE} run(s)); checking next deferred issue."
+              continue
+            fi
+
             SELECTED_ISSUE="$ISSUE_NUM"
+            SELECTED_WORKFLOW="$ISSUE_WORKFLOW"
+            SELECTED_ROUTE="$ISSUE_ROUTE"
             break
           done < <(printf '%s' "$PIPELINE_ISSUES" | jq -c 'sort_by(.createdAt)[]')
 
@@ -150,23 +160,23 @@ jobs:
             exit 0
           fi
 
-          echo "Re-dispatching issue #${SELECTED_ISSUE}."
+          echo "Re-dispatching issue #${SELECTED_ISSUE} via ${SELECTED_WORKFLOW} (route: ${SELECTED_ROUTE})."
           DISPATCHED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          GH_TOKEN="$GH_AW_GITHUB_TOKEN" gh workflow run repo-assist.lock.yml \
+          GH_TOKEN="$GH_AW_GITHUB_TOKEN" gh workflow run "$SELECTED_WORKFLOW" \
             --repo "$REPO"
 
-          REPO_ASSIST_RUN_ID=""
-          REPO_ASSIST_RUN_URL=""
+          AGENT_RUN_ID=""
+          AGENT_RUN_URL=""
           for attempt in $(seq 1 12); do
             RUN_JSON=$(gh run list --repo "$REPO" \
-              --workflow repo-assist.lock.yml \
+              --workflow "$SELECTED_WORKFLOW" \
               --event workflow_dispatch \
               --limit 20 \
-              --json databaseId,createdAt,url,displayTitle \
-              | jq --arg dispatched_at "$DISPATCHED_AT" '[.[] | select(.displayTitle == "Pipeline Repo Assist" and .createdAt >= $dispatched_at)] | sort_by(.createdAt) | last // {}')
-            REPO_ASSIST_RUN_ID=$(printf '%s' "$RUN_JSON" | jq -r '.databaseId // ""')
-            REPO_ASSIST_RUN_URL=$(printf '%s' "$RUN_JSON" | jq -r '.url // ""')
-            if [ -n "$REPO_ASSIST_RUN_ID" ]; then
+              --json databaseId,createdAt,url \
+              | jq --arg dispatched_at "$DISPATCHED_AT" '[.[] | select(.createdAt >= $dispatched_at)] | sort_by(.createdAt) | last // {}')
+            AGENT_RUN_ID=$(printf '%s' "$RUN_JSON" | jq -r '.databaseId // ""')
+            AGENT_RUN_URL=$(printf '%s' "$RUN_JSON" | jq -r '.url // ""')
+            if [ -n "$AGENT_RUN_ID" ]; then
               break
             fi
             sleep 5
@@ -177,10 +187,14 @@ jobs:
             'dispatch_workflow=Auto-Dispatch Pipeline Issues' \
             'dispatch_origin_workflow=Auto-Dispatch Requeue' \
             'dispatch_reason=requeue_after_guard_skip' \
+            "route=${SELECTED_ROUTE}" \
+            "workflow_file=${SELECTED_WORKFLOW}" \
             "dispatch_workflow_run_id=${GITHUB_RUN_ID}" \
             "dispatch_workflow_run_url=https://github.com/${REPO}/actions/runs/${GITHUB_RUN_ID}" \
-            "repo_assist_run_id=${REPO_ASSIST_RUN_ID}" \
-            "repo_assist_run_url=${REPO_ASSIST_RUN_URL}" \
+            "repo_assist_run_id=${AGENT_RUN_ID}" \
+            "repo_assist_run_url=${AGENT_RUN_URL}" \
+            "agent_run_id=${AGENT_RUN_ID}" \
+            "agent_run_url=${AGENT_RUN_URL}" \
             "dispatched_at=${DISPATCHED_AT}" \
             '-->')
           gh issue comment "$SELECTED_ISSUE" --repo "$REPO" --body "$MARKER_BODY" >/dev/null || \

@@ -178,15 +178,33 @@ to_epoch() {
   date -u -d "$iso_value" +%s 2>/dev/null || date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$iso_value" +%s 2>/dev/null || echo 0
 }
 
-echo "=== Pipeline Watchdog — $(date -u) ==="
+workflow_active_runs() {
+  local workflow_file=$1
+  local running queued
+  running=$(gh run list --repo "$REPO" --workflow "$workflow_file" --status in_progress --json databaseId --jq 'length' 2>/dev/null || echo "0")
+  queued=$(gh run list --repo "$REPO" --workflow "$workflow_file" --status queued --json databaseId --jq 'length' 2>/dev/null || echo "0")
+  echo $((running + queued))
+}
 
-RUNNING=$(gh run list --repo "$REPO" --workflow repo-assist.lock.yml --status in_progress --json databaseId --jq 'length' 2>/dev/null || echo "0")
-QUEUED=$(gh run list --repo "$REPO" --workflow repo-assist.lock.yml --status queued --json databaseId --jq 'length' 2>/dev/null || echo "0")
-ACTIVE=$((RUNNING + QUEUED))
-if [ "$ACTIVE" -gt 0 ]; then
-  echo "repo-assist is already running ($ACTIVE active runs). Skipping watchdog actions."
-  exit 0
-fi
+workflow_for_branch() {
+  local head_branch=$1
+  if printf '%s' "$head_branch" | grep -q '^frontend-agent/'; then
+    echo "frontend-agent.lock.yml"
+  else
+    echo "repo-assist.lock.yml"
+  fi
+}
+
+command_for_branch() {
+  local head_branch=$1
+  if printf '%s' "$head_branch" | grep -q '^frontend-agent/'; then
+    echo "/frontend-agent"
+  else
+    echo "/repo-assist"
+  fi
+}
+
+echo "=== Pipeline Watchdog — $(date -u) ==="
 
 PIPELINE_PRS=$(gh pr list --repo "$REPO" --state open --json number,title,updatedAt \
   --jq '[.[] | select(.title | startswith("[Pipeline]"))]')
@@ -205,6 +223,8 @@ while IFS= read -r PR_ROW; do
   CURRENT_HEAD_SHA=$(printf '%s' "$PR_DETAILS" | jq -r '.headRefOid')
   CURRENT_HEAD_BRANCH=$(printf '%s' "$PR_DETAILS" | jq -r '.headRefName')
   PR_URL=$(printf '%s' "$PR_DETAILS" | jq -r '.url')
+  REPAIR_AGENT_WORKFLOW=$(workflow_for_branch "$CURRENT_HEAD_BRANCH")
+  REPAIR_AGENT_CMD=$(command_for_branch "$CURRENT_HEAD_BRANCH")
 
   STATE_JSON=$(find_marker_comment "$PR_NUM" "$STATE_MARKER")
   STATE_COMMENT_ID=$(printf '%s' "$STATE_JSON" | jq -r '.id // empty')
@@ -232,6 +252,12 @@ while IFS= read -r PR_ROW; do
 
   if [ "$MARKER_HEAD_SHA" != "$CURRENT_HEAD_SHA" ]; then
     echo "PR #${PR_NUM}: incident tracks ${MARKER_HEAD_SHA}, current head is ${CURRENT_HEAD_SHA}. Skipping stale incident."
+    continue
+  fi
+
+  REPAIR_ACTIVE=$(workflow_active_runs "$REPAIR_AGENT_WORKFLOW")
+  if [ "$REPAIR_ACTIVE" -gt 0 ]; then
+    echo "PR #${PR_NUM}: ${REPAIR_AGENT_WORKFLOW} already active (${REPAIR_ACTIVE} run(s)). Skipping retry/escalation."
     continue
   fi
 
@@ -277,7 +303,9 @@ while IFS= read -r PR_ROW; do
   fi
 
   NEXT_ATTEMPT=$((ATTEMPT_COUNT + 1))
+
   COMMAND_BODY=$("$SCRIPT_DIR/render-ci-repair-command.sh" \
+    --agent-command "$REPAIR_AGENT_CMD" \
     --pr-number "$PR_NUM" \
     --linked-issue "$LINKED_ISSUE" \
     --head-sha "$CURRENT_HEAD_SHA" \
@@ -355,10 +383,19 @@ while IFS= read -r PR_ROW; do
     continue
   fi
 
-  echo "Posting /repo-assist on issue #${ISSUE_NUM} for stalled PR #${PR_NUM}"
+  PR_BRANCH=$(gh pr view "$PR_NUM" --repo "$REPO" --json headRefName --jq '.headRefName' 2>/dev/null || echo "")
+  AGENT_WORKFLOW=$(workflow_for_branch "$PR_BRANCH")
+  AGENT_CMD=$(command_for_branch "$PR_BRANCH")
+  AGENT_ACTIVE=$(workflow_active_runs "$AGENT_WORKFLOW")
+  if [ "$AGENT_ACTIVE" -gt 0 ]; then
+    echo "PR #${PR_NUM}: ${AGENT_WORKFLOW} already active (${AGENT_ACTIVE} run(s)). Skipping stalled-PR follow-up."
+    continue
+  fi
+
+  echo "Posting ${AGENT_CMD} on issue #${ISSUE_NUM} for stalled PR #${PR_NUM}"
   gh issue comment "$ISSUE_NUM" --repo "$REPO" \
-    --body "/repo-assist Fix review feedback on PR #${PR_NUM}. The PR has CHANGES_REQUESTED and has been stalled for $((AGE / 60)) minutes. Read the review comments on PR #${PR_NUM}, implement all requested changes, push fixes to the PR branch, and comment what you changed." || \
-    echo "::warning::Could not post /repo-assist on issue #${ISSUE_NUM}"
+    --body "${AGENT_CMD} Fix review feedback on PR #${PR_NUM}. The PR has CHANGES_REQUESTED and has been stalled for $((AGE / 60)) minutes. Read the review comments on PR #${PR_NUM}, implement all requested changes, push fixes to the PR branch, and comment what you changed." || \
+    echo "::warning::Could not post ${AGENT_CMD} on issue #${ISSUE_NUM}"
   ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
   break
 done < <(printf '%s' "$PIPELINE_PRS" | jq -c '.[]')
@@ -400,9 +437,17 @@ while IFS= read -r ISSUE_ROW; do
     break
   fi
 
-  echo "Dispatching repo-assist for orphaned issue #${ISSUE_NUM}"
-  gh workflow run repo-assist.lock.yml --repo "$REPO" || \
-    echo "::warning::Could not dispatch repo-assist"
+  # Determine owning workflow from issue classification
+  ISSUE_ROUTE_JSON=$(printf '%s' "$ISSUE_ROW" | "$SCRIPT_DIR/classify-pipeline-issue.sh")
+  ISSUE_WORKFLOW=$(printf '%s' "$ISSUE_ROUTE_JSON" | jq -r '.workflow_file')
+  ISSUE_ACTIVE=$(workflow_active_runs "$ISSUE_WORKFLOW")
+  if [ "$ISSUE_ACTIVE" -gt 0 ]; then
+    echo "Issue #${ISSUE_NUM}: ${ISSUE_WORKFLOW} already active (${ISSUE_ACTIVE} run(s)). Skipping."
+    continue
+  fi
+  echo "Dispatching ${ISSUE_WORKFLOW} for orphaned issue #${ISSUE_NUM}"
+  gh workflow run "$ISSUE_WORKFLOW" --repo "$REPO" || \
+    echo "::warning::Could not dispatch ${ISSUE_WORKFLOW}"
   ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
   break
 done < <(printf '%s' "$PIPELINE_ISSUES" | jq -c '.[]')
@@ -478,6 +523,12 @@ while IFS= read -r AW_ROW; do
   if [ "$ACTIONS_TAKEN" -gt 0 ]; then
     echo "Already dispatched this cycle. Will handle [aw] issue #${AW_NUM} on next run."
     break
+  fi
+
+  REPO_ASSIST_ACTIVE=$(workflow_active_runs "repo-assist.lock.yml")
+  if [ "$REPO_ASSIST_ACTIVE" -gt 0 ]; then
+    echo "[aw] Issue #${AW_NUM}: repo-assist already active (${REPO_ASSIST_ACTIVE} run(s)). Skipping."
+    continue
   fi
 
   echo "[aw] Issue #${AW_NUM}: stale workflow failure (${AW_TITLE}). Dispatching repo-assist and closing."

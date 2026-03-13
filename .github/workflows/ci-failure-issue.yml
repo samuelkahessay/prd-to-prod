@@ -7,7 +7,7 @@
 #      workflow_run:completed fires with conclusion=failure
 #   2. Router fetches failed-step logs and normalizes the failure signature
 #   3. For open [Pipeline] PRs with a linked source issue, router upserts PR state
-#      and posts a structured /repo-assist repair command to the linked issue
+#      and posts a structured repair command to the linked issue
 #   4. Router creates a standalone [CI Incident] issue only for fallback/escalation
 #      cases (no PR, non-pipeline PR, missing linked issue, dispatch failure)
 #
@@ -510,13 +510,21 @@ jobs:
             add_pr_label "repair-escalated"
             TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} repeated CI failure"
             BODY=$(render_incident_body \
-              "GH_AW_GITHUB_TOKEN is unavailable, so the router could not post the repair command that triggers repo-assist." \
+              "GH_AW_GITHUB_TOKEN is unavailable, so the router could not post the repair command that triggers the owning agent." \
               "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`\n- **Linked Issue**: #${LINKED_ISSUE}")
             create_or_update_incident_issue "$TITLE" "$BODY"
             exit 0
           fi
 
+          # Determine owning agent command from PR branch prefix
+          if printf '%s' "$HEAD_BRANCH" | grep -q '^frontend-agent/'; then
+            REPAIR_AGENT_CMD="/frontend-agent"
+          else
+            REPAIR_AGENT_CMD="/repo-assist"
+          fi
+
           COMMAND_ARGS=(
+            --agent-command "$REPAIR_AGENT_CMD"
             --pr-number "$PR_NUMBER"
             --linked-issue "$LINKED_ISSUE"
             --head-sha "$HEAD_SHA"
@@ -546,7 +554,7 @@ jobs:
             add_pr_label "repair-escalated"
             TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} repeated CI failure"
             BODY=$(render_incident_body \
-              "Router could not post the repair command that triggers repo-assist on the linked source issue." \
+              "Router could not post the repair command that triggers the owning agent on the linked source issue." \
               "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`\n- **Linked Issue**: #${LINKED_ISSUE}")
             create_or_update_incident_issue "$TITLE" "$BODY"
             exit 0
