@@ -147,11 +147,9 @@ These workflows handle CI, deploy, repair routing, and stall recovery.
 
 | Workflow | Role |
 |---|---|
-| `dotnet-ci.yml` | Build and test for the current .NET profile |
 | `ci-node.yml` | Build and test for Node profiles |
 | `ci-docker.yml` | Build and test for Docker profiles |
 | `deploy-router.yml` | Chooses the deploy workflow based on `.deploy-profile` |
-| `deploy-azure.yml` | Deploys the active app to Azure |
 | `deploy-vercel.yml` | Deploys Next.js runs to Vercel |
 | `deploy-docker.yml` | Publishes Docker images to GHCR |
 | `ci-failure-issue.yml` | Converts failed CI or deploy runs into repair commands or escalation issues |
@@ -321,7 +319,7 @@ refused to do, and why.
 | `GH_AW_GITHUB_TOKEN` | Auto-merge, workflow dispatch, and GitHub API actions that must outlive `GITHUB_TOKEN` cascade limits |
 | `COPILOT_GITHUB_TOKEN` | Copilot engine token for gh-aw workflows |
 | `GH_AW_PROJECT_GITHUB_TOKEN` | Project board access for repo-assist updates |
-| `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` / `AZURE_SUBSCRIPTION_ID` | Azure deploy identity |
+| `VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` | Vercel deploy identity |
 
 ### Repository Variables
 
@@ -343,5 +341,4 @@ The live repo is expected to keep these in place:
 ## Related Documents
 
 - [README](../README.md) — public system overview
-- [Self-Healing MVP Runbook](SELF_HEALING_MVP.md) — bounded repair runbook
 - [Why gh-aw](why-gh-aw.md) — why the repo splits deterministic and agentic work
