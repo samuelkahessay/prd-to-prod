@@ -10,7 +10,7 @@ import { BottomCta } from "@/components/landing/bottom-cta";
 import { RunsTable } from "@/components/console/runs-table";
 import type { EvidenceRow, Run } from "@/lib/types";
 
-const MAILTO = "mailto:sam@skahessay.dev?subject=PRD%20Submission";
+const MAILTO = "mailto:kahessay@icloud.com?subject=PRD%20Submission";
 
 describe("Hero", () => {
   it("renders headline and CTA", () => {

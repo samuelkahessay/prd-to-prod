@@ -1,6 +1,6 @@
 import styles from "./bottom-cta.module.css";
 
-const MAILTO = "mailto:sam@skahessay.dev?subject=PRD%20Submission";
+const MAILTO = "mailto:kahessay@icloud.com?subject=PRD%20Submission";
 
 export function BottomCta() {
   return (
