@@ -4,7 +4,7 @@ const MAILTO = "mailto:kahessay@icloud.com?subject=PRD%20Submission";
 
 export function BottomCta() {
   return (
-    <section className={styles.section}>
+    <footer className={styles.section}>
       <h2 className={styles.heading}>Ready to ship something?</h2>
       <p className={styles.body}>
         Send us a PRD, a rough brief, or even just an idea. We'll reply with
@@ -19,6 +19,6 @@ export function BottomCta() {
       >
         View on GitHub →
       </a>
-    </section>
+    </footer>
   );
 }

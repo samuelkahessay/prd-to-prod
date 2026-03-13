@@ -12,10 +12,13 @@ export default async function LandingPage() {
   const evidence = await fetchEvidenceData();
 
   return (
-    <main className={styles.page}>
-      <StickyNav />
+    <>
+      <header>
+        <StickyNav />
+      </header>
 
-      <Hero />
+      <main className={styles.page}>
+        <Hero />
 
       <hr className={styles.divider} />
       <Pricing />
@@ -30,7 +33,9 @@ export default async function LandingPage() {
       <EvidenceLedger rows={evidence} />
 
       <hr className={styles.divider} />
+      </main>
+
       <BottomCta />
-    </main>
+    </>
   );
 }

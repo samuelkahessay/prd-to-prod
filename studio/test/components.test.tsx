@@ -56,7 +56,7 @@ describe("StickyNav", () => {
 describe("Pricing", () => {
   it("renders both offers and the scope guardrails", () => {
     render(<Pricing />);
-    expect(screen.getByRole("heading", { name: "Pricing" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Open source. Pay for compute." })).toBeInTheDocument();
     expect(screen.getByText("Most popular")).toBeInTheDocument();
     expect(screen.getByText("We run it for you")).toBeInTheDocument();
     expect(screen.getByText("Run it yourself")).toBeInTheDocument();

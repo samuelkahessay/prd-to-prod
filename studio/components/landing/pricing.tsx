@@ -6,7 +6,7 @@ export function Pricing() {
   return (
     <section id="pricing" className={styles.section}>
       <span className={styles.label}>Pricing</span>
-      <h2 className={styles.heading}>Pricing</h2>
+      <h2 className={styles.heading}>Open source. Pay for compute.</h2>
       <p className={styles.subtitle}>
         The pipeline is open source. You're paying for compute, hosting,
         and the operational expertise to keep it running.

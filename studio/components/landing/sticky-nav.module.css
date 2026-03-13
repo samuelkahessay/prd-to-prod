@@ -7,6 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   padding: 16px 48px;
   background: transparent;
   transition: background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
@@ -25,6 +26,12 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--ink);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 28px;
 }
 
 .links {
@@ -55,11 +62,70 @@
   letter-spacing: 0.01em;
 }
 
+.menuBtn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 4px;
+  flex-direction: column;
+  gap: 5px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.menuLine {
+  display: block;
+  width: 18px;
+  height: 1.5px;
+  background: var(--ink);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.menuOpen .menuLine:first-child {
+  transform: translateY(3.25px) rotate(45deg);
+}
+
+.menuOpen .menuLine:last-child {
+  transform: translateY(-3.25px) rotate(-45deg);
+}
+
+.dropdown {
+  display: none;
+}
+
+.dropLink {
+  font-size: 14px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  padding: 12px 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.dropLink:hover {
+  color: var(--ink);
+}
+
 @media (max-width: 768px) {
   .nav {
     padding: 14px 24px;
   }
-  .links .link {
+  .links {
     display: none;
+  }
+  .cta {
+    padding: 12px 20px;
+  }
+  .menuBtn {
+    display: flex;
+  }
+  .dropdown {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 8px 0 4px;
+    border-top: 1px solid var(--rule);
+    margin-top: 14px;
   }
 }
