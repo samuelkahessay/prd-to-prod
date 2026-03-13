@@ -8,7 +8,7 @@ name: "CI Failure Resolver"
 
 on:
   workflow_run:
-    workflows: ["Node CI", "Docker CI", "Deploy Router"]
+    workflows: ["Node CI", "Deploy Router"]
     types: [completed]
   pull_request:
     types: [closed]

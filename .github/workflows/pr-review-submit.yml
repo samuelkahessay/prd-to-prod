@@ -8,7 +8,7 @@
 # GitHub App that creates PRs, avoiding GitHub's self-approval restriction.
 # For approved pipeline PRs, the auto-merge command intentionally switches to
 # GH_AW_GITHUB_TOKEN so the resulting push to main can trigger downstream
-# workflows such as Deploy to Azure.
+# deploy workflows.
 #
 # Flow:
 #   1. pr-review-agent posts a verdict comment starting with [PIPELINE-VERDICT]

@@ -12,7 +12,7 @@ export default async function LandingPage() {
   const evidence = await fetchEvidenceData();
 
   return (
-    <>
+    <div className={styles.shell}>
       <header>
         <StickyNav />
       </header>
@@ -20,22 +20,22 @@ export default async function LandingPage() {
       <main className={styles.page}>
         <Hero />
 
-      <hr className={styles.divider} />
-      <Pricing />
+        <hr className={styles.divider} />
+        <Pricing />
 
-      <hr className={styles.divider} />
-      <WhatYouGet />
+        <hr className={styles.divider} />
+        <WhatYouGet />
 
-      <hr className={styles.divider} />
-      <HowItWorks />
+        <hr className={styles.divider} />
+        <HowItWorks />
 
-      <hr className={styles.divider} />
-      <EvidenceLedger rows={evidence} />
+        <hr className={styles.divider} />
+        <EvidenceLedger rows={evidence} />
 
-      <hr className={styles.divider} />
+        <hr className={styles.divider} />
       </main>
 
       <BottomCta />
-    </>
+    </div>
   );
 }

@@ -83,8 +83,8 @@ These workflows are routing, guard logic, deploy, and state transitions.
 | `auto-dispatch.yml` | Entry gate: accepts `pipeline` issues, classifies actionability, debounces, dispatches |
 | `auto-dispatch-requeue.yml` | Picks up the next deferred issue |
 | `pr-review-submit.yml` | Parses verdicts, enforces the merge gate, arms auto-merge only inside policy |
-| `dotnet-ci.yml`, `ci-node.yml`, `ci-docker.yml` | Deterministic CI |
-| `deploy-router.yml`, `deploy-azure.yml`, `deploy-vercel.yml`, `deploy-docker.yml` | Deterministic deploy path |
+| `ci-node.yml` | Deterministic CI |
+| `deploy-router.yml`, `deploy-vercel.yml` | Deterministic deploy path |
 | `ci-failure-issue.yml` | Converts failed CI or deploy runs into repair commands or escalations |
 | `ci-failure-resolve.yml` | Marks repair incidents resolved |
 | `pipeline-watchdog.yml` | Stall detection, retry, redispatch, and escalation |

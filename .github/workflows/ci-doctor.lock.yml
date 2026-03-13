@@ -23,7 +23,7 @@
 #
 # Investigates failed CI workflows to identify root causes and patterns, creating issues with diagnostic information
 #
-# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"b3bf601ffcd8c6f48050e7d69af2c1d49a248bcd74370efc80722ee536ae74cf","stop_time":"2026-04-02 21:41:50","compiler_version":"v0.56.0","strict":true}
+# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"b19404f1a663a02092df6d073cbad3b20650ca18878a75848cfa5dc6c3ac7401","stop_time":"2026-04-02 21:41:50","compiler_version":"v0.56.0","strict":true}
 #
 # Effective stop-time: 2026-04-02 21:41:50
 
@@ -36,11 +36,7 @@ name: "CI Failure Doctor"
     types:
     - completed
     workflows:
-    - .NET CI
     - Node CI
-    - Docker CI
-    - Deploy to Azure
-    - Deploy Docker
     - Deploy to Vercel
     - Deploy Router
 

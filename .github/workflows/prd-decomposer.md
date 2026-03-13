@@ -156,22 +156,23 @@ If the PRD creates a new app or intentionally changes the app foundation:
 
 Before creating issues, determine the target tech stack and deploy profile:
 
-1. **Check the PRD for explicit stack preference.** Look for mentions of specific frameworks (Next.js, React, .NET, Express), languages (TypeScript, C#, Python), or deployment targets (Vercel, Azure, Docker).
+1. **Check the PRD for explicit stack preference.** Look for mentions of supported web-app technologies such as Next.js, React, Express, Node.js, or Vercel.
 
-2. **If no explicit preference**, infer from the requirements:
-   - Web dashboard, landing page, interactive UI, visualization → `nextjs-vercel`
-   - API service, enterprise backend, .NET/C# → `dotnet-azure`
-   - Multi-language, microservices, or unclear → `docker-generic`
+2. **Select the supported deploy lane.**
+   - Web dashboard, landing page, interactive UI, or productized web app → `nextjs-vercel`
+   - Backend/API work that still fits the current web-app template → `nextjs-vercel`
    - Default (no clear signals): `nextjs-vercel`
 
-3. **Read the selected deploy profile** from `.github/deploy-profiles/{profile-name}.yml` to understand the build, test, and deploy configuration.
+3. **If the PRD explicitly requires an unsupported stack or deployment target** (for example .NET, Python, Azure App Service, or Docker-first deployment), stop and call out the mismatch instead of inventing a missing deploy lane.
 
-4. **In greenfield or migration mode**, the FIRST issue must be a bootstrap/scaffold issue that includes in its Technical Notes:
+4. **Read the selected deploy profile** from `.github/deploy-profiles/{profile-name}.yml` to understand the build, test, and deploy configuration.
+
+5. **In greenfield or migration mode**, the FIRST issue must be a bootstrap/scaffold issue that includes in its Technical Notes:
    - The selected deploy profile (e.g., "Deploy profile: `nextjs-vercel`")
    - Instruction: "Update `.deploy-profile` to `{profile-name}`"
    - Build, test, and deploy commands from the profile
 
-5. **In enhancement mode**, do not create a bootstrap issue unless the PRD explicitly requires replacing the stack, deploy profile, or app foundation.
+6. **In enhancement mode**, do not create a bootstrap issue unless the PRD explicitly requires replacing the stack, deploy profile, or app foundation.
 
 ## Output Format
 

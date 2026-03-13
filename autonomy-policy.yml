@@ -101,10 +101,14 @@ actions:
       Changes to authentication, compliance, or payment logic carry elevated risk
       and require human review before merge.
     allowed_targets:
+      - console/server.js
+      - studio/lib/api.ts
       - console/**/auth/**
       - console/**/compliance/**
       - console/**/payments/**
       - studio/**/auth/**
+      - studio/**/compliance/**
+      - studio/**/payments/**
       - src/**/auth/**
       - src/**/compliance/**
       - src/**/payments/**

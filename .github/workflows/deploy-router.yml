@@ -2,8 +2,8 @@
 # Deploy Router — Reads the active deploy profile and dispatches to the
 # appropriate deployment workflow on every push to main.
 #
-# The .deploy-profile file in the repo root contains the profile name
-# (e.g., "nextjs-vercel", "docker-generic").
+# The .deploy-profile file in the repo root contains the active profile name.
+# The current product lane uses `nextjs-vercel`.
 #
 # Safety:
 #   - Concurrency group ensures only one deploy runs at a time
@@ -18,7 +18,6 @@ on:
 
 permissions:
   contents: read
-  packages: write     # needed for Docker GHCR
   issues: write       # needed for validate-deployment
   pull-requests: read # needed for validate-deployment
 
@@ -65,21 +64,12 @@ jobs:
     uses: ./.github/workflows/deploy-vercel.yml
     secrets: inherit
 
-  deploy-docker:
-    needs: detect-profile
-    if: needs.detect-profile.outputs.profile == 'docker-generic'
-    uses: ./.github/workflows/deploy-docker.yml
-    secrets: inherit
-
   validate-deployment:
-    needs: [detect-profile, deploy-vercel, deploy-docker]
+    needs: [detect-profile, deploy-vercel]
     if: |
       always() &&
       needs.detect-profile.outputs.issue_numbers != '' &&
-      (
-        needs.deploy-vercel.result == 'success' ||
-        needs.deploy-docker.result == 'success'
-      )
+      needs.deploy-vercel.result == 'success'
     uses: ./.github/workflows/validate-deployment.yml
     with:
       profile: ${{ needs.detect-profile.outputs.profile }}

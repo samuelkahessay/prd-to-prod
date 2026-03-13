@@ -24,24 +24,17 @@ printf '%s' "$WORKFLOW_MATCH_JSON" | jq -e '.found == true' >/dev/null
 printf '%s' "$WORKFLOW_MATCH_JSON" | jq -e '.matched == true' >/dev/null
 printf '%s' "$WORKFLOW_MATCH_JSON" | jq -e '.mode == "human_required"' >/dev/null
 
-APP_MATCH_JSON=$(bash "$SCRIPT" match app_code_change "PRDtoProd/Program.cs" "$POLICY")
+APP_MATCH_JSON=$(bash "$SCRIPT" match app_code_change "studio/components/landing/hero.tsx" "$POLICY")
 printf '%s' "$APP_MATCH_JSON" | jq -e '.matched == true' >/dev/null
 printf '%s' "$APP_MATCH_JSON" | jq -e '.mode == "autonomous"' >/dev/null
 
-# --- Regression: sensitive_app_change must match real compliance file paths ---
-COMPLIANCE_FILES=(
-  "PRDtoProd/Services/ComplianceScanService.cs"
-  "PRDtoProd/Services/ComplianceRuleLibrary.cs"
-  "PRDtoProd/Models/ComplianceDecision.cs"
-  "PRDtoProd/Models/ComplianceScan.cs"
-  "PRDtoProd/Models/ComplianceEnums.cs"
-  "PRDtoProd/Endpoints/ComplianceEndpoints.cs"
-  "PRDtoProd/Pages/Compliance.cshtml"
-  "PRDtoProd/Pages/Compliance.cshtml.cs"
-  "PRDtoProd/Data/ComplianceSeedData.cs"
+# --- Regression: sensitive_app_change must match the real auth boundary ---
+SENSITIVE_FILES=(
+  "console/server.js"
+  "studio/lib/api.ts"
 )
 
-for FILE in "${COMPLIANCE_FILES[@]}"; do
+for FILE in "${SENSITIVE_FILES[@]}"; do
   SENSITIVE_JSON=$(bash "$SCRIPT" match sensitive_app_change "$FILE" "$POLICY")
   printf '%s' "$SENSITIVE_JSON" | jq -e '.matched == true' >/dev/null || {
     echo "FAIL: sensitive_app_change should match $FILE" >&2
@@ -52,18 +45,6 @@ for FILE in "${COMPLIANCE_FILES[@]}"; do
     exit 1
   }
 done
-
-PROGRAM_SENSITIVE_JSON=$(bash "$SCRIPT" match sensitive_app_change "PRDtoProd/Program.cs" "$POLICY")
-printf '%s' "$PROGRAM_SENSITIVE_JSON" | jq -e '.matched == true' >/dev/null || {
-  echo "FAIL: sensitive_app_change should match PRDtoProd/Program.cs" >&2
-  exit 1
-}
-
-DBCTX_SENSITIVE_JSON=$(bash "$SCRIPT" match sensitive_app_change "PRDtoProd/Data/TicketDbContext.cs" "$POLICY")
-printf '%s' "$DBCTX_SENSITIVE_JSON" | jq -e '.matched == true' >/dev/null || {
-  echo "FAIL: sensitive_app_change should match PRDtoProd/Data/TicketDbContext.cs" >&2
-  exit 1
-}
 
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT

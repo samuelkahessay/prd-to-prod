@@ -21,16 +21,9 @@ URL=$(VERCEL_PROJECT_PRODUCTION_URL="app.example.vercel.app" bash "$SCRIPT" next
   exit 1
 }
 
-URL=$(AZURE_WEBAPP_NAME="my-webapp" bash "$SCRIPT" dotnet-azure)
-[ "$URL" = "https://my-webapp.azurewebsites.net" ] || {
-  echo "FAIL: Azure webapp name should map to azurewebsites URL" >&2
+if bash "$SCRIPT" docker-generic >/dev/null 2>&1; then
+  echo "FAIL: unsupported docker-generic profile should fail" >&2
   exit 1
-}
-
-URL=$(bash "$SCRIPT" docker-generic || true)
-[ -z "$URL" ] || {
-  echo "FAIL: docker-generic should not infer a URL without DEPLOYMENT_URL" >&2
-  exit 1
-}
+fi
 
 echo "resolve-deployment-url tests passed"

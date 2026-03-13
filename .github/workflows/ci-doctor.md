@@ -2,7 +2,7 @@
 description: Investigates failed CI workflows to identify root causes and patterns, creating issues with diagnostic information
 on:
   workflow_run:
-    workflows: [".NET CI", "Node CI", "Docker CI", "Deploy to Azure", "Deploy Docker", "Deploy to Vercel", "Deploy Router"]
+    workflows: ["Node CI", "Deploy to Vercel", "Deploy Router"]
     types:
       - completed
     branches:

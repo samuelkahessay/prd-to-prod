@@ -16,7 +16,9 @@ Check the active PRD and `.deploy-profile` for build/test commands.
 Enhancement runs may extend the current application in place, so do not assume a clean-slate scaffold.
 
 ## Tech Stack
-Determined by the active PRD. The pipeline is tech-stack agnostic.
+Constrained by the current template. The supported product surface is web apps
+on the `nextjs-vercel` lane; do not assume dormant `.NET` or Docker deploy
+paths exist unless they are explicitly added back.
 
 ## PR Requirements
 - PR body must include `Closes #N` referencing the source issue

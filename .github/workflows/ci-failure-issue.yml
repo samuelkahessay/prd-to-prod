@@ -3,7 +3,7 @@
 # runs back into the repair loop instead of creating duplicate backlog issues.
 #
 # Flow:
-#   1. .NET CI / Node CI / Docker CI fails on a PR or the main deploy run fails →
+#   1. Node CI fails on a PR or the main deploy run fails →
 #      workflow_run:completed fires with conclusion=failure
 #   2. Router fetches failed-step logs and normalizes the failure signature
 #   3. For open [Pipeline] PRs with a linked source issue, router upserts PR state
@@ -16,7 +16,7 @@ name: "CI Failure Router"
 
 on:
   workflow_run:
-    workflows: ["Node CI", "Docker CI", "Deploy Router"]
+    workflows: ["Node CI", "Deploy Router"]
     types: [completed]
 
 permissions:

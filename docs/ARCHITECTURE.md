@@ -147,11 +147,9 @@ These workflows handle CI, deploy, repair routing, and stall recovery.
 
 | Workflow | Role |
 |---|---|
-| `ci-node.yml` | Build and test for Node profiles |
-| `ci-docker.yml` | Build and test for Docker profiles |
-| `deploy-router.yml` | Chooses the deploy workflow based on `.deploy-profile` |
+| `ci-node.yml` | Build and test for the supported Next.js/Node lane |
+| `deploy-router.yml` | Chooses the current deploy workflow based on `.deploy-profile` |
 | `deploy-vercel.yml` | Deploys Next.js runs to Vercel |
-| `deploy-docker.yml` | Publishes Docker images to GHCR |
 | `ci-failure-issue.yml` | Converts failed CI or deploy runs into repair commands or escalation issues |
 | `ci-failure-resolve.yml` | Marks active repair incidents resolved when CI recovers |
 | `pipeline-watchdog.yml` | Detects stalled PRs, orphaned issues, and stale repair loops |

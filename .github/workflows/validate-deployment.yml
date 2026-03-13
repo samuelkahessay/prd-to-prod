@@ -29,8 +29,6 @@ jobs:
       PROFILE: ${{ inputs.profile }}
       DEPLOYMENT_URL: ${{ vars.DEPLOYMENT_URL }}
       VERCEL_PROJECT_PRODUCTION_URL: ${{ vars.VERCEL_PROJECT_PRODUCTION_URL }}
-      AZURE_WEBAPP_URL: ${{ vars.AZURE_WEBAPP_URL }}
-      AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
     steps:

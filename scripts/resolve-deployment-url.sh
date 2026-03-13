@@ -24,16 +24,6 @@ case "$PROFILE" in
       normalize_url "$VERCEL_PROJECT_PRODUCTION_URL"
     fi
     ;;
-  dotnet-azure)
-    if [ -n "${AZURE_WEBAPP_URL:-}" ]; then
-      normalize_url "$AZURE_WEBAPP_URL"
-    elif [ -n "${AZURE_WEBAPP_NAME:-}" ]; then
-      printf 'https://%s.azurewebsites.net\n' "$AZURE_WEBAPP_NAME"
-    fi
-    ;;
-  docker-generic)
-    # Docker deployments require an explicit DEPLOYMENT_URL from repo vars.
-    ;;
   *)
     echo "Unknown deploy profile: $PROFILE" >&2
     exit 1
