@@ -1,54 +1,69 @@
 .hero {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 48px;
-  padding: 80px 48px 60px;
-  align-items: center;
+  padding: 120px 48px 60px;
 }
-.text {
-  padding-top: 40px;
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 16px;
 }
+
 .headline {
-  font-size: clamp(52px, 6.5vw, 88px);
+  font-size: clamp(42px, 5.5vw, 64px);
   font-weight: 900;
-  line-height: 0.95;
-  letter-spacing: -0.04em;
-  margin-bottom: 28px;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  margin-bottom: 24px;
+  max-width: 560px;
 }
+
 .line2 {
   display: block;
   color: var(--ink-mid);
   font-weight: 300;
   font-style: italic;
 }
+
 .subtitle {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 400;
   color: var(--ink-muted);
-  max-width: 420px;
+  max-width: 440px;
   line-height: 1.6;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
 .ctaPrimary {
   display: inline-block;
   background: var(--ink);
   color: var(--cream);
-  padding: 16px 32px;
+  padding: 14px 28px;
   font-size: 15px;
   font-weight: 600;
   font-family: inherit;
   letter-spacing: 0.01em;
   text-decoration: none;
 }
+
 .ctaLink {
-  display: inline-block;
-  margin-left: 24px;
   font-size: 14px;
   color: var(--ink-muted);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.animation {
-  position: relative;
-  overflow: hidden;
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 100px 24px 48px;
+  }
 }

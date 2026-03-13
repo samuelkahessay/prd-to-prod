@@ -1,25 +1,23 @@
-import { PipelineAnimation } from "./pipeline-animation";
 import styles from "./hero.module.css";
+
+const MAILTO = "mailto:sam@skahessay.dev?subject=PRD%20Submission";
 
 export function Hero() {
   return (
     <section className={styles.hero}>
-      <div className={styles.text}>
-        <h1 className={styles.headline}>
-          Brief in.
-          <span className={styles.line2}>Production out.</span>
-        </h1>
-        <p className={styles.subtitle}>
-          Turns PRDs and meeting notes into reviewed, merged, deployed code.
-          Agents build. Policy gates enforce. The system heals itself.
-        </p>
-        <div>
-          <a href="/console" className={styles.ctaPrimary}>See it run</a>
-          <a href="/console" className={styles.ctaLink}>Open console →</a>
-        </div>
-      </div>
-      <div className={styles.animation}>
-        <PipelineAnimation />
+      <p className={styles.eyebrow}>Powered by GitHub Agentic Workflows</p>
+      <h1 className={styles.headline}>
+        Send a PRD.
+        <span className={styles.line2}>Get a deployed app.</span>
+      </h1>
+      <p className={styles.subtitle}>
+        Autonomous agents build, review, and deploy your app from your PRD.
+        You get a live URL, a real repo with CI/CD, and code you own.
+        First project free.
+      </p>
+      <div className={styles.actions}>
+        <a href={MAILTO} className={styles.ctaPrimary}>Send your PRD →</a>
+        <a href="#pricing" className={styles.ctaLink}>See pricing</a>
       </div>
     </section>
   );
