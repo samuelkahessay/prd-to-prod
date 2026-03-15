@@ -82,6 +82,63 @@ export interface AuditEntry {
   ref: string | null;
 }
 
+// Build session types
+export type BuildSessionStatus =
+  | "refining"
+  | "ready"
+  | "awaiting_install"
+  | "provisioning"
+  | "building"
+  | "complete"
+  | "failed";
+
+export interface BuildSession {
+  id: string;
+  user_id: string | null;
+  status: BuildSessionStatus;
+  github_repo: string | null;
+  github_repo_id: number | null;
+  github_repo_url: string | null;
+  deploy_url: string | null;
+  prd_final: string | null;
+  app_installation_id: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type BuildEventCategory = "chat" | "provision" | "build" | "delivery";
+
+export interface BuildEvent {
+  id: number;
+  build_session_id: string;
+  category: BuildEventCategory;
+  kind: string;
+  data: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface PrdStructure {
+  title: string;
+  problem: string;
+  users: string;
+  features: string[];
+  criteria: string[];
+}
+
+export interface LLMParsedResponse {
+  status: "needs_input" | "ready";
+  message: string;
+  question: string | null;
+  prd: PrdStructure | null;
+}
+
+export interface BuildUser {
+  id: string;
+  githubId: number;
+  githubLogin: string;
+  githubAvatarUrl: string;
+}
+
 // Preflight types
 export interface PreflightCheck {
   id: string;

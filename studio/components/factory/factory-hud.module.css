@@ -1,0 +1,80 @@
+.hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--warm-white);
+  border: 1px solid var(--rule);
+  border-bottom: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-muted);
+  gap: 16px;
+}
+
+.left,
+.center,
+.right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.center {
+  flex: 1;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+}
+
+.quiet {
+  background: var(--ink-faint);
+}
+
+.busy {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.blocked {
+  background: var(--danger);
+  box-shadow: 0 0 6px var(--danger);
+}
+
+.celebrating {
+  background: var(--good);
+  box-shadow: 0 0 6px var(--good);
+}
+
+.label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+
+.separator {
+  color: var(--ink-faint);
+}
+
+.activeAgent {
+  padding: 2px 8px;
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.idle {
+  color: var(--ink-faint);
+}
+
+.stat {
+  color: var(--ink-mid);
+}
