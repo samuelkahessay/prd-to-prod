@@ -201,7 +201,7 @@ describe("BuildStatusPage", () => {
     expect(
       await screen.findByRole("heading", { name: "Factory floor" })
     ).toBeInTheDocument();
-    expect(screen.getByText(/Factory Floor/)).toBeInTheDocument();
+    expect(screen.getByText(/Factory floor/)).toBeInTheDocument();
     expect(screen.getByText("1 issue")).toBeInTheDocument();
     expect(mockedBuildApi.streamBuildEvents).toHaveBeenCalledTimes(1);
 
