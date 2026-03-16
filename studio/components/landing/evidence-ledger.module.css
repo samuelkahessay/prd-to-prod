@@ -21,11 +21,13 @@
 }
 .ledger {
   border-top: 2px solid var(--ink);
-  max-width: 780px;
+  max-width: 840px;
+  width: min(100%, 840px);
 }
 .header {
   display: grid;
-  grid-template-columns: 120px 1fr 140px 100px;
+  grid-template-columns: 120px minmax(0, 1fr) 96px 88px;
+  column-gap: 16px;
   padding: 10px 0;
   border-bottom: 1px solid var(--rule);
   font-family: var(--font-mono);
@@ -37,12 +39,22 @@
 }
 .row {
   display: grid;
-  grid-template-columns: 120px 1fr 140px 100px;
+  grid-template-columns: 120px minmax(0, 1fr) 96px 88px;
+  column-gap: 16px;
   padding: 14px 0;
   border-bottom: 1px solid var(--rule);
   font-size: 14px;
-  align-items: baseline;
+  align-items: start;
   transition: background 0.15s ease;
+}
+.header > span,
+.row > span {
+  min-width: 0;
+}
+.header > span:nth-child(3),
+.header > span:nth-child(4) {
+  justify-self: end;
+  text-align: right;
 }
 .row:hover {
   background: oklch(96% 0.004 75);
@@ -59,16 +71,18 @@
 .event {
   color: var(--ink);
   font-weight: 400;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .ref {
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
   color: var(--accent);
+  display: inline-flex;
   margin-left: 4px;
   text-decoration: none;
-  padding: 8px 4px;
-  margin: -8px 0;
+  white-space: nowrap;
 }
 .refHeal {
   color: var(--heal);
@@ -80,11 +94,17 @@
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--ink-muted);
+  justify-self: end;
+  text-align: right;
+  white-space: nowrap;
 }
 .outcome {
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
+  justify-self: end;
+  text-align: right;
+  white-space: nowrap;
 }
 .merged { color: var(--good); }
 .blocked { color: var(--heal); }

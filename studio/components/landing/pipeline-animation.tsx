@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import { BUILD_QUEUE, REVIEW_QUEUE } from "./pipeline-animation-data";
 import styles from "./pipeline-animation.module.css";
 
 const ACT_NAMES = ["Brief", "Plan", "Build", "Ship", "Heal"];
@@ -365,16 +366,13 @@ function act2(
     color: C.policy, alpha: 0, width: 0.75, dash: [3, 4], targetAlpha: 0.5,
   });
 
-  const items = [
-    { num: 1, lane: 0, start: 0.05, prDelay: 0.6, prType: "pr-1", prLabel: "PR" },
-    { num: 2, lane: 1, start: 1.1, prDelay: 1.7, prType: "pr-2", prLabel: "" },
-  ];
-
-  for (const item of items) {
+  for (const item of BUILD_QUEUE) {
     const iy = L.issueLanes[item.lane] * H;
 
     setTimeout(() => {
-      const issue = entities.find((e) => e.type === "issue" && e.label === `#${item.num}`);
+      const issue = entities.find(
+        (e) => e.type === "issue" && e.label === `#${item.issueNumber}`,
+      );
       if (issue) {
         issue.moveTo(L.buildX * W, iy, 0.05);
         issue.label = "";
@@ -388,7 +386,7 @@ function act2(
           );
         }
       }
-    }, item.start * 1000);
+    }, item.buildStartMs);
 
     setTimeout(() => {
       entities.push(
@@ -398,14 +396,14 @@ function act2(
           shape: "rect", type: item.prType, label: item.prLabel, easing: 0.045, maxTrail: 16,
         }),
       );
-    }, item.prDelay * 1000);
+    }, item.prSpawnMs);
 
     setTimeout(() => {
       const issue = entities.find(
         (e) => e.type === "issue" && e.x > L.buildX * W - 30 && Math.abs(e.y - iy) < 10,
       );
       if (issue) issue.kill();
-    }, (item.prDelay + 0.25) * 1000);
+    }, item.prSpawnMs + 250);
   }
 }
 
@@ -433,32 +431,41 @@ function act3(
     color: C.good, alpha: 0, width: 1, targetAlpha: 0.5,
   });
 
-  const pr1 = entities.find((e) => e.type === "pr-1");
-  if (pr1) {
-    pr1.moveTo(L.reviewX * W, L.reviewY * H, 0.06);
-    setTimeout(() => { pr1.moveTo(L.deployX * W, L.deployY * H, 0.06); pr1.shape = "circle"; pr1.r = 4; pr1.label = ""; }, 350);
-    setTimeout(() => pr1.kill(), 800);
-  }
+  for (const item of REVIEW_QUEUE) {
+    const pr = entities.find((e) => e.type === item.prType);
+    if (!pr) continue;
 
-  const pr2 = entities.find((e) => e.type === "pr-2");
-  if (pr2) {
-    setTimeout(() => pr2.moveTo(L.reviewX * W, L.reviewY * H, 0.06), 350);
+    setTimeout(() => pr.moveTo(L.reviewX * W, L.reviewY * H, 0.06), item.reviewDelayMs);
+
+    if (
+      item.policySendDelayMs !== undefined &&
+      item.policyReturnDelayMs !== undefined
+    ) {
+      setTimeout(() => {
+        entities.push(new Entity(L.reviewX * W, L.reviewY * H - 2, {
+          tx: L.policyX * W, ty: L.policyY * H + 10,
+          r: 3, color: C.policy, wash: C.policyFade,
+          shape: "circle", type: "policy-check", maxTrail: 12, easing: 0.07,
+        }));
+      }, item.policySendDelayMs);
+
+      setTimeout(() => {
+        entities.push(new Entity(L.policyX * W, L.policyY * H + 10, {
+          tx: L.reviewX * W, ty: L.reviewY * H - 2,
+          r: 3, color: C.policy, wash: C.policyFade,
+          shape: "circle", type: "policy-return", maxTrail: 12, easing: 0.07,
+        }));
+      }, item.policyReturnDelayMs);
+    }
+
     setTimeout(() => {
-      entities.push(new Entity(L.reviewX * W, L.reviewY * H - 2, {
-        tx: L.policyX * W, ty: L.policyY * H + 10,
-        r: 3, color: C.policy, wash: C.policyFade,
-        shape: "circle", type: "policy-check", maxTrail: 12, easing: 0.07,
-      }));
-    }, 600);
-    setTimeout(() => {
-      entities.push(new Entity(L.policyX * W, L.policyY * H + 10, {
-        tx: L.reviewX * W, ty: L.reviewY * H - 2,
-        r: 3, color: C.policy, wash: C.policyFade,
-        shape: "circle", type: "policy-return", maxTrail: 12, easing: 0.07,
-      }));
-    }, 850);
-    setTimeout(() => { pr2.moveTo(L.deployX * W, L.deployY * H, 0.06); pr2.shape = "circle"; pr2.r = 4; pr2.label = ""; }, 1100);
-    setTimeout(() => pr2.kill(), 1500);
+      pr.moveTo(L.deployX * W, L.deployY * H, 0.06);
+      pr.shape = "circle";
+      pr.r = 4;
+      pr.label = "";
+    }, item.deployDelayMs);
+
+    setTimeout(() => pr.kill(), item.killDelayMs);
   }
 }
 

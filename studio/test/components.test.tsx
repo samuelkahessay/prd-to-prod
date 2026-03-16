@@ -7,6 +7,7 @@ import { Pricing } from "@/components/landing/pricing";
 import { WhatYouGet } from "@/components/landing/what-you-get";
 import { EvidenceLedger } from "@/components/landing/evidence-ledger";
 import { BottomCta } from "@/components/landing/bottom-cta";
+import { BUILD_QUEUE, REVIEW_QUEUE } from "@/components/landing/pipeline-animation-data";
 import { RunsTable } from "@/components/console/runs-table";
 import type { EvidenceRow, Run } from "@/lib/types";
 
@@ -106,6 +107,17 @@ describe("EvidenceLedger", () => {
     expect(screen.getByText("Event 5")).toBeInTheDocument();
     expect(screen.queryByText("Event 6")).not.toBeInTheDocument();
     expect(screen.getByText(/Showing\s+5\s+recent events/)).toBeInTheDocument();
+  });
+});
+
+describe("Pipeline animation queues", () => {
+  it("advances all three decomposed issues through the build queue", () => {
+    expect(BUILD_QUEUE.map((item) => item.issueNumber)).toEqual([1, 2, 3]);
+    expect(BUILD_QUEUE.map((item) => item.prType)).toEqual(["pr-1", "pr-2", "pr-3"]);
+  });
+
+  it("includes a review-stage handoff for the third PR", () => {
+    expect(REVIEW_QUEUE.map((item) => item.prType)).toContain("pr-3");
   });
 });
 
