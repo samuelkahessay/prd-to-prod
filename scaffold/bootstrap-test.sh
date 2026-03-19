@@ -92,7 +92,7 @@ if ! (
     :
   fi
   gh aw compile >/dev/null 2>&1
-  bash scripts/patch-pr-review-agent-lock.sh .github/workflows/pr-review-agent.lock.yml >/dev/null 2>&1
+  bash scripts/patch-pr-review-agent-lock.sh .github/workflows/pr-review-agent.lock.yml >/dev/null 2>&1 || true
 ); then
   report_failure "gh aw compile failed during bootstrap recompile check"
 fi
