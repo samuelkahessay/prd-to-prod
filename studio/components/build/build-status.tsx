@@ -14,6 +14,7 @@ import type {
   BuildSession,
   BuildSessionStatus,
 } from "@/lib/types";
+import { PrdToProdAnimation } from "@/components/shared/prd-to-prod-animation";
 import styles from "../../app/build/[id]/page.module.css";
 
 interface BuildStatusProps {
@@ -182,6 +183,12 @@ export function BuildStatus({
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Next step</h2>
         <div className={styles.card}>
+          {pendingAction ? (
+            <div style={{ margin: "8px 0 16px" }}>
+              <PrdToProdAnimation size={28} amplitude="tight" />
+            </div>
+          ) : null}
+
           <p className={styles.copy}>
             {describeSessionState(session.status, pendingAction)}
           </p>
