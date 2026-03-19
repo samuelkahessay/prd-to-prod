@@ -3,6 +3,10 @@ import {
   IsoViewport,
   worldToScreen,
   drawIsoBlock,
+  drawWallQuad,
+  strokeWallQuad,
+  ceilingAnchor,
+  computeRoomAnchors,
   WORLD_STATIONS,
   ROOM_W,
   ROOM_D,
@@ -37,14 +41,12 @@ export function drawBackdrop(
   vp: IsoViewport,
   time: number
 ) {
-  const cx = vp.canvasW * 0.42;
-  const wy = vp.canvasH * 0.02;
-  const ww = vp.canvasW * 0.32;
-  const wh = vp.canvasH * 0.28;
+  const anchors = computeRoomAnchors(vp);
+  const { x: cx, y: wy, w: ww, h: wh } = anchors.window;
 
   // Back wall hint
-  const wallTop = worldToScreen(vp, 0, 0);
-  const wallRight = worldToScreen(vp, ROOM_W, 0);
+  const wallTop = anchors.backWall.left;
+  const wallRight = anchors.backWall.right;
   ctx.fillStyle = E.wallBg;
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -132,10 +134,13 @@ export function drawBackdrop(
   ctx.lineTo(cx + ww, wy + wh * 0.45);
   ctx.stroke();
 
-  // Pendant lamps
-  drawPendantLamp(ctx, vp.canvasW * 0.22, 0, vp.canvasH * 0.12);
-  drawPendantLamp(ctx, vp.canvasW * 0.52, 0, vp.canvasH * 0.1);
-  drawPendantLamp(ctx, vp.canvasW * 0.78, 0, vp.canvasH * 0.14);
+  // Pendant lamps — anchored to isometric ceiling points
+  const lamp1 = ceilingAnchor(vp, 2, 1, vp.canvasH * 0.12);
+  const lamp2 = ceilingAnchor(vp, 6, 1, vp.canvasH * 0.1);
+  const lamp3 = ceilingAnchor(vp, 10, 1, vp.canvasH * 0.14);
+  drawPendantLamp(ctx, lamp1.x, 0, lamp1.y);
+  drawPendantLamp(ctx, lamp2.x, 0, lamp2.y);
+  drawPendantLamp(ctx, lamp3.x, 0, lamp3.y);
 }
 
 function drawCloud(
@@ -249,26 +254,27 @@ function drawBlueprintTable(
   const deskTop = worldToScreen(vp, wx + 1, wy + 0.6);
   const h = vp.cellSize * 0.7;
 
-  // Whiteboard behind desk (flat rectangle floating above)
-  const wbPos = worldToScreen(vp, wx + 0.3, wy - 0.3);
-  const wbW = vp.cellSize * 1.4;
+  // Whiteboard behind desk — on back-wall plane
+  const wbWorldW = 1.8; // world units wide along x-axis
   const wbH = vp.cellSize * 1;
-  ctx.fillStyle = "#fff";
-  ctx.strokeStyle = "#c4bbb0";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.roundRect(wbPos.x, wbPos.y - wbH - h, wbW, wbH, 2);
-  ctx.fill();
-  ctx.stroke();
+  const wbElev = h + vp.cellSize * 0.2; // above desk height
 
-  // Sticky notes on whiteboard
+  // Board fill
+  drawWallQuad(ctx, vp, wx + 0.1, wy - 0.3, wbWorldW, wbH, "back", wbElev, "#fff");
+  // Board border
+  strokeWallQuad(ctx, vp, wx + 0.1, wy - 0.3, wbWorldW, wbH, "back", wbElev, "#c4bbb0", 1.5);
+
+  // Sticky notes on whiteboard (use wall-projected corners for positioning)
+  const wbBL = worldToScreen(vp, wx + 0.1, wy - 0.3);
+  const wbBR = worldToScreen(vp, wx + 0.1 + wbWorldW, wy - 0.3);
+  const wbScreenW = wbBR.x - wbBL.x;
   const noteColors = ["#fff3b0", "#b0e0ff", "#ffb0b0", "#b0ffb0"];
   const noteCount = Math.min(state.output.issueCount + 1, 4);
   for (let i = 0; i < noteCount; i++) {
-    const nx = wbPos.x + 4 + (i % 2) * (wbW * 0.4);
-    const ny = wbPos.y - wbH - h + 4 + Math.floor(i / 2) * (wbH * 0.45);
+    const nx = wbBL.x + 4 + (i % 2) * (wbScreenW * 0.4);
+    const ny = wbBL.y - wbElev - wbH + 4 + Math.floor(i / 2) * (wbH * 0.45);
     ctx.fillStyle = noteColors[i];
-    ctx.fillRect(nx, ny, wbW * 0.25, wbH * 0.35);
+    ctx.fillRect(nx, ny, wbScreenW * 0.2, wbH * 0.35);
   }
 
   // Scattered papers on desk
@@ -309,39 +315,43 @@ function drawCodeForge(
   const h = vp.cellSize * 0.65;
   const monBase = worldToScreen(vp, wx + 0.3, wy + 0.2);
 
-  // Triple monitors
+  // Triple monitors — wall quads standing on desk, facing back wall
+  const monWorldW = 0.6; // each monitor width in world units
+  const monSpacing = 0.05;
+  const monH = vp.cellSize * 0.38;
+  const monElev = h + 4; // sits just above desk
+
   for (let i = 0; i < 3; i++) {
-    const mx = monBase.x + i * vp.cellSize * 0.55;
-    const my = monBase.y - h;
-    const mw = vp.cellSize * 0.5;
-    const mh = vp.cellSize * 0.38;
+    const monX = wx + 0.2 + i * (monWorldW + monSpacing);
 
     // Monitor frame
-    ctx.fillStyle = "#1a1a1a";
-    ctx.beginPath();
-    ctx.roundRect(mx, my - mh - 4, mw, mh, 2);
-    ctx.fill();
+    drawWallQuad(ctx, vp, monX, wy + 0.15, monWorldW, monH, "back", monElev, "#1a1a1a");
 
-    // Screen
-    ctx.fillStyle = active ? "#1e2127" : E.screenOff;
-    ctx.fillRect(mx + 2, my - mh - 2, mw - 4, mh - 4);
+    // Screen inset
+    const screenInset = 0.05;
+    const screenH = monH - 4;
+    drawWallQuad(ctx, vp, monX + screenInset, wy + 0.15, monWorldW - screenInset * 2, screenH, "back", monElev + 2, active ? "#1e2127" : E.screenOff);
 
     // Code lines when active
     if (active) {
+      const screenBL = worldToScreen(vp, monX + screenInset, wy + 0.15);
+      const screenBR = worldToScreen(vp, monX + monWorldW - screenInset, wy + 0.15);
+      const screenW = screenBR.x - screenBL.x;
       const colors = ["#61afef", "#98c379", "#e5c07b", "#c678dd", "#e06c75"];
       for (let j = 0; j < 5; j++) {
         const lw = 3 + ((time * 4 + j * 3 + i * 7) % 12);
         ctx.fillStyle = colors[(j + i) % colors.length];
         ctx.globalAlpha = 0.7;
-        ctx.fillRect(mx + 4, my - mh + j * 3 + 2, Math.min(lw, mw - 8), 1.5);
+        ctx.fillRect(screenBL.x + 2, screenBL.y - monElev - screenH + j * 3 + 4, Math.min(lw, screenW - 4), 1.5);
       }
       ctx.globalAlpha = 1;
     }
 
     // Stand
+    const standPos = worldToScreen(vp, monX + monWorldW / 2, wy + 0.15);
     ctx.fillStyle = "#333";
-    ctx.fillRect(mx + mw / 2 - 2, my - 4, 4, 4);
-    ctx.fillRect(mx + mw / 2 - 4, my, 8, 1.5);
+    ctx.fillRect(standPos.x - 2, standPos.y - monElev, 4, 4);
+    ctx.fillRect(standPos.x - 4, standPos.y - monElev + 4, 8, 1.5);
   }
 
   // Mechanical keyboard
@@ -478,46 +488,50 @@ function drawInspectionBay(
   });
 
   const h = vp.cellSize * 0.7;
-  const monPos = worldToScreen(vp, wx + 0.3, wy + 0.2);
 
-  // Curved ultrawide monitor
-  const mw = vp.cellSize * 1.2;
-  const mh = vp.cellSize * 0.45;
-  const mx = monPos.x;
-  const my = monPos.y - h - mh;
+  // Ultrawide monitor — wall quad on back wall plane
+  const uwWorldW = 1.6;
+  const uwH = vp.cellSize * 0.45;
+  const uwElev = h + 4;
+  const uwX = wx + 0.2;
+  const uwY = wy + 0.15;
 
-  ctx.fillStyle = "#1a1a1a";
-  ctx.beginPath();
-  ctx.roundRect(mx, my, mw, mh, 3);
-  ctx.fill();
+  // Monitor frame
+  drawWallQuad(ctx, vp, uwX, uwY, uwWorldW, uwH, "back", uwElev, "#1a1a1a");
 
-  // Screen content
-  ctx.fillStyle = active ? "#1e2127" : E.screenOff;
-  ctx.fillRect(mx + 3, my + 3, mw - 6, mh - 6);
+  // Screen inset
+  const uwScreenH = uwH - 6;
+  drawWallQuad(ctx, vp, uwX + 0.05, uwY, uwWorldW - 0.1, uwScreenH, "back", uwElev + 3, active ? "#1e2127" : E.screenOff);
 
   // Diff lines when active
   if (active) {
+    const scrBL = worldToScreen(vp, uwX + 0.05, uwY);
+    const scrBR = worldToScreen(vp, uwX + uwWorldW - 0.05, uwY);
+    const scrW = scrBR.x - scrBL.x;
+    const scrTopY = scrBL.y - uwElev - uwScreenH;
+
     for (let i = 0; i < 7; i++) {
       const isAdd = i % 3 !== 0;
       ctx.fillStyle = isAdd ? "rgba(98,199,121,0.5)" : "rgba(224,108,117,0.4)";
-      ctx.fillRect(mx + 5, my + 5 + i * 3.5, mw * 0.6, 2);
+      ctx.fillRect(scrBL.x + 3, scrTopY + 5 + i * 3.5, scrW * 0.6, 2);
     }
 
     // PR badge
     ctx.fillStyle = "#3d9a6a";
     ctx.beginPath();
-    ctx.roundRect(mx + mw - 22, my + 5, 18, 10, 2);
+    ctx.roundRect(scrBL.x + scrW - 22, scrTopY + 5, 18, 10, 2);
     ctx.fill();
     ctx.fillStyle = "#fff";
     ctx.font = `${Math.max(6, vp.cellSize * 0.2)}px monospace`;
     ctx.textAlign = "center";
-    ctx.fillText(`#${state.output.prCount || 42}`, mx + mw - 13, my + 13);
+    ctx.fillText(`#${state.output.prCount || 42}`, scrBL.x + scrW - 13, scrTopY + 13);
   }
 
   // Monitor stand
+  const standCenter = worldToScreen(vp, uwX + uwWorldW / 2, uwY);
   ctx.fillStyle = "#333";
-  ctx.fillRect(mx + mw / 2 - 3, monPos.y - h - 3, 6, 4);
-  ctx.fillRect(mx + mw / 2 - 8, monPos.y - h, 16, 2);
+  ctx.fillRect(standCenter.x - 3, standCenter.y - uwElev, 6, 4);
+  ctx.fillRect(standCenter.x - 8, standCenter.y - uwElev + 4, 16, 2);
 
   // Documents with checkmark
   if (active) {
@@ -559,31 +573,35 @@ function drawLaunchPad(
   });
 
   const h = vp.cellSize * 0.6;
-  const consPos = worldToScreen(vp, wx + 0.2, wy + 0.2);
 
-  // 4 small status monitors
+  // 4 small status monitors — wall quads in a 2x2 grid on back wall
+  const smWorldW = 0.5;
+  const smH = vp.cellSize * 0.25;
+  const smElev = h + 2;
+
   for (let i = 0; i < 4; i++) {
-    const smx = consPos.x + (i % 2) * vp.cellSize * 0.55;
-    const smy = consPos.y - h - (Math.floor(i / 2) === 0 ? vp.cellSize * 0.35 : 0);
-    const smw = vp.cellSize * 0.4;
-    const smh = vp.cellSize * 0.25;
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const smX = wx + 0.15 + col * (smWorldW + 0.08);
+    const smRowElev = smElev + (1 - row) * (smH + 4); // top row higher
 
-    ctx.fillStyle = "#1a1a1a";
-    ctx.beginPath();
-    ctx.roundRect(smx, smy - smh, smw, smh, 1.5);
-    ctx.fill();
+    // Monitor frame
+    drawWallQuad(ctx, vp, smX, wy + 0.15, smWorldW, smH, "back", smRowElev, "#1a1a1a");
 
     // Status LED
     const ledColor = active
       ? ["#3d9a6a", "#4a6fd8", "#e8c547", "#c45a3c"][i]
       : "#333";
+    const smBR = worldToScreen(vp, smX + smWorldW, wy + 0.15);
+    const ledX = smBR.x - 4;
+    const ledY = smBR.y - smRowElev - smH + 4;
     ctx.beginPath();
-    ctx.arc(smx + smw - 4, smy - smh + 4, 2, 0, Math.PI * 2);
+    ctx.arc(ledX, ledY, 2, 0, Math.PI * 2);
     ctx.fillStyle = ledColor;
     ctx.fill();
     if (active) {
       ctx.beginPath();
-      ctx.arc(smx + smw - 4, smy - smh + 4, 4, 0, Math.PI * 2);
+      ctx.arc(ledX, ledY, 4, 0, Math.PI * 2);
       ctx.fillStyle = ledColor;
       ctx.globalAlpha = 0.2;
       ctx.fill();
@@ -679,8 +697,9 @@ function drawBookshelf(
     const sy = pos.y - h + shelf * (h * 0.45) + 4;
     let bx = pos.x + 2;
     for (let i = 0; i < 4; i++) {
-      const bw = 2 + Math.random() * 2;
-      const bh = h * 0.3 - Math.random() * 4;
+      const seed = shelf * 4 + i + 1;
+      const bw = 2 + (Math.sin(seed * 7.31) * 0.5 + 0.5) * 2;
+      const bh = h * 0.3 - (Math.sin(seed * 3.17) * 0.5 + 0.5) * 4;
       ctx.fillStyle = bookColors[(shelf * 4 + i) % bookColors.length];
       ctx.fillRect(bx, sy + (h * 0.35 - bh), bw, bh);
       bx += bw + 1;
@@ -735,32 +754,39 @@ function drawKanbanBoard(
   wy: number,
   state: FactoryState
 ) {
-  const pos = worldToScreen(vp, wx, wy);
-  const bw = vp.cellSize * 1.5;
-  const bh = vp.cellSize * 1;
+  // Kanban board — on left wall plane (extends along y-axis at wx)
+  const kbWorldW = 2.5; // world units along y-axis
+  const kbH = vp.cellSize * 1;
+  const kbElev = vp.cellSize * 0.3;
 
   // Board background
-  ctx.fillStyle = "#f5f0e8";
-  ctx.strokeStyle = "#c4bbb0";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.roundRect(pos.x, pos.y - bh, bw, bh, 2);
-  ctx.fill();
-  ctx.stroke();
+  drawWallQuad(ctx, vp, wx, wy, kbWorldW, kbH, "left", kbElev, "#f5f0e8");
+  strokeWallQuad(ctx, vp, wx, wy, kbWorldW, kbH, "left", kbElev, "#c4bbb0", 1);
 
-  // Column headers
+  // Get screen coords for content layout
+  const kbBL = worldToScreen(vp, wx, wy);
+  const kbBR = worldToScreen(vp, wx, wy + kbWorldW);
+  const kbScreenW = Math.abs(kbBR.x - kbBL.x);
+  // Left wall goes right-to-left in screen x, but y increases downward
+  const kbLeftX = Math.min(kbBL.x, kbBR.x);
+  const kbTopY = Math.min(kbBL.y, kbBR.y) - kbElev - kbH;
+  // Vertical center of the slanted board
+  const kbMidY = (kbBL.y + kbBR.y) / 2 - kbElev;
+
+  // Column headers (flat overlay — acceptable since content on an iso board)
   const cols = ["TODO", "WIP", "DONE"];
-  const colW = bw / 3;
+  const colW = kbScreenW / 3;
   ctx.font = `600 ${Math.max(5, vp.cellSize * 0.13)}px monospace`;
   ctx.textAlign = "center";
   ctx.fillStyle = "#8e877f";
   for (let i = 0; i < 3; i++) {
-    ctx.fillText(cols[i], pos.x + colW * i + colW / 2, pos.y - bh + 8);
+    ctx.fillText(cols[i], kbLeftX + colW * i + colW / 2, kbTopY + 8);
     if (i > 0) {
       ctx.strokeStyle = "#ddd8d1";
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(pos.x + colW * i, pos.y - bh + 2);
-      ctx.lineTo(pos.x + colW * i, pos.y - 2);
+      ctx.moveTo(kbLeftX + colW * i, kbTopY + 2);
+      ctx.lineTo(kbLeftX + colW * i, kbMidY - 2);
       ctx.stroke();
     }
   }
@@ -768,14 +794,14 @@ function drawKanbanBoard(
   // Sticky notes in columns
   const noteColors = ["#fff3b0", "#b0e0ff", "#ffb0b0", "#b0ffb0"];
   const cardW = colW * 0.7;
-  const cardH = bh * 0.15;
+  const cardH = kbH * 0.15;
 
   // TODO cards
   for (let i = 0; i < 2; i++) {
     ctx.fillStyle = noteColors[i];
     ctx.fillRect(
-      pos.x + colW * 0 + (colW - cardW) / 2,
-      pos.y - bh + 13 + i * (cardH + 2),
+      kbLeftX + colW * 0 + (colW - cardW) / 2,
+      kbTopY + 13 + i * (cardH + 2),
       cardW,
       cardH
     );
@@ -784,8 +810,8 @@ function drawKanbanBoard(
   // WIP card
   ctx.fillStyle = noteColors[2];
   ctx.fillRect(
-    pos.x + colW * 1 + (colW - cardW) / 2,
-    pos.y - bh + 13,
+    kbLeftX + colW * 1 + (colW - cardW) / 2,
+    kbTopY + 13,
     cardW,
     cardH
   );
@@ -795,16 +821,16 @@ function drawKanbanBoard(
   for (let i = 0; i < doneCount; i++) {
     ctx.fillStyle = noteColors[3];
     ctx.fillRect(
-      pos.x + colW * 2 + (colW - cardW) / 2,
-      pos.y - bh + 13 + i * (cardH + 2),
+      kbLeftX + colW * 2 + (colW - cardW) / 2,
+      kbTopY + 13 + i * (cardH + 2),
       cardW,
       cardH
     );
     // Checkmark
     ctx.strokeStyle = "#3d9a6a";
     ctx.lineWidth = 1;
-    const cx = pos.x + colW * 2 + colW / 2;
-    const cy = pos.y - bh + 13 + i * (cardH + 2) + cardH / 2;
+    const cx = kbLeftX + colW * 2 + colW / 2;
+    const cy = kbTopY + 13 + i * (cardH + 2) + cardH / 2;
     ctx.beginPath();
     ctx.moveTo(cx - 2, cy);
     ctx.lineTo(cx, cy + 2);
@@ -906,8 +932,10 @@ function drawClock(
   time: number,
   state: FactoryState
 ) {
-  const cx = vp.canvasW * 0.82;
-  const cy = vp.canvasH * 0.06;
+  // Clock anchored to back wall near right side
+  const clockAnchor = ceilingAnchor(vp, ROOM_W - 1.5, 0, vp.canvasH * 0.15);
+  const cx = clockAnchor.x;
+  const cy = clockAnchor.y;
   const r = vp.cellSize * 0.4;
 
   // Face
@@ -967,22 +995,23 @@ export function drawSunbeam(
   vp: IsoViewport,
   time: number
 ) {
-  const wx = vp.canvasW * 0.42;
-  const ww = vp.canvasW * 0.32;
-  const wh = vp.canvasH * 0.28;
+  // Derive from shared window anchors
+  const anchors = computeRoomAnchors(vp);
+  const { x: wx, y: _wy, w: ww, h: wh } = anchors.window;
+  const winBottom = anchors.window.y + wh;
 
   // Sunbeam polygon from window to floor
   ctx.save();
   ctx.beginPath();
-  ctx.moveTo(wx + ww * 0.4, wh + 4);
-  ctx.lineTo(wx + ww * 0.9, wh + 4);
+  ctx.moveTo(wx + ww * 0.4, winBottom + 4);
+  ctx.lineTo(wx + ww * 0.9, winBottom + 4);
   ctx.lineTo(wx + ww * 1.1, vp.canvasH * 0.85);
   ctx.lineTo(wx + ww * 0.1, vp.canvasH * 0.75);
   ctx.closePath();
 
   const grad = ctx.createLinearGradient(
     wx + ww * 0.5,
-    wh,
+    winBottom,
     wx + ww * 0.5,
     vp.canvasH * 0.8
   );
@@ -1019,8 +1048,11 @@ export function drawDustMotes(
   vp: IsoViewport,
   time: number
 ) {
-  const beamCenterX = vp.canvasW * 0.55;
-  const beamCenterY = vp.canvasH * 0.5;
+  // Derive from shared window anchors — dust floats in the sunbeam area
+  const anchors = computeRoomAnchors(vp);
+  const { x: wx, w: ww, h: wh } = anchors.window;
+  const beamCenterX = wx + ww * 0.65;
+  const beamCenterY = anchors.window.y + wh + (vp.canvasH * 0.5 - anchors.window.y - wh) * 0.6;
 
   for (let i = 0; i < 8; i++) {
     const seed = i * 137.508;

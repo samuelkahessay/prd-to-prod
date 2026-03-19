@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# codex-review — send content to Codex for review
+# Usage:
+#   codex-review plan <file>          Review an implementation plan
+#   codex-review diff [base-branch]   Review git diff (default: main)
+#   codex-review file <file>          Review a specific file
+#   codex-review pr                   Review current branch as a PR
+
+set -euo pipefail
+
+MODEL="gpt-5.4"
+CMD="${1:-help}"
+shift || true
+
+case "$CMD" in
+  plan)
+    FILE="${1:?Usage: codex-review plan <file>}"
+    cat "$FILE" | codex exec -m "$MODEL" \
+      "Review this implementation plan. Approve it or suggest specific fixes. Focus on: (1) correctness of identified issues and prioritization, (2) soundness of the approach, (3) anything missing. Write your verdict clearly."
+    ;;
+
+  diff)
+    BASE="${1:-main}"
+    git diff "$BASE" | codex exec -m "$MODEL" \
+      "Review this code diff. Look for: (1) bugs or logic errors, (2) visual/rendering issues if canvas/animation code, (3) missing edge cases, (4) anything that could regress existing behavior. Approve or list specific issues with file:line references."
+    ;;
+
+  file)
+    FILE="${1:?Usage: codex-review file <file>}"
+    cat "$FILE" | codex exec -m "$MODEL" \
+      "Review this file for bugs, quality issues, and improvements. Be specific with line references. Focus on real issues, not style."
+    ;;
+
+  pr)
+    DIFF=$(git diff main...HEAD)
+    LOG=$(git log main..HEAD --oneline)
+    echo -e "Commits:\n$LOG\n\nDiff:\n$DIFF" | codex exec -m "$MODEL" \
+      "Review this PR (commits + diff). Check for: (1) coherence between commits and changes, (2) bugs or regressions, (3) missing tests or verification, (4) anything that should be split or combined. Approve or request changes."
+    ;;
+
+  help|*)
+    echo "Usage: codex-review <command> [args]"
+    echo ""
+    echo "Commands:"
+    echo "  plan <file>          Review an implementation plan"
+    echo "  diff [base-branch]   Review git diff (default: main)"
+    echo "  file <file>          Review a specific file"
+    echo "  pr                   Review current branch as PR"
+    ;;
+esac

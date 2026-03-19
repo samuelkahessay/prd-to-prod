@@ -141,6 +141,141 @@ export function drawIsoBlock(
   ctx.fill();
 }
 
+// ── Isometric geometry helpers ─────────────────────────────
+
+/** Draw a flat quad on the floor/desk plane at a given screen-pixel elevation */
+export function drawIsoFlatQuad(
+  ctx: CanvasRenderingContext2D,
+  vp: IsoViewport,
+  wx: number,
+  wy: number,
+  w: number,
+  d: number,
+  elevation: number,
+  fill: string
+) {
+  const p0 = worldToScreen(vp, wx, wy);
+  const p1 = worldToScreen(vp, wx + w, wy);
+  const p2 = worldToScreen(vp, wx + w, wy + d);
+  const p3 = worldToScreen(vp, wx, wy + d);
+
+  ctx.beginPath();
+  ctx.moveTo(p0.x, p0.y - elevation);
+  ctx.lineTo(p1.x, p1.y - elevation);
+  ctx.lineTo(p2.x, p2.y - elevation);
+  ctx.lineTo(p3.x, p3.y - elevation);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+}
+
+/** Draw a quad on a wall plane (back wall: extends along x at wy=0; left wall: extends along y at wx=0) */
+export function drawWallQuad(
+  ctx: CanvasRenderingContext2D,
+  vp: IsoViewport,
+  wx: number,
+  wy: number,
+  wallW: number,
+  wallH: number,
+  wall: "back" | "left",
+  elevation: number,
+  fill: string
+) {
+  let bl: { x: number; y: number };
+  let br: { x: number; y: number };
+
+  if (wall === "back") {
+    // Wall runs along world x-axis at constant wy
+    bl = worldToScreen(vp, wx, wy);
+    br = worldToScreen(vp, wx + wallW, wy);
+  } else {
+    // Wall runs along world y-axis at constant wx
+    bl = worldToScreen(vp, wx, wy);
+    br = worldToScreen(vp, wx, wy + wallW);
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(bl.x, bl.y - elevation);
+  ctx.lineTo(br.x, br.y - elevation);
+  ctx.lineTo(br.x, br.y - elevation - wallH);
+  ctx.lineTo(bl.x, bl.y - elevation - wallH);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+}
+
+/** Stroke variant of wall quad (for outlines/frames) */
+export function strokeWallQuad(
+  ctx: CanvasRenderingContext2D,
+  vp: IsoViewport,
+  wx: number,
+  wy: number,
+  wallW: number,
+  wallH: number,
+  wall: "back" | "left",
+  elevation: number,
+  stroke: string,
+  lineWidth: number
+) {
+  let bl: { x: number; y: number };
+  let br: { x: number; y: number };
+
+  if (wall === "back") {
+    bl = worldToScreen(vp, wx, wy);
+    br = worldToScreen(vp, wx + wallW, wy);
+  } else {
+    bl = worldToScreen(vp, wx, wy);
+    br = worldToScreen(vp, wx, wy + wallW);
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(bl.x, bl.y - elevation);
+  ctx.lineTo(br.x, br.y - elevation);
+  ctx.lineTo(br.x, br.y - elevation - wallH);
+  ctx.lineTo(bl.x, bl.y - elevation - wallH);
+  ctx.closePath();
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+}
+
+/** Get a ceiling/wall anchor point in screen coords */
+export function ceilingAnchor(
+  vp: IsoViewport,
+  wx: number,
+  wy: number,
+  ceilingH: number
+): { x: number; y: number } {
+  const pos = worldToScreen(vp, wx, wy);
+  return { x: pos.x, y: pos.y - ceilingH };
+}
+
+// ── Room anchors (shared positioning for backdrop elements) ──
+
+export interface RoomAnchors {
+  /** Window frame bounds in screen coords */
+  window: { x: number; y: number; w: number; h: number };
+  /** Back wall top-left and top-right in screen coords */
+  backWall: { left: { x: number; y: number }; right: { x: number; y: number } };
+}
+
+export function computeRoomAnchors(vp: IsoViewport): RoomAnchors {
+  const backLeft = worldToScreen(vp, 0, 0);
+  const backRight = worldToScreen(vp, ROOM_W, 0);
+
+  // Window: centered on back wall, occupies ~40% of wall width, top 35% of scene
+  const wallScreenW = backRight.x - backLeft.x;
+  const winW = wallScreenW * 0.55;
+  const winH = vp.canvasH * 0.28;
+  const winX = backLeft.x + (wallScreenW - winW) * 0.55; // slightly right of center
+  const winY = vp.canvasH * 0.02;
+
+  return {
+    window: { x: winX, y: winY, w: winW, h: winH },
+    backWall: { left: backLeft, right: backRight },
+  };
+}
+
 export const WORLD_STATIONS: Record<
   WorkstationId,
   { x: number; y: number; label: string }
