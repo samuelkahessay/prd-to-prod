@@ -1,0 +1,241 @@
+/* studio/components/shared/prd-to-prod-animation.module.css */
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.letters {
+  display: flex;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0.05em;
+  position: relative;
+
+  /* Tunable axis defaults (medium amplitude) */
+  --fall-distance: -70px;
+  --squash-x: 1.3;
+  --squash-y: 0.65;
+  --hop-height: -6px;
+  --hop-height-far: -4px;
+  --rotation: 0deg;
+  --rotation-neg: 0deg;
+  --ripple-squash-x: 1;
+  --ripple-squash-y: 1;
+  --ripple-squash-x-inv: 1;
+  --ripple-squash-y-inv: 1;
+  --duration: 3.6s;
+}
+
+.letter {
+  display: inline-block;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+}
+
+/* "d" starts shifted left to close the gap where "o" will appear */
+.letterD {
+  animation: shiftD var(--duration) ease infinite;
+}
+
+/* "o" starts hidden above */
+.letterO {
+  animation: dropO var(--duration) ease infinite;
+}
+
+/* "r" ripple — fires first on impact */
+.letterR {
+  animation: rippleR var(--duration) ease infinite;
+}
+
+/* "p" ripple — fires slightly after "r" */
+.letterP {
+  animation: rippleP var(--duration) ease infinite;
+}
+
+@keyframes dropO {
+  0%, 22% {
+    opacity: 0;
+    transform:
+      translateY(var(--fall-distance))
+      scaleX(0.8)
+      scaleY(1.3);
+  }
+  36% {
+    opacity: 1;
+    transform:
+      translateY(2px)
+      scaleX(var(--squash-x))
+      scaleY(var(--squash-y));
+  }
+  43% {
+    opacity: 1;
+    transform:
+      translateY(-6px)
+      scaleX(0.88)
+      scaleY(1.15);
+  }
+  50% {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scaleX(1.05)
+      scaleY(0.95);
+  }
+  56%, 80% {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scaleX(1)
+      scaleY(1);
+  }
+  92%, 100% {
+    opacity: 0;
+    transform:
+      translateY(var(--fall-distance))
+      scaleX(0.8)
+      scaleY(1.3);
+  }
+}
+
+@keyframes shiftD {
+  0%, 22% {
+    transform:
+      translateX(-18px)
+      translateY(0)
+      scaleX(var(--ripple-squash-x-inv))
+      scaleY(var(--ripple-squash-y-inv));
+  }
+  36% {
+    transform:
+      translateX(2px)
+      translateY(-3px)
+      scaleX(var(--ripple-squash-x))
+      scaleY(var(--ripple-squash-y));
+  }
+  43% {
+    transform:
+      translateX(-1px)
+      translateY(1px)
+      scaleX(var(--ripple-squash-x-inv))
+      scaleY(var(--ripple-squash-y-inv));
+  }
+  50%, 80% {
+    transform:
+      translateX(0)
+      translateY(0)
+      scaleX(1)
+      scaleY(1);
+  }
+  92%, 100% {
+    transform:
+      translateX(-18px)
+      translateY(0)
+      scaleX(var(--ripple-squash-x-inv))
+      scaleY(var(--ripple-squash-y-inv));
+  }
+}
+
+@keyframes rippleR {
+  0%, 35% {
+    transform:
+      translateY(0)
+      rotate(0deg)
+      scaleX(1)
+      scaleY(1);
+  }
+  37% {
+    transform:
+      translateY(var(--hop-height))
+      rotate(var(--rotation-neg))
+      scaleX(var(--ripple-squash-x-inv))
+      scaleY(var(--ripple-squash-y-inv));
+  }
+  40% {
+    transform:
+      translateY(1px)
+      rotate(0deg)
+      scaleX(var(--ripple-squash-x))
+      scaleY(var(--ripple-squash-y));
+  }
+  45%, 100% {
+    transform:
+      translateY(0)
+      rotate(0deg)
+      scaleX(1)
+      scaleY(1);
+  }
+}
+
+@keyframes rippleP {
+  0%, 37% {
+    transform:
+      translateY(0)
+      rotate(0deg)
+      scaleX(1)
+      scaleY(1);
+  }
+  39.5% {
+    transform:
+      translateY(var(--hop-height-far))
+      rotate(var(--rotation))
+      scaleX(var(--ripple-squash-x-inv))
+      scaleY(var(--ripple-squash-y-inv));
+  }
+  43% {
+    transform:
+      translateY(1px)
+      rotate(0deg)
+      scaleX(var(--ripple-squash-x))
+      scaleY(var(--ripple-squash-y));
+  }
+  48%, 100% {
+    transform:
+      translateY(0)
+      rotate(0deg)
+      scaleX(1)
+      scaleY(1);
+  }
+}
+
+/* Reduced motion: no animation, show static "prod" */
+@media (prefers-reduced-motion: reduce) {
+  .letterO {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
+  .letterD {
+    animation: none;
+    transform: none;
+  }
+  .letterR {
+    animation: none;
+    transform: none;
+  }
+  .letterP {
+    animation: none;
+    transform: none;
+  }
+}
+
+/* Amplitude: tight */
+.tight {
+  --fall-distance: -55px;
+  --squash-x: 1.2;
+  --squash-y: 0.75;
+  --hop-height: -4px;
+  --hop-height-far: -3px;
+}
+
+/* Amplitude: full */
+.full {
+  --fall-distance: -85px;
+  --squash-x: 1.4;
+  --squash-y: 0.55;
+  --hop-height: -8px;
+  --hop-height-far: -6px;
+}
