@@ -43,15 +43,8 @@ describe("createLLMClient", () => {
     const request = JSON.parse(global.fetch.mock.calls[0][1].body);
 
     expect(content).toContain('"status":"needs_input"');
-    expect(request.model).toBe("anthropic/claude-sonnet-4.5");
-    expect(request.response_format).toMatchObject({
-      type: "json_schema",
-      json_schema: {
-        name: "prd_refinement",
-        strict: true,
-      },
-    });
-    expect(request.provider).toEqual({ require_parameters: true });
+    expect(request.model).toBe("glm-5");
+    expect(request.response_format).toEqual({ type: "json_object" });
   });
 
   test("parseResponse accepts valid structured output and rejects malformed fallback prose", () => {

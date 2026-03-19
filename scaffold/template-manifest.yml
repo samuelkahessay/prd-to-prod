@@ -42,7 +42,6 @@ include:
 
   # ── Docs (stable, exported) ──
   - docs/ARCHITECTURE.md
-  - docs/SELF_HEALING_MVP.md
   - docs/why-gh-aw.md
   - docs/decision-ledger/README.md
   - docs/prd/sample-prd.md

@@ -60,7 +60,6 @@ actions:
     allowed_targets:
       - README.md
       - docs/ARCHITECTURE.md
-      - docs/SELF_HEALING_MVP.md
       - showcase/**
     evidence_required:
       - Behavior already implemented in code or validated by run evidence

@@ -50,7 +50,6 @@ dist/scaffold/LICENSE
 dist/scaffold/README.md
 dist/scaffold/autonomy-policy.yml
 dist/scaffold/docs/ARCHITECTURE.md
-dist/scaffold/docs/SELF_HEALING_MVP.md
 dist/scaffold/docs/decision-ledger/README.md
 dist/scaffold/docs/prd/sample-prd.md
 dist/scaffold/docs/why-gh-aw.md
