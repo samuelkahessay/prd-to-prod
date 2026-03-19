@@ -102,7 +102,7 @@ export function ChatInterface({
           <div className={styles.streaming}>
             <div className={styles.roleLabel}>prd-to-prod</div>
             <div>
-              {streamingContent}
+              {formatStreamingContent(streamingContent)}
               <span className={styles.cursor} />
             </div>
           </div>
@@ -168,4 +168,79 @@ function tryParseJson(content: string): { message?: string; question?: string } 
   } catch {
     return null;
   }
+}
+
+function formatStreamingContent(content: string): string {
+  const parsed = tryParseJson(content);
+  if (parsed) {
+    return formatParsedContent(parsed) || content;
+  }
+
+  const preview = formatParsedContent({
+    message: extractJsonStringValue(content, "message") ?? undefined,
+    question: extractJsonStringValue(content, "question") ?? undefined,
+  });
+
+  if (preview) {
+    return preview;
+  }
+
+  return content.trimStart().startsWith("{") ? "" : content;
+}
+
+function formatParsedContent(parsed: {
+  message?: string | null;
+  question?: string | null;
+}): string {
+  return [parsed.message, parsed.question]
+    .filter((part): part is string => typeof part === "string" && part.length > 0)
+    .join("\n\n");
+}
+
+function extractJsonStringValue(content: string, key: string): string | null {
+  const marker = findJsonStringMarker(content, key);
+  if (marker === -1) {
+    return null;
+  }
+
+  return readJsonStringValue(content, marker);
+}
+
+function findJsonStringMarker(content: string, key: string): number {
+  const propertyPattern = new RegExp(`"${escapeForRegExp(key)}"\\s*:\\s*"`);
+  const match = propertyPattern.exec(content);
+  return match ? match.index + match[0].length : -1;
+}
+
+function readJsonStringValue(content: string, startIndex: number): string {
+  let value = "";
+  let index = startIndex;
+
+  while (index < content.length) {
+    const char = content[index];
+
+    if (char === '"') {
+      return value;
+    }
+
+    if (char === "\\") {
+      index++;
+      if (index < content.length) {
+        const escaped = content[index];
+        if (escaped === "n") value += "\n";
+        else if (escaped === "t") value += "\t";
+        else value += escaped;
+      }
+    } else {
+      value += char;
+    }
+
+    index++;
+  }
+
+  return value;
+}
+
+function escapeForRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

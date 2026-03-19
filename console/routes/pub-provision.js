@@ -13,6 +13,10 @@ function registerProvisionRoutes(app, { db, serviceResolver }) {
       return res.status(404).json({ error: "Build session not found" });
     }
 
+    if (!enforceSessionBoundary(db, userSession.user_id, session, res)) {
+      return;
+    }
+
     try {
       const { provisioner } = serviceResolver.forSession(session.id);
       const result = await provisioner.provisionRepo(session.id);
@@ -33,6 +37,10 @@ function registerProvisionRoutes(app, { db, serviceResolver }) {
     const session = getOwnedBuildSession(db, req.params.id, userSession.user_id);
     if (!session) {
       return res.status(404).json({ error: "Build session not found" });
+    }
+
+    if (!enforceSessionBoundary(db, userSession.user_id, session, res)) {
+      return;
     }
 
     if (session.status === "ready") {
@@ -60,8 +68,12 @@ function registerProvisionRoutes(app, { db, serviceResolver }) {
         session.app_installation_id
       );
 
-      // Dispatch builder
-      await buildRunner.dispatchBuild(session.id);
+      // Only dispatch mock build runner for demo sessions —
+      // real sessions are handled by the pipeline via /decompose
+      if (session.is_demo) {
+        await buildRunner.dispatchBuild(session.id);
+      }
+
       res.json({ sessionId: session.id, status: "building" });
     } catch (err) {
       console.error("Build dispatch error:", err);
@@ -102,4 +114,21 @@ function isStartableStatus(status) {
   return status === "provisioning";
 }
 
-module.exports = { registerProvisionRoutes };
+function enforceSessionBoundary(db, userId, session, res) {
+  const user = db.prepare("SELECT github_id FROM users WHERE id = ?").get(userId);
+  if (!user) {
+    res.status(401).json({ error: "User not found" });
+    return false;
+  }
+  if (session.is_demo && user.github_id !== 0) {
+    res.status(403).json({ error: "Demo sessions require demo authentication" });
+    return false;
+  }
+  if (!session.is_demo && user.github_id === 0) {
+    res.status(403).json({ error: "Real sessions require GitHub authentication" });
+    return false;
+  }
+  return true;
+}
+
+module.exports = { registerProvisionRoutes, enforceSessionBoundary };

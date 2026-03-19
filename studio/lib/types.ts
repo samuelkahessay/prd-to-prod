@@ -102,6 +102,7 @@ export interface BuildSession {
   deploy_url: string | null;
   prd_final: string | null;
   app_installation_id: number | null;
+  is_demo?: number;
   created_at: string;
   updated_at: string;
 }

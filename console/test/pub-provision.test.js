@@ -144,5 +144,7 @@ test("start-build allows the owning user to continue a provisioning session", as
   });
 
   expect(provisioner.createPrdIssue).toHaveBeenCalledWith("owned-build", 101);
-  expect(buildRunner.dispatchBuild).toHaveBeenCalledWith("owned-build");
+  // buildRunner.dispatchBuild is only called for demo sessions —
+  // real sessions rely on the pipeline's /decompose flow
+  expect(buildRunner.dispatchBuild).not.toHaveBeenCalled();
 });

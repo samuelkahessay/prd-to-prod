@@ -52,8 +52,16 @@ find_marker_comment() {
   local item_number=$1
   local marker=$2
   local comments_json
+  comments_json=$(find_marker_comments "$item_number" "$marker")
+  printf '%s' "$comments_json" | jq -c 'last // {}'
+}
+
+find_marker_comments() {
+  local item_number=$1
+  local marker=$2
+  local comments_json
   comments_json=$(gh api "/repos/${REPO}/issues/${item_number}/comments?per_page=100" 2>/dev/null || echo '[]')
-  printf '%s' "$comments_json" | jq -c --arg marker "$marker" '[.[] | select(.body | contains($marker))] | last // {}'
+  printf '%s' "$comments_json" | jq -c --arg marker "$marker" '[.[] | select(.body | contains($marker))]'
 }
 
 upsert_comment() {
@@ -77,13 +85,14 @@ render_state_body() {
   local linked_issue=$3
   local head_sha=$4
   local head_branch=$5
-  local failure_run_id=$6
-  local failure_run_url=$7
-  local failure_type=$8
-  local failure_signature=$9
-  local attempt_count=${10}
-  local failure_summary=${11}
-  local failure_excerpt=${12}
+  local workflow_name=$6
+  local failure_run_id=$7
+  local failure_run_url=$8
+  local failure_type=$9
+  local failure_signature=${10}
+  local attempt_count=${11}
+  local failure_summary=${12}
+  local failure_excerpt=${13}
   printf '%s\n' \
     "${STATE_MARKER}" \
     "status=${status}" \
@@ -91,6 +100,7 @@ render_state_body() {
     "linked_issue=${linked_issue}" \
     "head_sha=${head_sha}" \
     "head_branch=${head_branch}" \
+    "workflow_name=${workflow_name}" \
     "failure_run_id=${failure_run_id}" \
     "failure_run_url=${failure_run_url}" \
     "failure_type=${failure_type}" \
@@ -105,6 +115,7 @@ render_state_body() {
     "- **Run**: ${failure_run_url}" \
     "- **Branch**: \`${head_branch}\`" \
     "- **Head SHA**: \`${head_sha}\`" \
+    "- **Workflow**: ${workflow_name}" \
     "- **Failure Type**: ${failure_type}" \
     "- **Failure Signature**: \`${failure_signature}\`" \
     "- **Failure Summary**: ${failure_summary}" \
@@ -123,11 +134,12 @@ render_incident_body() {
   local head_branch=$3
   local head_sha=$4
   local linked_issue=$5
-  local failure_type=$6
-  local failure_signature=$7
-  local failure_summary=$8
-  local failure_excerpt=$9
-  local reason=${10}
+  local workflow_name=$6
+  local failure_type=$7
+  local failure_signature=$8
+  local failure_summary=$9
+  local failure_excerpt=${10}
+  local reason=${11}
   printf '%s\n' \
     "## CI Incident Escalation" \
     "" \
@@ -135,6 +147,7 @@ render_incident_body() {
     "- **Branch**: \`${head_branch}\`" \
     "- **Commit**: \`${head_sha}\`" \
     "- **Linked Issue**: #${linked_issue}" \
+    "- **Workflow**: ${workflow_name}" \
     "- **Reason**: ${reason}" \
     "- **Failure Type**: ${failure_type}" \
     "- **Failure Signature**: \`${failure_signature}\`" \
@@ -171,6 +184,54 @@ create_or_update_incident_issue() {
   done
 
   gh issue create --repo "$REPO" --title "$title" --body "$body" "${issue_args[@]}" >/dev/null
+}
+
+sync_pr_repair_labels() {
+  local pr_number=$1
+  local comments_json comment body status
+  local has_active=false
+  local has_in_progress=false
+  local has_escalated=false
+  comments_json=$(find_marker_comments "$pr_number" "$STATE_MARKER")
+
+  while IFS= read -r comment; do
+    [ -z "$comment" ] && continue
+    body=$(printf '%s' "$comment" | jq -r '.body // empty')
+    status=$(read_marker_field "$body" status)
+    case "$status" in
+      ""|resolved|superseded)
+        ;;
+      escalated)
+        has_active=true
+        has_escalated=true
+        ;;
+      detected|dispatched|repairing)
+        has_active=true
+        has_in_progress=true
+        ;;
+      *)
+        has_active=true
+        ;;
+    esac
+  done < <(printf '%s' "$comments_json" | jq -c '.[]')
+
+  if [ "$has_active" = "true" ]; then
+    add_pr_label "$pr_number" "ci-failure"
+  else
+    remove_pr_label "$pr_number" "ci-failure"
+  fi
+
+  if [ "$has_in_progress" = "true" ]; then
+    add_pr_label "$pr_number" "repair-in-progress"
+  else
+    remove_pr_label "$pr_number" "repair-in-progress"
+  fi
+
+  if [ "$has_escalated" = "true" ]; then
+    add_pr_label "$pr_number" "repair-escalated"
+  else
+    remove_pr_label "$pr_number" "repair-escalated"
+  fi
 }
 
 to_epoch() {
@@ -216,9 +277,6 @@ while IFS= read -r PR_ROW; do
   PR_NUM=$(printf '%s' "$PR_ROW" | jq -r '.number')
   PR_DETAILS=$(gh pr view "$PR_NUM" --repo "$REPO" --json labels,headRefOid,headRefName,url)
   HAS_CI_LABEL=$(printf '%s' "$PR_DETAILS" | jq -r '[.labels[].name] | index("ci-failure") != null')
-  if [ "$HAS_CI_LABEL" != "true" ]; then
-    continue
-  fi
 
   CURRENT_HEAD_SHA=$(printf '%s' "$PR_DETAILS" | jq -r '.headRefOid')
   CURRENT_HEAD_BRANCH=$(printf '%s' "$PR_DETAILS" | jq -r '.headRefName')
@@ -226,118 +284,126 @@ while IFS= read -r PR_ROW; do
   REPAIR_AGENT_WORKFLOW=$(workflow_for_branch "$CURRENT_HEAD_BRANCH")
   REPAIR_AGENT_CMD=$(command_for_branch "$CURRENT_HEAD_BRANCH")
 
-  STATE_JSON=$(find_marker_comment "$PR_NUM" "$STATE_MARKER")
-  STATE_COMMENT_ID=$(printf '%s' "$STATE_JSON" | jq -r '.id // empty')
-  STATE_BODY=$(printf '%s' "$STATE_JSON" | jq -r '.body // empty')
-  if [ -z "$STATE_COMMENT_ID" ]; then
+  STATE_COMMENTS_JSON=$(find_marker_comments "$PR_NUM" "$STATE_MARKER")
+  if [ "$HAS_CI_LABEL" != "true" ] && [ "$(printf '%s' "$STATE_COMMENTS_JSON" | jq 'length')" -eq 0 ]; then
+    continue
+  fi
+  if [ "$(printf '%s' "$STATE_COMMENTS_JSON" | jq 'length')" -eq 0 ]; then
     echo "PR #${PR_NUM}: ci-failure label present but no incident comment found."
     continue
   fi
-
-  STATUS=$(read_marker_field "$STATE_BODY" status)
-  LINKED_ISSUE=$(read_marker_field "$STATE_BODY" linked_issue)
-  MARKER_HEAD_SHA=$(read_marker_field "$STATE_BODY" head_sha)
-  FAILURE_RUN_ID=$(read_marker_field "$STATE_BODY" failure_run_id)
-  FAILURE_RUN_URL=$(read_marker_field "$STATE_BODY" failure_run_url)
-  FAILURE_TYPE=$(read_marker_field "$STATE_BODY" failure_type)
-  FAILURE_SIGNATURE=$(read_marker_field "$STATE_BODY" failure_signature)
-  ATTEMPT_COUNT=$(read_marker_field "$STATE_BODY" attempt_count)
-  UPDATED_AT=$(read_marker_field "$STATE_BODY" updated_at)
-  ATTEMPT_COUNT=${ATTEMPT_COUNT:-1}
-
-  if [ "$STATUS" = "resolved" ] || [ "$STATUS" = "superseded" ] || [ "$STATUS" = "escalated" ]; then
-    echo "PR #${PR_NUM}: incident status is ${STATUS}. Skipping retry logic."
-    continue
+  if [ "$HAS_CI_LABEL" != "true" ]; then
+    sync_pr_repair_labels "$PR_NUM"
   fi
 
-  if [ "$MARKER_HEAD_SHA" != "$CURRENT_HEAD_SHA" ]; then
-    echo "PR #${PR_NUM}: incident tracks ${MARKER_HEAD_SHA}, current head is ${CURRENT_HEAD_SHA}. Skipping stale incident."
-    continue
-  fi
+  while IFS= read -r STATE_ROW; do
+    [ -z "$STATE_ROW" ] && continue
+    STATE_COMMENT_ID=$(printf '%s' "$STATE_ROW" | jq -r '.id // empty')
+    STATE_BODY=$(printf '%s' "$STATE_ROW" | jq -r '.body // empty')
+    STATUS=$(read_marker_field "$STATE_BODY" status)
+    LINKED_ISSUE=$(read_marker_field "$STATE_BODY" linked_issue)
+    MARKER_HEAD_SHA=$(read_marker_field "$STATE_BODY" head_sha)
+    FAILURE_WORKFLOW_NAME=$(read_marker_field "$STATE_BODY" workflow_name)
+    FAILURE_RUN_ID=$(read_marker_field "$STATE_BODY" failure_run_id)
+    FAILURE_RUN_URL=$(read_marker_field "$STATE_BODY" failure_run_url)
+    FAILURE_TYPE=$(read_marker_field "$STATE_BODY" failure_type)
+    FAILURE_SIGNATURE=$(read_marker_field "$STATE_BODY" failure_signature)
+    ATTEMPT_COUNT=$(read_marker_field "$STATE_BODY" attempt_count)
+    UPDATED_AT=$(read_marker_field "$STATE_BODY" updated_at)
+    ATTEMPT_COUNT=${ATTEMPT_COUNT:-1}
+    FAILURE_WORKFLOW_NAME=${FAILURE_WORKFLOW_NAME:-Unknown workflow}
 
-  REPAIR_ACTIVE=$(workflow_active_runs "$REPAIR_AGENT_WORKFLOW")
-  if [ "$REPAIR_ACTIVE" -gt 0 ]; then
-    echo "PR #${PR_NUM}: ${REPAIR_AGENT_WORKFLOW} already active (${REPAIR_ACTIVE} run(s)). Skipping retry/escalation."
-    continue
-  fi
+    if [ "$STATUS" = "resolved" ] || [ "$STATUS" = "superseded" ] || [ "$STATUS" = "escalated" ]; then
+      echo "PR #${PR_NUM}: incident for ${FAILURE_WORKFLOW_NAME} is ${STATUS}. Skipping retry logic."
+      continue
+    fi
 
-  UPDATED_EPOCH=$(to_epoch "$UPDATED_AT")
-  AGE=$((NOW - UPDATED_EPOCH))
-  if [ "$AGE" -lt "$STALE_THRESHOLD" ]; then
-    echo "PR #${PR_NUM}: incident updated ${AGE}s ago. Skipping retry/escalation."
-    continue
-  fi
+    if [ "$MARKER_HEAD_SHA" != "$CURRENT_HEAD_SHA" ]; then
+      echo "PR #${PR_NUM}: incident for ${FAILURE_WORKFLOW_NAME} tracks ${MARKER_HEAD_SHA}, current head is ${CURRENT_HEAD_SHA}. Skipping stale incident."
+      continue
+    fi
 
-  FAILURE_RAW_LOGS=$(gh run view "$FAILURE_RUN_ID" --repo "$REPO" --log-failed 2>&1 || true)
-  if [ -z "$FAILURE_RAW_LOGS" ]; then
-    FAILURE_RAW_LOGS="$FAILURE_SIGNATURE"
-  fi
-  FAILURE_JSON=$(printf '%s' "$FAILURE_RAW_LOGS" | "$SCRIPT_DIR/extract-failure-context.sh")
-  FAILURE_SUMMARY=$(printf '%s' "$FAILURE_JSON" | jq -r '.summary')
-  FAILURE_EXCERPT=$(printf '%s' "$FAILURE_JSON" | jq -r '.excerpt')
+    REPAIR_ACTIVE=$(workflow_active_runs "$REPAIR_AGENT_WORKFLOW")
+    if [ "$REPAIR_ACTIVE" -gt 0 ]; then
+      echo "PR #${PR_NUM}: ${REPAIR_AGENT_WORKFLOW} already active (${REPAIR_ACTIVE} run(s)). Skipping retry/escalation."
+      continue
+    fi
 
-  if [ "$ATTEMPT_COUNT" -ge "$MAX_REPAIR_ATTEMPTS" ] || [ "$AGE" -ge "$ESCALATE_THRESHOLD" ]; then
-    echo "PR #${PR_NUM}: escalating unresolved CI incident."
-    ESCALATED_STATE=$(render_state_body "$PR_NUM" escalated "$LINKED_ISSUE" "$CURRENT_HEAD_SHA" "$CURRENT_HEAD_BRANCH" "$FAILURE_RUN_ID" "$FAILURE_RUN_URL" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$ATTEMPT_COUNT" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
-    upsert_comment "$PR_NUM" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
-    remove_pr_label "$PR_NUM" "repair-in-progress"
-    add_pr_label "$PR_NUM" "repair-escalated"
-    TITLE="[CI Incident] Escalation: PR #${PR_NUM} repeated .NET CI failure"
-    BODY=$(render_incident_body "$PR_NUM" "$PR_URL" "$CURRENT_HEAD_BRANCH" "$CURRENT_HEAD_SHA" "$LINKED_ISSUE" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT" "The automated repair loop exhausted its retry budget or remained unresolved for more than two hours.")
-    create_or_update_incident_issue "$TITLE" "$BODY"
+    UPDATED_EPOCH=$(to_epoch "$UPDATED_AT")
+    AGE=$((NOW - UPDATED_EPOCH))
+    if [ "$AGE" -lt "$STALE_THRESHOLD" ]; then
+      echo "PR #${PR_NUM}: incident for ${FAILURE_WORKFLOW_NAME} updated ${AGE}s ago. Skipping retry/escalation."
+      continue
+    fi
+
+    FAILURE_RAW_LOGS=$(gh run view "$FAILURE_RUN_ID" --repo "$REPO" --log-failed 2>&1 || true)
+    if [ -z "$FAILURE_RAW_LOGS" ]; then
+      FAILURE_RAW_LOGS="$FAILURE_SIGNATURE"
+    fi
+    FAILURE_JSON=$(printf '%s' "$FAILURE_RAW_LOGS" | "$SCRIPT_DIR/extract-failure-context.sh")
+    FAILURE_SUMMARY=$(printf '%s' "$FAILURE_JSON" | jq -r '.summary')
+    FAILURE_EXCERPT=$(printf '%s' "$FAILURE_JSON" | jq -r '.excerpt')
+
+    if [ "$ATTEMPT_COUNT" -ge "$MAX_REPAIR_ATTEMPTS" ] || [ "$AGE" -ge "$ESCALATE_THRESHOLD" ]; then
+      echo "PR #${PR_NUM}: escalating unresolved ${FAILURE_WORKFLOW_NAME} incident."
+      ESCALATED_STATE=$(render_state_body "$PR_NUM" escalated "$LINKED_ISSUE" "$CURRENT_HEAD_SHA" "$CURRENT_HEAD_BRANCH" "$FAILURE_WORKFLOW_NAME" "$FAILURE_RUN_ID" "$FAILURE_RUN_URL" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$ATTEMPT_COUNT" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
+      upsert_comment "$PR_NUM" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
+      sync_pr_repair_labels "$PR_NUM"
+      TITLE="[CI Incident] Escalation: PR #${PR_NUM} ${FAILURE_WORKFLOW_NAME} repeated CI failure"
+      BODY=$(render_incident_body "$PR_NUM" "$PR_URL" "$CURRENT_HEAD_BRANCH" "$CURRENT_HEAD_SHA" "$LINKED_ISSUE" "$FAILURE_WORKFLOW_NAME" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT" "The automated repair loop exhausted its retry budget or remained unresolved for more than two hours.")
+      create_or_update_incident_issue "$TITLE" "$BODY"
+      ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
+      break 2
+    fi
+
+    if [ -z "${GH_AW_GITHUB_TOKEN:-}" ]; then
+      echo "PR #${PR_NUM}: GH_AW_GITHUB_TOKEN unavailable. Escalating ${FAILURE_WORKFLOW_NAME}."
+      ESCALATED_STATE=$(render_state_body "$PR_NUM" escalated "$LINKED_ISSUE" "$CURRENT_HEAD_SHA" "$CURRENT_HEAD_BRANCH" "$FAILURE_WORKFLOW_NAME" "$FAILURE_RUN_ID" "$FAILURE_RUN_URL" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$ATTEMPT_COUNT" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
+      upsert_comment "$PR_NUM" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
+      sync_pr_repair_labels "$PR_NUM"
+      TITLE="[CI Incident] Escalation: PR #${PR_NUM} ${FAILURE_WORKFLOW_NAME} repeated CI failure"
+      BODY=$(render_incident_body "$PR_NUM" "$PR_URL" "$CURRENT_HEAD_BRANCH" "$CURRENT_HEAD_SHA" "$LINKED_ISSUE" "$FAILURE_WORKFLOW_NAME" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT" "GH_AW_GITHUB_TOKEN is unavailable, so the watchdog cannot repost the repair command.")
+      create_or_update_incident_issue "$TITLE" "$BODY"
+      ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
+      break 2
+    fi
+
+    NEXT_ATTEMPT=$((ATTEMPT_COUNT + 1))
+
+    COMMAND_BODY=$("$SCRIPT_DIR/render-ci-repair-command.sh" \
+      --agent-command "$REPAIR_AGENT_CMD" \
+      --pr-number "$PR_NUM" \
+      --linked-issue "$LINKED_ISSUE" \
+      --head-sha "$CURRENT_HEAD_SHA" \
+      --head-branch "$CURRENT_HEAD_BRANCH" \
+      --workflow-name "$FAILURE_WORKFLOW_NAME" \
+      --failure-run-id "$FAILURE_RUN_ID" \
+      --failure-run-url "$FAILURE_RUN_URL" \
+      --failure-type "${FAILURE_TYPE:-unknown}" \
+      --failure-signature "${FAILURE_SIGNATURE:-unknown-failure}" \
+      --attempt-count "$NEXT_ATTEMPT" \
+      --failure-summary "$FAILURE_SUMMARY" \
+      --failure-excerpt "$FAILURE_EXCERPT")
+
+    if ! GH_TOKEN="$GH_AW_GITHUB_TOKEN" gh issue comment "$LINKED_ISSUE" --repo "$REPO" --body "$COMMAND_BODY" >/dev/null; then
+      echo "PR #${PR_NUM}: retry dispatch failed for ${FAILURE_WORKFLOW_NAME}. Escalating."
+      ESCALATED_STATE=$(render_state_body "$PR_NUM" escalated "$LINKED_ISSUE" "$CURRENT_HEAD_SHA" "$CURRENT_HEAD_BRANCH" "$FAILURE_WORKFLOW_NAME" "$FAILURE_RUN_ID" "$FAILURE_RUN_URL" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$NEXT_ATTEMPT" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
+      upsert_comment "$PR_NUM" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
+      sync_pr_repair_labels "$PR_NUM"
+      TITLE="[CI Incident] Escalation: PR #${PR_NUM} ${FAILURE_WORKFLOW_NAME} repeated CI failure"
+      BODY=$(render_incident_body "$PR_NUM" "$PR_URL" "$CURRENT_HEAD_BRANCH" "$CURRENT_HEAD_SHA" "$LINKED_ISSUE" "$FAILURE_WORKFLOW_NAME" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT" "The watchdog could not repost the repair command after the incident went stale.")
+      create_or_update_incident_issue "$TITLE" "$BODY"
+      ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
+      break 2
+    fi
+
+    RETRIED_STATE=$(render_state_body "$PR_NUM" dispatched "$LINKED_ISSUE" "$CURRENT_HEAD_SHA" "$CURRENT_HEAD_BRANCH" "$FAILURE_WORKFLOW_NAME" "$FAILURE_RUN_ID" "$FAILURE_RUN_URL" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$NEXT_ATTEMPT" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
+    upsert_comment "$PR_NUM" "$STATE_COMMENT_ID" "$RETRIED_STATE"
+    sync_pr_repair_labels "$PR_NUM"
+    echo "PR #${PR_NUM}: reposted ${FAILURE_WORKFLOW_NAME} CI repair command (attempt ${NEXT_ATTEMPT})."
     ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
-    break
-  fi
-
-  if [ -z "${GH_AW_GITHUB_TOKEN:-}" ]; then
-    echo "PR #${PR_NUM}: GH_AW_GITHUB_TOKEN unavailable. Escalating."
-    ESCALATED_STATE=$(render_state_body "$PR_NUM" escalated "$LINKED_ISSUE" "$CURRENT_HEAD_SHA" "$CURRENT_HEAD_BRANCH" "$FAILURE_RUN_ID" "$FAILURE_RUN_URL" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$ATTEMPT_COUNT" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
-    upsert_comment "$PR_NUM" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
-    remove_pr_label "$PR_NUM" "repair-in-progress"
-    add_pr_label "$PR_NUM" "repair-escalated"
-    TITLE="[CI Incident] Escalation: PR #${PR_NUM} repeated .NET CI failure"
-    BODY=$(render_incident_body "$PR_NUM" "$PR_URL" "$CURRENT_HEAD_BRANCH" "$CURRENT_HEAD_SHA" "$LINKED_ISSUE" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT" "GH_AW_GITHUB_TOKEN is unavailable, so the watchdog cannot repost the repair command.")
-    create_or_update_incident_issue "$TITLE" "$BODY"
-    ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
-    break
-  fi
-
-  NEXT_ATTEMPT=$((ATTEMPT_COUNT + 1))
-
-  COMMAND_BODY=$("$SCRIPT_DIR/render-ci-repair-command.sh" \
-    --agent-command "$REPAIR_AGENT_CMD" \
-    --pr-number "$PR_NUM" \
-    --linked-issue "$LINKED_ISSUE" \
-    --head-sha "$CURRENT_HEAD_SHA" \
-    --head-branch "$CURRENT_HEAD_BRANCH" \
-    --failure-run-id "$FAILURE_RUN_ID" \
-    --failure-run-url "$FAILURE_RUN_URL" \
-    --failure-type "${FAILURE_TYPE:-unknown}" \
-    --failure-signature "${FAILURE_SIGNATURE:-unknown-failure}" \
-    --attempt-count "$NEXT_ATTEMPT" \
-    --failure-summary "$FAILURE_SUMMARY" \
-    --failure-excerpt "$FAILURE_EXCERPT")
-
-  if ! GH_TOKEN="$GH_AW_GITHUB_TOKEN" gh issue comment "$LINKED_ISSUE" --repo "$REPO" --body "$COMMAND_BODY" >/dev/null; then
-    echo "PR #${PR_NUM}: retry dispatch failed. Escalating."
-    ESCALATED_STATE=$(render_state_body "$PR_NUM" escalated "$LINKED_ISSUE" "$CURRENT_HEAD_SHA" "$CURRENT_HEAD_BRANCH" "$FAILURE_RUN_ID" "$FAILURE_RUN_URL" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$NEXT_ATTEMPT" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
-    upsert_comment "$PR_NUM" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
-    remove_pr_label "$PR_NUM" "repair-in-progress"
-    add_pr_label "$PR_NUM" "repair-escalated"
-    TITLE="[CI Incident] Escalation: PR #${PR_NUM} repeated .NET CI failure"
-    BODY=$(render_incident_body "$PR_NUM" "$PR_URL" "$CURRENT_HEAD_BRANCH" "$CURRENT_HEAD_SHA" "$LINKED_ISSUE" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT" "The watchdog could not repost the repair command after the incident went stale.")
-    create_or_update_incident_issue "$TITLE" "$BODY"
-    ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
-    break
-  fi
-
-  RETRIED_STATE=$(render_state_body "$PR_NUM" dispatched "$LINKED_ISSUE" "$CURRENT_HEAD_SHA" "$CURRENT_HEAD_BRANCH" "$FAILURE_RUN_ID" "$FAILURE_RUN_URL" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$NEXT_ATTEMPT" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
-  upsert_comment "$PR_NUM" "$STATE_COMMENT_ID" "$RETRIED_STATE"
-  add_pr_label "$PR_NUM" "repair-in-progress"
-  remove_pr_label "$PR_NUM" "repair-escalated"
-  echo "PR #${PR_NUM}: reposted CI repair command (attempt ${NEXT_ATTEMPT})."
-  ACTIONS_TAKEN=$((ACTIONS_TAKEN + 1))
-  break
+    break 2
+  done < <(printf '%s' "$STATE_COMMENTS_JSON" | jq -c '.[]')
 done < <(printf '%s' "$PIPELINE_PRS" | jq -c '.[]')
 
 echo ""
@@ -350,14 +416,18 @@ while IFS= read -r PR_ROW; do
   PR_UPDATED=$(printf '%s' "$PR_ROW" | jq -r '.updatedAt')
   PR_DETAILS=$(gh pr view "$PR_NUM" --repo "$REPO" --json labels)
   HAS_CI_LABEL=$(printf '%s' "$PR_DETAILS" | jq -r '[.labels[].name] | index("ci-failure") != null')
-  INCIDENT_COMMENT=$(find_marker_comment "$PR_NUM" "$STATE_MARKER")
-  INCIDENT_COMMENT_ID=$(printf '%s' "$INCIDENT_COMMENT" | jq -r '.id // empty')
-  INCIDENT_STATUS=""
-  if [ -n "$INCIDENT_COMMENT_ID" ]; then
-    INCIDENT_STATUS=$(read_marker_field "$(printf '%s' "$INCIDENT_COMMENT" | jq -r '.body // empty')" status)
-  fi
+  INCIDENT_COMMENTS=$(find_marker_comments "$PR_NUM" "$STATE_MARKER")
+  HAS_ACTIVE_INCIDENT=false
+  while IFS= read -r INCIDENT_ROW; do
+    [ -z "$INCIDENT_ROW" ] && continue
+    INCIDENT_STATUS=$(read_marker_field "$(printf '%s' "$INCIDENT_ROW" | jq -r '.body // empty')" status)
+    if [ "$INCIDENT_STATUS" != "resolved" ] && [ "$INCIDENT_STATUS" != "superseded" ]; then
+      HAS_ACTIVE_INCIDENT=true
+      break
+    fi
+  done < <(printf '%s' "$INCIDENT_COMMENTS" | jq -c '.[]')
 
-  if [ "$HAS_CI_LABEL" = "true" ] || { [ -n "$INCIDENT_COMMENT_ID" ] && [ "$INCIDENT_STATUS" != "resolved" ] && [ "$INCIDENT_STATUS" != "superseded" ]; }; then
+  if [ "$HAS_CI_LABEL" = "true" ] || [ "$HAS_ACTIVE_INCIDENT" = "true" ]; then
     echo "PR #${PR_NUM}: active CI incident detected. Skipping stalled-PR handling."
     continue
   fi

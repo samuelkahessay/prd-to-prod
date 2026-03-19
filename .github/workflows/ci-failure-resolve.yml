@@ -8,7 +8,7 @@ name: "CI Failure Resolver"
 
 on:
   workflow_run:
-    workflows: ["Node CI", "Deploy Router"]
+    workflows: ["Node CI", "Deploy Router", "Pipeline Scripts CI"]
     types: [completed]
   pull_request:
     types: [closed]
@@ -39,6 +39,7 @@ jobs:
           SUCCESS_RUN_ID: ${{ github.event.workflow_run.id }}
           SUCCESS_RUN_URL: ${{ github.event.workflow_run.html_url }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
           PULL_REQUESTS_JSON: ${{ toJson(github.event.workflow_run.pull_requests) }}
         run: |
           set -euo pipefail
@@ -65,12 +66,76 @@ jobs:
             printf '%s\n' "$body" | sed -n "s/^${field}=//p" | head -1
           }
 
+          find_marker_comments() {
+            local item_number=$1
+            local marker=$2
+            gh api "/repos/${REPO}/issues/${item_number}/comments?per_page=100" 2>/dev/null \
+              | jq -c --arg marker "$marker" '[.[] | select(.body | contains($marker))]' || echo '[]'
+          }
+
           find_marker_comment() {
             local item_number=$1
             local marker=$2
+            local workflow_name=$3
             local comments_json
-            comments_json=$(gh api "/repos/${REPO}/issues/${item_number}/comments?per_page=100" 2>/dev/null || echo '[]')
-            printf '%s' "$comments_json" | jq -c --arg marker "$marker" '[.[] | select(.body | contains($marker))] | last // {}'
+            comments_json=$(find_marker_comments "$item_number" "$marker")
+            printf '%s' "$comments_json" | jq -c --arg workflow_name "$workflow_name" \
+              '[.[] | select(.body | contains("workflow_name=" + $workflow_name))] | last // {}'
+          }
+
+          find_legacy_marker_comment() {
+            local item_number=$1
+            local marker=$2
+            local comments_json
+            comments_json=$(find_marker_comments "$item_number" "$marker")
+            printf '%s' "$comments_json" | jq -c '[.[] | select((.body | contains("workflow_name=")) | not)] | last // {}'
+          }
+
+          sync_pr_repair_labels() {
+            local comments_json comment body status
+            local has_active=false
+            local has_in_progress=false
+            local has_escalated=false
+            comments_json=$(find_marker_comments "$PR_NUMBER" "$STATE_MARKER")
+
+            while IFS= read -r comment; do
+              [ -z "$comment" ] && continue
+              body=$(printf '%s' "$comment" | jq -r '.body // empty')
+              status=$(read_marker_field "$body" status)
+              case "$status" in
+                ""|resolved|superseded)
+                  ;;
+                escalated)
+                  has_active=true
+                  has_escalated=true
+                  ;;
+                detected|dispatched|repairing)
+                  has_active=true
+                  has_in_progress=true
+                  ;;
+                *)
+                  has_active=true
+                  ;;
+              esac
+            done < <(printf '%s' "$comments_json" | jq -c '.[]')
+
+            if [ "$has_active" = "true" ]; then
+              gh pr edit "$PR_NUMBER" --repo "$REPO" --add-label "ci-failure" >/dev/null 2>&1 || true
+            else
+              remove_pr_label "ci-failure"
+            fi
+
+            if [ "$has_in_progress" = "true" ]; then
+              gh pr edit "$PR_NUMBER" --repo "$REPO" --add-label "repair-in-progress" >/dev/null 2>&1 || true
+            else
+              remove_pr_label "repair-in-progress"
+            fi
+
+            if [ "$has_escalated" = "true" ]; then
+              gh pr edit "$PR_NUMBER" --repo "$REPO" --add-label "repair-escalated" >/dev/null 2>&1 || true
+            else
+              remove_pr_label "repair-escalated"
+            fi
           }
 
           upsert_comment() {
@@ -103,6 +168,7 @@ jobs:
               "linked_issue=${linked_issue}" \
               "head_sha=${HEAD_SHA}" \
               "head_branch=${HEAD_BRANCH}" \
+              "workflow_name=${WORKFLOW_NAME}" \
               "failure_run_id=${FAILURE_RUN_ID_MARKER}" \
               "failure_run_url=${FAILURE_RUN_URL_MARKER}" \
               "failure_type=${failure_type}" \
@@ -117,6 +183,7 @@ jobs:
               "- **Run**: ${FAILURE_RUN_URL_MARKER}" \
               "- **Branch**: \`${HEAD_BRANCH}\`" \
               "- **Head SHA**: \`${HEAD_SHA}\`" \
+              "- **Workflow**: ${WORKFLOW_NAME}" \
               "- **Failure Type**: ${failure_type}" \
               "- **Failure Signature**: \`${failure_signature}\`" \
               "- **Failure Summary**: ${failure_summary}" \
@@ -151,15 +218,21 @@ jobs:
             exit 0
           fi
 
-          STATE_JSON=$(find_marker_comment "$PR_NUMBER" "$STATE_MARKER")
+          STATE_JSON=$(find_marker_comment "$PR_NUMBER" "$STATE_MARKER" "$WORKFLOW_NAME")
           STATE_COMMENT_ID=$(printf '%s' "$STATE_JSON" | jq -r '.id // empty')
           STATE_BODY=$(printf '%s' "$STATE_JSON" | jq -r '.body // empty')
           if [ -z "$STATE_COMMENT_ID" ]; then
-            echo "No CI repair incident comment found on PR #${PR_NUMBER}."
-            exit 0
+            STATE_JSON=$(find_legacy_marker_comment "$PR_NUMBER" "$STATE_MARKER")
+            STATE_COMMENT_ID=$(printf '%s' "$STATE_JSON" | jq -r '.id // empty')
+            STATE_BODY=$(printf '%s' "$STATE_JSON" | jq -r '.body // empty')
+            if [ -z "$STATE_COMMENT_ID" ]; then
+              echo "No CI repair incident comment found on PR #${PR_NUMBER} for ${WORKFLOW_NAME}."
+              exit 0
+            fi
           fi
 
           EXISTING_STATUS=$(read_marker_field "$STATE_BODY" status)
+          MARKER_WORKFLOW_NAME=$(read_marker_field "$STATE_BODY" workflow_name)
           FAILURE_RUN_ID_MARKER=$(read_marker_field "$STATE_BODY" failure_run_id)
           FAILURE_RUN_URL_MARKER=$(read_marker_field "$STATE_BODY" failure_run_url)
           FAILURE_TYPE=$(read_marker_field "$STATE_BODY" failure_type)
@@ -178,6 +251,11 @@ jobs:
             exit 0
           fi
 
+          if [ -n "$MARKER_WORKFLOW_NAME" ] && [ "$MARKER_WORKFLOW_NAME" != "$WORKFLOW_NAME" ]; then
+            echo "Incident is tracking workflow ${MARKER_WORKFLOW_NAME}, not successful workflow ${WORKFLOW_NAME}."
+            exit 0
+          fi
+
           FAILURE_RAW_LOGS=$(gh run view "$FAILURE_RUN_ID_MARKER" --repo "$REPO" --log-failed 2>&1 || true)
           if [ -z "$FAILURE_RAW_LOGS" ]; then
             FAILURE_RAW_LOGS="$FAILURE_SIGNATURE"
@@ -188,14 +266,11 @@ jobs:
 
           RESOLVED_STATE=$(render_state_body resolved "$LINKED_ISSUE" "${ATTEMPT_COUNT:-1}" "${FAILURE_TYPE:-unknown}" "${FAILURE_SIGNATURE:-unknown-failure}" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
           upsert_comment "$PR_NUMBER" "$STATE_COMMENT_ID" "$RESOLVED_STATE"
-
-          remove_pr_label "ci-failure"
-          remove_pr_label "repair-in-progress"
-          remove_pr_label "repair-escalated"
+          sync_pr_repair_labels
 
           if [ -n "$LINKED_ISSUE" ] && { [ "$EXISTING_STATUS" = "dispatched" ] || [ "$EXISTING_STATUS" = "repairing" ]; }; then
             gh issue comment "$LINKED_ISSUE" --repo "$REPO" \
-              --body "CI repair incident resolved for PR #${PR_NUMBER}. CI passed on ${SUCCESS_RUN_URL} for head \`${HEAD_SHA}\`." >/dev/null || \
+              --body "CI repair incident resolved for PR #${PR_NUMBER}. ${WORKFLOW_NAME} passed on ${SUCCESS_RUN_URL} for head \`${HEAD_SHA}\`." >/dev/null || \
               echo "::warning::Could not post resolution comment on issue #${LINKED_ISSUE}"
           fi
 
@@ -239,6 +314,7 @@ jobs:
           REPO: ${{ github.repository }}
           SUCCESS_RUN_URL: ${{ github.event.workflow_run.html_url }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
           PULL_REQUESTS_JSON: ${{ toJson(github.event.workflow_run.pull_requests) }}
         run: |
           set -euo pipefail
@@ -259,7 +335,13 @@ jobs:
           fi
 
           ISSUES=$(gh issue list --repo "$REPO" --state open --label ci-failure --limit 200 --json number,title \
-            | jq -r --arg pr "$PR_NUMBER" '.[] | select(.title | test("^\\[CI Incident\\](?: Escalation:)? PR #" + $pr + "\\b")) | .number')
+            | jq -r --arg pr "$PR_NUMBER" --arg workflow "$WORKFLOW_NAME" '
+              .[]
+              | select(
+                  (.title | startswith("[CI Incident] PR #" + $pr + " " + $workflow + " CI Failure")) or
+                  (.title | startswith("[CI Incident] Escalation: PR #" + $pr + " " + $workflow + " "))
+                )
+              | .number')
 
           if [ -z "$ISSUES" ]; then
             echo "No open PR-scoped CI incidents found for PR #${PR_NUMBER}."
@@ -269,7 +351,7 @@ jobs:
           for ISSUE_NUMBER in $ISSUES; do
             echo "Closing PR-scoped CI incident #${ISSUE_NUMBER}..."
             gh issue close "$ISSUE_NUMBER" --repo "$REPO" \
-              --comment "CI recovered for PR #${PR_NUMBER} on ${SUCCESS_RUN_URL}. Closing PR-scoped incident as resolved." || \
+              --comment "${WORKFLOW_NAME} recovered for PR #${PR_NUMBER} on ${SUCCESS_RUN_URL}. Closing PR-scoped incident as resolved." || \
               echo "::warning::Failed to close PR-scoped CI incident #${ISSUE_NUMBER}"
           done
 

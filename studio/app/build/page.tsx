@@ -30,6 +30,7 @@ export default function BuildPage() {
   const [hydratingSession, setHydratingSession] = useState(false);
   const [resumeAction, setResumeAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [demo, setDemo] = useState(false);
   const autoResumeHandledRef = useRef(false);
 
   // Check auth status on mount
@@ -63,6 +64,7 @@ export default function BuildPage() {
       .getSession(persistedSessionId)
       .then(({ session, messages: storedMessages }) => {
         setSessionId(session.id);
+        setDemo(!!session.is_demo);
         setMessages(storedMessages.map(toChatMessage).filter(isChatMessage));
         setPrdReady(hasReadyPrd(session, storedMessages));
       })
@@ -88,6 +90,7 @@ export default function BuildPage() {
     // Create demo session (startSession isn't available yet, so call API directly)
     buildApi.createSession(true).then(({ sessionId: id }) => {
       setSessionId(id);
+      setDemo(true);
       // Re-fetch auth since demo session sets a cookie
       buildApi.getMe().then(setUser).catch(() => setUser(null));
       const nextUrl = new URL(window.location.href);
@@ -241,6 +244,7 @@ export default function BuildPage() {
           Describe what you want to build. We&apos;ll refine it together, then
           our agents will build it for you.
         </p>
+        {demo && <span className={styles.demoPill}>Demo</span>}
       </header>
 
       <ChatInterface

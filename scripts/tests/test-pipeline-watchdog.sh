@@ -11,6 +11,10 @@ grep -F "run: bash scripts/pipeline-watchdog.sh" "$WORKFLOW" >/dev/null
 grep -F "workflow_active_runs()" "$SCRIPT" >/dev/null
 grep -F "workflow_for_branch()" "$SCRIPT" >/dev/null
 grep -F "command_for_branch()" "$SCRIPT" >/dev/null
+grep -F "find_marker_comments()" "$SCRIPT" >/dev/null
+grep -F "sync_pr_repair_labels()" "$SCRIPT" >/dev/null
+grep -F 'workflow_name=${workflow_name}' "$SCRIPT" >/dev/null
+grep -F -- '--workflow-name "$FAILURE_WORKFLOW_NAME"' "$SCRIPT" >/dev/null
 
 if grep -F "Skipping watchdog actions." "$SCRIPT" >/dev/null; then
   echo "FAIL: watchdog should not short-circuit all work when any agent is active" >&2

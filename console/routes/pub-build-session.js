@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const { getActiveUserSession } = require("../lib/auth-store");
+const { enforceSessionBoundary } = require("./pub-provision");
 
 function resolveUserId(db, req) {
   const sessionId = req.cookies?.build_session;
@@ -21,7 +22,8 @@ function registerBuildSessionRoutes(app, { db, buildSessionStore, serviceResolve
       const authSessionId = createMockSession(db, userId);
 
       // Create a mock OAuth grant so provisioner can consume it
-      if (!process.env.ENCRYPTION_KEY) {
+      const DEMO_MODE = process.env.DEMO_MODE === "true";
+      if (!process.env.ENCRYPTION_KEY && DEMO_MODE) {
         process.env.ENCRYPTION_KEY = crypto.randomBytes(32).toString("hex");
       }
 
@@ -35,6 +37,7 @@ function registerBuildSessionRoutes(app, { db, buildSessionStore, serviceResolve
 
       res.cookie("build_session", authSessionId, {
         httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 24 * 60 * 60 * 1000,
       });
@@ -146,6 +149,10 @@ function registerBuildSessionRoutes(app, { db, buildSessionStore, serviceResolve
     }
     if (session.status !== "refining") {
       return res.status(400).json({ error: "Session is not in refining state" });
+    }
+
+    if (!enforceSessionBoundary(db, userId, session, res)) {
+      return;
     }
 
     // Find the last assistant message with a ready PRD

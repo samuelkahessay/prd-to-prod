@@ -16,9 +16,7 @@ function createMockLLMClient() {
     if (count <= 1) {
       response = MOCK_RESPONSES.first;
     } else {
-      response = MOCK_RESPONSES.ready(
-        userMessages[0]?.content || "My project"
-      );
+      response = MOCK_RESPONSES.ready();
     }
 
     const content = JSON.stringify(response);
@@ -38,9 +36,7 @@ function createMockLLMClient() {
     if (userMessages.length <= 1) {
       return JSON.stringify(MOCK_RESPONSES.first);
     }
-    return JSON.stringify(
-      MOCK_RESPONSES.ready(userMessages[0]?.content || "My project")
-    );
+    return JSON.stringify(MOCK_RESPONSES.ready());
   }
 
   function parseResponse(content) {
@@ -60,33 +56,34 @@ const MOCK_RESPONSES = {
   first: {
     status: "needs_input",
     message:
-      "That sounds like an interesting project! I have a couple of questions to make sure we build the right thing.",
+      "That's a great starting point. Before I write the PRD — are you thinking of this as a tool for your own team, or something you'd ship to external users? That'll shape the auth model and how much polish the first version needs.",
     question:
-      "Who are the primary users of this app, and what's the single most important thing they need to accomplish?",
+      "Is this for internal team use or external users?",
     prd: null,
   },
 
-  ready: (userInput) => ({
+  ready: () => ({
     status: "ready",
     message:
       "Great, I have enough to put together a solid PRD. Here's what I've synthesized from our conversation.",
     question: null,
     prd: {
-      title: deriveMockTitle(userInput),
+      title: "Team Standup Dashboard",
       problem:
-        "Users currently lack a streamlined way to accomplish their core workflow, leading to fragmented tools and wasted time.",
+        "Engineering teams waste 15-30 minutes daily in synchronous standups. Remote and distributed teams suffer most — timezone gaps mean someone is always presenting to a screen. There's no lightweight async alternative that captures blockers, progress, and plans without requiring yet another Slack thread.",
       users:
-        "Small teams and individual contributors who need a focused, efficient tool for their daily work.",
+        "Engineering teams of 5–20 people, especially distributed teams spanning 2+ timezones. Team leads who need visibility into blockers without scheduling calls.",
       features: [
-        "Dashboard with key metrics and recent activity",
-        "Create, edit, and organize items with drag-and-drop",
-        "Real-time collaboration with presence indicators",
-        "Search and filter across all content",
-        "Mobile-responsive design for on-the-go access",
+        "Async daily status updates with structured fields (yesterday, today, blockers)",
+        "Blockers board with @-mention escalation and auto-nudge after 24h",
+        "Weekly digest email summarizing team velocity and recurring blockers",
+        "Slack integration for reminders and blocker notifications",
+        "Dashboard view showing team status at a glance with presence indicators",
       ],
       criteria: [
-        "User can sign up and see a populated dashboard within 30 seconds",
-        "CRUD operations complete in under 200ms",
+        "Team member can submit a status update in under 60 seconds",
+        "Blockers surface to team lead within 5 minutes of submission",
+        "Weekly digest accurately reflects the past 7 days of activity",
         "Works on mobile viewports (375px+) without horizontal scroll",
         "All interactive elements are keyboard-accessible",
       ],
@@ -419,13 +416,6 @@ function registerMockAuthRoutes(app, { db }) {
   app.get("/pub/auth/github/callback", (req, res) => {
     res.redirect(`${frontendUrl}/build`);
   });
-}
-
-function deriveMockTitle(input) {
-  const firstLine = (input || "").split("\n")[0].trim();
-  if (firstLine.length > 50) return firstLine.slice(0, 50);
-  if (firstLine.length > 3) return firstLine;
-  return "My Project";
 }
 
 function sleep(ms) {
