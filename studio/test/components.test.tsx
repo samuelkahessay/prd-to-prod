@@ -22,6 +22,7 @@ describe("Hero", () => {
     expect(screen.getByText(/Get a deployed app/)).toBeInTheDocument();
     expect(screen.getByText(/\$1\./)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Send your PRD" })).toHaveAttribute("href", MAILTO);
+    expect(screen.getByRole("link", { name: "Watch it build" })).toHaveAttribute("href", "/build?demo=true");
   });
 });
 

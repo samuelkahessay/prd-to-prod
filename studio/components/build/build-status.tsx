@@ -419,24 +419,34 @@ function renderActions({
     );
   }
 
-  if (session.status === "complete" && session.deploy_url) {
+  if (session.status === "complete") {
     if (isDemo) {
       return (
-        <span className={styles.demoAction}>
-          Demo — not a real deployment
-        </span>
+        <div className={styles.conversionNudge}>
+          <p className={styles.nudgeText}>
+            That was a simulation. Ready for the real thing?
+          </p>
+          <a
+            className={styles.button}
+            href="mailto:kahessay@icloud.com?subject=PRD%20Submission"
+          >
+            Send your PRD — $1
+          </a>
+        </div>
       );
     }
-    return (
-      <a
-        className={styles.linkButton}
-        href={session.deploy_url}
-        rel="noreferrer"
-        target="_blank"
-      >
-        Open deployed app
-      </a>
-    );
+    if (session.deploy_url) {
+      return (
+        <a
+          className={styles.linkButton}
+          href={session.deploy_url}
+          rel="noreferrer"
+          target="_blank"
+        >
+          Open deployed app
+        </a>
+      );
+    }
   }
 
   return null;

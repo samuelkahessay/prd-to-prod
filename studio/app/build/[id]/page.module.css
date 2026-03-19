@@ -179,17 +179,14 @@
   font-style: italic;
 }
 
-.demoAction {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 18px;
-  border-radius: 999px;
-  font-size: 13px;
+.conversionNudge {
+  display: grid;
+  gap: 16px;
+}
+
+.nudgeText {
+  font-size: 18px;
   font-weight: 600;
-  letter-spacing: -0.01em;
-  background: transparent;
-  color: var(--ink-muted, #888);
-  border: 1px solid var(--rule, #ddd);
-  cursor: default;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
 }

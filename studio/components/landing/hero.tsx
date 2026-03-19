@@ -17,6 +17,7 @@ export function Hero() {
       </p>
       <div className={styles.actions}>
         <a href={MAILTO} className={styles.ctaPrimary}>Send your PRD</a>
+        <a href="/build?demo=true" className={styles.ctaSecondary}>Watch it build</a>
       </div>
       <p className={styles.scope}>
         Web apps only. Next.js, Express, Node.

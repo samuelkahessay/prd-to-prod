@@ -54,6 +54,19 @@
   text-decoration: none;
 }
 
+.ctaSecondary {
+  display: inline-block;
+  background: transparent;
+  color: var(--ink);
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  border: 1px solid var(--line, #ddd);
+}
+
 .scope {
   font-family: var(--font-mono);
   font-size: 12px;
