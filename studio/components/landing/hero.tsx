@@ -7,8 +7,8 @@ export function Hero() {
     <section className={styles.hero}>
       <p className={styles.eyebrow}>Powered by GitHub Agentic Workflows</p>
       <h1 className={styles.headline}>
-        Send a PRD. Get a deployed app.
-        <span className={styles.price}>$1.</span>
+        Send a PRD.<br />
+        Get a deployed app for $1.
       </h1>
       <p className={styles.subtitle}>
         Autonomous agents decompose your PRD into issues, implement each one,

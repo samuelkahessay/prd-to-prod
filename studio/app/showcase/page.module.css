@@ -14,6 +14,18 @@
   margin-bottom: 48px;
 }
 
+.backLink {
+  font-size: 13px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 24px;
+}
+
+.backLink:hover {
+  color: var(--ink);
+}
+
 .label {
   font-family: var(--font-mono);
   font-size: 12px;

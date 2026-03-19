@@ -22,7 +22,6 @@
 }
 
 .price {
-  display: block;
   color: var(--accent);
   font-weight: 900;
 }

@@ -31,6 +31,7 @@ export default function ShowcasePage() {
       <main className={styles.page}>
         {/* Header */}
         <div className={styles.header}>
+          <a href="/" className={styles.backLink}>← Home</a>
           <span className={styles.label}>Showcase</span>
           <h1 className={styles.heading}>Built by the pipeline</h1>
           <p className={styles.subtitle}>

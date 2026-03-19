@@ -57,6 +57,13 @@
   flex-direction: column;
   gap: 12px;
   flex-shrink: 0;
+  position: relative;
+  transition: border-color 0.15s ease;
+}
+
+.card:hover {
+  border-color: var(--ink-muted);
+  cursor: pointer;
 }
 
 .cardTop {
@@ -155,6 +162,12 @@
   white-space: nowrap;
 }
 
+.openLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
 .openLink:hover {
   text-decoration: underline;
 }
@@ -192,6 +205,12 @@
   display: inline-block;
   margin-top: 8px;
   border-radius: 4px;
+}
+
+.ctaLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 
 .ctaLink:hover {

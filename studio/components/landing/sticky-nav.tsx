@@ -21,7 +21,7 @@ export function StickyNav() {
 
   return (
     <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ""}`}>
-      <a href="/" className={styles.logo}>prd-to-prod</a>
+      <a href="/" className={styles.logo}>prd to prod</a>
       <div className={styles.right}>
         <div className={styles.links}>
           <a href="#pricing" className={styles.link}>Pricing</a>

@@ -40,11 +40,21 @@
   border: 1px solid var(--rule);
   border-radius: 8px;
   padding: 32px;
+  position: relative;
+  transition: border-color 0.15s ease;
+}
+
+.card:hover {
+  border-color: var(--ink-muted);
+  cursor: pointer;
 }
 
 .cardPrimary {
   border: 2px solid var(--ink);
-  position: relative;
+}
+
+.cardPrimary:hover {
+  border-color: var(--ink);
 }
 
 .badge {
@@ -149,6 +159,12 @@
   text-decoration: none;
 }
 
+.ctaPrimary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
 .ctaOutline {
   display: block;
   text-align: center;
@@ -160,6 +176,12 @@
   font-family: inherit;
   text-decoration: none;
   border: 1.5px solid var(--ink);
+}
+
+.ctaOutline::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 
 .scope {
