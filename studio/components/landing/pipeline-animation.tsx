@@ -23,15 +23,17 @@ const C = {
   chaosFade: "rgba(196,189,181,0.25)",
 };
 
-// 9s loop
-const LOOP = 9;
-const ACTS = [
+export const PIPELINE_LOOP_SECONDS = 10;
+export const PIPELINE_ACTS = [
   { start: 0, end: 1.5 },
   { start: 1.5, end: 3.0 },
   { start: 3.0, end: 5.5 },
   { start: 5.5, end: 7.0 },
-  { start: 7.0, end: 9.0 },
-];
+  { start: 7.0, end: 10.0 },
+] as const;
+
+const LOOP = PIPELINE_LOOP_SECONDS;
+const ACTS = PIPELINE_ACTS;
 
 // Layout positions (normalized 0-1)
 const L = {
@@ -560,6 +562,7 @@ export function PipelineAnimation() {
     let entities: Entity[] = [];
     let connections: Connection[] = [];
     let scheduled: Record<string, boolean> = {};
+    let loopIndex = 0;
     let raf: number;
 
     function frame(now: number) {
@@ -567,15 +570,15 @@ export function PipelineAnimation() {
       lastFrame = now;
       time += dt;
 
-      const lt = time % LOOP;
-      const act = getAct(time);
-
-      // Reset on loop
-      if (lt < dt * 2 && time > 1) {
+      const currentLoop = Math.floor(time / LOOP);
+      if (currentLoop !== loopIndex) {
+        loopIndex = currentLoop;
         entities = [];
         connections = [];
         scheduled = {};
       }
+
+      const act = getAct(time);
 
       if (act >= 0) act0(W, H, entities, scheduled);
       if (act >= 1) { act1(W, H, entities, connections, scheduled); fadeConns(connections); }
