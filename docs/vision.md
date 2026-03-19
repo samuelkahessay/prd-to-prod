@@ -23,14 +23,13 @@ production workloads.
 
 Mitchell Hashimoto (co-founder of HashiCorp, creator of Terraform) named this
 discipline *harness engineering* in February 2026: designing systems that wrap
-around AI agents to make them reliable and governable. Not better prompts. Better
-infrastructure.
+around AI agents to make them reliable and governable. The infrastructure around
+the agent, not the agent itself.
 
 LangChain demonstrated the principle: same model, 52.8% to 66.5% task success
-rate. The only variable was the harness. OpenAI published how they built a
-million lines of code with Codex agents using the same insight — not by improving
-the model, but by designing better orchestration, constraints, and recovery loops
-around it.
+rate. The only variable was the harness. OpenAI built a million lines of code
+with Codex agents by designing better orchestration, constraints, and recovery
+loops.
 
 In `prd-to-prod`, the harness is:
 
@@ -60,9 +59,8 @@ independent review → auto-merge.
 
 Building this pipeline deep enough to chain agents, depend on structured outputs,
 and run full lifecycle workflows surfaced 19 genuine platform issues in GitHub's
-Agentic Workflows. 17 shipped as fixes across 7 releases. Not because this repo
-is a prolific contributor — because depth stresses edges that shallow
-integrations never touch.
+Agentic Workflows. 17 shipped as fixes across 7 releases. Depth stresses edges
+that shallow integrations never touch.
 
 ## Where the industry is converging
 
@@ -97,10 +95,9 @@ control boundary.
 | OpenAI Symphony | Via Codex | Issue → PR | Not yet formalized |
 | **prd-to-prod** | **Via agents** | **Brief → deploy + self-heal** | **Explicit policy artifact** |
 
-The last column is the differentiator. When agents do the work, human authority
-does not decrease — it becomes the most important part of the system. The
-question shifts from "can the agent write the code" to "who decides what ships,
-and can you prove it."
+The last column is where the gap is. When agents do the work, human authority
+becomes the most important part of the system. The question becomes: who decides
+what ships, and can you prove it.
 
 No single product currently packages the exact combination this repo
 demonstrates: full pipeline from brief to deploy, multi-agent orchestration,
@@ -116,9 +113,6 @@ Devin, or Cursor. It does not have the enterprise surface area those platforms
 are building.
 
 What it does have is a working example of the thesis: that the next platform is
-not for developers writing code faster, but for agents governed by humans
-shipping autonomously. And that the harness — the orchestration, policy, identity
-separation, and recovery infrastructure — is what makes the difference between a
-demo and a delivery system.
-
-The era of generating code is ending. The era of governing agents is beginning.
+for agents governed by humans shipping autonomously, and the harness — the
+orchestration, policy, identity separation, and recovery infrastructure — is what
+makes the difference between a demo and a delivery system.

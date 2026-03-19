@@ -62,17 +62,15 @@ export default function VisionPage() {
             Mitchell Hashimoto (co-founder of HashiCorp, creator of Terraform)
             named this discipline{" "}
             <em>harness engineering</em> in February 2026: designing systems that
-            wrap around AI agents to make them reliable and governable. Not
-            better prompts. Better infrastructure.
+            wrap around AI agents to make them reliable and governable. The
+            infrastructure around the agent, not the agent itself.
           </p>
 
           <p>
             LangChain demonstrated the principle: same model, 52.8% to 66.5%
-            task success rate. The only variable was the harness. OpenAI
-            published how they built a million lines of code with Codex agents
-            using the same insight &mdash; not by improving the model, but by
-            designing better orchestration, constraints, and recovery loops
-            around it.
+            task success rate. The only variable was the harness. OpenAI built a
+            million lines of code with Codex agents by designing better
+            orchestration, constraints, and recovery loops.
           </p>
 
           <p>
@@ -128,8 +126,7 @@ export default function VisionPage() {
             Building this pipeline deep enough to chain agents, depend on
             structured outputs, and run full lifecycle workflows surfaced 19
             genuine platform issues in GitHub&rsquo;s Agentic Workflows. 17
-            shipped as fixes across 7 releases. Not because this repo is a
-            prolific contributor &mdash; because depth stresses edges that
+            shipped as fixes across 7 releases. Depth stresses edges that
             shallow integrations never touch.
           </p>
 
@@ -237,11 +234,9 @@ export default function VisionPage() {
           </div>
 
           <p>
-            The last column is the differentiator. When agents do the work,
-            human authority does not decrease &mdash; it becomes the most
-            important part of the system. The question shifts from &ldquo;can the
-            agent write the code&rdquo; to &ldquo;who decides what ships, and
-            can you prove it.&rdquo;
+            The last column is where the gap is. When agents do the work,
+            human authority becomes the most important part of the system. The
+            question becomes: who decides what ships, and can you prove it.
           </p>
 
           <p>
@@ -263,17 +258,10 @@ export default function VisionPage() {
 
           <p>
             What it does have is a working example of the thesis: that the next
-            platform is not for developers writing code faster, but for agents
-            governed by humans shipping autonomously. And that the harness
-            &mdash; the orchestration, policy, identity separation, and recovery
-            infrastructure &mdash; is what makes the difference between a demo
-            and a delivery system.
-          </p>
-
-          <p className={styles.closing}>
-            The era of generating code is ending.
-            <br />
-            The era of governing agents is beginning.
+            platform is for agents governed by humans shipping autonomously, and
+            the harness &mdash; the orchestration, policy, identity separation,
+            and recovery infrastructure &mdash; is what makes the difference
+            between a demo and a delivery system.
           </p>
 
           <p className={styles.cta}>
