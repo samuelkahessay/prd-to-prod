@@ -1,0 +1,174 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--cream);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--rule);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--warm-white);
+}
+
+.backLink {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  transition: color 0.1s;
+}
+
+.backLink:hover {
+  color: var(--ink);
+}
+
+.appName {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.techBadge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 3px 7px;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.description {
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+/* Stats */
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--rule);
+  padding-top: 16px;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.statValue {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.statKey {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+/* PRD link */
+.prdLink {
+  display: inline-block;
+  margin-top: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.1s;
+}
+
+.prdLink:hover {
+  opacity: 0.75;
+}
+
+/* Main content area */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* Mobile: hide sidebar, show collapsible top bar */
+.mobileBar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .mobileBar {
+    display: block;
+    background: var(--warm-white);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .mobileSummary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  /* Remove default disclosure triangle in webkit */
+  .mobileSummary::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobileAppName {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    flex: 1;
+  }
+
+  .mobileDetails {
+    padding: 0 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .mobileDetails .stats {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 14px;
+    border-top: 1px solid var(--rule);
+    padding-top: 12px;
+  }
+
+  .mobileDetails .stat {
+    flex-direction: column;
+    gap: 2px;
+  }
+}
