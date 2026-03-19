@@ -4,9 +4,9 @@ import styles from "./how-it-works.module.css";
 const STEPS = [
   { num: "01", title: "Decompose", body: "PRD to scoped GitHub issues with acceptance criteria", color: "accent" },
   { num: "02", title: "Build", body: "Agents implement each issue, open PRs with tests", color: "accent" },
-  { num: "03", title: "Review", body: "Automated code review verifies against the original spec", color: "accent" },
-  { num: "04", title: "Gate", body: "Policy decides what merges autonomously vs. needs human sign-off", color: "policy" },
-  { num: "05", title: "Ship + Heal", body: "Deploy to production. CI failures route back through the pipeline.", color: "good" },
+  { num: "03", title: "Review", body: "Automated code review verifies against the spec. Policy gates enforce human boundaries.", color: "policy" },
+  { num: "04", title: "Ship", body: "Approved PRs deploy to production", color: "good" },
+  { num: "05", title: "Heal", body: "CI failures are detected and routed back through the pipeline as new issues", color: "good" },
 ];
 
 const STEP_CLASS: Record<string, string> = {

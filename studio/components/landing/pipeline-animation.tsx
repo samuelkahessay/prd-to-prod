@@ -4,7 +4,7 @@ import { useRef, useEffect } from "react";
 import { BUILD_QUEUE, REVIEW_QUEUE } from "./pipeline-animation-data";
 import styles from "./pipeline-animation.module.css";
 
-const ACT_NAMES = ["Brief", "Plan", "Build", "Ship", "Heal"];
+const ACT_NAMES = ["Decompose", "Build", "Review", "Ship", "Heal"];
 
 // Colors
 const C = {
