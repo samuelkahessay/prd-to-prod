@@ -1,0 +1,646 @@
+/* ── Blueprint × Terminal Theme ─────────────────────────────────────────────
+   Scoped to .shell — dark navy background, cyan accents, monospace labels.
+   No globals are modified.
+──────────────────────────────────────────────────────────────────────────── */
+
+.shell {
+  /* Color tokens — scoped here, do not leak */
+  --td-bg: #0d1b2a;
+  --td-surface: #132033;
+  --td-surface-2: #1a2d44;
+  --td-border: #1e3a5a;
+  --td-border-strong: #2a5080;
+  --td-text: #cde4f8;
+  --td-text-muted: #6e98bc;
+  --td-text-faint: #3d6080;
+  --td-cyan: #00d4ff;
+  --td-cyan-wash: rgba(0, 212, 255, 0.08);
+  --td-cyan-dim: rgba(0, 212, 255, 0.55);
+  --td-green: #00e5a0;
+  --td-green-wash: rgba(0, 229, 160, 0.1);
+  --td-red: #ff5a6a;
+  --td-red-wash: rgba(255, 90, 106, 0.1);
+  --td-amber: #ffb347;
+  --td-amber-wash: rgba(255, 179, 71, 0.1);
+  --td-purple: #c792ea;
+  --td-purple-wash: rgba(199, 146, 234, 0.1);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--td-bg);
+  color: var(--td-text);
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+.loading {
+  padding: 3rem;
+  text-align: center;
+  color: var(--td-text-muted);
+  font-size: 0.875rem;
+  font-family: var(--font-mono, monospace);
+}
+
+/* ── Tab bar ──────────────────────────────────────────────────────────────── */
+
+.tabBar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--td-border);
+  background: var(--td-surface);
+  padding: 0 1rem;
+  flex-shrink: 0;
+}
+
+.tab {
+  padding: 0.75rem 1.125rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--td-text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s;
+  white-space: nowrap;
+  margin-bottom: -1px;
+  letter-spacing: 0.01em;
+}
+
+.tab:hover {
+  color: var(--td-text);
+}
+
+.tabActive {
+  color: var(--td-cyan);
+  border-bottom-color: var(--td-cyan);
+}
+
+/* ── Scrollable content area ────────────────────────────────────────────── */
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+  min-height: 0;
+}
+
+/* ── Stats grid ──────────────────────────────────────────────────────────── */
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.statCard {
+  background: var(--td-surface);
+  border: 1px solid var(--td-border);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.statLabel {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--td-text-faint);
+  font-family: var(--font-mono, monospace);
+}
+
+.statValue {
+  font-size: 1.625rem;
+  font-weight: 700;
+  color: var(--td-text);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.statValueCyan {
+  color: var(--td-cyan);
+}
+
+.statValueGreen {
+  color: var(--td-green);
+}
+
+.statValueRed {
+  color: var(--td-red);
+}
+
+.statValueAmber {
+  color: var(--td-amber);
+}
+
+/* ── Chart section ───────────────────────────────────────────────────────── */
+
+.chartsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 520px) {
+  .chartsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chartCard {
+  background: var(--td-surface);
+  border: 1px solid var(--td-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.chartTitle {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--td-text-faint);
+  font-family: var(--font-mono, monospace);
+  margin-bottom: 0.875rem;
+}
+
+.doughnutWrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.doughnutSvg {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  transform: rotate(-90deg);
+}
+
+.doughnutLegend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.doughnutItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.doughnutDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.doughnutLabel {
+  font-size: 0.6875rem;
+  color: var(--td-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.doughnutCount {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--td-text);
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono, monospace);
+  flex-shrink: 0;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+
+.empty {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--td-text-faint);
+  font-size: 0.8125rem;
+  font-family: var(--font-mono, monospace);
+}
+
+/* ── Ticket submit form ───────────────────────────────────────────────────── */
+
+.submitSection {
+  background: var(--td-surface);
+  border: 1px solid var(--td-border);
+  border-radius: 8px;
+  padding: 1rem 1.125rem;
+  margin-bottom: 1rem;
+}
+
+.submitTitle {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--td-text-faint);
+  font-family: var(--font-mono, monospace);
+  margin-bottom: 0.75rem;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-bottom: 0.75rem;
+}
+
+.formInput,
+.formTextarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 0.875rem;
+  color: var(--td-text);
+  background: var(--td-bg);
+  border: 1px solid var(--td-border);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.formInput::placeholder,
+.formTextarea::placeholder {
+  color: var(--td-text-faint);
+}
+
+.formInput:focus,
+.formTextarea:focus {
+  border-color: var(--td-cyan);
+}
+
+.formTextarea {
+  resize: vertical;
+  line-height: 1.6;
+  min-height: 72px;
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.submitBtn {
+  padding: 0.5rem 1rem;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--td-bg);
+  background: var(--td-cyan);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.submitBtn:hover {
+  opacity: 0.88;
+}
+
+.submitBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.simulateBtn {
+  padding: 0.5rem 0.875rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--td-cyan);
+  background: var(--td-cyan-wash);
+  border: 1px solid var(--td-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.simulateBtn:hover {
+  border-color: var(--td-cyan);
+  background: rgba(0, 212, 255, 0.14);
+}
+
+.clearBtn {
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  color: var(--td-text-faint);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.12s;
+  margin-left: auto;
+}
+
+.clearBtn:hover {
+  color: var(--td-red);
+}
+
+/* ── Ticket feed ─────────────────────────────────────────────────────────── */
+
+.feedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.625rem;
+}
+
+.feedLabel {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--td-text-faint);
+  font-family: var(--font-mono, monospace);
+}
+
+.feedCount {
+  font-size: 0.6875rem;
+  color: var(--td-text-faint);
+  font-family: var(--font-mono, monospace);
+}
+
+.ticketList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ticketCard {
+  background: var(--td-surface);
+  border: 1px solid var(--td-border);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.ticketCard:hover {
+  border-color: var(--td-border-strong);
+}
+
+.ticketCardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ticketCardBody {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--td-border);
+}
+
+.ticketTitle {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--td-text);
+  line-height: 1.4;
+  min-width: 0;
+}
+
+.ticketMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
+}
+
+.ticketMetaItem {
+  font-size: 0.6875rem;
+  color: var(--td-text-muted);
+  font-family: var(--font-mono, monospace);
+}
+
+.ticketDescription {
+  font-size: 0.8125rem;
+  color: var(--td-text-muted);
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+}
+
+.ticketResolution {
+  background: var(--td-green-wash);
+  border-left: 2px solid var(--td-green);
+  padding: 0.625rem 0.75rem;
+  border-radius: 0 4px 4px 0;
+}
+
+.ticketResolutionLabel {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--td-green);
+  font-family: var(--font-mono, monospace);
+  margin-bottom: 0.375rem;
+}
+
+.ticketResolutionText {
+  font-size: 0.8125rem;
+  color: var(--td-text);
+  line-height: 1.6;
+}
+
+.expandChevron {
+  font-size: 0.75rem;
+  color: var(--td-text-faint);
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  transition: transform 0.15s;
+}
+
+.expandChevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Status badges ───────────────────────────────────────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badgeNew {
+  background: rgba(110, 152, 188, 0.12);
+  color: var(--td-text-muted);
+}
+
+.badgeClassified {
+  background: var(--td-cyan-wash);
+  color: var(--td-cyan-dim);
+}
+
+.badgeMatched {
+  background: var(--td-purple-wash);
+  color: var(--td-purple);
+}
+
+.badgeAutoResolved {
+  background: var(--td-green-wash);
+  color: var(--td-green);
+}
+
+.badgeEscalated {
+  background: var(--td-red-wash);
+  color: var(--td-red);
+}
+
+/* Severity variants */
+.badgeSevLow {
+  background: rgba(110, 152, 188, 0.08);
+  color: var(--td-text-faint);
+}
+
+.badgeSevMedium {
+  background: var(--td-amber-wash);
+  color: var(--td-amber);
+}
+
+.badgeSevHigh {
+  background: var(--td-red-wash);
+  color: var(--td-red);
+}
+
+.badgeSevCritical {
+  background: rgba(255, 90, 106, 0.2);
+  color: var(--td-red);
+  animation: critPulse 2s ease-in-out infinite;
+}
+
+@keyframes critPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badgeSevCritical {
+    animation: none;
+  }
+}
+
+/* Category variants */
+.badgeCatBug {
+  background: var(--td-red-wash);
+  color: var(--td-red);
+}
+
+.badgeCatFeature {
+  background: var(--td-purple-wash);
+  color: var(--td-purple);
+}
+
+.badgeCatHowTo {
+  background: var(--td-cyan-wash);
+  color: var(--td-cyan-dim);
+}
+
+.badgeCatAccount {
+  background: var(--td-amber-wash);
+  color: var(--td-amber);
+}
+
+.badgeCatOther {
+  background: rgba(110, 152, 188, 0.08);
+  color: var(--td-text-faint);
+}
+
+/* ── Activity log ────────────────────────────────────────────────────────── */
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.activityEntry {
+  display: flex;
+  gap: 0.875rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--td-border);
+  position: relative;
+}
+
+.activityEntry:last-child {
+  border-bottom: none;
+}
+
+.activityDotCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  padding-top: 0.25rem;
+}
+
+.activityDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.activityLine {
+  flex: 1;
+  width: 1px;
+  background: var(--td-border);
+  margin-top: 4px;
+}
+
+.activityBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.activityAction {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--td-text);
+  font-family: var(--font-mono, monospace);
+  margin-bottom: 0.125rem;
+}
+
+.activityDetails {
+  font-size: 0.8125rem;
+  color: var(--td-text-muted);
+  line-height: 1.5;
+}
+
+.activityTime {
+  font-size: 0.6875rem;
+  color: var(--td-text-faint);
+  font-family: var(--font-mono, monospace);
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  font-variant-numeric: tabular-nums;
+}
