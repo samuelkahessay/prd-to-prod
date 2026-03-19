@@ -168,6 +168,8 @@ dist/scaffold/studio/components/factory/renderer-2d/movement.ts
 dist/scaffold/studio/components/factory/renderer-2d/particles.ts
 dist/scaffold/studio/components/landing/bottom-cta.module.css
 dist/scaffold/studio/components/landing/bottom-cta.tsx
+dist/scaffold/studio/components/landing/credibility.module.css
+dist/scaffold/studio/components/landing/credibility.tsx
 dist/scaffold/studio/components/landing/evidence-ledger.module.css
 dist/scaffold/studio/components/landing/evidence-ledger.tsx
 dist/scaffold/studio/components/landing/hero.module.css
