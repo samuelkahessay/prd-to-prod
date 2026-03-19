@@ -134,13 +134,13 @@ export function drawBackdrop(
   ctx.lineTo(cx + ww, wy + wh * 0.45);
   ctx.stroke();
 
-  // Pendant lamps — anchored to isometric ceiling points
-  const lamp1 = ceilingAnchor(vp, 2, 1, vp.canvasH * 0.12);
-  const lamp2 = ceilingAnchor(vp, 6, 1, vp.canvasH * 0.1);
-  const lamp3 = ceilingAnchor(vp, 10, 1, vp.canvasH * 0.14);
-  drawPendantLamp(ctx, lamp1.x, 0, lamp1.y);
-  drawPendantLamp(ctx, lamp2.x, 0, lamp2.y);
-  drawPendantLamp(ctx, lamp3.x, 0, lamp3.y);
+  // Pendant lamps — x from back-wall projection, y near top of canvas
+  const lamp1pos = worldToScreen(vp, 2, 0);
+  const lamp2pos = worldToScreen(vp, 6, 0);
+  const lamp3pos = worldToScreen(vp, 10, 0);
+  drawPendantLamp(ctx, lamp1pos.x, 0, vp.canvasH * 0.12);
+  drawPendantLamp(ctx, lamp2pos.x, 0, vp.canvasH * 0.1);
+  drawPendantLamp(ctx, lamp3pos.x, 0, vp.canvasH * 0.14);
 }
 
 function drawCloud(
@@ -264,10 +264,20 @@ function drawBlueprintTable(
   // Board border
   strokeWallQuad(ctx, vp, wx + 0.1, wy - 0.3, wbWorldW, wbH, "back", wbElev, "#c4bbb0", 1.5);
 
-  // Sticky notes on whiteboard (use wall-projected corners for positioning)
+  // Sticky notes clipped to whiteboard quad
   const wbBL = worldToScreen(vp, wx + 0.1, wy - 0.3);
   const wbBR = worldToScreen(vp, wx + 0.1 + wbWorldW, wy - 0.3);
   const wbScreenW = wbBR.x - wbBL.x;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(wbBL.x, wbBL.y - wbElev);
+  ctx.lineTo(wbBR.x, wbBR.y - wbElev);
+  ctx.lineTo(wbBR.x, wbBR.y - wbElev - wbH);
+  ctx.lineTo(wbBL.x, wbBL.y - wbElev - wbH);
+  ctx.closePath();
+  ctx.clip();
+
   const noteColors = ["#fff3b0", "#b0e0ff", "#ffb0b0", "#b0ffb0"];
   const noteCount = Math.min(state.output.issueCount + 1, 4);
   for (let i = 0; i < noteCount; i++) {
@@ -276,6 +286,7 @@ function drawBlueprintTable(
     ctx.fillStyle = noteColors[i];
     ctx.fillRect(nx, ny, wbScreenW * 0.2, wbH * 0.35);
   }
+  ctx.restore();
 
   // Scattered papers on desk
   if (active) {
@@ -332,11 +343,21 @@ function drawCodeForge(
     const screenH = monH - 4;
     drawWallQuad(ctx, vp, monX + screenInset, wy + 0.15, monWorldW - screenInset * 2, screenH, "back", monElev + 2, active ? "#1e2127" : E.screenOff);
 
-    // Code lines when active
+    // Code lines when active — clipped to screen quad
     if (active) {
       const screenBL = worldToScreen(vp, monX + screenInset, wy + 0.15);
       const screenBR = worldToScreen(vp, monX + monWorldW - screenInset, wy + 0.15);
       const screenW = screenBR.x - screenBL.x;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(screenBL.x, screenBL.y - monElev - 2);
+      ctx.lineTo(screenBR.x, screenBR.y - monElev - 2);
+      ctx.lineTo(screenBR.x, screenBR.y - monElev - 2 - screenH);
+      ctx.lineTo(screenBL.x, screenBL.y - monElev - 2 - screenH);
+      ctx.closePath();
+      ctx.clip();
+
       const colors = ["#61afef", "#98c379", "#e5c07b", "#c678dd", "#e06c75"];
       for (let j = 0; j < 5; j++) {
         const lw = 3 + ((time * 4 + j * 3 + i * 7) % 12);
@@ -345,6 +366,7 @@ function drawCodeForge(
         ctx.fillRect(screenBL.x + 2, screenBL.y - monElev - screenH + j * 3 + 4, Math.min(lw, screenW - 4), 1.5);
       }
       ctx.globalAlpha = 1;
+      ctx.restore();
     }
 
     // Stand
@@ -503,12 +525,21 @@ function drawInspectionBay(
   const uwScreenH = uwH - 6;
   drawWallQuad(ctx, vp, uwX + 0.05, uwY, uwWorldW - 0.1, uwScreenH, "back", uwElev + 3, active ? "#1e2127" : E.screenOff);
 
-  // Diff lines when active
+  // Diff lines when active — clipped to screen quad
   if (active) {
     const scrBL = worldToScreen(vp, uwX + 0.05, uwY);
     const scrBR = worldToScreen(vp, uwX + uwWorldW - 0.05, uwY);
     const scrW = scrBR.x - scrBL.x;
     const scrTopY = scrBL.y - uwElev - uwScreenH;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(scrBL.x, scrBL.y - uwElev - 3);
+    ctx.lineTo(scrBR.x, scrBR.y - uwElev - 3);
+    ctx.lineTo(scrBR.x, scrBR.y - uwElev - 3 - uwScreenH);
+    ctx.lineTo(scrBL.x, scrBL.y - uwElev - 3 - uwScreenH);
+    ctx.closePath();
+    ctx.clip();
 
     for (let i = 0; i < 7; i++) {
       const isAdd = i % 3 !== 0;
@@ -525,6 +556,7 @@ function drawInspectionBay(
     ctx.font = `${Math.max(6, vp.cellSize * 0.2)}px monospace`;
     ctx.textAlign = "center";
     ctx.fillText(`#${state.output.prCount || 42}`, scrBL.x + scrW - 13, scrTopY + 13);
+    ctx.restore();
   }
 
   // Monitor stand
@@ -763,17 +795,25 @@ function drawKanbanBoard(
   drawWallQuad(ctx, vp, wx, wy, kbWorldW, kbH, "left", kbElev, "#f5f0e8");
   strokeWallQuad(ctx, vp, wx, wy, kbWorldW, kbH, "left", kbElev, "#c4bbb0", 1);
 
-  // Get screen coords for content layout
+  // Clip overlay content to the wall quad shape
   const kbBL = worldToScreen(vp, wx, wy);
   const kbBR = worldToScreen(vp, wx, wy + kbWorldW);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(kbBL.x, kbBL.y - kbElev);
+  ctx.lineTo(kbBR.x, kbBR.y - kbElev);
+  ctx.lineTo(kbBR.x, kbBR.y - kbElev - kbH);
+  ctx.lineTo(kbBL.x, kbBL.y - kbElev - kbH);
+  ctx.closePath();
+  ctx.clip();
+
+  // Content layout uses the clipped region — flat content is safe inside clip
   const kbScreenW = Math.abs(kbBR.x - kbBL.x);
-  // Left wall goes right-to-left in screen x, but y increases downward
   const kbLeftX = Math.min(kbBL.x, kbBR.x);
   const kbTopY = Math.min(kbBL.y, kbBR.y) - kbElev - kbH;
-  // Vertical center of the slanted board
-  const kbMidY = (kbBL.y + kbBR.y) / 2 - kbElev;
 
-  // Column headers (flat overlay — acceptable since content on an iso board)
+  // Column headers
   const cols = ["TODO", "WIP", "DONE"];
   const colW = kbScreenW / 3;
   ctx.font = `600 ${Math.max(5, vp.cellSize * 0.13)}px monospace`;
@@ -786,7 +826,7 @@ function drawKanbanBoard(
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(kbLeftX + colW * i, kbTopY + 2);
-      ctx.lineTo(kbLeftX + colW * i, kbMidY - 2);
+      ctx.lineTo(kbLeftX + colW * i, kbTopY + kbH - 2);
       ctx.stroke();
     }
   }
@@ -796,7 +836,6 @@ function drawKanbanBoard(
   const cardW = colW * 0.7;
   const cardH = kbH * 0.15;
 
-  // TODO cards
   for (let i = 0; i < 2; i++) {
     ctx.fillStyle = noteColors[i];
     ctx.fillRect(
@@ -807,7 +846,6 @@ function drawKanbanBoard(
     );
   }
 
-  // WIP card
   ctx.fillStyle = noteColors[2];
   ctx.fillRect(
     kbLeftX + colW * 1 + (colW - cardW) / 2,
@@ -816,7 +854,6 @@ function drawKanbanBoard(
     cardH
   );
 
-  // DONE cards with checkmarks
   const doneCount = Math.min(state.output.prCount, 3);
   for (let i = 0; i < doneCount; i++) {
     ctx.fillStyle = noteColors[3];
@@ -826,17 +863,18 @@ function drawKanbanBoard(
       cardW,
       cardH
     );
-    // Checkmark
     ctx.strokeStyle = "#3d9a6a";
     ctx.lineWidth = 1;
-    const cx = kbLeftX + colW * 2 + colW / 2;
-    const cy = kbTopY + 13 + i * (cardH + 2) + cardH / 2;
+    const ccx = kbLeftX + colW * 2 + colW / 2;
+    const ccy = kbTopY + 13 + i * (cardH + 2) + cardH / 2;
     ctx.beginPath();
-    ctx.moveTo(cx - 2, cy);
-    ctx.lineTo(cx, cy + 2);
-    ctx.lineTo(cx + 3, cy - 2);
+    ctx.moveTo(ccx - 2, ccy);
+    ctx.lineTo(ccx, ccy + 2);
+    ctx.lineTo(ccx + 3, ccy - 2);
     ctx.stroke();
   }
+
+  ctx.restore(); // remove clip
 }
 
 function drawServerRack(
@@ -932,10 +970,10 @@ function drawClock(
   time: number,
   state: FactoryState
 ) {
-  // Clock anchored to back wall near right side
-  const clockAnchor = ceilingAnchor(vp, ROOM_W - 1.5, 0, vp.canvasH * 0.15);
-  const cx = clockAnchor.x;
-  const cy = clockAnchor.y;
+  // Clock — x from back-wall projection, y near top of canvas
+  const clockWallPos = worldToScreen(vp, ROOM_W - 1.5, 0);
+  const cx = clockWallPos.x;
+  const cy = vp.canvasH * 0.06;
   const r = vp.cellSize * 0.4;
 
   // Face
