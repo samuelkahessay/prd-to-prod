@@ -2,7 +2,7 @@ import { PipelineAnimation } from "./pipeline-animation";
 import styles from "./how-it-works.module.css";
 
 const STEPS = [
-  { num: "01", title: "Decompose", body: "PRD → scoped GitHub issues with acceptance criteria", color: "accent" },
+  { num: "01", title: "Decompose", body: "PRD to scoped GitHub issues with acceptance criteria", color: "accent" },
   { num: "02", title: "Build", body: "Agents implement each issue, open PRs with tests", color: "accent" },
   { num: "03", title: "Review", body: "Automated code review verifies against the original spec", color: "accent" },
   { num: "04", title: "Gate", body: "Policy decides what merges autonomously vs. needs human sign-off", color: "policy" },
@@ -25,16 +25,16 @@ export function HowItWorks() {
     <section id="how-it-works" className={styles.section}>
       <div className={styles.labelRow}>
         <span className={styles.label}>How it works</span>
-        <span className={styles.dot}>·</span>
+        <span className={styles.dot}>&middot;</span>
         <span className={styles.labelGhaw}>Powered by GitHub Agentic Workflows</span>
       </div>
       <h2 className={styles.heading}>
         Agents build the app. Policy controls the boundaries.
       </h2>
       <p className={styles.subtitle}>
-        Your PRD is decomposed into scoped issues. Specialized agents implement
-        each one, open PRs, pass automated review. Human approval gates enforce
-        where the boundary is.
+        Your PRD is decomposed into scoped issues. Agents implement each one,
+        open PRs, pass automated review. Human approval gates enforce where
+        the boundary is.
       </p>
 
       <div className={styles.animation}>
@@ -59,9 +59,8 @@ export function HowItWorks() {
       <div className={styles.credibility}>
         <p className={styles.credibilityBody}>
           Built on <strong>GitHub Agentic Workflows</strong> — an open framework
-          from GitHub for autonomous development workflows. We've filed 31
-          upstream findings, with 17 fixes shipped across 7 releases. The
-          pipeline is real infrastructure, not a demo.
+          from GitHub for autonomous development workflows. 31 upstream findings
+          filed, 17 fixes shipped across 7 releases.
         </p>
       </div>
     </section>

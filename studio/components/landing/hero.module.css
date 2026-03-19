@@ -18,21 +18,20 @@
   line-height: 1.0;
   letter-spacing: -0.03em;
   margin-bottom: 24px;
-  max-width: 560px;
+  max-width: 620px;
 }
 
-.line2 {
+.price {
   display: block;
-  color: var(--ink-mid);
-  font-weight: 300;
-  font-style: italic;
+  color: var(--accent);
+  font-weight: 900;
 }
 
 .subtitle {
   font-size: 16px;
   font-weight: 400;
   color: var(--ink-muted);
-  max-width: 440px;
+  max-width: 480px;
   line-height: 1.6;
   margin-bottom: 32px;
 }
@@ -41,6 +40,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  margin-bottom: 16px;
 }
 
 .ctaPrimary {
@@ -55,24 +55,11 @@
   text-decoration: none;
 }
 
-.ctaSecondary {
-  display: inline-block;
-  background: transparent;
-  color: var(--ink);
-  border: 1.5px solid var(--ink);
-  padding: 14px 28px;
-  font-size: 15px;
-  font-weight: 600;
-  font-family: inherit;
-  letter-spacing: 0.01em;
-  text-decoration: none;
-}
-
-.ctaLink {
-  font-size: 14px;
-  color: var(--ink-muted);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.scope {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 0.02em;
 }
 
 @media (max-width: 768px) {

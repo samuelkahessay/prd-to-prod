@@ -6,81 +6,55 @@ export function Pricing() {
   return (
     <section id="pricing" className={styles.section}>
       <span className={styles.label}>Pricing</span>
-      <h2 className={styles.heading}>Open source. Pay for compute.</h2>
+      <h2 className={styles.heading}>$1. One PRD. One deployed app.</h2>
       <p className={styles.subtitle}>
-        The pipeline is open source. You're paying for compute, hosting,
-        and the operational expertise to keep it running.
+        We&apos;re building case studies with early adopters on Platform Calgary.
+        For $1, you get a real pipeline run — same agents, same CI/CD, same
+        deployment.
       </p>
 
       <div className={styles.cards}>
-        {/* Card A — Managed runs (primary) */}
         <div className={`${styles.card} ${styles.cardPrimary}`}>
-          <div className={styles.badge}>Most popular</div>
-          <p className={styles.cardLabel}>We run it for you</p>
-          <div className={styles.price}>
-            $99<span className={styles.priceUnit}>–$499</span>
+          <div className={styles.badge}>Early adopter</div>
+          <p className={styles.cardLabel}>$1 pipeline run</p>
+          <div className={styles.priceTag}>
+            $1
           </div>
           <p className={styles.pricePer}>per pipeline run</p>
 
           <ul className={styles.features}>
-            <li>✓ Send a PRD, get a deployed app</li>
-            <li>✓ All LLM compute included</li>
-            <li>✓ Deployed on Vercel with CI/CD</li>
-            <li>✓ Real repo you own — code, history, everything</li>
-            <li>✓ Self-healing CI included</li>
-            <li className={styles.featureMuted}>~ 24–48 hour turnaround</li>
+            <li>You send a PRD</li>
+            <li>Agents build, review, and deploy autonomously</li>
+            <li>You get a GitHub repo you own — full commit history, CI/CD, agentic workflows pre-wired</li>
+            <li>Live deployment on Vercel for 30 days</li>
+            <li>After 30 days, you take over hosting (Vercel free tier works for most projects)</li>
+            <li>The agentic pipeline in your repo activates when you add your own Copilot token</li>
           </ul>
 
-          <div className={styles.tiers}>
-            <p className={styles.tiersTitle}>Complexity tiers</p>
-            <div className={styles.tier}>
-              <span>Simple app / internal tool</span>
-              <span className={styles.tierPrice}>$99</span>
-            </div>
-            <div className={styles.tier}>
-              <span>Multi-feature with integrations</span>
-              <span className={styles.tierPrice}>$249</span>
-            </div>
-            <div className={styles.tier}>
-              <span>Complex (auth, multiple APIs)</span>
-              <span className={styles.tierPrice}>$499</span>
-            </div>
-          </div>
-
-          <a href={MAILTO} className={styles.ctaPrimary}>Send your PRD →</a>
-          <p className={styles.subCta}>First run free — no card required</p>
+          <a href={MAILTO} className={styles.ctaPrimary}>Send your PRD</a>
         </div>
 
-        {/* Card B — Self-hosted (secondary) */}
-        <div id="for-teams" className={styles.card}>
+        <div className={styles.card}>
           <p className={styles.cardLabel}>Run it yourself</p>
-          <div className={styles.price}>
+          <div className={styles.priceTag}>
             $0
           </div>
           <p className={styles.pricePer}>MIT licensed, forever</p>
 
           <ul className={styles.features}>
-            <li>✓ Full pipeline source code</li>
-            <li>✓ Bring your own LLM (Copilot, Claude, Codex, Gemini)</li>
-            <li>✓ Deploy anywhere — your infra, your rules</li>
-            <li>✓ Self-healing, review agents, auto-dispatch</li>
-            <li>✓ Same code that runs our managed service</li>
+            <li>Full pipeline source code</li>
+            <li>Bring your own LLM (Copilot, Claude, Codex, Gemini)</li>
+            <li>Deploy anywhere — your infra, your rules</li>
+            <li>Self-healing, review agents, auto-dispatch</li>
           </ul>
 
-          <div className={styles.tiers}>
-            <p className={styles.tiersTitle}>You'll need</p>
-            <div className={styles.tier}>
-              <span>GitHub repo + Actions</span>
-              <span className={styles.tierPrice}>free</span>
-            </div>
-            <div className={styles.tier}>
-              <span>LLM access (Copilot, Claude, etc.)</span>
-              <span className={styles.tierPrice}>~$19/mo</span>
-            </div>
-            <div className={styles.tier}>
-              <span>Hosting (Vercel, Fly, etc.)</span>
-              <span className={styles.tierPrice}>~$0–20/mo</span>
-            </div>
+          <div className={styles.needs}>
+            <p className={styles.needsTitle}>You need</p>
+            <ul className={styles.needsList}>
+              <li>GitHub repo + Actions</li>
+              <li>LLM access (Copilot, Claude, etc.)</li>
+              <li>Hosting (Vercel, Fly, etc.)</li>
+            </ul>
           </div>
 
           <a
@@ -89,19 +63,16 @@ export function Pricing() {
             target="_blank"
             rel="noopener"
           >
-            View on GitHub →
+            View on GitHub
           </a>
-          <p className={styles.subCta}>Optional support from $299/mo</p>
         </div>
       </div>
 
       <div className={styles.scope}>
-        <p className={styles.scopeTitle}>What's in scope today</p>
+        <p className={styles.scopeTitle}>Scope</p>
         <p className={styles.scopeBody}>
-          Web apps (Next.js, Express, Node.js). Best fit for new products and
-          isolated builds. No mobile, no desktop, no complex infrastructure.
-          We're upfront about boundaries because the pipeline is honest about
-          what it can deliver.
+          Web apps. Next.js, Express, Node.js. Best fit for new products and
+          isolated builds. No mobile, no desktop.
         </p>
       </div>
     </section>

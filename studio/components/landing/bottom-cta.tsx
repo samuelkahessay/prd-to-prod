@@ -5,19 +5,19 @@ const MAILTO = "mailto:kahessay@icloud.com?subject=PRD%20Submission";
 export function BottomCta() {
   return (
     <footer className={styles.section}>
-      <h2 className={styles.heading}>Ready to ship something?</h2>
+      <h2 className={styles.heading}>Send a PRD. Get a deployed app. $1.</h2>
       <p className={styles.body}>
-        Send us a PRD, a rough brief, or even just an idea. We'll reply with
-        scope, timeline, and price. Or fork the repo and run it yourself.
+        Email your PRD — a doc, a rough brief, a few paragraphs. We reply with
+        scope and a timeline.
       </p>
-      <a href={MAILTO} className={styles.ctaPrimary}>Send your PRD →</a>
+      <a href={MAILTO} className={styles.ctaPrimary}>Send your PRD</a>
       <a
         href="https://github.com/samuelkahessay/prd-to-prod"
         className={styles.ctaLink}
         target="_blank"
         rel="noopener"
       >
-        View on GitHub →
+        View on GitHub
       </a>
     </footer>
   );

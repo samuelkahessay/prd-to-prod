@@ -7,19 +7,20 @@ export function Hero() {
     <section className={styles.hero}>
       <p className={styles.eyebrow}>Powered by GitHub Agentic Workflows</p>
       <h1 className={styles.headline}>
-        Send a PRD.
-        <span className={styles.line2}>Get a deployed app.</span>
+        Send a PRD. Get a deployed app.
+        <span className={styles.price}>$1.</span>
       </h1>
       <p className={styles.subtitle}>
-        Autonomous agents build, review, and deploy your app from your PRD.
-        You get a live URL, a real repo with CI/CD, and code you own.
-        Open source. First run free.
+        Autonomous agents decompose your PRD into issues, implement each one,
+        pass automated review, and deploy to Vercel. You get a GitHub repo you
+        own with the full agentic CI/CD pipeline wired in.
       </p>
       <div className={styles.actions}>
-        <a href={MAILTO} className={styles.ctaPrimary}>Send your PRD →</a>
-        <a href="/build?demo=true" className={styles.ctaSecondary}>Try demo</a>
-        <a href="#pricing" className={styles.ctaLink}>See pricing</a>
+        <a href={MAILTO} className={styles.ctaPrimary}>Send your PRD</a>
       </div>
+      <p className={styles.scope}>
+        Web apps only. Next.js, Express, Node.
+      </p>
     </section>
   );
 }
