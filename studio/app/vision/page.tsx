@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import { StickyNav } from "@/components/landing/sticky-nav";
+import { HarnessLayers } from "@/components/vision/harness-layers";
+import { LandscapeMap } from "@/components/vision/landscape-map";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -74,31 +76,18 @@ export default function VisionPage() {
           </p>
 
           <p>
-            In <code>prd-to-prod</code>, the harness is:
+            In <code>prd-to-prod</code>, the harness is five layers deep:
           </p>
 
-          <ul className={styles.list}>
-            <li>
-              An <strong>autonomy policy</strong> that defines what agents can
-              and cannot do
-            </li>
-            <li>
-              A <strong>decision state machine</strong> that constrains human
-              interventions to a small, reasoned-about set
-            </li>
-            <li>
-              <strong>Identity separation</strong> so the agent that writes code
-              can never approve its own work
-            </li>
-            <li>
-              <strong>Self-healing loops</strong> that detect CI failures,
-              diagnose root causes, and open fix PRs without human intervention
-            </li>
-            <li>
-              <strong>Deterministic scaffolding</strong> in standard GitHub
-              Actions that owns routing, policy, deploy, and merge authority
-            </li>
-          </ul>
+          <HarnessLayers
+            layers={[
+              { label: "Autonomy Policy", description: "A machine-readable file that defines what agents can and cannot do. Unrecognized actions fail closed.", color: "#8b5cf6" },
+              { label: "Decision State Machine", description: "Constrains human interventions to a small, reasoned-about enum: Approved or Rejected. No freeform.", color: "#6e8cff" },
+              { label: "Identity Separation", description: "The agent that writes code can never be the same identity that approves it. Builder and reviewer are distinct actors.", color: "#14b8a6" },
+              { label: "Self-Healing Loops", description: "CI failures are detected, diagnosed, and repaired by agents without human intervention. Fix PRs are reviewed independently.", color: "#f59e0b" },
+              { label: "Deterministic Scaffolding", description: "Standard GitHub Actions owns routing, policy enforcement, deploy, and merge authority. Agents operate inside, not above.", color: "#ef4444" },
+            ]}
+          />
 
           <p>The agents operate inside this harness. They do not get to redefine it.</p>
 
@@ -182,56 +171,18 @@ export default function VisionPage() {
 
           <h2>The positioning gap</h2>
 
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>Generates code</th>
-                  <th>Full pipeline</th>
-                  <th>Human boundary</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Lovable / Bolt</td>
-                  <td>Yes</td>
-                  <td>No</td>
-                  <td>Human is the loop</td>
-                </tr>
-                <tr>
-                  <td>Devin</td>
-                  <td>Yes</td>
-                  <td>Ticket &rarr; PR</td>
-                  <td>Implicit</td>
-                </tr>
-                <tr>
-                  <td>Factory</td>
-                  <td>Yes (Droids)</td>
-                  <td>Full SDLC</td>
-                  <td>Dashboard</td>
-                </tr>
-                <tr>
-                  <td>Mendral</td>
-                  <td>Fixes only</td>
-                  <td>CI self-heal</td>
-                  <td>Automated</td>
-                </tr>
-                <tr>
-                  <td>OpenAI Symphony</td>
-                  <td>Via Codex</td>
-                  <td>Issue &rarr; PR</td>
-                  <td>Not yet formalized</td>
-                </tr>
-                <tr className={styles.highlightRow}>
-                  <td><strong>prd-to-prod</strong></td>
-                  <td><strong>Via agents</strong></td>
-                  <td><strong>Brief &rarr; deploy + self-heal</strong></td>
-                  <td><strong>Explicit policy artifact</strong></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <LandscapeMap
+            xLabel="Pipeline depth →"
+            yLabel="↑ Human boundary"
+            companies={[
+              { name: "Lovable / Bolt", x: 12, y: 10, detail: "Code gen from prompts. No pipeline. Human is the loop." },
+              { name: "Devin", x: 35, y: 25, detail: "Ticket → PR. $10B valuation. Human boundary implicit." },
+              { name: "Factory", x: 65, y: 45, detail: "$70M raised. Full SDLC Droids. Dashboard-based governance." },
+              { name: "Mendral", x: 40, y: 35, detail: "YC W26. Docker founders. CI self-heal only." },
+              { name: "Symphony", x: 45, y: 20, detail: "OpenAI. Issue → PR via Codex. No formalized boundary yet." },
+              { name: "prd-to-prod", x: 88, y: 85, detail: "Brief → deploy + self-heal. Explicit policy artifact.", highlight: true },
+            ]}
+          />
 
           <p>
             The last column is where the gap is. When agents do the work,

@@ -1,0 +1,171 @@
+.map {
+  position: relative;
+  margin: 2.5rem 0;
+  padding: 2rem 0 2rem 2.5rem;
+}
+
+.grid {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-left: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.gridLine {
+  position: absolute;
+}
+
+.h {
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--rule);
+  opacity: 0.5;
+}
+
+.v {
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--rule);
+  opacity: 0.5;
+}
+
+.yLabel,
+.xLabel {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-weight: 500;
+}
+
+.yLabel {
+  left: 0;
+  top: 50%;
+  transform: rotate(-90deg) translateX(-50%);
+  transform-origin: 0 0;
+  white-space: nowrap;
+}
+
+.xLabel {
+  bottom: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.dot {
+  position: absolute;
+  transform: translate(-50%, 50%);
+  cursor: help;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.marker {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  border: 1.5px solid var(--cream);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  transition: color 0.15s ease;
+}
+
+/* Highlighted dot (prd-to-prod) */
+.highlight .marker {
+  background: var(--accent);
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 8px oklch(56% 0.1 255 / 0.35);
+}
+
+.highlight .label {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.7rem;
+}
+
+/* Tooltip */
+.dot::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.4rem 0.7rem;
+  background: var(--ink);
+  border: 1px solid var(--ink-mid);
+  border-radius: 4px;
+  color: var(--cream);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: normal;
+  max-width: 240px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.dot:hover,
+.dot:focus {
+  outline: none;
+  z-index: 5;
+}
+
+.dot:hover .marker,
+.dot:focus .marker {
+  transform: scale(1.4);
+  background: var(--ink);
+}
+
+.highlight:hover .marker,
+.highlight:focus .marker {
+  background: var(--accent);
+}
+
+.dot:hover .label,
+.dot:focus .label {
+  color: var(--ink);
+}
+
+.dot:hover::after,
+.dot:focus::after {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .map {
+    padding-left: 1.5rem;
+  }
+
+  .grid {
+    aspect-ratio: 4 / 3;
+  }
+
+  .label {
+    font-size: 0.55rem;
+  }
+
+  .dot::after {
+    font-size: 0.6rem;
+    max-width: 180px;
+  }
+}
