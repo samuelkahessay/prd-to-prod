@@ -121,7 +121,7 @@ if [ -f "$GOLDEN" ]; then
   # Re-export cleanly (we removed the probe file)
   bash "$EXPORT_SCRIPT" >/dev/null 2>&1
   # Use relative paths to match golden file format
-  ACTUAL=$(cd "$ROOT_DIR" && find dist/scaffold/ -type f | sort)
+  ACTUAL=$(cd "$ROOT_DIR" && find dist/scaffold/ -type f | LC_ALL=C sort)
   EXPECTED=$(cat "$GOLDEN")
   if [ "$ACTUAL" != "$EXPECTED" ]; then
     echo "FAIL: Test 7: scaffold file list differs from golden file" >&2
