@@ -3,6 +3,7 @@ import { StickyNav } from "@/components/landing/sticky-nav";
 import { Hero } from "@/components/landing/hero";
 import { Pricing } from "@/components/landing/pricing";
 import { WhatYouGet } from "@/components/landing/what-you-get";
+import { ShowcaseStrip } from "@/components/landing/showcase-strip";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { EvidenceLedger } from "@/components/landing/evidence-ledger";
 import { BottomCta } from "@/components/landing/bottom-cta";
@@ -25,6 +26,9 @@ export default async function LandingPage() {
 
         <hr className={styles.divider} />
         <WhatYouGet />
+
+        <hr className={styles.divider} />
+        <ShowcaseStrip />
 
         <hr className={styles.divider} />
         <HowItWorks />

@@ -1,0 +1,229 @@
+.section {
+  padding: 80px 48px 0;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.heading {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+  max-width: 460px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--ink-muted);
+  margin-bottom: 32px;
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+/* Scrollable strip */
+.strip {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  padding-bottom: 4px;
+}
+
+.strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* Cards */
+.card {
+  min-width: 300px;
+  max-width: 300px;
+  scroll-snap-align: start;
+  background: var(--warm-white);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.runLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.techBadge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 2px 6px;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.appName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.appDesc {
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+  flex: 1;
+}
+
+/* Stats row */
+.stats {
+  display: flex;
+  gap: 16px;
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statValue {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.statKey {
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+/* Card footer */
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+  margin-top: auto;
+}
+
+.date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.openLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.openLink:hover {
+  text-decoration: underline;
+}
+
+/* CTA card */
+.ctaCard {
+  border: 1px dashed var(--rule-strong);
+  background: transparent;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.ctaHeading {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.ctaDesc {
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.ctaLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1.5px solid var(--ink);
+  padding: 8px 16px;
+  display: inline-block;
+  margin-top: 8px;
+  border-radius: 4px;
+}
+
+.ctaLink:hover {
+  background: var(--ink);
+  color: var(--warm-white);
+}
+
+/* "See all" link */
+.seeAll {
+  display: inline-block;
+  margin-top: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.seeAll:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 60px 24px 0;
+  }
+
+  .strip {
+    /* Cards become single-width swipeable on mobile */
+  }
+
+  .card {
+    min-width: calc(100vw - 48px);
+    max-width: calc(100vw - 48px);
+  }
+}
