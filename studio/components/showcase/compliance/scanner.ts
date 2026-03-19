@@ -37,10 +37,66 @@ interface Rule {
   severity: FindingSeverity;
   disposition: ComplianceDisposition;
   description: string;
-  // Pattern is tested against each line and the full content
-  pattern: RegExp;
+  // Pattern is tested against each line and the full content.
+  pattern?: RegExp;
+  matcher?: (content: string, lines: string[]) => MatchDetails | null;
   // Some rules only fire in specific content types (undefined = all types)
   contentTypes?: ContentType[];
+}
+
+interface MatchDetails {
+  lineNumber?: number;
+  codeSnippet?: string;
+}
+
+const TRANSACTION_CONTEXT =
+  /\b(transaction|transfer|payment|wire|deposit|withdrawal|cash|beneficiary)\b/i;
+const REPORTING_MARKERS = /\b(fintrac_reported|suspicious_flag|ctr_required)\b/i;
+const NEGATIVE_COMPLIANCE_MARKER =
+  /\b(missing|without|skipp(?:ed|ing)|omit(?:ted)?|not[_\s-]?verified|unverified|pending|false)\b/i;
+const VERIFICATION_TERM =
+  /\b(kyc|know[_\s]?your[_\s]?customer|identity[_\s]?verif(?:ication)?|beneficiary(?:[_\s]?verified)?)\b/i;
+const STRUCTURING_HINT =
+  /\b(split|multiple|structured?|structuring|avoid(?:ing)?(?: reporting)?|below threshold|under threshold|just under)\b/i;
+const STRUCTURING_AMOUNT = /\b([7-9]\d{3})(?:\.\d{2})?\b/;
+
+function clippedLine(line: string): string {
+  return line.trim().slice(0, 120);
+}
+
+function matchLine(lines: string[], predicate: (line: string) => boolean): MatchDetails | null {
+  for (let i = 0; i < lines.length; i++) {
+    if (predicate(lines[i])) {
+      return {
+        lineNumber: i + 1,
+        codeSnippet: clippedLine(lines[i]),
+      };
+    }
+  }
+
+  return null;
+}
+
+function hasLargeTransactionAmount(text: string): boolean {
+  const matches = text.matchAll(
+    /\$?\s*((?:\d{1,3}(?:,\d{3})+)|\d+)(?:\.\d{2})?\s*(cad|usd|dollars?)?/gi
+  );
+
+  for (const match of matches) {
+    const rawAmount = match[1];
+    const hasCurrencyMarker = match[0].includes("$") || Boolean(match[2]);
+
+    if (!hasCurrencyMarker) {
+      continue;
+    }
+
+    const amount = Number(rawAmount.replaceAll(",", ""));
+    if (amount > 10_000) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 const RULES: Rule[] = [
@@ -121,13 +177,18 @@ const RULES: Rule[] = [
   {
     id: "FINTRAC-001",
     regulation: "FINTRAC",
-    severity: "Critical",
-    disposition: "AUTO_BLOCK",
+    severity: "High",
+    disposition: "HUMAN_REQUIRED",
     description:
       "Large cash transaction exceeding $10,000 threshold — mandatory reporting under Proceeds of Crime Act s.9",
-    // Matches amounts like $10,500 or 15000 CAD or 12500.00
-    pattern:
-      /\$\s?(1[0-9],\d{3}|[2-9]\d,\d{3}|\d{3},\d{3})|(\b1[0-9]\d{3,}|\b[2-9]\d{4,})\s*(cad|usd|dollars?)?/i,
+    matcher: (_content, lines) =>
+      matchLine(
+        lines,
+        (line) =>
+          TRANSACTION_CONTEXT.test(line) &&
+          hasLargeTransactionAmount(line) &&
+          !REPORTING_MARKERS.test(line)
+      ),
   },
   {
     id: "FINTRAC-002",
@@ -136,7 +197,13 @@ const RULES: Rule[] = [
     disposition: "HUMAN_REQUIRED",
     description:
       "Missing KYC (Know Your Customer) reference in transaction context — FINTRAC requires identity verification",
-    pattern: /\b(kyc|know[_\s]?your[_\s]?customer|identity[_\s]?verif|id[_\s]?check|aml)\b/i,
+    matcher: (_content, lines) =>
+      matchLine(
+        lines,
+        (line) =>
+          VERIFICATION_TERM.test(line) &&
+          NEGATIVE_COMPLIANCE_MARKER.test(line)
+      ),
   },
   {
     id: "FINTRAC-003",
@@ -145,8 +212,14 @@ const RULES: Rule[] = [
     disposition: "AUTO_BLOCK",
     description:
       "Suspicious transaction pattern: structured splitting to avoid reporting threshold (structuring)",
-    // Looking for multiple transactions just under the threshold
-    pattern: /\b9[,.]?[0-9]{3}|8[,.]?[0-9]{3}|7[,.]?[0-9]{3}\b.*\b(transaction|transfer|payment)/i,
+    matcher: (_content, lines) =>
+      matchLine(
+        lines,
+        (line) =>
+          TRANSACTION_CONTEXT.test(line) &&
+          STRUCTURING_AMOUNT.test(line) &&
+          STRUCTURING_HINT.test(line)
+      ),
   },
   {
     id: "FINTRAC-004",
@@ -202,6 +275,30 @@ export function scanContent(
       continue;
     }
 
+    if (rule.matcher) {
+      const match = rule.matcher(content, lines);
+
+      if (match && !firedRules.has(rule.id)) {
+        firedRules.add(rule.id);
+        findings.push({
+          id: findingId(),
+          regulation: rule.regulation,
+          severity: rule.severity,
+          disposition: rule.disposition,
+          ruleId: rule.id,
+          description: rule.description,
+          ...(match.lineNumber != null ? { lineNumber: match.lineNumber } : {}),
+          ...(match.codeSnippet ? { codeSnippet: match.codeSnippet } : {}),
+        });
+      }
+
+      continue;
+    }
+
+    if (!rule.pattern) {
+      continue;
+    }
+
     // Test line-by-line first to capture line numbers and snippets
     let ruleMatched = false;
     for (let i = 0; i < lines.length; i++) {
@@ -216,7 +313,7 @@ export function scanContent(
             ruleId: rule.id,
             description: rule.description,
             lineNumber: i + 1,
-            codeSnippet: lines[i].trim().slice(0, 120),
+            codeSnippet: clippedLine(lines[i]),
           });
           ruleMatched = true;
           break;

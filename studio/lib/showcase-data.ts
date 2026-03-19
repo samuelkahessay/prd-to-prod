@@ -18,8 +18,22 @@ export interface ShowcaseApp {
 }
 
 const REPO = "https://github.com/samuelkahessay/prd-to-prod";
+const MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
 
-// Derived from showcase/*/manifest.json — counts match the arrays in each manifest.
+// Embedded snapshot of showcase/*/manifest.json to avoid fs reads in shared modules.
 // Curated fields (slug, description, originalStack, extra metrics) are added manually.
 export const SHOWCASE_APPS: ShowcaseApp[] = [
   {
@@ -56,7 +70,7 @@ export const SHOWCASE_APPS: ShowcaseApp[] = [
     run: 3,
     name: "DevCard",
     tag: "v3.0.0",
-    techStack: "Next.js 14 + Framer Motion",
+    techStack: "Next.js 14 + TypeScript + Framer Motion",
     originalStack: null,
     date: "2026-02",
     prdPath: "docs/prd/devcard-prd.md",
@@ -71,7 +85,7 @@ export const SHOWCASE_APPS: ShowcaseApp[] = [
     run: 4,
     name: "Ticket Deflection",
     tag: "v4.0.0",
-    techStack: "Next.js (showcase)",
+    techStack: "ASP.NET Core + C#",
     originalStack: "ASP.NET Core + C#",
     date: "2026-02",
     prdPath: "docs/prd/ticket-deflection-prd.md",
@@ -87,7 +101,7 @@ export const SHOWCASE_APPS: ShowcaseApp[] = [
     run: 5,
     name: "Compliance Scan Service",
     tag: "v5.0.0",
-    techStack: "Next.js (showcase)",
+    techStack: "ASP.NET Core + C#",
     originalStack: "ASP.NET Core + C#",
     date: "2026-03",
     prdPath: "docs/prd/run-07-compliance-scan-service-prd.md",
@@ -100,4 +114,16 @@ export const SHOWCASE_APPS: ShowcaseApp[] = [
 
 export function getShowcaseApp(slug: string): ShowcaseApp | undefined {
   return SHOWCASE_APPS.find((app) => app.slug === slug);
+}
+
+export function formatShowcaseMonth(dateStr: string): string {
+  const [yearPart, monthPart] = dateStr.split("-");
+  const year = Number(yearPart);
+  const month = Number(monthPart);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    return dateStr;
+  }
+
+  return `${MONTH_LABELS[month - 1]} ${year}`;
 }

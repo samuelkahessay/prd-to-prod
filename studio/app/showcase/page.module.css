@@ -62,6 +62,18 @@
 .preview {
   height: 180px;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.previewImage {
+  object-fit: cover;
+}
+
+.previewFallback {
+  height: 100%;
+  width: 100%;
 }
 
 /* Card body */

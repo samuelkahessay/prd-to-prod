@@ -74,8 +74,8 @@ export const SEED_SCANS: ComplianceScan[] = [
       {
         id: "f-seed-2b",
         regulation: "FINTRAC",
-        severity: "Critical",
-        disposition: "AUTO_BLOCK",
+        severity: "High",
+        disposition: "HUMAN_REQUIRED",
         ruleId: "FINTRAC-001",
         description:
           "Large cash transaction exceeding $10,000 threshold — mandatory reporting under Proceeds of Crime Act s.9",

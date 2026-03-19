@@ -1,10 +1,5 @@
-import { SHOWCASE_APPS } from "@/lib/showcase-data";
+import { SHOWCASE_APPS, formatShowcaseMonth } from "@/lib/showcase-data";
 import styles from "./showcase-strip.module.css";
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
 
 function runLabel(n: number): string {
   return `Run ${String(n).padStart(2, "0")}`;
@@ -64,7 +59,7 @@ export function ShowcaseStrip() {
             </div>
 
             <div className={styles.cardFooter}>
-              <span className={styles.date}>{formatDate(app.date)}</span>
+              <span className={styles.date}>{formatShowcaseMonth(app.date)}</span>
               <a href={`/showcase/${app.slug}`} className={styles.openLink}>
                 Open showcase →
               </a>

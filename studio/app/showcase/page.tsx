@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+import Image from "next/image";
 import { SHOWCASE_APPS } from "@/lib/showcase-data";
 import styles from "./page.module.css";
 
@@ -14,6 +17,14 @@ function runLabel(n: number): string {
   return `Run ${String(n).padStart(2, "0")}`;
 }
 
+function previewPath(slug: string): string {
+  return `/showcase/${slug}.png`;
+}
+
+function hasPreview(slug: string): boolean {
+  return fs.existsSync(path.join(process.cwd(), "public", "showcase", `${slug}.png`));
+}
+
 export default function ShowcasePage() {
   return (
     <div className={styles.shell}>
@@ -24,85 +35,101 @@ export default function ShowcasePage() {
           <h1 className={styles.heading}>Built by the pipeline</h1>
           <p className={styles.subtitle}>
             Five products, five PRDs. Each one autonomously decomposed, implemented,
-            reviewed, and merged — no human wrote a line of application code.
+            reviewed, and merged by the pipeline, then presented here with human polish.
           </p>
         </div>
 
         {/* Gallery grid */}
         <div className={styles.grid}>
-          {SHOWCASE_APPS.map((app, i) => (
-            <div key={app.slug} className={styles.card}>
-              {/* Preview */}
-              <div
-                className={styles.preview}
-                style={{ background: GRADIENTS[i % GRADIENTS.length] }}
-                aria-hidden
-              />
+          {SHOWCASE_APPS.map((app, i) => {
+            const previewExists = hasPreview(app.slug);
 
-              <div className={styles.cardBody}>
-                {/* Run + tech stack */}
-                <div className={styles.cardMeta}>
-                  <span className={styles.runLabel}>{runLabel(app.run)}</span>
-                  {app.originalStack != null ? (
-                    <span className={styles.techBadge}>
-                      Originally {app.originalStack}
-                    </span>
+            return (
+              <div key={app.slug} className={styles.card}>
+                {/* Preview */}
+                <div className={styles.preview}>
+                  {previewExists ? (
+                    <Image
+                      src={previewPath(app.slug)}
+                      alt={`${app.name} landing state preview`}
+                      fill
+                      className={styles.previewImage}
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
                   ) : (
-                    <span className={styles.techBadge}>{app.techStack}</span>
+                    <div
+                      className={styles.previewFallback}
+                      style={{ background: GRADIENTS[i % GRADIENTS.length] }}
+                      aria-hidden
+                    />
                   )}
                 </div>
 
-                {/* Name + description */}
-                <h2 className={styles.appName}>{app.name}</h2>
-                <p className={styles.appDesc}>{app.description}</p>
+                <div className={styles.cardBody}>
+                  {/* Run + tech stack */}
+                  <div className={styles.cardMeta}>
+                    <span className={styles.runLabel}>{runLabel(app.run)}</span>
+                    {app.originalStack != null ? (
+                      <span className={styles.techBadge}>
+                        Originally {app.originalStack}
+                      </span>
+                    ) : (
+                      <span className={styles.techBadge}>{app.techStack}</span>
+                    )}
+                  </div>
 
-                {/* Pipeline stats */}
-                <div className={styles.stats}>
-                  <span className={styles.stat}>
-                    <span className={styles.statValue}>{app.issueCount}</span>
-                    <span className={styles.statKey}>issues</span>
-                  </span>
-                  <span className={styles.stat}>
-                    <span className={styles.statValue}>{app.prCount}</span>
-                    <span className={styles.statKey}>PRs</span>
-                  </span>
-                  {app.testsWritten != null && (
-                    <span className={styles.stat}>
-                      <span className={styles.statValue}>{app.testsWritten}</span>
-                      <span className={styles.statKey}>tests</span>
-                    </span>
-                  )}
-                  {app.themes != null && (
-                    <span className={styles.stat}>
-                      <span className={styles.statValue}>{app.themes}</span>
-                      <span className={styles.statKey}>themes</span>
-                    </span>
-                  )}
-                  {app.linesAdded != null && app.testsWritten == null && app.themes == null && (
-                    <span className={styles.stat}>
-                      <span className={styles.statValue}>{app.linesAdded.toLocaleString()}</span>
-                      <span className={styles.statKey}>lines</span>
-                    </span>
-                  )}
-                </div>
+                  {/* Name + description */}
+                  <h2 className={styles.appName}>{app.name}</h2>
+                  <p className={styles.appDesc}>{app.description}</p>
 
-                {/* Actions */}
-                <div className={styles.actions}>
-                  <a href={`/showcase/${app.slug}`} className={styles.actionPrimary}>
-                    Open app →
-                  </a>
-                  <a
-                    href={app.prdUrl}
-                    className={styles.actionSecondary}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    View PRD
-                  </a>
+                  {/* Pipeline stats */}
+                  <div className={styles.stats}>
+                    <span className={styles.stat}>
+                      <span className={styles.statValue}>{app.issueCount}</span>
+                      <span className={styles.statKey}>issues</span>
+                    </span>
+                    <span className={styles.stat}>
+                      <span className={styles.statValue}>{app.prCount}</span>
+                      <span className={styles.statKey}>PRs</span>
+                    </span>
+                    {app.testsWritten != null && (
+                      <span className={styles.stat}>
+                        <span className={styles.statValue}>{app.testsWritten}</span>
+                        <span className={styles.statKey}>tests</span>
+                      </span>
+                    )}
+                    {app.themes != null && (
+                      <span className={styles.stat}>
+                        <span className={styles.statValue}>{app.themes}</span>
+                        <span className={styles.statKey}>themes</span>
+                      </span>
+                    )}
+                    {app.linesAdded != null && app.testsWritten == null && app.themes == null && (
+                      <span className={styles.stat}>
+                        <span className={styles.statValue}>{app.linesAdded.toLocaleString()}</span>
+                        <span className={styles.statKey}>lines</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className={styles.actions}>
+                    <a href={`/showcase/${app.slug}`} className={styles.actionPrimary}>
+                      Open app →
+                    </a>
+                    <a
+                      href={app.prdUrl}
+                      className={styles.actionSecondary}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View PRD
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* CTA card */}
           <div className={`${styles.card} ${styles.ctaCard}`}>

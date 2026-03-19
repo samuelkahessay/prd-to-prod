@@ -50,4 +50,11 @@ describe("ShowcaseStrip", () => {
     render(<ShowcaseStrip />);
     expect(screen.getByRole("link", { name: "See all →" })).toHaveAttribute("href", "/showcase");
   });
+
+  it("renders month-only dates without timezone drift", () => {
+    render(<ShowcaseStrip />);
+    expect(screen.getAllByText("Feb 2026")).toHaveLength(4);
+    expect(screen.getByText("Mar 2026")).toBeInTheDocument();
+    expect(screen.queryByText("Jan 31, 2026")).not.toBeInTheDocument();
+  });
 });

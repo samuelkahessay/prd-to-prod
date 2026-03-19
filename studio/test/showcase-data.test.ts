@@ -1,4 +1,6 @@
-import { SHOWCASE_APPS, getShowcaseApp } from "@/lib/showcase-data";
+import fs from "node:fs";
+import path from "node:path";
+import { SHOWCASE_APPS, formatShowcaseMonth, getShowcaseApp } from "@/lib/showcase-data";
 
 describe("showcase-data", () => {
   it("has 5 apps", () => {
@@ -48,5 +50,21 @@ describe("showcase-data", () => {
     const snippets = getShowcaseApp("code-snippets")!;
     expect(snippets.linesAdded).toBeUndefined();
     expect(snippets.testsWritten).toBeUndefined();
+  });
+
+  it("preserves manifest tech stack exactly for native apps", () => {
+    expect(getShowcaseApp("devcard")?.techStack).toBe("Next.js 14 + TypeScript + Framer Motion");
+  });
+
+  it("formats month-only dates without timezone drift", () => {
+    expect(formatShowcaseMonth("2026-02")).toBe("Feb 2026");
+    expect(formatShowcaseMonth("2026-03")).toBe("Mar 2026");
+  });
+
+  it("has gallery preview assets for each showcase app", () => {
+    for (const app of SHOWCASE_APPS) {
+      const previewFile = path.join(process.cwd(), "public", "showcase", `${app.slug}.png`);
+      expect(fs.existsSync(previewFile)).toBe(true);
+    }
   });
 });

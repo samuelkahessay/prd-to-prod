@@ -75,7 +75,8 @@ describe("scanContent — FINTRAC: large transaction detection", () => {
     const finding = result.findings.find((f) => f.ruleId === "FINTRAC-001");
     expect(finding).toBeDefined();
     expect(finding!.regulation).toBe("FINTRAC");
-    expect(finding!.severity).toBe("Critical");
+    expect(finding!.severity).toBe("High");
+    expect(finding!.disposition).toBe("HUMAN_REQUIRED");
   });
 
   it("finds a large numeric amount without currency symbol", () => {
@@ -84,6 +85,13 @@ describe("scanContent — FINTRAC: large transaction detection", () => {
     const finding = result.findings.find((f) => f.ruleId === "FINTRAC-001");
     expect(finding).toBeDefined();
     expect(finding!.regulation).toBe("FINTRAC");
+  });
+
+  it("does not treat arbitrary 5-digit numbers as reportable transactions", () => {
+    const content = "build id 12345 completed successfully";
+    const result = scanContent(content, "FREETEXT");
+    const finding = result.findings.find((f) => f.ruleId === "FINTRAC-001");
+    expect(finding).toBeUndefined();
   });
 });
 
@@ -120,26 +128,14 @@ describe("scanContent — disposition classification", () => {
     // Ensure no AUTO_BLOCK triggers fire by avoiding email/SIN/credential patterns
     const log = "Support call received from 416-555-1234 regarding their account";
     const result = scanContent(log, "LOG");
-    // PIPEDA-003 is HUMAN_REQUIRED; check no AUTO_BLOCK finding also fires
-    const hasAutoBlock = result.findings.some((f) => f.disposition === "AUTO_BLOCK");
-    if (!hasAutoBlock) {
-      expect(result.disposition).toBe("HUMAN_REQUIRED");
-    } else {
-      expect(result.disposition).toBe("AUTO_BLOCK");
-    }
+    expect(result.disposition).toBe("HUMAN_REQUIRED");
   });
 
   it("returns ADVISORY when only low-severity advisory findings are present", () => {
     // PIPEDA-007: retention keyword in FREETEXT (Low, ADVISORY)
     const content = "Data retention policy must define TTL for user records.";
     const result = scanContent(content, "FREETEXT");
-    // All findings should be ADVISORY with no AUTO_BLOCK or HUMAN_REQUIRED
-    const hasEscalated = result.findings.some(
-      (f) => f.disposition === "AUTO_BLOCK" || f.disposition === "HUMAN_REQUIRED"
-    );
-    if (!hasEscalated) {
-      expect(result.disposition).toBe("ADVISORY");
-    }
+    expect(result.disposition).toBe("ADVISORY");
   });
 
   it("returns ADVISORY when no findings are present", () => {
@@ -154,6 +150,20 @@ describe("scanContent — disposition classification", () => {
     const content = "SIN 123-456-789 called from 416-555-9876 for account inquiry";
     const result = scanContent(content, "FREETEXT");
     expect(result.disposition).toBe("AUTO_BLOCK");
+  });
+
+  it("does not escalate when KYC is explicitly completed", () => {
+    const content = "KYC check completed for customer before transfer approval";
+    const result = scanContent(content, "FREETEXT");
+    const finding = result.findings.find((f) => f.ruleId === "FINTRAC-002");
+    expect(finding).toBeUndefined();
+  });
+
+  it("does not flag structuring without suspicious context", () => {
+    const content = "balance is 8000 users and ticket 9000 opened";
+    const result = scanContent(content, "FREETEXT");
+    const finding = result.findings.find((f) => f.ruleId === "FINTRAC-003");
+    expect(finding).toBeUndefined();
   });
 });
 
