@@ -11,6 +11,7 @@ Options:
   --linked-issue N
   --head-sha SHA
   --head-branch BRANCH
+  --workflow-name NAME
   --failure-run-id ID
   --failure-run-url URL
   --failure-type TYPE
@@ -34,6 +35,7 @@ while [ "$#" -gt 0 ]; do
     --linked-issue) LINKED_ISSUE="$2"; shift 2 ;;
     --head-sha) HEAD_SHA="$2"; shift 2 ;;
     --head-branch) HEAD_BRANCH="$2"; shift 2 ;;
+    --workflow-name) WORKFLOW_NAME="$2"; shift 2 ;;
     --failure-run-id) FAILURE_RUN_ID="$2"; shift 2 ;;
     --failure-run-url) FAILURE_RUN_URL="$2"; shift 2 ;;
     --failure-type) FAILURE_TYPE="$2"; shift 2 ;;
@@ -54,6 +56,7 @@ required_vars=(
   LINKED_ISSUE
   HEAD_SHA
   HEAD_BRANCH
+  WORKFLOW_NAME
   FAILURE_RUN_ID
   FAILURE_RUN_URL
   FAILURE_TYPE
@@ -82,6 +85,7 @@ printf '%s\n' \
   "linked_issue=${LINKED_ISSUE}" \
   "head_sha=${HEAD_SHA}" \
   "head_branch=${HEAD_BRANCH}" \
+  "workflow_name=${WORKFLOW_NAME}" \
   "failure_run_id=${FAILURE_RUN_ID}" \
   "failure_run_url=${FAILURE_RUN_URL}" \
   "failure_type=${FAILURE_TYPE}" \
@@ -90,6 +94,9 @@ printf '%s\n' \
   "-->" \
   "" \
   "Fix the failure on the existing PR branch. Do not open a new PR. If the failure is stale because the PR head moved, comment that and stop." \
+  "" \
+  "### Failing Workflow" \
+  "${WORKFLOW_NAME}" \
   "" \
   "### Failure Summary" \
   "${FAILURE_SUMMARY}" \

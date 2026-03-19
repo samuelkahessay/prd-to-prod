@@ -1,9 +1,9 @@
 dist/scaffold/.deploy-profile
+dist/scaffold/.github/ISSUE_TEMPLATE/bug-report.yml
 dist/scaffold/.github/agents/agentic-workflows.agent.md
 dist/scaffold/.github/aw/actions-lock.json
 dist/scaffold/.github/copilot-instructions.md
 dist/scaffold/.github/deploy-profiles/nextjs-vercel.yml
-dist/scaffold/.github/ISSUE_TEMPLATE/bug-report.yml
 dist/scaffold/.github/workflows/agentics-maintenance.yml
 dist/scaffold/.github/workflows/architecture-approve.yml
 dist/scaffold/.github/workflows/auto-dispatch-requeue.yml
@@ -42,13 +42,13 @@ dist/scaffold/.github/workflows/shared/reporting.md
 dist/scaffold/.github/workflows/validate-deployment.yml
 dist/scaffold/.gitignore
 dist/scaffold/AGENTS.md
+dist/scaffold/LICENSE
+dist/scaffold/README.md
 dist/scaffold/autonomy-policy.yml
 dist/scaffold/docs/ARCHITECTURE.md
 dist/scaffold/docs/decision-ledger/README.md
 dist/scaffold/docs/prd/sample-prd.md
 dist/scaffold/docs/why-gh-aw.md
-dist/scaffold/LICENSE
-dist/scaffold/README.md
 dist/scaffold/scripts/archive-run.sh
 dist/scaffold/scripts/bootstrap.sh
 dist/scaffold/scripts/capture-run-data.sh
@@ -103,7 +103,6 @@ dist/scaffold/scripts/tests/test-patch-pr-review-agent-lock.sh
 dist/scaffold/scripts/tests/test-pipeline-watchdog.sh
 dist/scaffold/scripts/tests/test-pr-review-agent-activation.sh
 dist/scaffold/scripts/tests/test-pr-review-submit-policy-gate.sh
-dist/scaffold/scripts/tests/test-prd-decomposer-activation.sh
 dist/scaffold/scripts/tests/test-push-to-existing-golden.sh
 dist/scaffold/scripts/tests/test-push-to-existing.sh
 dist/scaffold/scripts/tests/test-push-to-pipeline-dryrun.sh
@@ -199,5 +198,4 @@ dist/scaffold/studio/test/build-flow.test.tsx
 dist/scaffold/studio/test/components.test.tsx
 dist/scaffold/studio/test/factory-state.test.ts
 dist/scaffold/studio/tsconfig.json
-dist/scaffold/studio/tsconfig.tsbuildinfo
 dist/scaffold/vercel.json

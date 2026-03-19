@@ -10,6 +10,7 @@ OUTPUT=$(
     --linked-issue 172 \
     --head-sha fb3f6fc1e3e91007b1c43871187b709214ad83cc \
     --head-branch repo-assist/issue-172-fix-knowledge-article-createdat-65fb9152408a7630 \
+    --workflow-name "Node CI" \
     --failure-run-id 22510586524 \
     --failure-run-url https://github.com/samuelkahessay/prd-to-prod/actions/runs/22510586524 \
     --failure-type build \
@@ -23,7 +24,10 @@ printf '%s' "$OUTPUT" | grep -q '^/repo-assist Repair CI failure for PR #173\.$'
 printf '%s' "$OUTPUT" | grep -q '^<!-- ci-repair-command:v1$'
 printf '%s' "$OUTPUT" | grep -q '^pr_number=173$'
 printf '%s' "$OUTPUT" | grep -q '^linked_issue=172$'
+printf '%s' "$OUTPUT" | grep -q '^workflow_name=Node CI$'
 printf '%s' "$OUTPUT" | grep -q '^failure_signature=cs0117-knowledgearticle-createdat$'
+printf '%s' "$OUTPUT" | grep -q '^### Failing Workflow$'
+printf '%s' "$OUTPUT" | grep -q '^Node CI$'
 printf '%s' "$OUTPUT" | grep -q '^### Failure Summary$'
 printf '%s' "$OUTPUT" | grep -q '^```text$'
 printf '%s' "$OUTPUT" | grep -q 'build-and-test Run dotnet build \.\.\. error CS0117'
@@ -41,6 +45,7 @@ OUTPUT_WITH_DIFF=$(
     --linked-issue 172 \
     --head-sha fb3f6fc1e3e91007b1c43871187b709214ad83cc \
     --head-branch repo-assist/issue-172-fix-knowledge-article-createdat-65fb9152408a7630 \
+    --workflow-name "Node CI" \
     --failure-run-id 22510586524 \
     --failure-run-url https://github.com/samuelkahessay/prd-to-prod/actions/runs/22510586524 \
     --failure-type build \
@@ -68,6 +73,7 @@ OUTPUT_FRONTEND=$(
     --linked-issue 172 \
     --head-sha fb3f6fc1e3e91007b1c43871187b709214ad83cc \
     --head-branch frontend-agent/issue-172-fix-hero-overflow \
+    --workflow-name "Pipeline Scripts CI" \
     --failure-run-id 22510586524 \
     --failure-run-url https://github.com/samuelkahessay/prd-to-prod/actions/runs/22510586524 \
     --failure-type build \
@@ -80,6 +86,7 @@ OUTPUT_FRONTEND=$(
 printf '%s' "$OUTPUT_FRONTEND" | grep -q '^/frontend-agent Repair CI failure for PR #173\.$'
 # Marker format stays the same regardless of agent command
 printf '%s' "$OUTPUT_FRONTEND" | grep -q '^<!-- ci-repair-command:v1$'
+printf '%s' "$OUTPUT_FRONTEND" | grep -q '^workflow_name=Pipeline Scripts CI$'
 
 # Test default (no --agent-command) still produces /repo-assist
 printf '%s' "$OUTPUT" | grep -q '^/repo-assist Repair CI failure for PR #173\.$'

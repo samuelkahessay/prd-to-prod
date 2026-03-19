@@ -16,7 +16,7 @@ name: "CI Failure Router"
 
 on:
   workflow_run:
-    workflows: ["Node CI", "Deploy Router"]
+    workflows: ["Node CI", "Deploy Router", "Pipeline Scripts CI"]
     types: [completed]
 
 permissions:
@@ -73,6 +73,7 @@ jobs:
           RUN_URL: ${{ github.event.workflow_run.html_url }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
           HEALING_PAUSED: ${{ steps.healing.outputs.paused }}
           PULL_REQUESTS_JSON: ${{ toJson(github.event.workflow_run.pull_requests) }}
         run: |
@@ -120,12 +121,68 @@ jobs:
             printf '%s\n' "$body" | sed -n "s/^${field}=//p" | head -1
           }
 
+          find_marker_comments() {
+            local item_number=$1
+            local marker=$2
+            gh api "/repos/${REPO}/issues/${item_number}/comments?per_page=100" 2>/dev/null \
+              | jq -c --arg marker "$marker" '[.[] | select(.body | contains($marker))]' || echo '[]'
+          }
+
           find_marker_comment() {
             local item_number=$1
             local marker=$2
+            local workflow_name=$3
             local comments_json
-            comments_json=$(gh api "/repos/${REPO}/issues/${item_number}/comments?per_page=100" 2>/dev/null || echo '[]')
-            printf '%s' "$comments_json" | jq -c --arg marker "$marker" '[.[] | select(.body | contains($marker))] | last // {}'
+            comments_json=$(find_marker_comments "$item_number" "$marker")
+            printf '%s' "$comments_json" | jq -c --arg workflow_name "$workflow_name" \
+              '[.[] | select(.body | contains("workflow_name=" + $workflow_name))] | last // {}'
+          }
+
+          sync_pr_repair_labels() {
+            local comments_json comment body status
+            local has_active=false
+            local has_in_progress=false
+            local has_escalated=false
+            comments_json=$(find_marker_comments "$PR_NUMBER" "$STATE_MARKER")
+
+            while IFS= read -r comment; do
+              [ -z "$comment" ] && continue
+              body=$(printf '%s' "$comment" | jq -r '.body // empty')
+              status=$(read_marker_field "$body" status)
+              case "$status" in
+                ""|resolved|superseded)
+                  ;;
+                escalated)
+                  has_active=true
+                  has_escalated=true
+                  ;;
+                detected|dispatched|repairing)
+                  has_active=true
+                  has_in_progress=true
+                  ;;
+                *)
+                  has_active=true
+                  ;;
+              esac
+            done < <(printf '%s' "$comments_json" | jq -c '.[]')
+
+            if [ "$has_active" = "true" ]; then
+              add_pr_label "ci-failure"
+            else
+              remove_pr_label "ci-failure"
+            fi
+
+            if [ "$has_in_progress" = "true" ]; then
+              add_pr_label "repair-in-progress"
+            else
+              remove_pr_label "repair-in-progress"
+            fi
+
+            if [ "$has_escalated" = "true" ]; then
+              add_pr_label "repair-escalated"
+            else
+              remove_pr_label "repair-escalated"
+            fi
           }
 
           upsert_comment() {
@@ -190,6 +247,7 @@ jobs:
               "linked_issue=${linked_issue}" \
               "head_sha=${HEAD_SHA}" \
               "head_branch=${HEAD_BRANCH}" \
+              "workflow_name=${WORKFLOW_NAME}" \
               "failure_run_id=${RUN_ID}" \
               "failure_run_url=${RUN_URL}" \
               "failure_type=${failure_type}" \
@@ -204,6 +262,7 @@ jobs:
               "- **Run**: ${RUN_URL}" \
               "- **Branch**: \`${HEAD_BRANCH}\`" \
               "- **Head SHA**: \`${HEAD_SHA}\`" \
+              "- **Workflow**: ${WORKFLOW_NAME}" \
               "- **Failure Type**: ${failure_type}" \
               "- **Failure Signature**: \`${failure_signature}\`" \
               "- **Failure Summary**: ${failure_summary}" \
@@ -226,6 +285,7 @@ jobs:
             printf '%b\n' "${context_line}"
             printf '%s\n' \
               "- **Commit**: \`${HEAD_SHA}\`" \
+              "- **Workflow**: ${WORKFLOW_NAME}" \
               "- **Reason**: ${reason}" \
               "- **Failure Type**: ${FAILURE_TYPE}" \
               "- **Failure Signature**: \`${FAILURE_SIGNATURE}\`" \
@@ -324,7 +384,7 @@ jobs:
 
           if [ -z "$PR_NUMBER" ]; then
             if [ "${HEALING_PAUSED:-false}" = "true" ]; then
-              TITLE="[CI Incident] ${HEAD_BRANCH} ${FAILURE_TYPE} failure: ${SHORT_SUMMARY}"
+              TITLE="[CI Incident] ${HEAD_BRANCH} ${WORKFLOW_NAME} ${FAILURE_TYPE} failure: ${SHORT_SUMMARY}"
               BODY=$(render_incident_body \
                 "Autonomous healing is paused via PIPELINE_HEALING_ENABLED, so no auto-dispatchable pipeline repair issue was created." \
                 "- **Branch**: \`${HEAD_BRANCH}\`")
@@ -335,7 +395,7 @@ jobs:
             fi
 
             if [ "$CLASSIFIER_ACTION" = "escalate" ]; then
-              TITLE="[CI Incident] main ${FAILURE_TYPE} failure: ${SHORT_SUMMARY}"
+              TITLE="[CI Incident] main ${WORKFLOW_NAME} ${FAILURE_TYPE} failure: ${SHORT_SUMMARY}"
               BODY=$(render_incident_body \
                 "The deterministic CI classifier marked this failure as requiring human intervention, so no repair issue was created." \
                 "- **Branch**: \`${HEAD_BRANCH}\`")
@@ -352,6 +412,7 @@ jobs:
               "- **Run**: ${RUN_URL}" \
               "- **Branch**: \`${HEAD_BRANCH}\`" \
               "- **Commit**: \`${HEAD_SHA}\`" \
+              "- **Workflow**: ${WORKFLOW_NAME}" \
               "- **Failure Type**: ${FAILURE_TYPE}" \
               "- **Failure Signature**: \`${FAILURE_SIGNATURE}\`" \
               "" \
@@ -425,7 +486,7 @@ jobs:
           unset FULL_DIFF
 
           if ! printf '%s' "$PR_TITLE" | grep -q '^\[Pipeline\]'; then
-            TITLE="[CI Incident] PR #${PR_NUMBER} CI Failure: ${SHORT_SUMMARY}"
+            TITLE="[CI Incident] PR #${PR_NUMBER} ${WORKFLOW_NAME} CI Failure: ${SHORT_SUMMARY}"
             BODY=$(render_incident_body \
               "The failing PR is not a [Pipeline] PR, so it is not eligible for automatic repair." \
               "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`")
@@ -437,7 +498,7 @@ jobs:
             | bash scripts/extract-linked-issue-numbers.sh "$REPO" \
             | head -1 || true)
           if [ -z "$LINKED_ISSUE" ]; then
-            TITLE="[CI Incident] PR #${PR_NUMBER} CI Failure: ${SHORT_SUMMARY}"
+            TITLE="[CI Incident] PR #${PR_NUMBER} ${WORKFLOW_NAME} CI Failure: ${SHORT_SUMMARY}"
             BODY=$(render_incident_body \
               "The failing [Pipeline] PR has no linked source issue in its PR body." \
               "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`")
@@ -445,20 +506,21 @@ jobs:
             exit 0
           fi
 
-          EXISTING_STATE_JSON=$(find_marker_comment "$PR_NUMBER" "$STATE_MARKER")
+          EXISTING_STATE_JSON=$(find_marker_comment "$PR_NUMBER" "$STATE_MARKER" "$WORKFLOW_NAME")
           STATE_COMMENT_ID=$(printf '%s' "$EXISTING_STATE_JSON" | jq -r '.id // empty')
           STATE_COMMENT_BODY=$(printf '%s' "$EXISTING_STATE_JSON" | jq -r '.body // empty')
           EXISTING_STATUS=$(read_marker_field "$STATE_COMMENT_BODY" status)
           EXISTING_HEAD_SHA=$(read_marker_field "$STATE_COMMENT_BODY" head_sha)
+          EXISTING_WORKFLOW_NAME=$(read_marker_field "$STATE_COMMENT_BODY" workflow_name)
 
-          if [ "$EXISTING_HEAD_SHA" = "$HEAD_SHA" ] && { [ "$EXISTING_STATUS" = "dispatched" ] || [ "$EXISTING_STATUS" = "repairing" ]; }; then
+          if [ "$EXISTING_HEAD_SHA" = "$HEAD_SHA" ] && [ "$EXISTING_WORKFLOW_NAME" = "$WORKFLOW_NAME" ] && { [ "$EXISTING_STATUS" = "dispatched" ] || [ "$EXISTING_STATUS" = "repairing" ]; }; then
             echo "Repair incident already active for PR #${PR_NUMBER} at ${HEAD_SHA}; skipping duplicate dispatch."
             exit 0
           fi
 
           DETECTED_STATE=$(render_state_body detected "$LINKED_ISSUE" 1 "$FAILURE_TYPE" "$FAILURE_SIGNATURE" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
           upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$DETECTED_STATE"
-          add_pr_label "ci-failure"
+          sync_pr_repair_labels
           if [ -n "${CATEGORY_LABEL:-}" ]; then
             add_pr_label "$CATEGORY_LABEL"
           fi
@@ -466,10 +528,9 @@ jobs:
           if [ "$CLASSIFIER_ACTION" = "escalate" ]; then
             ESCALATED_STATE=$(render_state_body escalated "$LINKED_ISSUE" 1 "$FAILURE_TYPE" "$FAILURE_SIGNATURE" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
             upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
-            remove_pr_label "repair-in-progress"
-            add_pr_label "repair-escalated"
+            sync_pr_repair_labels
             add_issue_label "$LINKED_ISSUE" "needs-human"
-            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} ${FAILURE_TYPE} failure"
+            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} ${WORKFLOW_NAME} ${FAILURE_TYPE} failure"
             BODY=$(render_incident_body \
               "The deterministic CI classifier marked this failure as requiring human intervention, so no repair command was posted." \
               "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`\n- **Linked Issue**: #${LINKED_ISSUE}")
@@ -480,9 +541,8 @@ jobs:
           if [ "${HEALING_PAUSED:-false}" = "true" ]; then
             ESCALATED_STATE=$(render_state_body escalated "$LINKED_ISSUE" 1 "$FAILURE_TYPE" "$FAILURE_SIGNATURE" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
             upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
-            remove_pr_label "repair-in-progress"
-            add_pr_label "repair-escalated"
-            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} healing paused"
+            sync_pr_repair_labels
+            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} ${WORKFLOW_NAME} healing paused"
             BODY=$(render_incident_body \
               "Autonomous healing is paused via PIPELINE_HEALING_ENABLED, so the router recorded the incident but did not post a repair command." \
               "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`\n- **Linked Issue**: #${LINKED_ISSUE}")
@@ -490,15 +550,13 @@ jobs:
             exit 0
           fi
 
-          add_pr_label "repair-in-progress"
-          remove_pr_label "repair-escalated"
-
           COMMAND_EXISTS=$(gh api "/repos/${REPO}/issues/${LINKED_ISSUE}/comments?per_page=100" 2>/dev/null \
-            | jq -r --arg pr "$PR_NUMBER" --arg sha "$HEAD_SHA" --arg marker "$COMMAND_MARKER" \
-              '[.[] | select(.body | contains($marker) and contains("pr_number=" + $pr) and contains("head_sha=" + $sha))] | length')
+            | jq -r --arg pr "$PR_NUMBER" --arg sha "$HEAD_SHA" --arg workflow "$WORKFLOW_NAME" --arg marker "$COMMAND_MARKER" \
+              '[.[] | select(.body | contains($marker) and contains("pr_number=" + $pr) and contains("head_sha=" + $sha) and contains("workflow_name=" + $workflow))] | length')
           if [ "${COMMAND_EXISTS:-0}" -gt 0 ]; then
             DISPATCHED_STATE=$(render_state_body dispatched "$LINKED_ISSUE" 1 "$FAILURE_TYPE" "$FAILURE_SIGNATURE" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
             upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$DISPATCHED_STATE"
+            sync_pr_repair_labels
             echo "Repair command already exists for issue #${LINKED_ISSUE}; skipping duplicate post."
             exit 0
           fi
@@ -506,9 +564,8 @@ jobs:
           if [ -z "${GH_AW_GITHUB_TOKEN:-}" ]; then
             ESCALATED_STATE=$(render_state_body escalated "$LINKED_ISSUE" 1 "$FAILURE_TYPE" "$FAILURE_SIGNATURE" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
             upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
-            remove_pr_label "repair-in-progress"
-            add_pr_label "repair-escalated"
-            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} repeated CI failure"
+            sync_pr_repair_labels
+            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} ${WORKFLOW_NAME} repeated CI failure"
             BODY=$(render_incident_body \
               "GH_AW_GITHUB_TOKEN is unavailable, so the router could not post the repair command that triggers the owning agent." \
               "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`\n- **Linked Issue**: #${LINKED_ISSUE}")
@@ -529,6 +586,7 @@ jobs:
             --linked-issue "$LINKED_ISSUE"
             --head-sha "$HEAD_SHA"
             --head-branch "$HEAD_BRANCH"
+            --workflow-name "$WORKFLOW_NAME"
             --failure-run-id "$RUN_ID"
             --failure-run-url "$RUN_URL"
             --failure-type "$FAILURE_TYPE"
@@ -550,9 +608,8 @@ jobs:
             echo "::warning::Repair command dispatch failed for issue #${LINKED_ISSUE}"
             ESCALATED_STATE=$(render_state_body escalated "$LINKED_ISSUE" 1 "$FAILURE_TYPE" "$FAILURE_SIGNATURE" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
             upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$ESCALATED_STATE"
-            remove_pr_label "repair-in-progress"
-            add_pr_label "repair-escalated"
-            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} repeated CI failure"
+            sync_pr_repair_labels
+            TITLE="[CI Incident] Escalation: PR #${PR_NUMBER} ${WORKFLOW_NAME} repeated CI failure"
             BODY=$(render_incident_body \
               "Router could not post the repair command that triggers the owning agent on the linked source issue." \
               "- **PR**: #${PR_NUMBER} (${PR_URL})\n- **Branch**: \`${HEAD_BRANCH}\`\n- **Linked Issue**: #${LINKED_ISSUE}")
@@ -562,4 +619,5 @@ jobs:
 
           DISPATCHED_STATE=$(render_state_body dispatched "$LINKED_ISSUE" 1 "$FAILURE_TYPE" "$FAILURE_SIGNATURE" "$FAILURE_SUMMARY" "$FAILURE_EXCERPT")
           upsert_comment "$GH_TOKEN" "$PR_NUMBER" "$STATE_COMMENT_ID" "$DISPATCHED_STATE"
+          sync_pr_repair_labels
           echo "Posted repair command for PR #${PR_NUMBER} on issue #${LINKED_ISSUE}."
