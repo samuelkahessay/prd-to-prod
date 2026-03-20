@@ -1,14 +1,34 @@
-function registerBuildStreamRoutes(app, { buildSessionStore }) {
+const { getActiveUserSession } = require("../lib/auth-store");
+
+function resolveUserId(db, req) {
+  const sessionId = req.cookies?.build_session;
+  if (!sessionId) return null;
+  const session = getActiveUserSession(db, sessionId);
+  return session ? session.user_id : null;
+}
+
+function registerBuildStreamRoutes(app, { db, buildSessionStore }) {
   app.get("/pub/build-session/:id/stream", (req, res) =>
-    streamBuildSessionEvents(req, res, buildSessionStore)
+    streamBuildSessionEvents(req, res, db, buildSessionStore)
   );
 }
 
-function streamBuildSessionEvents(req, res, buildSessionStore) {
+function streamBuildSessionEvents(req, res, db, buildSessionStore) {
   const sessionId = req.params.id;
   const session = buildSessionStore.getSession(sessionId);
   if (!session) {
     return res.status(404).json({ error: "Session not found" });
+  }
+
+  // Demo sessions are open; real sessions require authenticated owner
+  if (!session.is_demo) {
+    const userId = resolveUserId(db, req);
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    if (session.user_id !== userId) {
+      return res.status(404).json({ error: "Session not found" });
+    }
   }
 
   res.writeHead(200, {

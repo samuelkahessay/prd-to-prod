@@ -111,7 +111,7 @@ if (DEMO_MODE) {
 }
 
 registerBuildSessionRoutes(app, { db, buildSessionStore, serviceResolver });
-registerBuildStreamRoutes(app, { buildSessionStore });
+registerBuildStreamRoutes(app, { db, buildSessionStore });
 registerProvisionRoutes(app, { db, serviceResolver });
 
 // --- Internal routes (behind /internal auth middleware) ---

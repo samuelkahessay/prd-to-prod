@@ -9,6 +9,19 @@ function resolveUserId(db, req) {
   return session ? session.user_id : null;
 }
 
+function resolveSessionAccess(db, buildSessionStore, req) {
+  const session = buildSessionStore.getSession(req.params.id);
+  if (!session) return { status: 404, error: "Session not found" };
+
+  if (session.is_demo) return { session, allowed: true };
+
+  const userId = resolveUserId(db, req);
+  if (!userId) return { status: 401, error: "Authentication required" };
+  if (session.user_id !== userId) return { status: 404, error: "Session not found" };
+
+  return { session, allowed: true, userId };
+}
+
 function registerBuildSessionRoutes(app, { db, buildSessionStore, serviceResolver }) {
   // Create a new build session
   app.post("/pub/build-session", (req, res) => {
@@ -47,26 +60,30 @@ function registerBuildSessionRoutes(app, { db, buildSessionStore, serviceResolve
     }
 
     const userId = resolveUserId(db, req);
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
     const session = buildSessionStore.createSession(userId);
     res.status(201).json({ sessionId: session.id });
   });
 
   // Get a build session with its persisted events
   app.get("/pub/build-session/:id", (req, res) => {
-    const session = buildSessionStore.getSession(req.params.id);
-    if (!session) {
-      return res.status(404).json({ error: "Session not found" });
+    const access = resolveSessionAccess(db, buildSessionStore, req);
+    if (!access.allowed) {
+      return res.status(access.status).json({ error: access.error });
     }
-    const messages = buildSessionStore.getEvents(session.id);
-    res.json({ session, messages });
+    const messages = buildSessionStore.getEvents(access.session.id);
+    res.json({ session: access.session, messages });
   });
 
   // Send a message and get LLM response (streaming SSE)
   app.post("/pub/build-session/:id/message", async (req, res) => {
-    const session = buildSessionStore.getSession(req.params.id);
-    if (!session) {
-      return res.status(404).json({ error: "Session not found" });
+    const access = resolveSessionAccess(db, buildSessionStore, req);
+    if (!access.allowed) {
+      return res.status(access.status).json({ error: access.error });
     }
+    const session = access.session;
     if (session.status !== "refining") {
       return res.status(400).json({ error: "Session is not in refining state" });
     }
@@ -136,23 +153,16 @@ function registerBuildSessionRoutes(app, { db, buildSessionStore, serviceResolve
     res.end();
   });
 
-  // Finalize a build session (requires auth)
+  // Finalize a build session (requires auth + ownership)
   app.post("/pub/build-session/:id/finalize", (req, res) => {
-    const userId = resolveUserId(db, req);
-    if (!userId) {
-      return res.status(401).json({ error: "Authentication required to finalize" });
+    const access = resolveSessionAccess(db, buildSessionStore, req);
+    if (!access.allowed) {
+      return res.status(access.status).json({ error: access.error });
     }
+    const session = access.session;
 
-    const session = buildSessionStore.getSession(req.params.id);
-    if (!session) {
-      return res.status(404).json({ error: "Session not found" });
-    }
     if (session.status !== "refining") {
       return res.status(400).json({ error: "Session is not in refining state" });
-    }
-
-    if (!enforceSessionBoundary(db, userId, session, res)) {
-      return;
     }
 
     // Find the last assistant message with a ready PRD
@@ -168,9 +178,8 @@ function registerBuildSessionRoutes(app, { db, buildSessionStore, serviceResolve
     const prd = lastAssistant.data.parsed.prd;
     const prdMarkdown = formatPrdMarkdown(prd);
 
-    // Bind session to user and set final PRD
+    // Lock PRD and transition status (session already owned from creation)
     buildSessionStore.updateSession(session.id, {
-      user_id: userId,
       status: "ready",
       prd_final: prdMarkdown,
     });

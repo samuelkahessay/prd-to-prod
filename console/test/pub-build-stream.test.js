@@ -26,7 +26,7 @@ test("replays buffered events that arrive while history is being replayed", () =
   let listener;
 
   const buildSessionStore = {
-    getSession: jest.fn().mockReturnValue({ id: "session-1" }),
+    getSession: jest.fn().mockReturnValue({ id: "session-1", is_demo: true }),
     subscribe: jest.fn((_sessionId, callback) => {
       listener = callback;
       return unsubscribe;
@@ -54,7 +54,7 @@ test("replays buffered events that arrive while history is being replayed", () =
     }),
   };
 
-  streamBuildSessionEvents(req, res, buildSessionStore);
+  streamBuildSessionEvents(req, res, null, buildSessionStore);
 
   expect(res.write.mock.calls[0][0]).toContain("id: 2");
   expect(res.write.mock.calls[0][0]).toContain("historical-event");
