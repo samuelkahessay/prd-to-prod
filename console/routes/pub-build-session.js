@@ -91,7 +91,22 @@ function registerBuildSessionRoutes(app, { db, buildSessionStore, serviceResolve
       ? buildSessionStore.getEvents(session.id)
       : buildSessionStore.getEvents(session.id).filter((e) => e.category !== "chat");
 
-    res.json({ session, messages });
+    const response = { session, messages };
+
+    if (isOwner && !session.is_demo && userId) {
+      const codeRow = db.prepare(
+        "SELECT 1 FROM access_codes WHERE redeemed_by = ? AND (build_session_id IS NULL OR build_session_id = ?) LIMIT 1"
+      ).get(userId, session.id);
+      const credRow = db.prepare(
+        "SELECT 1 FROM build_session_refs WHERE build_session_id = ? AND ref_type = 'credential' AND ref_key = 'COPILOT_GITHUB_TOKEN' LIMIT 1"
+      ).get(session.id);
+      response.gates = {
+        codeRedeemed: !!codeRow,
+        credentialsSubmitted: !!credRow,
+      };
+    }
+
+    res.json(response);
   });
 
   // Send a message and get LLM response (streaming SSE)

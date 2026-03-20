@@ -40,6 +40,19 @@ export function BuildStatus({
   const autoBuildStartedRef = useRef(false);
   const [codeRedeemed, setCodeRedeemed] = useState(isDemo);
   const [credentialsSubmitted, setCredentialsSubmitted] = useState(isDemo);
+  const [gatesHydrated, setGatesHydrated] = useState(isDemo);
+
+  useEffect(() => {
+    if (isDemo) return;
+    buildApi.getSession(session.id).then((data) => {
+      const gates = (data as { gates?: { codeRedeemed: boolean; credentialsSubmitted: boolean } }).gates;
+      if (gates) {
+        setCodeRedeemed(gates.codeRedeemed);
+        setCredentialsSubmitted(gates.credentialsSubmitted);
+      }
+      setGatesHydrated(true);
+    }).catch(() => setGatesHydrated(true));
+  }, [isDemo, session.id]);
 
   useEffect(() => {
     return buildApi.streamBuildEvents(session.id, (event) => {
@@ -76,7 +89,13 @@ export function BuildStatus({
         status: parseBuildStatus(result.status),
       }));
       setInstallUrl(result.installRequired ? result.installUrl || null : null);
-    } catch (nextError) {
+    } catch (nextError: unknown) {
+      const apiErr = nextError as { action?: string; returnTo?: string; message?: string };
+      if (apiErr.action === "re_auth") {
+        const returnTo = apiErr.returnTo || `/build/${session.id}`;
+        window.location.href = `/pub/auth/github?return_to=${encodeURIComponent(returnTo)}`;
+        return;
+      }
       setError(
         nextError instanceof Error ? nextError.message : "Failed to provision repo"
       );
@@ -110,6 +129,7 @@ export function BuildStatus({
       session.status !== "ready" ||
       autoProvisionedRef.current ||
       pendingAction !== null ||
+      !gatesHydrated ||
       !codeRedeemed ||
       !credentialsSubmitted
     ) {
@@ -118,7 +138,7 @@ export function BuildStatus({
 
     autoProvisionedRef.current = true;
     void provisionRepo();
-  }, [pendingAction, provisionRepo, session.status, codeRedeemed, credentialsSubmitted]);
+  }, [pendingAction, provisionRepo, session.status, gatesHydrated, codeRedeemed, credentialsSubmitted]);
 
   useEffect(() => {
     if (

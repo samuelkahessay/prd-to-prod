@@ -20,6 +20,12 @@ async function get<T>(path: string): Promise<T> {
   return res.json();
 }
 
+interface ApiError extends Error {
+  status?: number;
+  action?: string;
+  returnTo?: string;
+}
+
 async function post<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
@@ -29,7 +35,17 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
     body: body ? JSON.stringify(body) : undefined,
   });
   if (res.status === 401) throw new Error("Unauthorized");
-  if (!res.ok) throw new Error(`API error: ${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    let parsed: Record<string, unknown> = {};
+    try { parsed = await res.json(); } catch {}
+    const err: ApiError = new Error(
+      typeof parsed.message === "string" ? parsed.message : `API error: ${res.status} ${res.statusText}`
+    );
+    err.status = res.status;
+    err.action = typeof parsed.action === "string" ? parsed.action : undefined;
+    err.returnTo = typeof parsed.returnTo === "string" ? parsed.returnTo : undefined;
+    throw err;
+  }
   return res.json();
 }
 
