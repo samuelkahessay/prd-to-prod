@@ -95,6 +95,12 @@ export const buildApi = {
       `/pub/build-session/${sessionId}/finalize`
     ),
 
+  redeemCode: (sessionId: string, code: string) =>
+    post<{ redeemed: boolean }>(`/pub/build-session/${sessionId}/redeem`, { code }),
+
+  submitCredentials: (sessionId: string, credentials: Record<string, string>) =>
+    post<{ stored: boolean }>(`/pub/build-session/${sessionId}/credentials`, credentials),
+
   provisionRepo: (sessionId: string) =>
     post<{
       sessionId: string;

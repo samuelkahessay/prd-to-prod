@@ -179,6 +179,40 @@
   font-style: italic;
 }
 
+.gateForm {
+  display: grid;
+  gap: 12px;
+}
+
+.gateLabel {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.gateRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.gateInput {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 14px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  background: white;
+  outline: none;
+}
+
+.gateInput:focus {
+  border-color: var(--accent);
+}
+
 .conversionNudge {
   display: grid;
   gap: 16px;

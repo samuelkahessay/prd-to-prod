@@ -38,6 +38,8 @@ export function BuildStatus({
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const autoProvisionedRef = useRef(false);
   const autoBuildStartedRef = useRef(false);
+  const [codeRedeemed, setCodeRedeemed] = useState(isDemo);
+  const [credentialsSubmitted, setCredentialsSubmitted] = useState(isDemo);
 
   useEffect(() => {
     return buildApi.streamBuildEvents(session.id, (event) => {
@@ -107,14 +109,16 @@ export function BuildStatus({
     if (
       session.status !== "ready" ||
       autoProvisionedRef.current ||
-      pendingAction !== null
+      pendingAction !== null ||
+      !codeRedeemed ||
+      !credentialsSubmitted
     ) {
       return;
     }
 
     autoProvisionedRef.current = true;
     void provisionRepo();
-  }, [pendingAction, provisionRepo, session.status]);
+  }, [pendingAction, provisionRepo, session.status, codeRedeemed, credentialsSubmitted]);
 
   useEffect(() => {
     if (
@@ -219,6 +223,10 @@ export function BuildStatus({
               session,
               onProvision: provisionRepo,
               onStartBuild: startBuild,
+              codeRedeemed,
+              credentialsSubmitted,
+              onCodeRedeemed: () => setCodeRedeemed(true),
+              onCredentialsSubmitted: () => setCredentialsSubmitted(true),
             })}
           </div>
         </div>
@@ -291,6 +299,10 @@ function renderActions({
   session,
   onProvision,
   onStartBuild,
+  codeRedeemed,
+  credentialsSubmitted,
+  onCodeRedeemed,
+  onCredentialsSubmitted,
 }: {
   events: BuildEvent[];
   installUrl: string | null;
@@ -299,8 +311,18 @@ function renderActions({
   session: BuildSession;
   onProvision: () => void;
   onStartBuild: () => void;
+  codeRedeemed: boolean;
+  credentialsSubmitted: boolean;
+  onCodeRedeemed: () => void;
+  onCredentialsSubmitted: () => void;
 }) {
   if (session.status === "ready") {
+    if (!isDemo && !codeRedeemed) {
+      return <AccessCodeForm sessionId={session.id} onRedeemed={onCodeRedeemed} />;
+    }
+    if (!isDemo && !credentialsSubmitted) {
+      return <ByokForm sessionId={session.id} onSubmitted={onCredentialsSubmitted} />;
+    }
     return (
       <button
         className={styles.button}
@@ -308,7 +330,7 @@ function renderActions({
         onClick={onProvision}
         type="button"
       >
-        {pendingAction === "provision" ? "Provisioning..." : "Retry provisioning"}
+        {pendingAction === "provision" ? "Provisioning..." : "Provision repository"}
       </button>
     );
   }
@@ -450,6 +472,100 @@ function renderActions({
   }
 
   return null;
+}
+
+function AccessCodeForm({ sessionId, onRedeemed }: { sessionId: string; onRedeemed: () => void }) {
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await buildApi.redeemCode(sessionId, code.trim());
+      onRedeemed();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to redeem code");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={styles.gateForm}>
+      <p className={styles.gateLabel}>Enter your access code to continue</p>
+      <div className={styles.gateRow}>
+        <input
+          className={styles.gateInput}
+          type="text"
+          placeholder="BETA-XXXXXXXX"
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          disabled={submitting}
+        />
+        <button
+          className={styles.button}
+          disabled={submitting || code.trim().length < 4}
+          onClick={handleSubmit}
+          type="button"
+        >
+          {submitting ? "Redeeming..." : "Redeem"}
+        </button>
+      </div>
+      {error && <p className={styles.error}>{error}</p>}
+    </div>
+  );
+}
+
+function ByokForm({ sessionId, onSubmitted }: { sessionId: string; onSubmitted: () => void }) {
+  const [copilotToken, setCopilotToken] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await buildApi.submitCredentials(sessionId, {
+        COPILOT_GITHUB_TOKEN: copilotToken.trim(),
+      });
+      onSubmitted();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to store credentials");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={styles.gateForm}>
+      <p className={styles.gateLabel}>Configure your pipeline</p>
+      <p className={styles.copy}>
+        Paste a GitHub personal access token with Copilot scope.
+        This token powers the AI agents that build your app.
+      </p>
+      <div className={styles.gateRow}>
+        <input
+          className={styles.gateInput}
+          type="password"
+          placeholder="ghp_..."
+          value={copilotToken}
+          onChange={(e) => setCopilotToken(e.target.value)}
+          disabled={submitting}
+        />
+        <button
+          className={styles.button}
+          disabled={submitting || copilotToken.trim().length < 10}
+          onClick={handleSubmit}
+          type="button"
+        >
+          {submitting ? "Saving..." : "Continue"}
+        </button>
+      </div>
+      {error && <p className={styles.error}>{error}</p>}
+    </div>
+  );
 }
 
 function appendUniqueEvent(events: BuildEvent[], nextEvent: BuildEvent): BuildEvent[] {

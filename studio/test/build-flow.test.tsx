@@ -67,6 +67,7 @@ function makeSession(status: BuildSession["status"] = "refining"): BuildSession 
         ? "# PRD: Customer portal\n\n## Problem\n\nSupport requests get lost\n"
         : null,
     app_installation_id: null,
+    is_demo: 1,
     created_at: "2026-03-14T17:00:00.000Z",
     updated_at: "2026-03-14T17:05:00.000Z",
   };
@@ -277,8 +278,8 @@ describe("BuildStatusPage", () => {
     });
 
     expect(
-      await screen.findByRole("link", { name: "Open deployed app" })
-    ).toHaveAttribute("href", "https://customer-portal.example.com");
+      await screen.findByText("That was a simulation. Ready for the real thing?")
+    ).toBeInTheDocument();
   });
 
   it("shows the install CTA and lets the user continue after app installation", async () => {
