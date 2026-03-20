@@ -47,6 +47,7 @@ tools:
   bash: true
   github:
     toolsets: [issues, labels]
+    repos: all
     min-integrity: none
   repo-memory: true
 
