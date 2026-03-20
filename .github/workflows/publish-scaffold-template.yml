@@ -1,0 +1,84 @@
+name: Publish Scaffold Template
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/**
+      - .github/deploy-profiles/**
+      - .github/agents/agentic-workflows.agent.md
+      - .github/copilot-instructions.md
+      - .github/ISSUE_TEMPLATE/**
+      - studio/**
+      - scripts/**
+      - docs/ARCHITECTURE.md
+      - docs/why-gh-aw.md
+      - docs/decision-ledger/README.md
+      - docs/prd/sample-prd.md
+      - autonomy-policy.yml
+      - .deploy-profile
+      - AGENTS.md
+      - setup.sh
+      - setup-verify.sh
+      - vercel.json
+      - .gitignore
+      - LICENSE
+      - README.template.md
+      - scaffold/**
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Git ref to publish from prd-to-prod
+        required: false
+        type: string
+        default: main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-scaffold-template
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      TEMPLATE_OWNER: ${{ vars.PUBLIC_BETA_TEMPLATE_OWNER }}
+      TEMPLATE_REPO: ${{ vars.PUBLIC_BETA_TEMPLATE_REPO }}
+    steps:
+      - name: Require template publication coordinates
+        run: |
+          [ -n "$TEMPLATE_OWNER" ] || { echo "::error::PUBLIC_BETA_TEMPLATE_OWNER is required"; exit 1; }
+          [ -n "$TEMPLATE_REPO" ] || { echo "::error::PUBLIC_BETA_TEMPLATE_REPO is required"; exit 1; }
+
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || github.sha }}
+
+      - name: Resolve source SHA
+        id: source
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Export scaffold
+        run: bash scaffold/export-scaffold.sh
+
+      - name: Leak test
+        run: bash scaffold/leak-test.sh
+
+      - name: Bootstrap test
+        run: bash scaffold/bootstrap-test.sh
+
+      - name: Require publish token
+        env:
+          GH_AW_GITHUB_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
+        run: |
+          [ -n "$GH_AW_GITHUB_TOKEN" ] || { echo "::error::GH_AW_GITHUB_TOKEN is required"; exit 1; }
+
+      - name: Publish generated template
+        env:
+          GH_AW_GITHUB_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
+          SOURCE_REPOSITORY: ${{ github.repository }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: bash scripts/publish-scaffold-template.sh dist/scaffold
