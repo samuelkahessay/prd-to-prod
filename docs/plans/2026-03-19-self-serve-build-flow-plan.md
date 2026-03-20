@@ -1,154 +1,310 @@
 # Self-Serve Build Flow — Gap Analysis & Test Plan
 
 **Date**: 2026-03-19
-**Status**: Draft
+**Status**: Draft (v2 — incorporates Codex review findings)
 **Context**: PR #511 shipped the public beta bootstrap flow. The demo CTA is live on the landing page. This plan covers what remains to make `/build` work as a real self-serve route for paying users.
 
 ---
 
 ## Architecture Summary
 
-The entire code path exists end-to-end. No missing implementations.
+The core code path exists end-to-end. What remains is launch gating, hardening, and one pipeline activation gap.
 
-```
+```text
 Landing page ("Watch it build")
   → /build (chat with LLM, refine PRD)
   → /finalize (bind session to authenticated user, lock PRD)
+  → payment + BYOK gate
   → OAuth redirect to GitHub (if not authenticated)
-  → /provision (create repo from template, install App, bootstrap)
+  → /provision (create private repo from template, install App, bootstrap)
   → /start-build (create root PRD issue, dispatch decomposer)
   → Webhook-driven event tracking (issues, PRs, workflow runs, deployments)
   → Factory visualization (real-time via SSE)
-  → Completion detection (deploy-vercel success → session complete)
+  → Terminal state:
+      - complete        = validated deployment exists
+      - handoff_ready   = pipeline finished successfully with no deployment
 ```
 
-Real users use `provisioner.launchPipeline()` which dispatches `prd-decomposer.lock.yml` on the target repo — NOT `buildRunner.dispatchBuild()` (that's demo-only). The target repo's own pipeline handles everything from decomposition through delivery.
+Real users use `provisioner.launchPipeline()` which dispatches `prd-decomposer.lock.yml` on the target repo. They do not use `buildRunner.dispatchBuild()`; that path remains demo-only.
+
+Current operating limit: webhook delivery tracking, session state, and refs live in console-local SQLite on Fly. Beta must stay single-instance until storage/routing is centralized.
+
+---
+
+## Tier 0: Launch Blockers
+
+These must be fixed before charging or allowing external self-serve traffic.
+
+### 0.1 Session auth and ownership hardening (HARD BLOCKER)
+
+**Severity**: Critical — security boundary is not strong enough for external users
+**Symptom**: Real build sessions can exist before authenticated ownership is established, session IDs are URL-addressable, and non-demo session read/write endpoints are not consistently owner-scoped. OAuth grant expiry also has no clean recovery path.
+
+**Required work**:
+- No anonymous server-backed real build sessions. Anonymous flow stays demo-only.
+- Require owner checks on non-demo `GET /pub/build-session/:id`, `/message`, `/finalize`, `/provision`, and `/start-build`.
+- Preserve resume-after-OAuth, but only for the same authenticated owner.
+- Add a clear re-auth/resume path for expired browser sessions or expired OAuth grants.
+- Keep demo auth isolated from real-user auth.
+
+### 0.2 BYOK for Copilot and deployment credentials (HARD BLOCKER)
+
+**Severity**: Critical — current real flow injects platform credentials into customer repos
+**Symptom**: Provisioning currently relies on platform `COPILOT_GITHUB_TOKEN`. That is acceptable for demo/internal runs, not for paid self-serve. Deployment credentials are also not user-scoped.
+
+**Required work**:
+- Add a required "Configure your pipeline" gate before launch.
+- Require customer-provided `COPILOT_GITHUB_TOKEN` for real builds.
+- Accept optional deployment credentials: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+- Encrypt user-supplied credentials at rest on the console until bootstrap writes them to the target repo.
+- Do not silently fall back to platform Copilot credentials for customer traffic.
+- If deployment credentials are omitted, the run must still be able to finish in `handoff_ready`.
+
+### 0.3 Payment gate before provisioning (LAUNCH GATE)
+
+**Severity**: Critical — the $1 offer is advertised but not enforced
+**Symptom**: The current flow can create repos and spend agent/runtime resources without payment.
+
+**Required work**:
+- Add a payment checkpoint before `provision`.
+- Use the simplest enforceable path: Stripe Checkout session before repo creation.
+- Record paid state on the build session and block provisioning until paid.
+- Keep any unpaid session resumable so the user can complete payment later.
+- Allow staff-only sandbox bypass outside the public path.
+
+### 0.4 Private repos by default (HARD BLOCKER)
+
+**Severity**: Critical — customer repos and PRDs must not default to public
+**Symptom**: `createRepoFromTemplate()` currently creates repos with `private: false`.
+
+**Fix**:
+- Default all provisioned repos to private.
+- Treat public visibility as an explicit future option, not the default.
+- Verify the UI, audit trail, and test plan all assume private-by-default behavior.
 
 ---
 
 ## Tier 1: Environment Configuration
 
-These are Fly.io secrets/vars on the `prd-to-prod` production console. Setting them unlocks the entire real flow.
+Configuration is split across three surfaces. Do not treat this as one flat env-var list.
 
-### Required Secrets
+### 1.1 Console / Fly
+
+These are secrets/vars on the `prd-to-prod` production console.
+
+#### Required Secrets
 
 | Secret | Purpose | Source |
 |--------|---------|--------|
-| `GITHUB_OAUTH_CLIENT_ID` | User authentication via GitHub OAuth | GitHub App → OAuth settings |
 | `GITHUB_OAUTH_CLIENT_SECRET` | OAuth token exchange | GitHub App → OAuth settings |
-| `LLM_API_KEY` or `OPENROUTER_API_KEY` | Real PRD refinement (currently GLM-5 via OpenRouter) | OpenRouter dashboard |
-| `PIPELINE_APP_ID` | App JWT generation for installation tokens | GitHub App settings → App ID |
-| `PIPELINE_APP_PRIVATE_KEY` | App JWT signing (RS256 PEM key) | GitHub App settings → Generate private key |
+| `LLM_API_KEY` or `OPENROUTER_API_KEY` | Real PRD refinement in `/build` | LLM provider dashboard |
+| `PIPELINE_APP_PRIVATE_KEY` | App JWT signing for installation tokens | GitHub App settings → Generate private key |
 | `GITHUB_APP_WEBHOOK_SECRET` | Webhook signature verification (HMAC-SHA256) | GitHub App settings → Webhook secret |
-| `COPILOT_GITHUB_TOKEN` | Injected into provisioned repos for agent LLM access | GitHub PAT with Copilot scope |
-| `ENCRYPTION_KEY` | OAuth token encryption at rest (hex-encoded 32 bytes) | Generate once, keep stable |
-| `GH_AW_GITHUB_TOKEN` | PAT for decomposer dispatch (needs `repo` + `workflow` scopes) | GitHub PAT |
+| `ENCRYPTION_KEY` | Encrypt OAuth grants and BYOK credentials at rest (hex-encoded 32 bytes) | Generate once, keep stable |
+| `STRIPE_SECRET_KEY` | Create/verify checkout sessions before provisioning | Stripe dashboard |
+| `STRIPE_WEBHOOK_SECRET` | Mark sessions paid from Stripe webhooks | Stripe dashboard |
 
-### Required Variables
+#### Required Variables
 
 | Variable | Purpose | Value |
 |----------|---------|-------|
+| `GITHUB_OAUTH_CLIENT_ID` | User authentication via GitHub OAuth | GitHub App → OAuth settings |
+| `PIPELINE_APP_ID` | App JWT issuer ID | GitHub App settings → App ID |
 | `FRONTEND_URL` | OAuth redirect base URL | `https://prd-to-prod.vercel.app` |
 | `PUBLIC_BETA_TEMPLATE_OWNER` | Template repo owner | `samuelkahessay` |
 | `PUBLIC_BETA_TEMPLATE_REPO` | Template repo name | `prd-to-prod-template` |
+| `STRIPE_PRICE_ID` | $1 self-serve SKU used by Checkout | Stripe dashboard |
 
-### Optional Variables
+#### Optional Variables
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
 | `PUBLIC_BETA_MAX_ACTIVE_BUILDS` | Concurrent build capacity | `2` |
-| `PUBLIC_BETA_VERCEL_DOMAIN_SUFFIX` | Deployment URL pattern | (none — deploy_url stays null) |
+| `PUBLIC_BETA_PIPELINE_BOT_LOGIN` | Bot login injected into target repos | `prd-to-prod-pipeline` |
+| `PUBLIC_BETA_VERCEL_PROJECT_PRODUCTION_URL_TEMPLATE` | Deterministic production URL template (e.g. `https://{repo}.example.com`) | (none) |
+| `PUBLIC_BETA_VERCEL_DOMAIN_SUFFIX` | Simpler production URL pattern fallback | (none) |
 | `LLM_MODEL` | OpenRouter model ID | `z-ai/glm-5` |
+
+#### Optional / Internal-Only Secrets
+
+| Secret | Purpose | Default |
+|--------|---------|---------|
+| `PUBLIC_BETA_COPILOT_GITHUB_TOKEN` | Staff-only fallback for demo/internal sandbox runs; not allowed for customer traffic | (none) |
+| `GH_AW_GITHUB_TOKEN` | Demo-only `buildRunner` path | (none) |
+
+### 1.2 Frontend / Vercel
+
+These are vars on the Vercel-hosted Next.js frontend.
+
+#### Required Variables
+
+| Variable | Purpose | Value |
+|----------|---------|-------|
+| `API_URL` | Rewrites `/api/*` and `/pub/*` from Vercel to the Fly console | `https://prd-to-prod.fly.dev` |
+
+#### Optional Variables
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `NEXT_PUBLIC_SUPPORT_EMAIL` | Support contact shown on stalled/failed runs | current fallback email |
+
+### 1.3 Target Repo Bootstrap
+
+These are written into each provisioned target repo during bootstrap. They are not part of Fly or Vercel app config.
+
+#### Required Variables
+
+| Variable | Purpose | Source |
+|----------|---------|--------|
+| `PIPELINE_APP_ID` | App auth in target-repo workflows | copied from console config |
+| `PIPELINE_BOT_LOGIN` | Bot identity used by pipeline workflows | copied from console config |
+
+#### Required Secrets
+
+| Secret | Purpose | Source |
+|--------|---------|--------|
+| `PIPELINE_APP_PRIVATE_KEY` | App auth in target-repo workflows | copied from console config |
+| `COPILOT_GITHUB_TOKEN` | Repo agent execution token | customer BYOK credential |
+
+#### Conditional Secrets
+
+| Secret | Purpose | Source |
+|--------|---------|--------|
+| `VERCEL_TOKEN` | Vercel deployment | customer BYOK credential |
+| `VERCEL_ORG_ID` | Vercel deployment | customer BYOK credential |
+| `VERCEL_PROJECT_ID` | Vercel deployment | customer BYOK credential |
+
+#### Conditional Variables
+
+| Variable | Purpose | Source |
+|----------|---------|--------|
+| `VERCEL_PROJECT_PRODUCTION_URL` | Display + validated deploy URL when deployment is configured | derived or user-provided |
+
+Bootstrap must also create labels, Actions permissions, auto-merge, branch protection, and `memory/repo-assist`.
 
 ### Verification Checklist
 
 - [ ] GitHub App webhook URL set to `https://prd-to-prod.fly.dev/webhooks/github-app`
-- [ ] GitHub OAuth callback URL set to `https://prd-to-prod.fly.dev/pub/auth/github/callback`
+- [ ] GitHub OAuth callback URL set to `https://prd-to-prod.vercel.app/pub/auth/github/callback`
 - [ ] OAuth scopes include `repo` and `read:user`
 - [ ] GitHub App has permissions: Contents (rw), Issues (rw), Pull requests (rw), Actions (rw), Metadata (r)
-- [ ] GitHub App subscribes to events: installation, installation_repositories, issues, pull_request, issue_comment, workflow_run
-- [ ] `ENCRYPTION_KEY` is persistent across deploys (stored in Fly.io secrets, not generated at runtime)
-- [ ] `DEMO_MODE` is NOT set in production (real OAuth and LLM are registered only when DEMO_MODE is absent)
+- [ ] GitHub App subscribes to events: installation, installation_repositories, issues, pull_request, issue_comment, workflow_run, push
+- [ ] Stripe Checkout and webhook are configured for the public path
+- [ ] `ENCRYPTION_KEY` is persistent across deploys
+- [ ] Frontend `API_URL` points at the production Fly console
+- [ ] Fly production stays at one machine while webhook/session state is stored in local SQLite
+- [ ] `PIPELINE_APP_ID` is treated as a variable; `PIPELINE_APP_PRIVATE_KEY` remains a secret
+- [ ] Real builds create private repos by default
+- [ ] `DEMO_MODE` is NOT set in production
+- [ ] Demo-only fallback tokens are not used for customer traffic
 
 ---
 
 ## Tier 2: Known Bugs
 
-These require code or investigation work. Ordered by severity.
+These require code or investigation work after Tier 0 blockers are addressed. Ordered by severity.
 
 ### 2.1 Decomposer activation skipped on fresh repos (PIPELINE-KILLER)
 
 **Severity**: Critical — blocks the entire pipeline
 **Symptom**: `/decompose` command is detected (pre_activation succeeds), but the `activation` job is skipped. Agent never runs. No child issues are created. repo-assist has nothing to implement.
+
 **Investigation**:
-- Check gh-aw activation logs on a fresh provisioned repo
-- Compare activation step conditions against the permissions/configuration the provisioner sets
-- May need: additional App permissions, `gh aw compile` during provisioning, or `memory/repo-assist` branch seeding (provisioner already does this at line 322)
-**References**: Open task in memory, also noted in e2e test 2026-03-16
+- Check gh-aw activation logs on a fresh provisioned repo.
+- Compare activation step conditions against the permissions/configuration the provisioner sets.
+- May need: additional App permissions, `gh aw compile` during provisioning, or `memory/repo-assist` branch seeding.
+- References: open task in memory, also noted in e2e test 2026-03-16.
 
-### 2.2 OAuth grant 10-minute TTL with no recovery
+### 2.2 Deployment completion inconsistency
 
-**Severity**: Medium — affects slow users
-**Symptom**: If a user takes >10 minutes between finalize and provision, the OAuth grant (stored access token) expires. `createTargetRepo()` throws "No valid OAuth grant" with no clear error in the UI.
-**Fix options**:
-- Extend grant TTL (30 minutes or 1 hour)
-- Add a re-auth prompt when grant is expired
-- Store the OAuth token in the session permanently (security trade-off)
+**Severity**: High — successful runs can get stuck behind deployment-specific completion logic
+**Symptom**: The current narrative assumes deployment success is the only successful terminal condition. That conflicts with the real launch plan, where some paid users will supply Copilot credentials but not Vercel credentials.
+
+**Fix**:
+- Add explicit non-deployment terminal state: `handoff_ready`.
+- Reserve `complete` for runs with validated deployment and a stable `deploy_url`.
+- Update webhook handling, build-status UI, and success copy to treat both states as successful.
+- Ensure no-deploy runs do not wait forever on `Validate Deployment`.
 
 ### 2.3 CI noise on fresh repos
 
-**Severity**: Low — cosmetic but confusing
-**Symptom**: Every push to main triggers deploy-router → deploy-vercel, which fails without Vercel secrets. Creates CI failure issues (#2, #10, #11) and CI Doctor diagnostics (#12) on every provisioned repo.
-**Fix**: Gate deploy-vercel on secret existence (`if: secrets.VERCEL_TOKEN != ''`) in the template repo's workflow.
+**Severity**: Medium — confusing and obscures real failures
+**Symptom**: Every push to main triggers deploy-router → deploy-vercel, which fails without Vercel secrets. That creates CI failure issues and CI Doctor diagnostics on repos that are otherwise healthy.
+
+**Fix**:
+- Gate deploy-vercel on secret existence in the template repo workflow.
+- If Vercel credentials are absent, skip deploy cleanly and allow the run to finish in `handoff_ready`.
 
 ### 2.4 Stale lock files in provisioned repos
 
 **Severity**: Medium — causes agent failures
 **Symptom**: Provisioned repos get snapshot lock files from the template. If agent `.md` sources update after the template was last compiled, lock files go stale.
+
 **Fix options**:
-- Add `gh aw compile` step to provisioner after bootstrap
-- Add CI check to template repo that verifies lock files match `.md` sources
-- Automate template re-compilation on a schedule
+- Add `gh aw compile` step to provisioner after bootstrap.
+- Add CI check to template repo that verifies lock files match `.md` sources.
+- Automate template recompilation on a schedule.
+
+### 2.5 Idempotency and race conditions around provision, launch, and webhook processing
+
+**Severity**: High — retries and concurrent events can duplicate work or regress state
+**Symptom**: Some paths already have partial idempotency, but not enough for a public flow. `createPrdIssue()` reuses an existing stored root issue ref, but repo creation, workflow dispatch, bootstrap resume, and terminal state handling still need race-proofing.
+
+**Risks**:
+- Double `provision` before `github_repo` is persisted can trigger duplicate repo-create attempts.
+- Double `start-build` can dispatch decomposer twice.
+- App-install webhook and manual retry can both resume bootstrap.
+- Duplicate or out-of-order webhook events can append misleading activity or regress status after success.
+
+**Required work**:
+- Make repo creation, bootstrap resume, and launch dispatch idempotent by session.
+- Add state-transition guards so terminal states are monotonic.
+- Keep webhook delivery dedupe, but test duplicate and out-of-order deliveries explicitly.
+- Treat late events as annotations, not as permission to move a session backwards.
+
+### 2.6 Single-instance webhook limitation
+
+**Severity**: Medium — operational limitation for beta, scaling blocker later
+**Symptom**: Session state, refs, and webhook dedupe live in local SQLite on the Fly console. Multiple instances would split state and make webhook handling nondeterministic.
+
+**Operating rule / fix**:
+- Run beta on a single Fly instance.
+- Before scaling out, move session/event/webhook state off local disk or guarantee sticky routing for all webhook traffic.
 
 ---
 
 ## Tier 3: UX Gaps
 
-Separate work items. Not required for initial self-serve, but needed for production quality.
+Separate follow-up work. Not launch blockers once Tier 0-2 are resolved.
 
-### 3.1 BYOK UI for Copilot + Vercel tokens
+### 3.1 Factory celebration timing
 
-Users currently inherit the platform owner's Copilot token (eats platform quota). Need a "Configure your pipeline" step on the build status page between bootstrap and launch:
-- Copilot token (required) — link to GitHub PAT creation with "Copilot Requests: Read-only" permission
-- Vercel secrets (optional) — VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+Factory shows "CELEBRATING" when provisioning finishes. It should celebrate only on successful terminal states: `complete` or `handoff_ready`.
 
-### 3.2 Payment integration
+### 3.2 Skip finalize for already-ready sessions
 
-The $1 offer is not enforced anywhere. No billing or payment collection. Options:
-- Stripe Checkout session before provision
-- Stripe Payment Link (simplest — redirect before OAuth)
-- Manual invoice (current implicit model via email)
+When a session is already finalized and the user triggers the build flow again, `/finalize` returns 400 before `/provision` proceeds. Frontend should check session status and skip finalize if already ready.
 
-### 3.3 Factory celebration timing
+### 3.3 Repo link on build status page
 
-Factory shows "CELEBRATING" when provisioning finishes. Should only celebrate on `delivery:complete` (all issues implemented, PRs merged, app deployed).
-
-### 3.4 Skip finalize for already-ready sessions
-
-When a session is already finalized and the user triggers the build flow again, `/finalize` returns 400 before `/provision` proceeds. Frontend should check session status and skip finalize if already `ready`.
-
-### 3.5 Repo link on build status page
-
-Repo name shows as plain text. Should be a clickable link to `https://github.com/{owner}/{repo}`.
+Repo name shows as plain text. It should be a clickable link to `https://github.com/{owner}/{repo}`.
 
 ---
 
 ## End-to-End Test Plan
 
 ### Prerequisites
-- All Tier 1 env vars set on Fly.io
+
+- Tier 0 blockers shipped
+- Console / Fly config set
+- Frontend / Vercel config set
 - GitHub App webhook and OAuth URLs verified
+- Stripe test mode configured
 - Template repo (`prd-to-prod-template`) is current
+- Fly console pinned to one machine
+- Internal sandbox GitHub user available
+- BYOK Copilot token available for sandbox
+- Optional Vercel sandbox project available for deployment-enabled test
 
 ### Test Sequence
 
@@ -158,62 +314,82 @@ Repo name shows as plain text. Should be a clickable link to `https://github.com
 3. Verify chat loads, mock LLM responds
 4. Verify factory animation plays through provisioning → build → complete
 5. Verify conversion nudge appears at completion: "That was a simulation. Ready for the real thing?"
-6. Verify mailto link works
+6. Verify no real repo is created and no real credentials are required
 
-**Phase 2: Real flow — chat + auth**
-1. Visit `/build` (no `?demo=true`)
-2. Type a project idea (e.g., "a simple habit tracker")
-3. Verify real LLM responds (not canned "Team Standup Dashboard")
-4. Continue until PRD is ready (status: "ready")
-5. Click "Build it" → verify OAuth redirect to GitHub
-6. Authorize → verify redirect back to `/build?session={id}&resume=finalize`
-7. Verify session binds to authenticated user
-8. Verify redirect to `/build/{id}` (status page)
+**Phase 2: Security gates + payment/BYOK checks**
+1. Visit `/build` logged out
+2. Verify real-session endpoints are not readable/writable without authenticated ownership
+3. Authenticate with GitHub and verify the same session resumes for the same user only
+4. Finalize a PRD and verify payment is required before provisioning
+5. Complete Stripe test checkout and verify session is marked paid
+6. Attempt to continue without `COPILOT_GITHUB_TOKEN` and verify launch is blocked with a clear prompt
+7. Add Copilot BYOK only and verify the no-deploy path remains valid
 
-**Phase 3: Real flow — provision + bootstrap**
-1. Verify auto-provision triggers (status page should start provisioning)
-2. Watch for repo creation event in factory
-3. If App install required: follow install link, install App on the new repo
-4. Verify bootstrap completes (labels, secrets, variables, branch protection, repo-memory)
-5. Check the target repo on GitHub: labels exist, secrets set, AGENTS.md present
+**Phase 3: Sandbox real flow — no deployment**
+1. Visit `/build` as the internal sandbox user
+2. Type a project idea and get the PRD to `ready`
+3. Finalize, pay, and provide Copilot BYOK
+4. Verify provisioning creates a private repo
+5. If App install is required: follow install link and resume
+6. Verify bootstrap completes: labels, variables, secrets, branch protection, repo-memory
+7. Check the target repo on GitHub:
+   - repo is private
+   - `PIPELINE_APP_ID` exists as a variable
+   - `PIPELINE_APP_PRIVATE_KEY` and `COPILOT_GITHUB_TOKEN` exist as secrets
+8. Start the build
+9. Verify decomposer activation actually runs
+10. Watch for child issues and repo-assist execution
+11. Let the run finish without Vercel credentials
+12. Verify session ends in `handoff_ready`
+13. Verify repo link appears and no deploy URL is required
 
-**Phase 4: Real flow — pipeline launch**
-1. Verify auto-launch triggers after bootstrap
-2. Check target repo: root PRD issue created with correct content
-3. **Critical**: verify decomposer agent runs (not just pre_activation)
-4. If decomposer skips: investigate activation logs, check App permissions
-5. Watch for child issues created by decomposer
-6. Watch for repo-assist picking up child issues
+**Phase 4: Sandbox real flow — with deployment**
+1. Repeat the flow with `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`
+2. Verify target repo receives Vercel secrets/variables
+3. Watch PR activity and deployment workflow
+4. Verify `Validate Deployment` succeeds
+5. Verify session transitions to `complete`
+6. Verify "Open deployed app" link appears and resolves correctly
 
-**Phase 5: Real flow — build + delivery**
-1. Monitor webhook events flowing to console (check build activity section)
-2. Verify factory visualization updates in real-time
-3. Watch for PR events (opened, reviewed, merged)
-4. Watch for deployment events
-5. Verify session transitions to "complete" on final deployment
-6. Verify "Open deployed app" link appears (not demo nudge)
+**Phase 5: Fresh-user full E2E rehearsal**
+1. Use a clean browser profile and a second GitHub test account
+2. Start from the landing page CTA
+3. Run the full public path: auth → PRD finalize → payment → BYOK → provision → build → success
+4. Verify resume behavior works across redirects and page refreshes
+5. Verify support/error states are understandable without operator intervention
 
 ### Failure Scenarios to Test
 
+- [ ] Unauthenticated user cannot read or write an existing real build session
+- [ ] Authenticated user cannot take over another user's `session` URL
+- [ ] Payment not completed → provisioning blocked, no repo created
+- [ ] Missing `COPILOT_GITHUB_TOKEN` → launch blocked with clear prompt
+- [ ] Invalid `COPILOT_GITHUB_TOKEN` → clean bootstrap failure with recovery path
+- [ ] Repo is created private by default
 - [ ] OAuth denied by user → graceful error, session preserved
-- [ ] OAuth grant expired (wait >10 min) → clear error message
+- [ ] Browser auth session expired or OAuth grant expired → clear re-auth + resume path
 - [ ] App not installed → install prompt, retry works
-- [ ] Provisioning retry after failure → idempotent (reuses existing repo)
-- [ ] Capacity limit reached → "awaiting_capacity" state, retry button
-- [ ] Webhook signature mismatch → 401, events not processed
-- [ ] Pipeline stalls → "stalled" state, retry or help buttons
+- [ ] Provisioning retry after failure → idempotent, reuses existing repo
+- [ ] Double-click `provision` → no duplicate repo creation
+- [ ] Double-click `start-build` → one root issue, one decomposer dispatch
+- [ ] Duplicate webhook delivery → deduped, no duplicate events
+- [ ] Out-of-order webhook deliveries → session does not regress from `handoff_ready` or `complete`
+- [ ] Capacity limit reached → `awaiting_capacity` state, retry button
+- [ ] Pipeline stalls → `stalled` state, retry/help actions available
+- [ ] No-deploy run reaches `handoff_ready`
+- [ ] Deploy-enabled run reaches `complete` with deploy URL
+- [ ] Console restart on the single Fly instance preserves session and webhook state
 
 ---
 
 ## Execution Order
 
-1. **Set env vars** (Tier 1) — unblocks everything, no code changes
-2. **Run Phase 1** (smoke test) — verify demo still works after env changes
-3. **Run Phase 2** (chat + auth) — first real user flow
-4. **Investigate decomposer activation** (Tier 2.1) — before Phase 4
-5. **Run Phases 3-5** (provision → build → delivery) — full end-to-end
-6. **Fix Tier 2 bugs** as discovered during testing
-7. **Tier 3 UX gaps** as separate follow-up work
+1. **Ship Tier 0 security/commercial blockers** — session auth, BYOK, payment gate, private repos, and non-deploy terminal state.
+2. **Set config** (Tier 1) — Console/Fly, Frontend/Vercel, and target-repo bootstrap inputs.
+3. **Run sandbox tests first** — Phase 1 through Phase 4 with internal accounts and Stripe/Vercel test credentials.
+4. **Run full E2E rehearsal** — clean-account pass through the public flow from landing page to success.
+5. **Fix Tier 2 bugs** surfaced during sandbox/full E2E, especially decomposer activation and idempotency gaps.
+6. **Address Tier 3 UX gaps** as follow-up work after the real path is proven.
 
 ---
 
@@ -222,6 +398,11 @@ Repo name shows as plain text. Should be a clickable link to `https://github.com
 | Decision | Rationale |
 |----------|-----------|
 | Real users use `provisioner.launchPipeline()`, not `buildRunner` | Target repo's own pipeline handles everything via decompose → child issues → repo-assist |
-| Demo mode stays as-is (mock services, no auth) | Zero-friction entry point, conversion funnel proven |
-| Payment deferred to Tier 3 | Need to prove the flow works before charging for it |
-| BYOK deferred to Tier 3 | Platform Copilot token works for beta; quota concern is manageable at low volume |
+| Demo mode stays as-is (mock services, no auth cost, no repo creation) | Zero-friction entry point still matters, but it is not the production path |
+| External self-serve requires authenticated session ownership | Real build sessions cannot be anonymous or transferable by URL |
+| External self-serve requires BYOK Copilot token | Customer repos must not consume platform Copilot quota |
+| External self-serve requires payment before provisioning | Repo creation and agent/runtime spend are paid resources |
+| Provisioned repos default to private | Customer PRDs, code, and workflow history should not be public by default |
+| `handoff_ready` is a valid successful terminal state | Some valid runs will intentionally skip deployment |
+| `complete` is reserved for validated deployment | Deployment success should remain a stronger, explicit terminal state |
+| Beta stays single-instance on Fly | Local SQLite + webhook handling are not multi-instance safe yet |
