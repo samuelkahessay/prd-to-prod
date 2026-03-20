@@ -15,6 +15,7 @@ const { registerRunsRoutes } = require("./routes/api-runs");
 const { registerQueueRoutes } = require("./routes/api-queue");
 const { registerRunDecisionRoutes } = require("./routes/api-run-decisions");
 const { registerRunAuditRoutes } = require("./routes/api-run-audit");
+const { registerAccessCodeRoutes } = require("./routes/api-access-codes");
 const { registerWebhookRoutes } = require("./routes/webhooks-github-app");
 const { registerPubAuthRoutes } = require("./routes/pub-auth");
 const { registerBuildSessionRoutes } = require("./routes/pub-build-session");
@@ -93,6 +94,7 @@ registerRunsRoutes(app, { eventStore });
 registerQueueRoutes(app, { eventStore });
 registerRunDecisionRoutes(app, { eventStore });
 registerRunAuditRoutes(app, { eventStore });
+registerAccessCodeRoutes(app, { db });
 
 // --- Public routes (real or demo mode) ---
 

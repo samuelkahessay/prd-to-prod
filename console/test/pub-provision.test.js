@@ -71,6 +71,12 @@ beforeEach(() => {
     `INSERT INTO build_session_refs (build_session_id, ref_type, ref_key, ref_value, metadata, created_at, updated_at)
      VALUES ('owned-build', 'credential', 'COPILOT_GITHUB_TOKEN', 'encrypted-stub', '{}', '2026-03-14T00:00:00Z', '2026-03-14T00:00:00Z')`
   ).run();
+
+  // Access code redeemed by user-1 for owned-build so provision gate passes
+  db.prepare(
+    `INSERT INTO access_codes (code_hash, created_at, issuer, redeemed_by, redeemed_at, build_session_id)
+     VALUES ('test-hash', '2026-03-14T00:00:00Z', 'test', 'user-1', '2026-03-14T00:00:00Z', 'owned-build')`
+  ).run();
 });
 
 afterEach(() => {

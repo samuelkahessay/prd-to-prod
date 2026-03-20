@@ -1,5 +1,6 @@
 const { getActiveUserSession } = require("../lib/auth-store");
 const { encrypt } = require("../lib/crypto");
+const { createAccessCodeStore } = require("../lib/access-codes");
 
 const BYOK_CREDENTIALS = [
   { key: "COPILOT_GITHUB_TOKEN", required: true },
@@ -9,6 +10,44 @@ const BYOK_CREDENTIALS = [
 ];
 
 function registerProvisionRoutes(app, { db, serviceResolver }) {
+  const accessCodes = createAccessCodeStore(db);
+
+  // Redeem an access code (binds to user account, not session)
+  app.post("/pub/build-session/:id/redeem", (req, res) => {
+    const userSession = requireUserSession(db, req, res);
+    if (!userSession) return;
+
+    const session = getOwnedBuildSession(db, req.params.id, userSession.user_id);
+    if (!session) {
+      return res.status(404).json({ error: "Build session not found" });
+    }
+
+    if (!enforceSessionBoundary(db, userSession.user_id, session, res)) return;
+
+    if (session.is_demo) {
+      return res.status(400).json({ error: "Demo sessions do not require access codes" });
+    }
+
+    const { code } = req.body;
+    if (!code || typeof code !== "string") {
+      return res.status(400).json({ error: "Access code is required" });
+    }
+
+    const result = accessCodes.redeem(code, userSession.user_id, session.id);
+    if (!result.success) {
+      const messages = {
+        invalid_code: "Invalid access code.",
+        already_redeemed: "This code has already been used.",
+        expired: "This access code has expired.",
+      };
+      return res.status(400).json({
+        error: "code_invalid",
+        message: messages[result.reason] || "Could not redeem code.",
+      });
+    }
+
+    res.json({ redeemed: true });
+  });
   // Store BYOK credentials for a build session
   app.post("/pub/build-session/:id/credentials", (req, res) => {
     const userSession = requireUserSession(db, req, res);
@@ -64,6 +103,15 @@ function registerProvisionRoutes(app, { db, serviceResolver }) {
 
     if (!enforceSessionBoundary(db, userSession.user_id, session, res)) {
       return;
+    }
+
+    // Real sessions require a redeemed access code
+    if (!session.is_demo && !accessCodes.hasActiveCredit(userSession.user_id, session.id)) {
+      return res.status(402).json({
+        error: "access_code_required",
+        message: "An access code is required to provision a build. Redeem a code first.",
+        action: "redeem",
+      });
     }
 
     try {

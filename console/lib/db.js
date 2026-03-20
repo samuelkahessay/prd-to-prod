@@ -141,6 +141,19 @@ function createDatabase(dataDir) {
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_github_webhook_events_repo ON github_webhook_events(repository_id, created_at);
+
+    CREATE TABLE IF NOT EXISTS access_codes (
+      code_hash TEXT PRIMARY KEY,
+      created_at TEXT NOT NULL,
+      expires_at TEXT,
+      issuer TEXT NOT NULL DEFAULT 'system',
+      payment_ref TEXT,
+      memo TEXT,
+      redeemed_by TEXT REFERENCES users(id),
+      redeemed_at TEXT,
+      build_session_id TEXT REFERENCES build_sessions(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_access_codes_redeemed ON access_codes(redeemed_by);
   `);
 
   // Safe migration for existing databases
