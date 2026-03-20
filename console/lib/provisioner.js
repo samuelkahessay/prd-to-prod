@@ -296,6 +296,27 @@ function createProvisioner({ db, buildSessionStore, githubClient }) {
     };
   }
 
+  function getByokCredential(sessionId, key) {
+    const refs = buildSessionStore.getRefs(sessionId, { type: "credential", key });
+    if (refs.length === 0) return null;
+    return decrypt(refs[0].ref_value);
+  }
+
+  function resolveCopilotToken(sessionId, session) {
+    if (session.is_demo) return BETA_COPILOT_TOKEN;
+    return getByokCredential(sessionId, "COPILOT_GITHUB_TOKEN") || null;
+  }
+
+  function resolveVercelCredentials(sessionId, session) {
+    if (session.is_demo) return {};
+    const creds = {};
+    for (const key of ["VERCEL_TOKEN", "VERCEL_ORG_ID", "VERCEL_PROJECT_ID"]) {
+      const value = getByokCredential(sessionId, key);
+      if (value) creds[key] = value;
+    }
+    return creds;
+  }
+
   async function finishBootstrap(sessionId, { owner, repo, installationId }) {
     const session = buildSessionStore.getSession(sessionId);
     if (!session) {
@@ -336,13 +357,28 @@ function createProvisioner({ db, buildSessionStore, githubClient }) {
         value: PIPELINE_APP_PRIVATE_KEY,
       });
 
-      if (!BETA_COPILOT_TOKEN) {
-        throw new Error("COPILOT_GITHUB_TOKEN is not configured on the platform");
+      // Resolve Copilot token: BYOK for real sessions, platform fallback for demo
+      const copilotToken = resolveCopilotToken(sessionId, session);
+      if (!copilotToken) {
+        throw new Error(
+          session.is_demo
+            ? "COPILOT_GITHUB_TOKEN is not configured on the platform"
+            : "Copilot token not provided. Submit credentials before provisioning."
+        );
       }
       await githubClient.createOrUpdateActionsSecret(token, owner, repo, {
         name: "COPILOT_GITHUB_TOKEN",
-        value: BETA_COPILOT_TOKEN,
+        value: copilotToken,
       });
+
+      // Write optional Vercel BYOK credentials if provided
+      const vercelCreds = resolveVercelCredentials(sessionId, session);
+      for (const [name, value] of Object.entries(vercelCreds)) {
+        await githubClient.createOrUpdateActionsSecret(token, owner, repo, {
+          name,
+          value,
+        });
+      }
 
       const productionUrl = derivePublicBetaProductionUrl(repo);
       if (productionUrl) {

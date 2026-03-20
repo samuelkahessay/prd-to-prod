@@ -65,6 +65,12 @@ beforeEach(() => {
      ('foreign-ready', 'user-2', 'ready', NULL, '2026-03-14T00:00:00Z', '2026-03-14T00:00:00Z'),
      ('foreign-build', 'user-2', 'ready_to_launch', 202, '2026-03-14T00:00:00Z', '2026-03-14T00:00:00Z')`
   ).run();
+
+  // BYOK credential for owned-build so start-build gate passes
+  db.prepare(
+    `INSERT INTO build_session_refs (build_session_id, ref_type, ref_key, ref_value, metadata, created_at, updated_at)
+     VALUES ('owned-build', 'credential', 'COPILOT_GITHUB_TOKEN', 'encrypted-stub', '{}', '2026-03-14T00:00:00Z', '2026-03-14T00:00:00Z')`
+  ).run();
 });
 
 afterEach(() => {

@@ -1,6 +1,55 @@
 const { getActiveUserSession } = require("../lib/auth-store");
+const { encrypt } = require("../lib/crypto");
+
+const BYOK_CREDENTIALS = [
+  { key: "COPILOT_GITHUB_TOKEN", required: true },
+  { key: "VERCEL_TOKEN", required: false },
+  { key: "VERCEL_ORG_ID", required: false },
+  { key: "VERCEL_PROJECT_ID", required: false },
+];
 
 function registerProvisionRoutes(app, { db, serviceResolver }) {
+  // Store BYOK credentials for a build session
+  app.post("/pub/build-session/:id/credentials", (req, res) => {
+    const userSession = requireUserSession(db, req, res);
+    if (!userSession) return;
+
+    const session = getOwnedBuildSession(db, req.params.id, userSession.user_id);
+    if (!session) {
+      return res.status(404).json({ error: "Build session not found" });
+    }
+
+    if (!enforceSessionBoundary(db, userSession.user_id, session, res)) return;
+
+    if (session.is_demo) {
+      return res.status(400).json({ error: "Demo sessions do not accept credentials" });
+    }
+
+    const credentials = req.body;
+    if (!credentials || typeof credentials !== "object") {
+      return res.status(400).json({ error: "Credentials object required" });
+    }
+
+    if (!credentials.COPILOT_GITHUB_TOKEN || typeof credentials.COPILOT_GITHUB_TOKEN !== "string") {
+      return res.status(400).json({ error: "COPILOT_GITHUB_TOKEN is required" });
+    }
+
+    const { createBuildSessionStore } = require("../lib/build-session-store");
+    const buildSessionStore = createBuildSessionStore(db);
+
+    for (const { key } of BYOK_CREDENTIALS) {
+      const value = credentials[key];
+      if (typeof value === "string" && value.length > 0) {
+        buildSessionStore.upsertRef(session.id, {
+          type: "credential",
+          key,
+          value: encrypt(value),
+        });
+      }
+    }
+
+    res.json({ stored: true });
+  });
   // Start provisioning — creates repo, waits for app installation, bootstraps target repo
   app.post("/pub/build-session/:id/provision", async (req, res) => {
     const userSession = requireUserSession(db, req, res);
@@ -67,6 +116,23 @@ function registerProvisionRoutes(app, { db, serviceResolver }) {
       return res.status(400).json({
         error: `Build session is not startable from status ${session.status}.`,
       });
+    }
+
+    // Real sessions require BYOK Copilot token before launch
+    if (!session.is_demo) {
+      const copilotRef = db
+        .prepare(
+          `SELECT 1 FROM build_session_refs
+           WHERE build_session_id = ? AND ref_type = 'credential' AND ref_key = 'COPILOT_GITHUB_TOKEN'`
+        )
+        .get(session.id);
+      if (!copilotRef) {
+        return res.status(400).json({
+          error: "credentials_required",
+          message: "Submit your Copilot token before starting the build.",
+          action: "byok",
+        });
+      }
     }
 
     try {
