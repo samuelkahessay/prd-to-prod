@@ -231,7 +231,7 @@ function createLLMClient() {
   }
 
   function parseResponse(content) {
-    const parsed = JSON.parse(extractJsonString(content));
+    const parsed = normalizeParsedResponse(JSON.parse(extractJsonString(content)));
     validateParsedResponse(parsed);
     return parsed;
   }
@@ -252,6 +252,17 @@ function consumeSSEBuffer(buffer, onPayload) {
   }
 
   return nextBuffer;
+}
+
+function normalizeParsedResponse(parsed) {
+  const normalized = { ...parsed };
+  if (!Object.prototype.hasOwnProperty.call(normalized, "question") || normalized.question === undefined) {
+    normalized.question = null;
+  }
+  if (!Object.prototype.hasOwnProperty.call(normalized, "prd") || normalized.prd === undefined) {
+    normalized.prd = null;
+  }
+  return normalized;
 }
 
 function extractJsonString(content) {
@@ -278,7 +289,7 @@ function validateParsedResponse(parsed) {
     if (typeof parsed.question !== "string") {
       throw new Error("Structured LLM response did not match needs_input schema: missing question");
     }
-    if (parsed.prd != null) {
+    if (parsed.prd !== null) {
       throw new Error("Structured LLM response did not match needs_input schema: prd should be null");
     }
     return;
