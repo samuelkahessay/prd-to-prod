@@ -1,5 +1,6 @@
 import { fetchEvidenceData } from "@/lib/github";
 import { StickyNav } from "@/components/landing/sticky-nav";
+import { SplashIntro } from "@/components/landing/splash-intro";
 import { Hero } from "@/components/landing/hero";
 import { Pricing } from "@/components/landing/pricing";
 import { WhatYouGet } from "@/components/landing/what-you-get";
@@ -15,6 +16,7 @@ export default async function LandingPage() {
 
   return (
     <div className={styles.shell}>
+      <SplashIntro />
       <header>
         <StickyNav />
       </header>

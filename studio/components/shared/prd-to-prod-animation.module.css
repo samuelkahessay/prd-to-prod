@@ -44,9 +44,10 @@
   will-change: transform, opacity;
 }
 
-/* "d" starts shifted left to close the gap where "o" will appear */
+/* "d" starts shifted left to close the gap where "o" will appear.
+   Uses ease-out (not spring) — d slides cleanly, o and ripple carry the physics. */
 .letterD {
-  animation: shiftD var(--duration) var(--spring) infinite;
+  animation: shiftD var(--duration) ease-out infinite;
 }
 
 /* "o" starts hidden above */
@@ -65,42 +66,50 @@
 }
 
 @keyframes dropO {
-  0%, 22% {
+  0%, 25% {
     opacity: 0;
     transform:
       translateY(var(--fall-distance))
       scaleX(0.8)
       scaleY(1.3);
   }
-  36% {
+  /* mid-fall: visible but still well above letters — d is already shifting */
+  31% {
+    opacity: 0.75;
+    transform:
+      translateY(calc(var(--fall-distance) * 0.4))
+      scaleX(0.84)
+      scaleY(1.2);
+  }
+  35% {
     opacity: 1;
     transform:
       translateY(2px)
       scaleX(var(--squash-x))
       scaleY(var(--squash-y));
   }
-  43% {
+  42% {
     opacity: 1;
     transform:
       translateY(-6px)
       scaleX(0.88)
       scaleY(1.15);
   }
-  50% {
+  48% {
     opacity: 1;
     transform:
       translateY(0)
       scaleX(1.05)
       scaleY(0.95);
   }
-  56%, 80% {
+  54%, 80% {
     opacity: 1;
     transform:
       translateY(0)
       scaleX(1)
       scaleY(1);
   }
-  92%, 100% {
+  90%, 100% {
     opacity: 0;
     transform:
       translateY(var(--fall-distance))
@@ -110,66 +119,43 @@
 }
 
 @keyframes shiftD {
-  0%, 22% {
-    transform:
-      translateX(-18px)
-      translateY(0)
-      scaleX(var(--ripple-squash-x-inv))
-      scaleY(var(--ripple-squash-y-inv));
+  0%, 28% {
+    transform: translateX(-0.62em);
   }
-  36% {
-    transform:
-      translateX(2px)
-      translateY(-3px)
-      scaleX(var(--ripple-squash-x))
-      scaleY(var(--ripple-squash-y));
+  38% {
+    transform: translateX(0);
   }
-  43% {
-    transform:
-      translateX(-1px)
-      translateY(1px)
-      scaleX(var(--ripple-squash-x-inv))
-      scaleY(var(--ripple-squash-y-inv));
+  80% {
+    transform: translateX(0);
   }
-  50%, 80% {
-    transform:
-      translateX(0)
-      translateY(0)
-      scaleX(1)
-      scaleY(1);
-  }
-  92%, 100% {
-    transform:
-      translateX(-18px)
-      translateY(0)
-      scaleX(var(--ripple-squash-x-inv))
-      scaleY(var(--ripple-squash-y-inv));
+  90%, 100% {
+    transform: translateX(-0.62em);
   }
 }
 
 @keyframes rippleR {
-  0%, 35% {
+  0%, 33% {
     transform:
       translateY(0)
       rotate(0deg)
       scaleX(1)
       scaleY(1);
   }
-  37% {
+  36% {
     transform:
       translateY(var(--hop-height))
       rotate(var(--rotation-neg))
       scaleX(var(--ripple-squash-x-inv))
       scaleY(var(--ripple-squash-y-inv));
   }
-  40% {
+  39% {
     transform:
       translateY(1px)
       rotate(0deg)
       scaleX(var(--ripple-squash-x))
       scaleY(var(--ripple-squash-y));
   }
-  45%, 100% {
+  43%, 100% {
     transform:
       translateY(0)
       rotate(0deg)
@@ -179,28 +165,28 @@
 }
 
 @keyframes rippleP {
-  0%, 37% {
+  0%, 35% {
     transform:
       translateY(0)
       rotate(0deg)
       scaleX(1)
       scaleY(1);
   }
-  39.5% {
+  38% {
     transform:
       translateY(var(--hop-height-far))
       rotate(var(--rotation))
       scaleX(var(--ripple-squash-x-inv))
       scaleY(var(--ripple-squash-y-inv));
   }
-  43% {
+  41% {
     transform:
       translateY(1px)
       rotate(0deg)
       scaleX(var(--ripple-squash-x))
       scaleY(var(--ripple-squash-y));
   }
-  48%, 100% {
+  45%, 100% {
     transform:
       translateY(0)
       rotate(0deg)
