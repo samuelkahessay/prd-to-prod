@@ -33,9 +33,28 @@ export default function BuildPage() {
   const [demo, setDemo] = useState(false);
   const autoResumeHandledRef = useRef(false);
 
-  // Check auth status on mount
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // Check auth status on mount — redirect to OAuth if not authenticated (unless demo)
   useEffect(() => {
-    buildApi.getMe().then(setUser).catch(() => setUser(null));
+    const url = new URL(window.location.href);
+    const isDemo = url.searchParams.get("demo") === "true";
+
+    buildApi
+      .getMe()
+      .then((u) => {
+        setUser(u);
+        setAuthChecked(true);
+      })
+      .catch(() => {
+        setUser(null);
+        setAuthChecked(true);
+        if (!isDemo) {
+          navigateTo(
+            `/pub/auth/github?return_to=${encodeURIComponent("/build" + url.search)}`
+          );
+        }
+      });
   }, []);
 
   useEffect(() => {
@@ -236,14 +255,35 @@ export default function BuildPage() {
     user,
   ]);
 
+  if (!authChecked) {
+    return (
+      <div className={styles.page}>
+        <header className={styles.header}>
+          <h1 className={styles.title}>Build something</h1>
+          <p className={styles.subtitle}>Checking authentication&hellip;</p>
+        </header>
+      </div>
+    );
+  }
+
+  if (!user && !demo) {
+    return (
+      <div className={styles.page}>
+        <header className={styles.header}>
+          <h1 className={styles.title}>Build something</h1>
+          <p className={styles.subtitle}>Redirecting to GitHub for authentication&hellip;</p>
+        </header>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Build something</h1>
         <p className={styles.subtitle}>
-          Describe what you want to build. We&apos;ll refine the PRD together,
-          then move it into the invite-only beta flow with GitHub auth, a
-          single-use access code, and your BYOK agent token.
+          Describe what you want to build. We&apos;ll refine it together, then
+          our agents will build it for you.
         </p>
         {demo && <span className={styles.demoPill}>Demo</span>}
       </header>

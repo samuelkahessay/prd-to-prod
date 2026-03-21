@@ -13,16 +13,14 @@ import { BUILD_QUEUE, REVIEW_QUEUE } from "@/components/landing/pipeline-animati
 import { RunsTable } from "@/components/console/runs-table";
 import type { EvidenceRow, Run } from "@/lib/types";
 
-const MAILTO = "mailto:kahessay@icloud.com?subject=PRD%20Submission";
-
 describe("Hero", () => {
   it("renders headline and CTA", () => {
     render(<Hero />);
     expect(screen.getByText("Powered by GitHub Agentic Workflows")).toBeInTheDocument();
     expect(screen.getByText(/Send a PRD/)).toBeInTheDocument();
-    expect(screen.getByText(/Get one beta run/)).toBeInTheDocument();
+    expect(screen.getByText(/Get a deployed app/)).toBeInTheDocument();
     expect(screen.getByText(/\$1\./)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Request beta access" })).toHaveAttribute("href", MAILTO);
+    expect(screen.getByRole("link", { name: "Send your PRD" })).toHaveAttribute("href", "/build");
     expect(screen.getByRole("link", { name: "Watch it build" })).toHaveAttribute("href", "/build?demo=true");
   });
 });
@@ -37,7 +35,7 @@ describe("StickyNav", () => {
       "href",
       "https://github.com/samuelkahessay/prd-to-prod",
     );
-    expect(screen.getByRole("link", { name: "Send your PRD" })).toHaveAttribute("href", MAILTO);
+    expect(screen.getByRole("link", { name: "Send your PRD" })).toHaveAttribute("href", "/build");
   });
 
   it("adds the scrolled class after scrolling past the threshold", () => {
@@ -59,11 +57,11 @@ describe("StickyNav", () => {
 describe("Pricing", () => {
   it("renders the $1 offer and self-hosted option", () => {
     render(<Pricing />);
-    expect(screen.getByRole("heading", { name: "$1. One access code. One beta run." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "$1. One PRD. One deployed app." })).toBeInTheDocument();
     expect(screen.getByText("Early adopter")).toBeInTheDocument();
     expect(screen.getByText("Run it yourself")).toBeInTheDocument();
     expect(screen.getByText("Scope")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Request beta access" })).toHaveAttribute("href", MAILTO);
+    expect(screen.getByRole("link", { name: "Send your PRD" })).toHaveAttribute("href", "/build");
     expect(screen.getByRole("link", { name: "View on GitHub" })).toHaveAttribute(
       "href",
       "https://github.com/samuelkahessay/prd-to-prod",
@@ -151,8 +149,8 @@ describe("Pipeline animation queues", () => {
 describe("BottomCta", () => {
   it("renders the final call to action", () => {
     render(<BottomCta />);
-    expect(screen.getByRole("heading", { name: "Request beta access. One run. $1." })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Request an access code" })).toHaveAttribute("href", MAILTO);
+    expect(screen.getByRole("heading", { name: "Send a PRD. Get a deployed app. $1." })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Send your PRD" })).toHaveAttribute("href", "/build");
     expect(screen.getByRole("link", { name: "View on GitHub" })).toHaveAttribute(
       "href",
       "https://github.com/samuelkahessay/prd-to-prod",

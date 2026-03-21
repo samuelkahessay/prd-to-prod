@@ -1,17 +1,14 @@
 import styles from "./pricing.module.css";
 
-const MAILTO = "mailto:kahessay@icloud.com?subject=PRD%20Submission";
-
 export function Pricing() {
   return (
     <section id="pricing" className={styles.section}>
       <span className={styles.label}>Pricing</span>
-      <h2 className={styles.heading}>$1. One access code. One beta run.</h2>
+      <h2 className={styles.heading}>$1. One PRD. One deployed app.</h2>
       <p className={styles.subtitle}>
-        We&apos;re running an invite-only beta with early adopters on Platform
-        Calgary. For $1, we manually issue a single-use access code for one
-        real run. Repo handoff is included; deployment validation is optional
-        when you bring Vercel credentials.
+        We&apos;re building case studies with early adopters on Platform Calgary.
+        For $1, you get a real pipeline run — same agents, same CI/CD, same
+        deployment.
       </p>
 
       <div className={styles.cards}>
@@ -24,15 +21,15 @@ export function Pricing() {
           <p className={styles.pricePer}>per pipeline run</p>
 
           <ul className={styles.features}>
-            <li>We manually fulfill one single-use access code</li>
-            <li>You authenticate with GitHub and bring your own Copilot token</li>
-            <li>The pipeline provisions a private repo you own with the workflows already wired in</li>
-            <li>The build page shows gates, bootstrap, issues, PRs, and delivery evidence</li>
-            <li>Runs finish at repo handoff by default</li>
-            <li>Add Vercel credentials if you want validated deployment output</li>
+            <li>You send a PRD</li>
+            <li>Agents build, review, and deploy autonomously</li>
+            <li>You get a GitHub repo you own — full commit history, CI/CD, agentic workflows pre-wired</li>
+            <li>Live deployment on Vercel for 30 days</li>
+            <li>After 30 days, you take over hosting (Vercel free tier works for most projects)</li>
+            <li>The agentic pipeline in your repo activates when you add your own Copilot token</li>
           </ul>
 
-          <a href={MAILTO} className={styles.ctaPrimary}>Request beta access</a>
+          <a href="/build" className={styles.ctaPrimary}>Send your PRD</a>
         </div>
 
         <div className={styles.card}>
@@ -72,8 +69,8 @@ export function Pricing() {
       <div className={styles.scope}>
         <p className={styles.scopeTitle}>Scope</p>
         <p className={styles.scopeBody}>
-          Invite-only beta. Greenfield web apps on the nextjs-vercel lane.
-          No managed checkout, no mobile, no desktop.
+          Web apps. Next.js, Express, Node.js. Best fit for new products and
+          isolated builds. No mobile, no desktop.
         </p>
       </div>
     </section>

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import styles from "./sticky-nav.module.css";
 
-const MAILTO = "mailto:kahessay@icloud.com?subject=PRD%20Submission";
 
 export function StickyNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -35,7 +34,7 @@ export function StickyNav() {
             GitHub
           </a>
         </div>
-        <a href={MAILTO} className={styles.cta}>Send your PRD</a>
+        <a href="/build" className={styles.cta}>Send your PRD</a>
         <button
           className={`${styles.menuBtn} ${menuOpen ? styles.menuOpen : ""}`}
           onClick={() => setMenuOpen(!menuOpen)}
