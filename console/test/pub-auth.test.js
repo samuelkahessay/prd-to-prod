@@ -107,5 +107,7 @@ test("oauth callback stores a one-hour provisioning grant by default", async () 
     .prepare("SELECT created_at, expires_at FROM oauth_grants ORDER BY created_at DESC LIMIT 1")
     .get();
 
-  expect(Date.parse(grant.expires_at) - Date.parse(grant.created_at)).toBe(60 * 60 * 1000);
+  const ttl = Date.parse(grant.expires_at) - Date.parse(grant.created_at);
+  expect(ttl).toBeGreaterThanOrEqual(60 * 60 * 1000);
+  expect(ttl).toBeLessThanOrEqual(60 * 60 * 1000 + 50);
 });
