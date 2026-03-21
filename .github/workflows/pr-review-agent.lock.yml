@@ -49,7 +49,7 @@ jobs:
     needs: pre_activation
     if: >
       (needs.pre_activation.outputs.activated == 'true') && ((github.event_name != 'pull_request') || (github.event.pull_request.head.repo.id == github.repository_id))
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -848,7 +848,7 @@ jobs:
       - agent
       - safe_outputs
     if: (always()) && ((needs.agent.result != 'skipped') || (needs.activation.outputs.lockdown_check_failed == 'true'))
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       discussions: write
@@ -950,7 +950,7 @@ jobs:
 
   pre_activation:
     if: (github.event_name != 'pull_request') || (github.event.pull_request.head.repo.id == github.repository_id)
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     outputs:
       activated: ${{ steps.check_membership.outputs.is_team_member == 'true' }}
       matched_command: ''
@@ -975,7 +975,7 @@ jobs:
   safe_outputs:
     needs: agent
     if: ((!cancelled()) && (needs.agent.result != 'skipped')) && (needs.agent.outputs.detection_success == 'true')
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       discussions: write

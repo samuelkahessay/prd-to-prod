@@ -222,17 +222,25 @@ function createGitHubClient() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const baseRef = await getBranchRef(token, owner, repo, repoData.default_branch);
-      await githubFetch(
-        `${GITHUB_API}/repos/${owner}/${repo}/git/refs`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: {
-            ref: `refs/heads/${branch}`,
-            sha: baseRef.object.sha,
-          },
+      try {
+        await githubFetch(
+          `${GITHUB_API}/repos/${owner}/${repo}/git/refs`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: {
+              ref: `refs/heads/${branch}`,
+              sha: baseRef.object.sha,
+            },
+          }
+        );
+      } catch (refError) {
+        if (refError.status === 422) {
+          // Branch was created by a concurrent request — safe to continue
+        } else {
+          throw refError;
         }
-      );
+      }
     }
 
     let existingSha = null;

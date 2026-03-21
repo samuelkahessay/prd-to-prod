@@ -15,6 +15,7 @@ const BETA_COPILOT_TOKEN =
   process.env.PUBLIC_BETA_COPILOT_GITHUB_TOKEN || process.env.COPILOT_GITHUB_TOKEN;
 const PIPELINE_APP_ID = process.env.PIPELINE_APP_ID || "";
 const PIPELINE_APP_PRIVATE_KEY = process.env.PIPELINE_APP_PRIVATE_KEY || "";
+const GH_AW_GITHUB_TOKEN = process.env.GH_AW_GITHUB_TOKEN || "";
 
 const REPO_BOOTSTRAP_LABELS = [
   ["pipeline", "0075ca", "Pipeline-managed issue"],
@@ -234,7 +235,7 @@ function createProvisioner({ db, buildSessionStore, githubClient }) {
     const issue = await githubClient.createIssue(token, owner, repo, {
       title: `[Pipeline] ${title}`,
       body: session.prd_final,
-      labels: [],
+      labels: ["pipeline"],
     });
 
     buildSessionStore.upsertRef(sessionId, {
@@ -421,6 +422,12 @@ function createProvisioner({ db, buildSessionStore, githubClient }) {
         name: "PIPELINE_APP_PRIVATE_KEY",
         value: PIPELINE_APP_PRIVATE_KEY,
       });
+      if (GH_AW_GITHUB_TOKEN) {
+        await githubClient.createOrUpdateActionsSecret(token, owner, repo, {
+          name: "GH_AW_GITHUB_TOKEN",
+          value: GH_AW_GITHUB_TOKEN,
+        });
+      }
 
       // Resolve Copilot token: BYOK for real sessions, platform fallback for demo
       const copilotToken = resolveCopilotToken(sessionId, session);
