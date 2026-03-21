@@ -12,7 +12,7 @@ set -euo pipefail
 WORKFLOW_DIR="${1:-.github/workflows}"
 
 COUNT=0
-for f in "$WORKFLOW_DIR"/*.lock.yml; do
+for f in "$WORKFLOW_DIR"/*.lock.yml "$WORKFLOW_DIR"/*.yml; do
   [ -f "$f" ] || continue
   if grep -q "ubuntu-slim" "$f"; then
     sed -i '' 's/ubuntu-slim/ubuntu-latest/g' "$f" 2>/dev/null || \
