@@ -11,16 +11,25 @@ CONFIDENCE="low"
 SUMMARY="Unknown CI failure"
 SUGGESTED_ACTION="fix"
 
-if [[ "$LOG_LOWER" =~ 403|401|resource\ not\ accessible|token|credentials ]]; then
+# Build/path errors checked first — they commonly co-occur with "token" in
+# masked env-var output and must not be shadowed by the auth rule.
+if [[ "$LOG_LOWER" =~ enoent|no\ such\ file|module\ not\ found ]]; then
+  CATEGORY="build"
+  CONFIDENCE="high"
+  SUMMARY="Build failure: missing file or module"
+  SUGGESTED_ACTION="fix"
+elif [[ "$LOG_LOWER" =~ build|compile|tsc|error\ ts ]]; then
+  CATEGORY="build"
+  CONFIDENCE="high"
+  SUMMARY="Build failure detected"
+  SUGGESTED_ACTION="fix"
+# Auth: match actual error codes/messages, NOT the word "token" which appears
+# in every Actions run via masked env-var output (e.g. "VERCEL_TOKEN: ***").
+elif [[ "$LOG_LOWER" =~ 403|401|resource\ not\ accessible|bad\ credentials|authentication\ failed|permission\ denied ]]; then
   CATEGORY="auth"
   CONFIDENCE="high"
   SUMMARY="Authentication or permission failure"
   SUGGESTED_ACTION="escalate"
-elif [[ "$LOG_LOWER" =~ fail|failing|test ]]; then
-  CATEGORY="test"
-  CONFIDENCE="high"
-  SUMMARY="Test failure detected"
-  SUGGESTED_ACTION="fix"
 elif [[ "$LOG_LOWER" =~ rate\ limit|429|quota ]]; then
   CATEGORY="rate-limit"
   CONFIDENCE="high"
@@ -31,10 +40,10 @@ elif [[ "$LOG_LOWER" =~ timeout ]]; then
   CONFIDENCE="high"
   SUMMARY="CI job timed out"
   SUGGESTED_ACTION="retry"
-elif [[ "$LOG_LOWER" =~ build|compile|tsc|error\ ts ]]; then
-  CATEGORY="build"
+elif [[ "$LOG_LOWER" =~ fail|failing|test ]]; then
+  CATEGORY="test"
   CONFIDENCE="high"
-  SUMMARY="Build failure detected"
+  SUMMARY="Test failure detected"
   SUGGESTED_ACTION="fix"
 elif [[ "$LOG_LOWER" =~ econnrefused|5[0-9][0-9]|service\ unavailable ]]; then
   CATEGORY="infrastructure"
