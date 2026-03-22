@@ -202,6 +202,16 @@ function createDatabase(dataDir) {
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_e2e_run_events_run ON e2e_run_events(run_id, id);
+
+    CREATE TABLE IF NOT EXISTS e2e_auth_exports (
+      id TEXT PRIMARY KEY,
+      cookie_header TEXT NOT NULL,
+      user_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      consumed_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_e2e_auth_exports_expires ON e2e_auth_exports(expires_at);
   `);
 
   // Safe migration for existing databases

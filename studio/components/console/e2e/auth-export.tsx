@@ -10,6 +10,7 @@ import styles from "./e2e.module.css";
 export function E2EAuthExport() {
   const searchParams = useSearchParams();
   const cookieJarPath = searchParams.get("jar") || "";
+  const exportRequestId = searchParams.get("export") || "";
   const [authState, setAuthState] = useState<"checking" | "needs_auth" | "ready" | "saved">("checking");
   const [message, setMessage] = useState("Checking build-session auth.");
 
@@ -18,8 +19,11 @@ export function E2EAuthExport() {
     if (cookieJarPath) {
       params.set("jar", cookieJarPath);
     }
+    if (exportRequestId) {
+      params.set("export", exportRequestId);
+    }
     return `/console/e2e/auth${params.toString() ? `?${params.toString()}` : ""}`;
-  }, [cookieJarPath]);
+  }, [cookieJarPath, exportRequestId]);
 
   useEffect(() => {
     buildApi
@@ -40,15 +44,19 @@ export function E2EAuthExport() {
     }
 
     api
-      .exportE2EAuthCookie(cookieJarPath)
+      .exportE2EAuthCookie(cookieJarPath, exportRequestId)
       .then((result) => {
         setAuthState("saved");
-        setMessage(`Saved the browser auth cookie to ${result.cookieJarPath}.`);
+        if (result.mode === "handoff") {
+          setMessage("Browser auth is ready. The local CLI can now save the cookie jar.");
+        } else {
+          setMessage(`Saved the browser auth cookie to ${result.cookieJarPath}.`);
+        }
       })
       .catch((error) => {
         setMessage(error instanceof Error ? error.message : "Failed to export the cookie jar.");
       });
-  }, [authState, cookieJarPath]);
+  }, [authState, cookieJarPath, exportRequestId]);
 
   return (
     <div className={styles.page}>

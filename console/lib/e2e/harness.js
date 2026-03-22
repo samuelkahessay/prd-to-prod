@@ -128,9 +128,27 @@ function createE2EHarness({
       };
     },
 
-    authBootstrapUrl(cookieJarPath) {
-      const targetPath = encodeURIComponent(cookieJarPath || defaultCookieJarPath());
-      return `${stripTrailingSlash(studioUrl)}/console/e2e/auth?jar=${targetPath}`;
+    authBootstrapUrl(cookieJarPath, exportRequestId = "") {
+      const params = new URLSearchParams();
+      params.set("jar", cookieJarPath || defaultCookieJarPath());
+      if (exportRequestId) {
+        params.set("export", exportRequestId);
+      }
+      return `${stripTrailingSlash(studioUrl)}/console/e2e/auth?${params.toString()}`;
+    },
+
+    async consumeAuthExport(exportRequestId) {
+      const response = await fetch(
+        `${stripTrailingSlash(baseUrl)}/pub/e2e/auth-cookie/export/${encodeURIComponent(exportRequestId)}`,
+        { cache: "no-store" }
+      );
+      if (response.status === 404) {
+        return null;
+      }
+      if (!response.ok) {
+        throw new Error(`Auth export failed: ${response.status} ${response.statusText}`);
+      }
+      return response.json();
     },
 
     isDashboardLaunchable(lane) {

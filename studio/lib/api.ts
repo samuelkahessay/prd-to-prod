@@ -135,10 +135,10 @@ export const api = {
     return () => source.close();
   },
 
-  exportE2EAuthCookie: (cookieJarPath: string) =>
-    post<{ ok: boolean; cookieJarPath: string; authBootstrapUrl: string }>(
+  exportE2EAuthCookie: (cookieJarPath: string, exportRequestId = "") =>
+    post<{ ok: boolean; cookieJarPath: string; authBootstrapUrl: string; mode: "server_write" | "handoff" }>(
       "/pub/e2e/auth-cookie",
-      { path: cookieJarPath }
+      { path: cookieJarPath, exportRequestId }
     ),
 
   getE2EAuthCookie: (cookieJarPath: string, options?: ApiRequestOptions) =>

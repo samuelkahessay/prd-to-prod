@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const path = require("path");
+const crypto = require("crypto");
 
 const { createDatabase } = require("../../console/lib/db");
 const { createBuildSessionStore } = require("../../console/lib/build-session-store");
@@ -75,7 +76,8 @@ async function authCheck(argv) {
 async function authRefresh(argv) {
   const pathArg = readOption(argv, "--path") || resolveCookieJarPath(projectRoot);
   const openBrowser = !argv.includes("--no-open");
-  const url = harness.authBootstrapUrl(pathArg);
+  const exportRequestId = crypto.randomUUID();
+  const url = harness.authBootstrapUrl(pathArg, exportRequestId);
 
   console.log(`Auth export page: ${url}`);
   console.log(`Cookie jar path: ${pathArg}`);
@@ -92,6 +94,23 @@ async function authRefresh(argv) {
 
   const deadline = Date.now() + 10 * 60_000;
   while (Date.now() < deadline) {
+    try {
+      const exported = await harness.consumeAuthExport(exportRequestId);
+      if (exported?.cookieHeader) {
+        harness.exportAuthCookie({
+          cookieJarPath: pathArg,
+          cookieHeader: exported.cookieHeader,
+          user: exported.user || null,
+        });
+        const result = await harness.validateAuth(pathArg);
+        console.log(`Saved browser auth for ${result.user.githubLogin}.`);
+        return;
+      }
+    } catch (error) {
+      if (!/404/.test(error.message || "")) {
+        throw error;
+      }
+    }
     try {
       const result = await harness.validateAuth(pathArg);
       console.log(`Saved browser auth for ${result.user.githubLogin}.`);

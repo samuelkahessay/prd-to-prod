@@ -185,6 +185,7 @@ test("auth-cookie route exports and validates real build-session cookies", async
       ok: true,
       cookieJarPath: "/tmp/e2e-cookiejar",
       authBootstrapUrl: "http://127.0.0.1:3001/console/e2e/auth",
+      mode: "server_write",
     });
     expect(harness.exportAuthCookie).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -202,6 +203,69 @@ test("auth-cookie route exports and validates real build-session cookies", async
       cookieJarPath: "/tmp/e2e-cookiejar",
       user: { githubLogin: "octocat" },
     });
+  }, {
+    validateSessionAccess: jest.fn().mockResolvedValue(undefined),
+  });
+});
+
+test("auth-cookie route can hand off browser auth for local cli export", async () => {
+  const now = new Date().toISOString();
+  db.prepare(
+    `INSERT INTO users (id, github_id, github_login, github_avatar_url, created_at, updated_at)
+     VALUES ('user-1', 42, 'octocat', 'https://example.com/octocat.png', ?, ?)`
+  ).run(now, now);
+  const browserSessionId = createUserSession(db, {
+    userId: "user-1",
+    createdAt: now,
+    expiresAt: new Date(Date.now() + 60_000).toISOString(),
+    sessionId: "build-session-1",
+  });
+
+  const harness = {
+    isDashboardLaunchable: jest.fn(),
+    launchRun: jest.fn(),
+    listRuns: jest.fn(),
+    getRun: jest.fn(),
+    cleanupRun: jest.fn(),
+    validateAuth: jest.fn(),
+    exportAuthCookie: jest.fn(),
+    authBootstrapUrl: jest.fn().mockReturnValue("http://127.0.0.1:3001/console/e2e/auth"),
+  };
+
+  await withServer(harness, async (server) => {
+    const exportRes = await fetch(makeUrl(server, "/pub/e2e/auth-cookie"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `build_session=${browserSessionId}`,
+      },
+      body: JSON.stringify({ path: "/tmp/e2e-cookiejar", exportRequestId: "export-1" }),
+    });
+
+    expect(exportRes.status).toBe(200);
+    expect(await exportRes.json()).toEqual({
+      ok: true,
+      cookieJarPath: "/tmp/e2e-cookiejar",
+      authBootstrapUrl: "http://127.0.0.1:3001/console/e2e/auth",
+      mode: "handoff",
+    });
+    expect(harness.exportAuthCookie).not.toHaveBeenCalled();
+
+    const consumeRes = await fetch(makeUrl(server, "/pub/e2e/auth-cookie/export/export-1"));
+    expect(consumeRes.status).toBe(200);
+    expect(await consumeRes.json()).toEqual({
+      ok: true,
+      cookieHeader: "build_session=build-session-1",
+      user: {
+        id: "user-1",
+        githubId: 42,
+        githubLogin: "octocat",
+        githubAvatarUrl: "https://example.com/octocat.png",
+      },
+    });
+
+    const secondConsume = await fetch(makeUrl(server, "/pub/e2e/auth-cookie/export/export-1"));
+    expect(secondConsume.status).toBe(404);
   }, {
     validateSessionAccess: jest.fn().mockResolvedValue(undefined),
   });
