@@ -353,6 +353,7 @@ function createE2EHarness({
     appendStep(runId, lane, "session.create", "running", "Creating build session.");
     const created = await client.createSession();
     const sessionId = created.sessionId;
+    syncLocalSession(sessionId, { status: "refining" });
     e2eStore.updateRun(runId, {
       build_session_id: sessionId,
       active_lane: lane,
@@ -367,10 +368,10 @@ function createE2EHarness({
     await client.finalizeSession(sessionId);
     appendStep(runId, lane, "prd.submit", "passed", "Finalized the standard PRD.");
 
-    const accessCode = accessCodes.generate({
+    const accessCode = await mintAccessCode({
       issuer: "e2e-harness",
       memo: `lane=${lane};run=${runId}`,
-    })[0];
+    });
     appendStep(runId, lane, "access-code", "running", "Redeeming a fresh access code.");
     await client.redeemCode(sessionId, accessCode);
     appendStep(runId, lane, "access-code", "passed", "Redeemed a fresh access code.");
@@ -383,6 +384,7 @@ function createE2EHarness({
     await client.provisionRepo(sessionId);
 
     const waited = await waitForProvision(runId, lane, sessionId, client);
+    syncLocalSession(sessionId, waited.session);
     const githubSnapshot = await githubSnapshots.collect(waited.session);
     const repoInfo = githubSnapshot.repo || {};
     e2eStore.updateRun(runId, {
@@ -480,6 +482,7 @@ function createE2EHarness({
     }
 
     const latestSession = (await client.getSession(context.sessionId)).session;
+    syncLocalSession(context.sessionId, latestSession);
     const githubSnapshot = await githubSnapshots.collect(latestSession);
     const matchedChildIssue = childIssue.event?.data?.issueNumber || null;
     appendStep(runId, lane, "child-issue", "passed", "Observed the first child issue.");
@@ -511,6 +514,7 @@ function createE2EHarness({
         const githubSnapshot = await githubSnapshots.collect(latestSession);
         const firstPrMatch = githubSnapshot.pullRequests[0];
         if (firstPrMatch) {
+          syncLocalSession(context.sessionId, latestSession);
           return {
             event: {
               kind: "first_pr_opened",
@@ -538,6 +542,7 @@ function createE2EHarness({
     }
 
     const latestSession = firstPr.session || (await client.getSession(context.sessionId)).session;
+    syncLocalSession(context.sessionId, latestSession);
     const githubSnapshot = await githubSnapshots.collect(latestSession);
     const firstPrNumber = firstPr.event?.data?.prNumber || githubSnapshot.pullRequests[0]?.number || null;
     e2eStore.updateRun(runId, {
@@ -571,10 +576,10 @@ function createE2EHarness({
     }
 
     const credentials = resolveCredentials();
-    const accessCode = accessCodes.generate({
+    const accessCode = await mintAccessCode({
       issuer: "e2e-harness",
       memo: `lane=${lane};run=${runId}`,
-    })[0];
+    });
     const browser = await playwright.chromium.launch({
       headless: process.env.E2E_HEADLESS !== "false",
     });
@@ -633,6 +638,7 @@ function createE2EHarness({
       e2eStore.updateRun(runId, {
         build_session_id: sessionId,
       });
+      syncLocalSession(sessionId, { status: "building" });
       appendStep(runId, lane, "browser.launch", "passed", `Browser canary reached session ${sessionId}.`);
 
       await page.getByPlaceholder("BETA-XXXXXXXX").fill(accessCode);
@@ -661,6 +667,7 @@ function createE2EHarness({
       }
 
       const session = (await client.getSession(sessionId)).session;
+      syncLocalSession(sessionId, session);
       const githubSnapshot = await githubSnapshots.collect(session);
       return {
         lane,
@@ -687,6 +694,7 @@ function createE2EHarness({
     while (Date.now() - started < LANE_SLAS_MS["provision-only"].bootstrapReady) {
       const data = await client.getSession(sessionId);
       const session = data.session;
+      syncLocalSession(sessionId, session);
       const buildEvents = data.messages.filter((event) => event.category !== "chat");
       lastEvents = buildEvents;
 
@@ -753,6 +761,7 @@ function createE2EHarness({
     fallback = null,
   }) {
     const initial = await client.getSession(sessionId);
+    syncLocalSession(sessionId, initial.session);
     const initialEvents = initial.messages.filter((event) => event.category !== "chat");
     const matched = initialEvents.find((event) => predicate(event, initialEvents));
     if (matched) {
@@ -780,6 +789,7 @@ function createE2EHarness({
         }
 
         const latest = await client.getSession(sessionId);
+        syncLocalSession(sessionId, latest.session);
         const error = new Error("Timed out waiting for build milestone.");
         error.buildEvents = latest.messages.filter((event) => event.category !== "chat");
         reject(error);
@@ -1046,6 +1056,56 @@ function createE2EHarness({
 
   function defaultCookieJarPath() {
     return resolveCookieJarPath(projectRoot);
+  }
+
+  function syncLocalSession(sessionId, session = {}) {
+    if (!sessionId) {
+      return null;
+    }
+
+    return buildSessionStore.ensureSession(sessionId, {
+      status: session.status || "refining",
+      user_id: session.user_id || null,
+      github_repo: session.github_repo || null,
+      github_repo_id: session.github_repo_id || null,
+      github_repo_url: session.github_repo_url || null,
+      deploy_url: session.deploy_url || null,
+      prd_final: session.prd_final || null,
+      app_installation_id: session.app_installation_id || null,
+      is_demo: Boolean(session.is_demo),
+    });
+  }
+
+  async function mintAccessCode({ issuer, memo }) {
+    const internalSecret =
+      process.env.E2E_BUILD_INTERNAL_SECRET ||
+      process.env.BUILD_INTERNAL_SECRET ||
+      "";
+
+    if (!internalSecret) {
+      return accessCodes.generate({ issuer, memo })[0];
+    }
+
+    const response = await fetch(`${stripTrailingSlash(baseUrl)}/internal/access-codes/generate`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${internalSecret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ count: 1, issuer, memo }),
+    });
+
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(`Failed to mint remote access code (${response.status}): ${detail || response.statusText}`);
+    }
+
+    const payload = await response.json();
+    const code = Array.isArray(payload?.codes) ? payload.codes[0] : "";
+    if (!code) {
+      throw new Error("Remote access-code mint returned no code.");
+    }
+    return code;
   }
 }
 

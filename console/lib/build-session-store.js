@@ -22,6 +22,35 @@ function createBuildSessionStore(db) {
       return this.getSession(id);
     },
 
+    ensureSession(id, fields = {}) {
+      const existing = this.getSession(id);
+      if (!existing) {
+        const now = new Date().toISOString();
+        db.prepare(
+          `INSERT INTO build_sessions (
+             id, user_id, status, is_demo, github_repo, github_repo_id, github_repo_url,
+             deploy_url, prd_final, app_installation_id, created_at, updated_at
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).run(
+          id,
+          fields.user_id || null,
+          fields.status || "refining",
+          fields.is_demo ? 1 : 0,
+          fields.github_repo || null,
+          fields.github_repo_id || null,
+          fields.github_repo_url || null,
+          fields.deploy_url || null,
+          fields.prd_final || null,
+          fields.app_installation_id || null,
+          now,
+          now
+        );
+      }
+
+      this.updateSession(id, fields);
+      return this.getSession(id);
+    },
+
     getSession(id) {
       return db
         .prepare("SELECT * FROM build_sessions WHERE id = ?")

@@ -24,6 +24,7 @@ const { createBuildSessionStore } = require("./lib/build-session-store");
 const { createServiceResolver } = require("./lib/service-resolver");
 const { registerProvisionRoutes } = require("./routes/pub-provision");
 const { registerInternalBuildRoutes } = require("./routes/internal-build");
+const { registerInternalAccessCodeRoutes } = require("./routes/internal-access-codes");
 const { createE2EHarness } = require("./lib/e2e/harness");
 const { registerE2ERunRoutes } = require("./routes/api-e2e-runs");
 const { registerE2EStreamRoutes } = require("./routes/api-e2e-stream");
@@ -137,6 +138,7 @@ registerProvisionRoutes(app, { db, serviceResolver });
 // --- Internal routes (behind /internal auth middleware) ---
 
 registerInternalBuildRoutes(app, { buildSessionStore, serviceResolver });
+registerInternalAccessCodeRoutes(app, { db });
 
 // --- Webhook routes ---
 
