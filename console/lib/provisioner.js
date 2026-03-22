@@ -415,7 +415,16 @@ function createProvisioner({ db, buildSessionStore, githubClient }) {
           detail: `Auto-merge was not fully configured: ${warning.message}`,
         });
       }
-      await githubClient.ensureRepoMemoryBranch(token, owner, repo);
+      try {
+        await githubClient.ensureRepoMemoryBranch(token, owner, repo);
+      } catch (warning) {
+        if (!isIgnorableRepoMemoryWarning(warning)) {
+          throw warning;
+        }
+        emitEvent(sessionId, "provision", "bootstrap_warning", {
+          detail: `Repo memory state was not fully updated: ${warning.message}`,
+        });
+      }
       if (!PIPELINE_APP_ID || !PIPELINE_APP_PRIVATE_KEY) {
         throw new Error("PIPELINE_APP_ID and PIPELINE_APP_PRIVATE_KEY must be configured on the platform");
       }
@@ -645,6 +654,11 @@ function parseRepo(fullName) {
 
 function isIgnorableAutoMergeWarning(error) {
   return /conflicting_auto_merge_configuration/i.test(error?.message || "");
+}
+
+function isIgnorableRepoMemoryWarning(error) {
+  const message = error?.message || "";
+  return /state\.json/i.test(message) && /\b409\b/.test(message);
 }
 
 function readUserGithubId(db, userId) {
