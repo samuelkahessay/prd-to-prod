@@ -71,6 +71,16 @@ test("createPrdIssue is idempotent once the pipeline issue has been created", as
   const result = await provisioner.createPrdIssue("build-1", 99);
 
   expect(githubClient.createIssue).toHaveBeenCalledTimes(1);
+  expect(githubClient.createIssue).toHaveBeenCalledWith(
+    "installation-token",
+    "octocat",
+    "customer-portal",
+    expect.objectContaining({
+      title: "[Pipeline] Customer portal",
+      body: "/decompose\n\n# PRD: Customer portal\n\n## Problem\n\nSupport requests get lost",
+      labels: ["pipeline"],
+    })
+  );
   expect(buildSessionStore.appendEvent).toHaveBeenCalledTimes(1);
   expect(result).toEqual({
     number: 17,

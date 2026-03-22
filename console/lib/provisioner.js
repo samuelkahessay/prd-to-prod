@@ -238,7 +238,7 @@ function createProvisioner({ db, buildSessionStore, githubClient }) {
     const title = extractPrdTitle(session.prd_final);
     const issue = await githubClient.createIssue(token, owner, repo, {
       title: `[Pipeline] ${title}`,
-      body: session.prd_final,
+      body: buildRootPrdIssueBody(session.prd_final),
       labels: ["pipeline"],
     });
 
@@ -649,6 +649,14 @@ function hasDeployCredentials(creds) {
 function extractPrdTitle(prdMarkdown) {
   const match = prdMarkdown.match(/^#\s+PRD:\s*(.+)$/m);
   return match ? match[1].trim() : "New Project";
+}
+
+function buildRootPrdIssueBody(prdMarkdown) {
+  const normalized = typeof prdMarkdown === "string" ? prdMarkdown.trim() : "";
+  if (normalized.startsWith("/decompose")) {
+    return normalized;
+  }
+  return `/decompose\n\n${normalized}`.trim();
 }
 
 function parseRepo(fullName) {
