@@ -1,7 +1,7 @@
 const { getActiveUserSession } = require("../lib/auth-store");
 
 function registerE2EAuthRoutes(app, { harness, db }) {
-  app.post("/api/e2e/auth-cookie", async (req, res) => {
+  app.post("/pub/e2e/auth-cookie", async (req, res) => {
     const sessionId = req.cookies?.build_session;
     if (!sessionId) {
       return res.status(401).json({ error: "Build-session authentication required" });
@@ -34,7 +34,7 @@ function registerE2EAuthRoutes(app, { harness, db }) {
     }
   });
 
-  app.get("/api/e2e/auth-cookie", async (req, res) => {
+  app.get("/pub/e2e/auth-cookie", async (req, res) => {
     try {
       const result = await harness.validateAuth(req.query.path);
       res.json({

@@ -137,13 +137,13 @@ export const api = {
 
   exportE2EAuthCookie: (cookieJarPath: string) =>
     post<{ ok: boolean; cookieJarPath: string; authBootstrapUrl: string }>(
-      "/api/e2e/auth-cookie",
+      "/pub/e2e/auth-cookie",
       { path: cookieJarPath }
     ),
 
   getE2EAuthCookie: (cookieJarPath: string, options?: ApiRequestOptions) =>
     get<{ ok: boolean; cookieJarPath: string; user: Record<string, unknown> }>(
-      `/api/e2e/auth-cookie?path=${encodeURIComponent(cookieJarPath)}`,
+      `/pub/e2e/auth-cookie?path=${encodeURIComponent(cookieJarPath)}`,
       options
     ),
 };

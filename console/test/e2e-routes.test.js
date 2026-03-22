@@ -160,7 +160,7 @@ test("auth-cookie route exports and validates real build-session cookies", async
   };
 
   await withServer(harness, async (server) => {
-    const exportRes = await fetch(makeUrl(server, "/api/e2e/auth-cookie"), {
+    const exportRes = await fetch(makeUrl(server, "/pub/e2e/auth-cookie"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -183,7 +183,7 @@ test("auth-cookie route exports and validates real build-session cookies", async
     );
 
     const validateRes = await fetch(
-      makeUrl(server, "/api/e2e/auth-cookie?path=%2Ftmp%2Fe2e-cookiejar")
+      makeUrl(server, "/pub/e2e/auth-cookie?path=%2Ftmp%2Fe2e-cookiejar")
     );
     expect(validateRes.status).toBe(200);
     expect(await validateRes.json()).toEqual({
