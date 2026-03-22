@@ -121,6 +121,48 @@ test("valid installation event updates awaiting build session", async () => {
   expect(resumeAppBootstrap).toHaveBeenCalledWith("build-1", 999);
 });
 
+test("agentic workflow failure issues do not emit child_issue_tracked", async () => {
+  buildSessionStore.upsertRef("build-1", {
+    type: "issue",
+    key: "root",
+    value: "1",
+    metadata: { issueUrl: "https://github.com/octocat/repo/issues/1" },
+  });
+
+  const payload = JSON.stringify({
+    action: "opened",
+    installation: { id: 999 },
+    repository: { id: 123 },
+    issue: {
+      number: 2,
+      title: "[aw] PRD Decomposer failed",
+      state: "open",
+      html_url: "https://github.com/octocat/repo/issues/2",
+      labels: [{ name: "agentic-workflows" }, { name: "pipeline" }],
+    },
+  });
+
+  await withServer(db, buildSessionStore, serviceResolver, async (server) => {
+    const res = await fetch(makeUrl(server), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Hub-Signature-256": sign(secret, payload),
+        "X-GitHub-Event": "issues",
+        "X-GitHub-Delivery": "delivery-issue-aw-1",
+      },
+      body: payload,
+    });
+
+    expect(res.status).toBe(200);
+  });
+
+  expect(buildSessionStore.getRefs("build-1", { type: "issue", key: "child" })).toEqual([]);
+  expect(
+    buildSessionStore.getEvents("build-1").some((event) => event.kind === "child_issue_tracked")
+  ).toBe(false);
+});
+
 test("workflow_run failure marks the session stalled", async () => {
   db.prepare(
     `UPDATE build_sessions

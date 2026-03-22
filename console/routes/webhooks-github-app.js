@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const { deactivatePipeline } = require("../lib/pipeline-lifecycle");
+const { isAgenticWorkflowIssue, normalizeIssueLabels } = require("../lib/e2e/issue-filters");
 
 function verifySignature(secret, payload, signature) {
   if (!secret || !Buffer.isBuffer(payload) || typeof signature !== "string") {
@@ -180,7 +181,13 @@ function handleIssueEvent(buildSessionStore, session, action, payload) {
     return;
   }
 
+  const agenticWorkflowIssue = isAgenticWorkflowIssue(issue);
+  if (agenticWorkflowIssue) {
+    return;
+  }
+
   if (labels.includes("pipeline") || action === "opened") {
+    const normalizedLabels = normalizeIssueLabels(issue.labels || []);
     buildSessionStore.upsertRef(session.id, {
       type: "issue",
       key: "child",
@@ -189,6 +196,7 @@ function handleIssueEvent(buildSessionStore, session, action, payload) {
         issueUrl: issue.html_url,
         title: issue.title,
         state: issue.state,
+        labels: normalizedLabels,
       },
     });
 
@@ -198,6 +206,9 @@ function handleIssueEvent(buildSessionStore, session, action, payload) {
       data: {
         issueNumber: issue.number,
         issueUrl: issue.html_url,
+        title: issue.title,
+        labels: normalizedLabels,
+        isAgenticWorkflowIssue: false,
         detail: `Tracking child issue #${issue.number}: ${issue.title}`,
       },
     });

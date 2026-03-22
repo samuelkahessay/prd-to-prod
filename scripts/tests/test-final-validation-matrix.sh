@@ -50,6 +50,7 @@ run_check "retry-state" "bash scripts/tests/test-retry-state.sh"
 run_check "self-healing-dispatch-substate" "bash scripts/tests/test-self-healing-drill-dispatch-substate.sh"
 run_check "self-healing-workflow-matching" "bash scripts/tests/test-self-healing-drill-workflow-matching.sh"
 run_check "pipeline-watchdog" "bash scripts/tests/test-pipeline-watchdog.sh"
+run_check "patch-codex-openrouter-http-locks" "bash scripts/tests/test-patch-codex-openrouter-http-locks.sh"
 
 # Greenfield mock smoke
 run_check "extract-prd-mock" "bash scripts/tests/test-extract-prd-mock.sh"

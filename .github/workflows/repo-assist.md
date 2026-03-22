@@ -42,8 +42,6 @@ env:
 engine:
   id: codex
   model: openai/gpt-5-codex
-  env:
-    OPENAI_BASE_URL: https://openrouter.ai/api/v1
 
 permissions: read-all
 

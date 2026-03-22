@@ -21,6 +21,11 @@ const { createGitHubSnapshotCollector } = require("./github-snapshot");
 const { createPublicBuildClient } = require("./public-client");
 const { createE2EReportWriter } = require("./report-writer");
 const { createE2EStore } = require("./store");
+const {
+  filterTrackedChildIssues,
+  hasTypedIssueLabel,
+  isAgenticWorkflowIssue,
+} = require("./issue-filters");
 
 const execFileAsync = promisify(execFile);
 const REQUIRED_BOOTSTRAP_LABELS = ["pipeline", "feature", "bug", "infra", "test", "docs"];
@@ -34,8 +39,6 @@ const REQUIRED_BOOTSTRAP_VARIABLES = {
   PIPELINE_APP_ID: "required",
   PIPELINE_BOT_LOGIN: "required",
 };
-const TYPED_ISSUE_LABELS = new Set(["feature", "bug", "infra", "test", "docs"]);
-
 function createE2EHarness({
   db,
   buildSessionStore,
@@ -503,7 +506,7 @@ function createE2EHarness({
       sessionId: context.sessionId,
       timeoutMs: LANE_SLAS_MS["decomposer-only"].firstChildIssue,
       predicate(event) {
-        return event.kind === "child_issue_tracked";
+        return event.kind === "child_issue_tracked" && !event.data?.isAgenticWorkflowIssue;
       },
     }).catch(async (error) =>
       failLaneResult(lane, context, {
@@ -1304,14 +1307,12 @@ function verifyProvisionSnapshot(snapshot) {
 }
 
 function verifyDecomposerSnapshot(snapshot, rootIssueNumber) {
-  const childIssues = snapshot.issues.filter((issue) => issue.number !== rootIssueNumber);
+  const childIssues = filterTrackedChildIssues(snapshot.issues, rootIssueNumber);
   if (childIssues.length === 0) {
     return { ok: false, detail: "No child issues were recorded." };
   }
 
-  const unlabeledChildren = childIssues.filter(
-    (issue) => !issue.labels.some((label) => TYPED_ISSUE_LABELS.has(label))
-  );
+  const unlabeledChildren = childIssues.filter((issue) => !hasTypedIssueLabel(issue));
   if (unlabeledChildren.length > 0) {
     return {
       ok: false,
@@ -1385,4 +1386,6 @@ function delay(ms) {
 
 module.exports = {
   createE2EHarness,
+  verifyDecomposerSnapshot,
+  isAgenticWorkflowIssue,
 };

@@ -129,6 +129,7 @@ if ! (
     :
   fi
   gh aw compile >/dev/null 2>&1
+  bash scripts/patch-codex-openrouter-http-locks.sh >/dev/null 2>&1 || true
   bash scripts/patch-runner-labels.sh .github/workflows >/dev/null 2>&1 || true
   bash scripts/patch-pr-review-agent-lock.sh .github/workflows/pr-review-agent.lock.yml >/dev/null 2>&1 || true
 ); then

@@ -46,6 +46,7 @@ echo "Labels created."
 # Compile workflows
 echo "Compiling gh-aw workflows..."
 gh aw compile
+bash "$SCRIPT_DIR/patch-codex-openrouter-http-locks.sh"
 bash "$SCRIPT_DIR/patch-pr-review-agent-lock.sh"
 echo "Workflows compiled."
 

@@ -29,6 +29,7 @@ include:
   - scripts/resolve-deployment-url.sh
   - scripts/pipeline-watchdog.sh
   - scripts/bootstrap.sh
+  - scripts/patch-codex-openrouter-http-locks.sh
   - scripts/patch-runner-labels.sh
   - scripts/patch-pr-review-agent-lock.sh
   - scripts/capture-run-data.sh

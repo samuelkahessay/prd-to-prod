@@ -41,5 +41,7 @@ jobs:
         run: bash scripts/tests/test-classify-pipeline-pr.sh
       - name: Test pr-review-agent lock patch script
         run: bash scripts/tests/test-patch-pr-review-agent-lock.sh
+      - name: Test codex OpenRouter lock patch script
+        run: bash scripts/tests/test-patch-codex-openrouter-http-locks.sh
       - name: Test pr-review-agent activation bypass
         run: bash scripts/tests/test-pr-review-agent-activation.sh

@@ -64,6 +64,7 @@ dist/scaffold/scripts/extract-linked-issue-numbers.sh
 dist/scaffold/scripts/healing-control.sh
 dist/scaffold/scripts/log-decision.sh
 dist/scaffold/scripts/monitor-pipeline.sh
+dist/scaffold/scripts/patch-codex-openrouter-http-locks.sh
 dist/scaffold/scripts/patch-pr-review-agent-lock.sh
 dist/scaffold/scripts/patch-runner-labels.sh
 dist/scaffold/scripts/pipeline-watchdog.sh
@@ -110,6 +111,7 @@ dist/scaffold/scripts/tests/test-manifest-completeness.sh
 dist/scaffold/scripts/tests/test-manifest-parse.sh
 dist/scaffold/scripts/tests/test-no-stale-references.sh
 dist/scaffold/scripts/tests/test-node-runtime-contract.sh
+dist/scaffold/scripts/tests/test-patch-codex-openrouter-http-locks.sh
 dist/scaffold/scripts/tests/test-patch-pr-review-agent-lock.sh
 dist/scaffold/scripts/tests/test-pipeline-watchdog.sh
 dist/scaffold/scripts/tests/test-pr-review-agent-activation.sh

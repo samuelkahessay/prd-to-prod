@@ -274,6 +274,9 @@ if ! (cd "$CLONE_DIR" && gh aw compile >/dev/null 2>&1); then
   log "First compile pass reported workflow dependency errors; retrying..."
 fi
 (cd "$CLONE_DIR" && gh aw compile >/dev/null 2>&1)
+(cd "$CLONE_DIR" && bash scripts/patch-codex-openrouter-http-locks.sh >/dev/null 2>&1)
+(cd "$CLONE_DIR" && bash scripts/patch-pr-review-agent-lock.sh .github/workflows/pr-review-agent.lock.yml >/dev/null 2>&1)
+(cd "$CLONE_DIR" && bash scripts/patch-runner-labels.sh .github/workflows >/dev/null 2>&1)
 
 for lock_file in \
   .github/workflows/repo-assist.lock.yml \

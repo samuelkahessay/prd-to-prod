@@ -97,10 +97,26 @@ case "$1" in
       clone)
         # Create a minimal git repo at the clone destination with lock files
         DEST="${4:-/tmp/clone-$$}"
-        mkdir -p "$DEST/.github/workflows"
+        mkdir -p "$DEST/.github/workflows" "$DEST/scripts"
         echo "name: repo-assist" > "$DEST/.github/workflows/repo-assist.lock.yml"
         echo "name: prd-decomposer" > "$DEST/.github/workflows/prd-decomposer.lock.yml"
         echo "name: pr-review-agent" > "$DEST/.github/workflows/pr-review-agent.lock.yml"
+        cat > "$DEST/scripts/patch-codex-openrouter-http-locks.sh" <<'PATCH'
+#!/usr/bin/env bash
+exit 0
+PATCH
+        cat > "$DEST/scripts/patch-pr-review-agent-lock.sh" <<'PATCH'
+#!/usr/bin/env bash
+exit 0
+PATCH
+        cat > "$DEST/scripts/patch-runner-labels.sh" <<'PATCH'
+#!/usr/bin/env bash
+exit 0
+PATCH
+        chmod +x \
+          "$DEST/scripts/patch-codex-openrouter-http-locks.sh" \
+          "$DEST/scripts/patch-pr-review-agent-lock.sh" \
+          "$DEST/scripts/patch-runner-labels.sh"
         (
           cd "$DEST" &&
           git init -q &&
