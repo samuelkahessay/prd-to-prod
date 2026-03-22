@@ -92,51 +92,6 @@ const RESPONSE_FORMAT = {
         },
       },
       required: ["status", "message", "question", "prd"],
-      allOf: [
-        {
-          if: {
-            properties: {
-              status: { const: "needs_input" },
-            },
-          },
-          then: {
-            properties: {
-              question: { type: "string" },
-              prd: { type: "null" },
-            },
-          },
-        },
-        {
-          if: {
-            properties: {
-              status: { const: "ready" },
-            },
-          },
-          then: {
-            properties: {
-              question: { type: "null" },
-              prd: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  title: { type: "string" },
-                  problem: { type: "string" },
-                  users: { type: "string" },
-                  features: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                  criteria: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                },
-                required: ["title", "problem", "users", "features", "criteria"],
-              },
-            },
-          },
-        },
-      ],
     },
   },
 };
