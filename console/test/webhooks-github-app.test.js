@@ -167,6 +167,7 @@ test("workflow_run failure marks the session stalled", async () => {
 });
 
 test("validate-deployment success without a production URL marks handoff_ready", async () => {
+  const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
   db.prepare(
     `UPDATE build_sessions
      SET status = 'building', app_installation_id = 999
@@ -214,6 +215,7 @@ test("validate-deployment success without a production URL marks handoff_ready",
     "deployment_skipped",
     "handoff_ready",
   ]);
+  expect(consoleError).not.toHaveBeenCalled();
 });
 
 test("third implementation workflow failure emits provider_retry_exhausted", async () => {

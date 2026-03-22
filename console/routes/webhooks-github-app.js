@@ -127,7 +127,7 @@ async function routeWebhookEvent({
   }
 
   if (event === "workflow_run") {
-    handleWorkflowRunEvent(buildSessionStore, session, action, payload);
+    handleWorkflowRunEvent(buildSessionStore, serviceResolver, session, action, payload);
     return;
   }
 
@@ -289,7 +289,7 @@ function handleIssueCommentEvent(buildSessionStore, session, action, payload) {
   }
 }
 
-function handleWorkflowRunEvent(buildSessionStore, session, action, payload) {
+function handleWorkflowRunEvent(buildSessionStore, serviceResolver, session, action, payload) {
   const run = payload.workflow_run;
   if (!run?.id || !run?.name) {
     return;
