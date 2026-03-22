@@ -99,8 +99,14 @@ maybe_reexec_in_clean_worktree() {
     child_env+=("E2E_PROVISION_SMOKE_DEPENDENCY_SOURCE_ROOT=$E2E_PROVISION_SMOKE_DEPENDENCY_SOURCE_ROOT")
   fi
 
-  env "${child_env[@]}" bash "$worktree_dir/scripts/e2e/provision-smoke.sh" "$@"
-  exit $?
+  local child_status=0
+  if env "${child_env[@]}" bash "$worktree_dir/scripts/e2e/provision-smoke.sh" "$@"; then
+    child_status=0
+  else
+    child_status=$?
+  fi
+  sync_worktree_reports "$worktree_dir"
+  exit "$child_status"
 }
 
 copy_dependency_dir() {
@@ -130,6 +136,28 @@ copy_worktree_dependencies() {
 
   for app_dir in console studio; do
     copy_dependency_dir "$DEPENDENCY_SOURCE_ROOT/$app_dir/node_modules" "$worktree_dir/$app_dir/node_modules"
+  done
+}
+
+sync_worktree_reports() {
+  local worktree_dir="$1"
+  local source_dir target_dir report_path relative_path
+
+  for source_dir in "$worktree_dir/output/e2e" "$worktree_dir/docs/internal/e2e-runs"; do
+    if [[ ! -d "$source_dir" ]]; then
+      continue
+    fi
+
+    relative_path="${source_dir#$worktree_dir/}"
+    target_dir="$STATE_ROOT/$relative_path"
+    mkdir -p "$target_dir"
+
+    while IFS= read -r report_path; do
+      local relative_report
+      relative_report="${report_path#$source_dir/}"
+      mkdir -p "$target_dir/$(dirname "$relative_report")"
+      cp "$report_path" "$target_dir/$relative_report"
+    done < <(find "$source_dir" -type f)
   done
 }
 
