@@ -56,7 +56,15 @@ resolve_meeting_input() {
   fi
 
   if [ ! -t 0 ]; then
-    stdin_content=$(cat)
+    stdin_content=$(python3 - <<'PY'
+import select
+import sys
+
+ready, _, _ = select.select([sys.stdin], [], [], 0)
+if ready:
+    sys.stdout.write(sys.stdin.read())
+PY
+)
     if [ -n "${stdin_content//[$'\t\r\n ']}" ]; then
       WORKIQ_OUTPUT="$stdin_content"
       INPUT_SOURCE="stdin notes"
