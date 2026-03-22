@@ -90,6 +90,8 @@ dist/scaffold/scripts/tests/test-console-structure.sh
 dist/scaffold/scripts/tests/test-demo-preflight.sh
 dist/scaffold/scripts/tests/test-deploy-validation-wiring.sh
 dist/scaffold/scripts/tests/test-duplicate-code-detector.sh
+dist/scaffold/scripts/tests/test-e2e-provision-smoke.sh
+dist/scaffold/scripts/tests/test-e2e-runtime-env.sh
 dist/scaffold/scripts/tests/test-export-scaffold.sh
 dist/scaffold/scripts/tests/test-extract-linked-issue-numbers.sh
 dist/scaffold/scripts/tests/test-extract-prd-mock.sh

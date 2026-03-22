@@ -42,6 +42,9 @@ main()
 
 async function main() {
   switch (command) {
+    case "auth-check":
+      await authCheck(args.slice(1));
+      return;
     case "auth-refresh":
       await authRefresh(args.slice(1));
       return;
@@ -60,6 +63,13 @@ async function main() {
     default:
       printUsage();
   }
+}
+
+async function authCheck(argv) {
+  const pathArg = readOption(argv, "--path") || resolveCookieJarPath(projectRoot);
+  const result = await harness.validateAuth(pathArg);
+  console.log(`Saved browser auth for ${result.user.githubLogin}.`);
+  console.log(`cookieJarPath: ${result.cookieJarPath}`);
 }
 
 async function authRefresh(argv) {
@@ -199,6 +209,7 @@ function delay(ms) {
 
 function printUsage() {
   console.log("Usage:");
+  console.log("  scripts/e2e/harness.sh auth-check [--path <cookie-jar>]");
   console.log("  scripts/e2e/harness.sh auth-refresh [--path <cookie-jar>] [--no-open]");
   console.log("  scripts/e2e/harness.sh run --lane <lane> [--keep-repo] [--path <cookie-jar>]");
   console.log("  scripts/e2e/harness.sh watch <run-id>");

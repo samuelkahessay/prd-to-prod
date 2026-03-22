@@ -23,6 +23,13 @@ function classifyFailure({
     };
   }
 
+  if (isAuthExpiry(detail)) {
+    return {
+      failureClass: "auth_required",
+      failureDetail: detail || "Browser or GitHub authorization expired.",
+    };
+  }
+
   const lastProviderRetry = findLatestEvent(buildEvents, "provider_retry_exhausted");
   if (lastProviderRetry) {
     return {
@@ -148,6 +155,10 @@ function readDetail(event, fallback = "") {
 function hasBootstrapConflictWarning(warnings, detail) {
   const texts = [...warnings, detail].filter(Boolean);
   return texts.some((value) => /state\.json/i.test(value) && /\b409\b/.test(value));
+}
+
+function isAuthExpiry(detail) {
+  return /authorization has expired|oauth[_\s-]*grant|re-authenticate/i.test(detail || "");
 }
 
 module.exports = {

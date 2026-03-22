@@ -64,3 +64,15 @@ test("repo name collisions classify as provision failures", () => {
       'GitHub API POST https://api.github.com/repos/octocat/template/generate: 422 {"message":"Could not clone: Name already exists on this account"}',
   });
 });
+
+test("oauth grant expiry classifies as auth_required", () => {
+  const result = classifyFailure({
+    lane: "provision-only",
+    detail: "Your GitHub authorization has expired. Please re-authenticate.",
+  });
+
+  expect(result).toEqual({
+    failureClass: "auth_required",
+    failureDetail: "Your GitHub authorization has expired. Please re-authenticate.",
+  });
+});
