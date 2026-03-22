@@ -39,6 +39,8 @@ const REQUIRED_BOOTSTRAP_VARIABLES = {
   PIPELINE_APP_ID: "required",
   PIPELINE_BOT_LOGIN: "required",
 };
+const STANDARD_PRD_READY_NUDGE =
+  "Use reasonable assumptions and return the finalized PRD now. Do not ask follow-up questions.";
 function createE2EHarness({
   db,
   buildSessionStore,
@@ -385,8 +387,8 @@ function createE2EHarness({
     appendStep(runId, lane, "session.create", "passed", `Created build session ${sessionId}.`);
 
     appendStep(runId, lane, "prd.submit", "running", "Submitting the standard bookmark-manager PRD.");
-    const parsed = await client.sendMessage(sessionId, STANDARD_PRD_TEXT);
-    if (!parsed || parsed.status !== "ready") {
+    const parsed = await completeStandardPrdConversation(client, sessionId);
+    if (!isReadyParsedPrd(parsed)) {
       throw new Error("The standard PRD did not reach a ready state.");
     }
     await client.finalizeSession(sessionId);
@@ -1223,6 +1225,26 @@ function createE2EHarness({
   }
 }
 
+async function completeStandardPrdConversation(client, sessionId, {
+  initialPrompt = STANDARD_PRD_TEXT,
+  nudgePrompt = STANDARD_PRD_READY_NUDGE,
+  maxAttempts = 3,
+} = {}) {
+  let parsed = await client.sendMessage(sessionId, initialPrompt);
+  let attempt = 1;
+
+  while (!isReadyParsedPrd(parsed) && attempt < maxAttempts) {
+    parsed = await client.sendMessage(sessionId, nudgePrompt);
+    attempt += 1;
+  }
+
+  return parsed;
+}
+
+function isReadyParsedPrd(parsed) {
+  return Boolean(parsed && parsed.status === "ready");
+}
+
 function resolveCredentials() {
   const agentApiKey =
     process.env.E2E_OPENAI_API_KEY ||
@@ -1386,6 +1408,8 @@ function delay(ms) {
 
 module.exports = {
   createE2EHarness,
+  completeStandardPrdConversation,
+  isReadyParsedPrd,
   verifyDecomposerSnapshot,
   isAgenticWorkflowIssue,
 };
