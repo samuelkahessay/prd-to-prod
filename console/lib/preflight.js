@@ -69,7 +69,27 @@ function classifyWorkflowToken(token) {
   };
 }
 
-function runPreflight(projectRoot, env = process.env) {
+function requiredInMode(mode, id) {
+  if (mode !== "remote-harness") {
+    return true;
+  }
+
+  return !["gh-aw-github-token", "pipeline-app-id", "pipeline-app-private-key"].includes(id);
+}
+
+function makeCheck(mode, required, id, name, present, detail) {
+  if (!requiredInMode(mode, id)) {
+    const remoteDetail = present
+      ? `${detail} Remote harness mode will also verify the deployed runtime.`
+      : `${detail} Remote harness mode validates this against the deployed runtime instead of the local shell.`;
+    return optionalCheck(id, name, present, remoteDetail);
+  }
+
+  return required ? requiredCheck(id, name, present, detail) : optionalCheck(id, name, present, detail);
+}
+
+function runPreflight(projectRoot, env = process.env, options = {}) {
+  const mode = options.mode || "local";
   const ghPresent = commandExists("gh");
   const ghAuthPresent = ghAuthOk();
   const ghAwPresent = commandExists("gh", ["aw", "version"]);
@@ -81,44 +101,58 @@ function runPreflight(projectRoot, env = process.env) {
   const workflowToken = classifyWorkflowToken(env.GH_AW_GITHUB_TOKEN || "");
 
   return [
-    requiredCheck(
+    makeCheck(
+      mode,
+      true,
       "openrouter",
       "OpenRouter API",
       Boolean(env.OPENROUTER_API_KEY),
       env.OPENROUTER_API_KEY ? "OPENROUTER_API_KEY is configured." : "Missing OPENROUTER_API_KEY."
     ),
-    requiredCheck(
+    makeCheck(
+      mode,
+      true,
       "gh",
       "GitHub CLI",
       ghPresent,
       ghPresent ? "gh is installed." : "gh is not installed or not on PATH."
     ),
-    requiredCheck(
+    makeCheck(
+      mode,
+      true,
       "gh-auth",
       "GitHub auth",
       ghAuthPresent,
       ghAuthPresent ? "gh auth status succeeded." : "gh auth status failed."
     ),
-    requiredCheck(
+    makeCheck(
+      mode,
+      true,
       "gh-aw",
       "gh-aw",
       ghAwPresent,
       ghAwPresent ? "gh aw version succeeded." : "gh-aw is not installed or not available to gh."
     ),
-    requiredCheck("copilot-token", "Copilot token", copilotToken.present, copilotToken.detail),
-    requiredCheck(
+    makeCheck(mode, true, "copilot-token", "Copilot token", copilotToken.present, copilotToken.detail),
+    makeCheck(
+      mode,
+      true,
       "gh-aw-github-token",
       "Workflow dispatch token",
       workflowToken.present,
       workflowToken.detail
     ),
-    requiredCheck(
+    makeCheck(
+      mode,
+      true,
       "pipeline-app-id",
       "Pipeline app id",
       Boolean(env.PIPELINE_APP_ID),
       env.PIPELINE_APP_ID ? "PIPELINE_APP_ID is configured." : "Missing PIPELINE_APP_ID."
     ),
-    requiredCheck(
+    makeCheck(
+      mode,
+      true,
       "pipeline-app-private-key",
       "Pipeline app private key",
       Boolean(env.PIPELINE_APP_PRIVATE_KEY),
@@ -126,19 +160,25 @@ function runPreflight(projectRoot, env = process.env) {
         ? "PIPELINE_APP_PRIVATE_KEY is configured."
         : "Missing PIPELINE_APP_PRIVATE_KEY."
     ),
-    requiredCheck(
+    makeCheck(
+      mode,
+      true,
       "deploy-profile",
       "Deploy profile",
       deployProfilePresent,
       deployProfilePresent ? ".deploy-profile is present." : "Missing .deploy-profile."
     ),
-    optionalCheck(
+    makeCheck(
+      mode,
+      false,
       "vercel-token",
       "Vercel token",
       Boolean(env.VERCEL_TOKEN),
       env.VERCEL_TOKEN ? "VERCEL_TOKEN is configured." : "VERCEL_TOKEN is not configured."
     ),
-    optionalCheck(
+    makeCheck(
+      mode,
+      false,
       "workiq",
       "WorkIQ client",
       workIqPresent,

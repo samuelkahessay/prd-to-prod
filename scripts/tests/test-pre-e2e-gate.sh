@@ -140,6 +140,14 @@ if printf '%s\n' "$*" | grep -q "GH_AW_GITHUB_TOKEN"; then
   printf 'ghp_live_token'
   exit 0
 fi
+if printf '%s\n' "$*" | grep -q "PIPELINE_APP_ID"; then
+  printf '12345'
+  exit 0
+fi
+if printf '%s\n' "$*" | grep -q "PIPELINE_APP_PRIVATE_KEY"; then
+  printf 'private-key'
+  exit 0
+fi
 exit 0
 EOF
 
@@ -186,8 +194,29 @@ if ! printf '%s\n' "$OUTPUT_LIVE" | grep -qF "Live: Fly runtime Copilot token is
   exit 1
 fi
 
+if ! printf '%s\n' "$OUTPUT_LIVE" | grep -qF "Live: Fly runtime pipeline app id exists"; then
+  echo "FAIL: expected Fly runtime pipeline app id check in live mode" >&2
+  exit 1
+fi
+
 if ! printf '%s\n' "$OUTPUT_LIVE" | grep -qF "PASS ("; then
   echo "FAIL: expected PASS summary from gate" >&2
+  exit 1
+fi
+
+unset GH_AW_GITHUB_TOKEN
+unset PIPELINE_APP_ID
+unset PIPELINE_APP_PRIVATE_KEY
+
+OUTPUT_REMOTE=$(run_and_capture --remote-harness)
+
+if ! printf '%s\n' "$OUTPUT_REMOTE" | grep -qF "Remote harness mode validates this against the deployed runtime"; then
+  echo "FAIL: expected remote-harness mode to relax local platform secret checks" >&2
+  exit 1
+fi
+
+if ! printf '%s\n' "$OUTPUT_REMOTE" | grep -qF "PASS ("; then
+  echo "FAIL: expected PASS summary from remote-harness gate" >&2
   exit 1
 fi
 

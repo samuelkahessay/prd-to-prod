@@ -6,12 +6,15 @@ REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
 usage() {
   cat >&2 <<'USAGE'
-Usage: pre-e2e-gate.sh [--skip-live]
+Usage: pre-e2e-gate.sh [--skip-live] [--remote-harness]
 
 Run the local and live readiness gate before burning tokens on a real E2E run.
 
 Options:
   --skip-live    Skip live platform checks (GitHub/Fly/Vercel/template runtime checks)
+  --remote-harness
+                Validate remote-harness prerequisites. Local Copilot/auth checks still
+                run, but platform secrets are validated against the deployed runtime.
   -h, --help     Show this help
 
 Exit codes:
@@ -23,10 +26,12 @@ USAGE
 }
 
 SKIP_LIVE=false
+REMOTE_HARNESS=false
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --skip-live) SKIP_LIVE=true; shift ;;
+    --remote-harness) REMOTE_HARNESS=true; shift ;;
     -h|--help) usage ;;
     *) usage ;;
   esac
@@ -85,11 +90,17 @@ check_clean_tree() {
 }
 
 check_console_preflight() {
+  local mode="local"
+  if [ "$REMOTE_HARNESS" = true ]; then
+    mode="remote-harness"
+  fi
+
   local output
-  output=$(cd "$REPO_ROOT" && node - <<'NODE'
+  output=$(cd "$REPO_ROOT" && PRE_E2E_PREFLIGHT_MODE="$mode" node - <<'NODE'
 const { runPreflight } = require("./console/lib/preflight");
 
-const checks = runPreflight(process.cwd());
+const mode = process.env.PRE_E2E_PREFLIGHT_MODE || "local";
+const checks = runPreflight(process.cwd(), process.env, { mode });
 const failed = checks.filter((check) => check.required && !check.present);
 
 for (const check of checks) {
@@ -224,6 +235,26 @@ check_runtime_workflow_token() {
   esac
 }
 
+check_runtime_pipeline_app_id() {
+  local value
+  value=$(read_fly_runtime_secret "PIPELINE_APP_ID")
+  if [ -z "$value" ]; then
+    echo "PIPELINE_APP_ID is missing from the Fly runtime." >&2
+    return 1
+  fi
+  printf "Detected PIPELINE_APP_ID in Fly runtime.\n"
+}
+
+check_runtime_pipeline_app_private_key() {
+  local value
+  value=$(read_fly_runtime_secret "PIPELINE_APP_PRIVATE_KEY")
+  if [ -z "$value" ]; then
+    echo "PIPELINE_APP_PRIVATE_KEY is missing from the Fly runtime." >&2
+    return 1
+  fi
+  printf "Detected PIPELINE_APP_PRIVATE_KEY in Fly runtime.\n"
+}
+
 run_check "Source: on main branch" check_main_branch
 run_check "Source: working tree is clean" check_clean_tree
 run_check "Local: console preflight required checks pass" check_console_preflight
@@ -250,6 +281,8 @@ if [ "$SKIP_LIVE" = false ]; then
   run_check "Live: template scaffold files and deploy profile exist" check_template_files
   run_check "Live: Fly runtime Copilot token is fine-grained" check_runtime_copilot_token
   run_check "Live: Fly runtime workflow token exists" check_runtime_workflow_token
+  run_check "Live: Fly runtime pipeline app id exists" check_runtime_pipeline_app_id
+  run_check "Live: Fly runtime pipeline app private key exists" check_runtime_pipeline_app_private_key
 fi
 
 if [ "$FAIL" -eq 0 ]; then

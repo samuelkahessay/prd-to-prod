@@ -115,4 +115,36 @@ describe("preflight", () => {
       ])
     );
   });
+
+  test("treats platform secrets as remote-validated in remote harness mode", () => {
+    process.env.OPENROUTER_API_KEY = "or-key";
+    process.env.COPILOT_GITHUB_TOKEN = "github_pat_copilot";
+
+    const checks = runPreflight("/repo", process.env, { mode: "remote-harness" });
+    const requiredFailures = checks.filter((check) => check.required && !check.present);
+
+    expect(requiredFailures).toEqual([]);
+    expect(checks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "gh-aw-github-token",
+          required: false,
+          present: false,
+          detail: expect.stringContaining("deployed runtime"),
+        }),
+        expect.objectContaining({
+          id: "pipeline-app-id",
+          required: false,
+          present: false,
+          detail: expect.stringContaining("deployed runtime"),
+        }),
+        expect.objectContaining({
+          id: "pipeline-app-private-key",
+          required: false,
+          present: false,
+          detail: expect.stringContaining("deployed runtime"),
+        }),
+      ])
+    );
+  });
 });

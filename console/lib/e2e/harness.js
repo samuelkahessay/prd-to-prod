@@ -854,7 +854,7 @@ function createE2EHarness({
   async function runPreflightGate(runId, lane) {
     appendStep(runId, lane, "pre-e2e-gate", "running", "Running scripts/pre-e2e-gate.sh.");
     try {
-      await execFileAsync("bash", ["scripts/pre-e2e-gate.sh"], {
+      await execFileAsync("bash", ["scripts/pre-e2e-gate.sh", "--remote-harness"], {
         cwd: projectRoot,
         timeout: 10 * 60_000,
         env: process.env,
