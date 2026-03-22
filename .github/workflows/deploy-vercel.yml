@@ -53,7 +53,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.creds.outputs.configured == 'true'
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Vercel CLI
         if: steps.creds.outputs.configured == 'true'
