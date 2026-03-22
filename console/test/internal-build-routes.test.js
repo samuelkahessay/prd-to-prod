@@ -55,7 +55,8 @@ beforeEach(() => {
      VALUES
      ('complete-build', 'complete', 'octocat/complete-build', 101, 'https://example.com', '2026-03-20T00:00:00Z', '2026-03-20T00:00:00Z'),
      ('handoff-build', 'handoff_ready', 'octocat/handoff-build', 102, NULL, '2026-03-20T00:00:00Z', '2026-03-20T00:00:00Z'),
-     ('building-build', 'building', 'octocat/building-build', 103, NULL, '2026-03-20T00:00:00Z', '2026-03-20T00:00:00Z')`
+     ('building-build', 'building', 'octocat/building-build', 103, NULL, '2026-03-20T00:00:00Z', '2026-03-20T00:00:00Z'),
+     ('ready-build', 'ready_to_launch', 'octocat/ready-build', 104, NULL, '2026-03-20T00:00:00Z', '2026-03-20T00:00:00Z')`
   ).run();
 });
 
@@ -153,6 +154,46 @@ test("handoff_ready callback deactivates the pipeline for a building session", a
     "installation-token",
     "octocat",
     "building-build",
+    expect.objectContaining({
+      name: "PIPELINE_ACTIVE",
+      value: "false",
+    })
+  );
+});
+
+test("build-release stalls a launchable session and deactivates the pipeline", async () => {
+  await withServer(db, buildSessionStore, async (server) => {
+    const response = await fetch(makeUrl(server, "/internal/build-release"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        session_id: "ready-build",
+        detail: "Released by E2E cleanup.",
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      released: true,
+      status: "stalled",
+    });
+  });
+
+  const session = buildSessionStore.getSession("ready-build");
+  expect(session.status).toBe("stalled");
+
+  const latestEvent = buildSessionStore.getEvents("ready-build").at(-1);
+  expect(latestEvent.kind).toBe("capacity_released");
+  expect(latestEvent.data.detail).toBe("Released by E2E cleanup.");
+
+  expect(githubClient.getInstallationToken).toHaveBeenCalledWith(104);
+  expect(githubClient.upsertActionsVariable).toHaveBeenCalledWith(
+    "installation-token",
+    "octocat",
+    "ready-build",
     expect.objectContaining({
       name: "PIPELINE_ACTIVE",
       value: "false",

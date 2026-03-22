@@ -89,6 +89,47 @@ function registerInternalBuildRoutes(app, { buildSessionStore, serviceResolver }
 
     res.json({ ok: true, eventId: event.id });
   });
+
+  app.post("/internal/build-release", async (req, res) => {
+    const { session_id, detail } = req.body || {};
+    if (!session_id) {
+      return res.status(400).json({ error: "session_id is required" });
+    }
+
+    const session = buildSessionStore.getSession(session_id);
+    if (!session) {
+      return res.status(404).json({ error: "Build session not found" });
+    }
+
+    const releasable = new Set(["ready_to_launch", "awaiting_capacity", "building"]);
+    if (!releasable.has(session.status)) {
+      return res.json({
+        ok: true,
+        released: false,
+        status: session.status,
+      });
+    }
+
+    buildSessionStore.updateSession(session_id, { status: "stalled" });
+    buildSessionStore.appendEvent(session_id, {
+      category: "build",
+      kind: "capacity_released",
+      data: {
+        detail: detail || "Released build capacity for E2E cleanup.",
+      },
+    });
+
+    await deactivatePipeline(
+      serviceResolver,
+      buildSessionStore.getSession(session_id) || session
+    );
+
+    return res.json({
+      ok: true,
+      released: true,
+      status: "stalled",
+    });
+  });
 }
 
 function baseUrl() {

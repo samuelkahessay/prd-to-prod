@@ -988,6 +988,26 @@ function createE2EHarness({
     }
 
     const session = buildSessionStore.getSession(run.buildSessionId);
+    const releaseStepLane = e2eStore.getRun(run.id)?.activeLane || run.lane;
+    try {
+      appendStep(run.id, releaseStepLane, "cleanup.release", "running", `Releasing remote build session ${run.buildSessionId}.`);
+      const releaseResult = await releaseRemoteBuildSession(run.buildSessionId, {
+        detail: `Released by E2E cleanup for ${run.lane}.`,
+      });
+      if (releaseResult.released && session) {
+        buildSessionStore.updateSession(run.buildSessionId, { status: "stalled" });
+      }
+      appendStep(
+        run.id,
+        releaseStepLane,
+        "cleanup.release",
+        releaseResult.released ? "passed" : "skipped",
+        releaseResult.detail
+      );
+    } catch (error) {
+      appendStep(run.id, releaseStepLane, "cleanup.release", "failed", error.message);
+    }
+
     if (!session?.github_repo) {
       e2eStore.updateRun(run.id, {
         cleanup_status: "skipped",
@@ -1133,6 +1153,48 @@ function createE2EHarness({
       throw new Error("Remote access-code mint returned no code.");
     }
     return code;
+  }
+
+  async function releaseRemoteBuildSession(sessionId, { detail = "" } = {}) {
+    const internalSecret =
+      process.env.E2E_BUILD_INTERNAL_SECRET ||
+      process.env.BUILD_INTERNAL_SECRET ||
+      "";
+
+    if (!internalSecret) {
+      return {
+        released: false,
+        detail: "No BUILD_INTERNAL_SECRET available for remote cleanup release.",
+      };
+    }
+
+    const response = await fetch(`${stripTrailingSlash(baseUrl)}/internal/build-release`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${internalSecret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        session_id: sessionId,
+        detail,
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(
+        `Failed to release remote build session ${sessionId} (${response.status}): ${body || response.statusText}`
+      );
+    }
+
+    const payload = await response.json();
+    return {
+      released: Boolean(payload?.released),
+      detail:
+        payload?.released
+          ? `Released remote build session ${sessionId}.`
+          : `Remote build session ${sessionId} did not need release.`,
+    };
   }
 }
 
