@@ -5,6 +5,7 @@ const E2E_LANES = [
   "decomposer-only",
   "first-pr",
   "browser-canary",
+  "demo-browser-canary",
   "full-ladder",
 ];
 
@@ -13,6 +14,7 @@ const DASHBOARD_LAUNCHABLE_LANES = [
   "provision-only",
   "decomposer-only",
   "first-pr",
+  "demo-browser-canary",
   "full-ladder",
 ];
 const FULL_LADDER_SEQUENCE = [

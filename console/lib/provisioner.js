@@ -432,57 +432,57 @@ function createProvisioner({ db, buildSessionStore, githubClient }) {
           detail: `Repo memory state was not fully updated: ${warning.message}`,
         });
       }
-      if (!PIPELINE_APP_ID || !PIPELINE_APP_PRIVATE_KEY) {
-        throw new Error("PIPELINE_APP_ID and PIPELINE_APP_PRIVATE_KEY must be configured on the platform");
-      }
-      await githubClient.upsertActionsVariable(token, owner, repo, {
-        name: "PIPELINE_ACTIVE",
-        value: "true",
-      });
-      await githubClient.upsertActionsVariable(token, owner, repo, {
-        name: "PIPELINE_APP_ID",
-        value: PIPELINE_APP_ID,
-      });
-      await githubClient.upsertActionsVariable(token, owner, repo, {
-        name: "PIPELINE_BOT_LOGIN",
-        value: PIPELINE_BOT_LOGIN,
-      });
-      await githubClient.createOrUpdateActionsSecret(token, owner, repo, {
-        name: "PIPELINE_APP_PRIVATE_KEY",
-        value: PIPELINE_APP_PRIVATE_KEY,
-      });
-      if (GH_AW_GITHUB_TOKEN) {
-        await githubClient.createOrUpdateActionsSecret(token, owner, repo, {
-          name: "GH_AW_GITHUB_TOKEN",
-          value: GH_AW_GITHUB_TOKEN,
+      let deployConfigured = false;
+      let productionUrl = null;
+
+      if (!session.is_demo) {
+        if (!PIPELINE_APP_ID || !PIPELINE_APP_PRIVATE_KEY) {
+          throw new Error("PIPELINE_APP_ID and PIPELINE_APP_PRIVATE_KEY must be configured on the platform");
+        }
+        await githubClient.upsertActionsVariable(token, owner, repo, {
+          name: "PIPELINE_ACTIVE",
+          value: "true",
         });
-      }
-
-      // Resolve agent API key: BYOK for real sessions, platform fallback for demo
-      const agentApiKey = resolveAgentApiKey(sessionId, session);
-      if (!agentApiKey) {
-        throw new Error(
-          session.is_demo
-            ? "OPENAI_API_KEY is not configured on the platform"
-            : "AI API key not provided. Submit credentials before provisioning."
-        );
-      }
-      await githubClient.createOrUpdateActionsSecret(token, owner, repo, {
-        name: "OPENAI_API_KEY",
-        value: agentApiKey,
-      });
-
-      // Write optional Vercel BYOK credentials if provided
-      const vercelCreds = resolveVercelCredentials(sessionId, session);
-      for (const [name, value] of Object.entries(vercelCreds)) {
-        await githubClient.createOrUpdateActionsSecret(token, owner, repo, {
-          name,
-          value,
+        await githubClient.upsertActionsVariable(token, owner, repo, {
+          name: "PIPELINE_APP_ID",
+          value: PIPELINE_APP_ID,
         });
+        await githubClient.upsertActionsVariable(token, owner, repo, {
+          name: "PIPELINE_BOT_LOGIN",
+          value: PIPELINE_BOT_LOGIN,
+        });
+        await githubClient.createOrUpdateActionsSecret(token, owner, repo, {
+          name: "PIPELINE_APP_PRIVATE_KEY",
+          value: PIPELINE_APP_PRIVATE_KEY,
+        });
+        if (GH_AW_GITHUB_TOKEN) {
+          await githubClient.createOrUpdateActionsSecret(token, owner, repo, {
+            name: "GH_AW_GITHUB_TOKEN",
+            value: GH_AW_GITHUB_TOKEN,
+          });
+        }
+
+        const agentApiKey = resolveAgentApiKey(sessionId, session);
+        if (!agentApiKey) {
+          throw new Error("AI API key not provided. Submit credentials before provisioning.");
+        }
+        await githubClient.createOrUpdateActionsSecret(token, owner, repo, {
+          name: "OPENAI_API_KEY",
+          value: agentApiKey,
+        });
+
+        const vercelCreds = resolveVercelCredentials(sessionId, session);
+        for (const [name, value] of Object.entries(vercelCreds)) {
+          await githubClient.createOrUpdateActionsSecret(token, owner, repo, {
+            name,
+            value,
+          });
+        }
+
+        deployConfigured = hasDeployCredentials(vercelCreds);
+        productionUrl = deployConfigured ? derivePublicBetaProductionUrl(repo) : null;
       }
 
-      const deployConfigured = hasDeployCredentials(vercelCreds);
-      const productionUrl = deployConfigured ? derivePublicBetaProductionUrl(repo) : null;
       if (productionUrl) {
         await githubClient.upsertActionsVariable(token, owner, repo, {
           name: "VERCEL_PROJECT_PRODUCTION_URL",

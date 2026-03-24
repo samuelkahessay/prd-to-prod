@@ -12,31 +12,40 @@ interface Particle {
   type: "dust" | "confetti" | "code" | "steam" | "sparkle";
 }
 
-function rand(min: number, max: number): number {
-  return min + Math.random() * (max - min);
+interface ParticleSystemOptions {
+  random?: () => number;
+  reducedMotion?: boolean;
+}
+
+function rand(random: () => number, min: number, max: number): number {
+  return min + random() * (max - min);
 }
 
 export class ParticleSystem {
   private particles: Particle[] = [];
   private reducedMotion = false;
+  private readonly random: () => number;
 
-  constructor() {
+  constructor(options: ParticleSystemOptions = {}) {
+    this.random = options.random ?? Math.random;
     this.reducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      options.reducedMotion ??
+      (typeof window !== "undefined" &&
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }
 
   emitDust(x: number, y: number, count = 1) {
     if (this.reducedMotion) return;
     for (let i = 0; i < count; i++) {
       this.particles.push({
-        x: x + rand(-40, 40),
-        y: y + rand(-30, 30),
-        vx: rand(-3, 3),
-        vy: rand(-4, -1),
+        x: x + rand(this.random, -40, 40),
+        y: y + rand(this.random, -30, 30),
+        vx: rand(this.random, -3, 3),
+        vy: rand(this.random, -4, -1),
         life: 0,
-        maxLife: rand(6, 12),
-        size: rand(1, 2.5),
+        maxLife: rand(this.random, 6, 12),
+        size: rand(this.random, 1, 2.5),
         color: "#d4a574",
         rotation: 0,
         rotSpeed: 0,
@@ -50,16 +59,16 @@ export class ParticleSystem {
     const colors = ["#4a6fd8", "#3d9a6a", "#9b7ed8", "#c45a3c", "#ffd700", "#e8c547"];
     for (let i = 0; i < count; i++) {
       this.particles.push({
-        x: x + rand(-20, 20),
-        y: y + rand(-10, 10),
-        vx: rand(-60, 60),
-        vy: rand(-120, -40),
+        x: x + rand(this.random, -20, 20),
+        y: y + rand(this.random, -10, 10),
+        vx: rand(this.random, -60, 60),
+        vy: rand(this.random, -120, -40),
         life: 0,
-        maxLife: rand(2, 4),
-        size: rand(3, 6),
-        color: colors[Math.floor(Math.random() * colors.length)],
-        rotation: rand(0, Math.PI * 2),
-        rotSpeed: rand(-8, 8),
+        maxLife: rand(this.random, 2, 4),
+        size: rand(this.random, 3, 6),
+        color: colors[Math.floor(this.random() * colors.length)],
+        rotation: rand(this.random, 0, Math.PI * 2),
+        rotSpeed: rand(this.random, -8, 8),
         type: "confetti",
       });
     }
@@ -69,13 +78,13 @@ export class ParticleSystem {
     if (this.reducedMotion) return;
     for (let i = 0; i < 3; i++) {
       this.particles.push({
-        x: x + rand(-8, 8),
-        y: y + rand(-5, 5),
-        vx: rand(-5, 5),
-        vy: rand(-15, -5),
+        x: x + rand(this.random, -8, 8),
+        y: y + rand(this.random, -5, 5),
+        vx: rand(this.random, -5, 5),
+        vy: rand(this.random, -15, -5),
         life: 0,
-        maxLife: rand(1, 2),
-        size: rand(2, 4),
+        maxLife: rand(this.random, 1, 2),
+        size: rand(this.random, 2, 4),
         color,
         rotation: 0,
         rotSpeed: 0,
@@ -88,13 +97,13 @@ export class ParticleSystem {
     if (this.reducedMotion) return;
     for (let i = 0; i < count; i++) {
       this.particles.push({
-        x: x + rand(-3, 3),
+        x: x + rand(this.random, -3, 3),
         y,
-        vx: rand(-2, 2),
-        vy: rand(-8, -3),
+        vx: rand(this.random, -2, 2),
+        vy: rand(this.random, -8, -3),
         life: 0,
-        maxLife: rand(2, 4),
-        size: rand(2, 4),
+        maxLife: rand(this.random, 2, 4),
+        size: rand(this.random, 2, 4),
         color: "rgba(255,255,255,0.5)",
         rotation: 0,
         rotSpeed: 0,
@@ -110,11 +119,11 @@ export class ParticleSystem {
       this.particles.push({
         x,
         y,
-        vx: Math.cos(angle) * rand(20, 50),
-        vy: Math.sin(angle) * rand(20, 50),
+        vx: Math.cos(angle) * rand(this.random, 20, 50),
+        vy: Math.sin(angle) * rand(this.random, 20, 50),
         life: 0,
-        maxLife: rand(0.4, 0.8),
-        size: rand(2, 4),
+        maxLife: rand(this.random, 0.4, 0.8),
+        size: rand(this.random, 2, 4),
         color: "#ffd700",
         rotation: 0,
         rotSpeed: 0,

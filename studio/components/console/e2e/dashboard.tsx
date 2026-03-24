@@ -10,6 +10,7 @@ const DASHBOARD_LANES: E2ERunLane[] = [
   "provision-only",
   "decomposer-only",
   "first-pr",
+  "demo-browser-canary",
   "full-ladder",
 ];
 
@@ -121,7 +122,7 @@ export function E2EDashboard({
           {result ? <p className={styles.result}>{result}</p> : null}
           {error ? <p className={styles.error}>{error}</p> : null}
           <p className={styles.note}>
-            `browser-canary` remains CLI-first in v1: use `scripts/e2e/harness.sh run --lane browser-canary`.
+            `browser-canary` remains CLI-first for authenticated build flows. `demo-browser-canary` is the dashboard-safe public demo smoke.
           </p>
         </section>
 

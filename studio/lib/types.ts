@@ -173,6 +173,7 @@ export type E2ERunLane =
   | "decomposer-only"
   | "first-pr"
   | "browser-canary"
+  | "demo-browser-canary"
   | "full-ladder";
 
 export type E2ERunStatus =

@@ -110,6 +110,44 @@ test("run routes create, list, and fetch e2e runs", async () => {
   });
 });
 
+test("run routes accept the public demo smoke lane", async () => {
+  const createdRun = {
+    id: "run-demo",
+    lane: "demo-browser-canary",
+    status: "queued",
+    activeLane: "demo-browser-canary",
+    cleanupStatus: "pending",
+  };
+  const harness = {
+    isDashboardLaunchable: jest.fn().mockReturnValue(true),
+    launchRun: jest.fn().mockResolvedValue(createdRun),
+    listRuns: jest.fn().mockReturnValue([createdRun]),
+    getRun: jest.fn().mockReturnValue({ ...createdRun, events: [] }),
+    cleanupRun: jest.fn(),
+    validateAuth: jest.fn(),
+    exportAuthCookie: jest.fn(),
+  };
+
+  await withServer(harness, async (server) => {
+    const startRes = await fetch(makeUrl(server, "/api/e2e/runs"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lane: "demo-browser-canary" }),
+    });
+
+    expect(startRes.status).toBe(202);
+    expect(await startRes.json()).toEqual({
+      runId: "run-demo",
+      run: createdRun,
+    });
+    expect(harness.launchRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lane: "demo-browser-canary",
+      })
+    );
+  });
+});
+
 test("report route returns report contents from disk", async () => {
   const reportJsonPath = path.join(tmpDir, "report.json");
   const reportMarkdownPath = path.join(tmpDir, "report.md");

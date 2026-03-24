@@ -104,6 +104,20 @@ export function mapBuildEvent(event: BuildEvent): FactoryAction[] {
       actions.push({ type: "AMBIENT_CHANGE", ambient: "busy" });
     }
 
+    if (kind === "pipeline_started") {
+      actions.push({
+        type: "ITEM_TRANSIT",
+        from: "blueprint-table",
+        to: "code-forge",
+        item: {
+          id: `brief-${event.id}`,
+          type: "issue",
+          label: "Work brief",
+          enteredAt: now,
+        },
+      });
+    }
+
     if (kind === "agent_progress") {
       // Keep the agent working, update task description
       const detail =
@@ -166,6 +180,17 @@ export function mapBuildEvent(event: BuildEvent): FactoryAction[] {
 
     if (kind === "ci_passed") {
       // CI pass — move toward deployment
+      actions.push({
+        type: "ITEM_TRANSIT",
+        from: "inspection-bay",
+        to: "launch-pad",
+        item: {
+          id: `deploy-${event.id}`,
+          type: "deployment",
+          label: "Preview deploy",
+          enteredAt: now,
+        },
+      });
       actions.push({
         type: "AGENT_START_WORK",
         agent: "deployer",

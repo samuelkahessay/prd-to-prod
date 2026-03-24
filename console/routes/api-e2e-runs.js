@@ -9,7 +9,7 @@ function registerE2ERunRoutes(app, { harness }) {
 
     if (!harness.isDashboardLaunchable(lane)) {
       return res.status(400).json({
-        error: "Lane must be one of provision-only, decomposer-only, first-pr, or full-ladder.",
+        error: "Lane must be one of provision-only, decomposer-only, first-pr, demo-browser-canary, or full-ladder.",
       });
     }
 

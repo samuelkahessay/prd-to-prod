@@ -5,7 +5,7 @@ import "@testing-library/jest-dom";
 import BuildPage from "@/app/build/page";
 import BuildStatusPage from "@/app/build/[id]/page";
 import { buildApi } from "@/lib/build-api";
-import { navigateTo } from "@/lib/browser-navigation";
+import { navigateTo, replaceCurrentUrl } from "@/lib/browser-navigation";
 import type {
   BuildEvent,
   BuildSession,
@@ -34,6 +34,14 @@ jest.mock("@/lib/browser-navigation", () => ({
 
 const mockedBuildApi = jest.mocked(buildApi);
 const mockedNavigateTo = jest.mocked(navigateTo);
+const mockedReplaceCurrentUrl = jest.mocked(replaceCurrentUrl);
+
+beforeAll(() => {
+  Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+    configurable: true,
+    value: jest.fn(() => null),
+  });
+});
 
 function makeParsedResponse(status: "needs_input" | "ready"): LLMParsedResponse {
   return {
@@ -67,7 +75,7 @@ function makeSession(status: BuildSession["status"] = "refining"): BuildSession 
         ? "# PRD: Customer portal\n\n## Problem\n\nSupport requests get lost\n"
         : null,
     app_installation_id: null,
-    is_demo: 1,
+    is_demo: 0,
     created_at: "2026-03-14T17:00:00.000Z",
     updated_at: "2026-03-14T17:05:00.000Z",
   };
@@ -109,6 +117,7 @@ beforeEach(() => {
   mockedBuildApi.startBuild.mockReset();
   mockedBuildApi.streamBuildEvents.mockReset();
   mockedBuildApi.logout.mockReset();
+  mockedReplaceCurrentUrl.mockReset();
   mockedBuildApi.sendMessage.mockImplementation(async function* sendMessage() {});
   mockedBuildApi.streamBuildEvents.mockReturnValue(jest.fn());
 });
@@ -131,7 +140,9 @@ describe("BuildPage", () => {
     expect(await screen.findByText("Ready to build.")).toBeInTheDocument();
     expect(await screen.findByText("PRD ready")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Sign in & build" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Sign in with GitHub to launch" })
+    );
 
     expect(mockedNavigateTo).toHaveBeenCalledWith(
       "/pub/auth/github?return_to=%2Fbuild%3Fsession%3Dsession-1%26resume%3Dfinalize"
@@ -149,7 +160,7 @@ describe("BuildPage", () => {
 
     mockedBuildApi.getMe.mockResolvedValue(user);
     mockedBuildApi.getSession.mockResolvedValue({
-      session: makeSession("refining"),
+      session: { ...makeSession("refining"), is_demo: 0 },
       messages: [makeAssistantEvent(parsed)],
     });
     mockedBuildApi.finalizeSession.mockResolvedValue({
@@ -173,6 +184,78 @@ describe("BuildPage", () => {
     expect(mockedNavigateTo).toHaveBeenCalledWith("/build/session-1");
   });
 
+  it("routes demo sessions to the dedicated demo surface after finalize", async () => {
+    const user: BuildUser = {
+      id: "user-1",
+      githubId: 0,
+      githubLogin: "demo-user",
+      githubAvatarUrl: "",
+    };
+    const parsed = makeParsedResponse("ready");
+
+    mockedBuildApi.getMe.mockResolvedValue(user);
+    mockedBuildApi.getSession.mockResolvedValue({
+      session: { ...makeSession("refining"), is_demo: 1 },
+      messages: [makeAssistantEvent(parsed)],
+    });
+    mockedBuildApi.finalizeSession.mockResolvedValue({
+      sessionId: "session-1",
+      status: "ready",
+      prd: parsed.prd,
+    });
+
+    window.history.replaceState(
+      {},
+      "",
+      "/build?session=session-1&resume=finalize"
+    );
+
+    render(<BuildPage />);
+
+    await waitFor(() => {
+      expect(mockedBuildApi.finalizeSession).toHaveBeenCalledWith("session-1");
+    });
+
+    expect(mockedNavigateTo).toHaveBeenCalledWith("/demo/session-1");
+  });
+
+  it("preserves the recording preset when demo sessions finalize", async () => {
+    const user: BuildUser = {
+      id: "user-1",
+      githubId: 0,
+      githubLogin: "demo-user",
+      githubAvatarUrl: "",
+    };
+    const parsed = makeParsedResponse("ready");
+
+    mockedBuildApi.getMe.mockResolvedValue(user);
+    mockedBuildApi.getSession.mockResolvedValue({
+      session: { ...makeSession("refining"), is_demo: 1 },
+      messages: [makeAssistantEvent(parsed)],
+    });
+    mockedBuildApi.finalizeSession.mockResolvedValue({
+      sessionId: "session-1",
+      status: "ready",
+      prd: parsed.prd,
+    });
+
+    window.history.replaceState(
+      {},
+      "",
+      "/demo?session=session-1&resume=finalize&preset=recording"
+    );
+
+    render(<BuildPage initialMode="demo" />);
+
+    await waitFor(() => {
+      expect(mockedBuildApi.finalizeSession).toHaveBeenCalledWith("session-1");
+    });
+
+    expect(mockedNavigateTo).toHaveBeenCalledWith(
+      "/demo/session-1?preset=recording"
+    );
+  });
+
   it("preserves the e2e repo override across finalize redirects", async () => {
     const user: BuildUser = {
       id: "user-1",
@@ -184,7 +267,7 @@ describe("BuildPage", () => {
 
     mockedBuildApi.getMe.mockResolvedValue(user);
     mockedBuildApi.getSession.mockResolvedValue({
-      session: makeSession("refining"),
+      session: { ...makeSession("refining"), is_demo: 0 },
       messages: [makeAssistantEvent(parsed)],
     });
     mockedBuildApi.finalizeSession.mockResolvedValue({
@@ -209,6 +292,23 @@ describe("BuildPage", () => {
       "/build/session-1?e2e_repo_name=personal-bookmark-manager-e2e-bc-abc12345"
     );
   });
+
+  it("uses /demo as the canonical public demo entry", async () => {
+    mockedBuildApi.getMe.mockRejectedValue(new Error("Unauthorized"));
+    mockedBuildApi.createSession.mockResolvedValue({ sessionId: "session-1" });
+
+    window.history.replaceState({}, "", "/demo?preset=recording");
+
+    render(<BuildPage initialMode="demo" />);
+
+    await waitFor(() => {
+      expect(mockedBuildApi.createSession).toHaveBeenCalledWith(true);
+    });
+
+    expect(mockedReplaceCurrentUrl).toHaveBeenLastCalledWith(
+      "/demo?preset=recording&session=session-1"
+    );
+  });
 });
 
 describe("BuildStatusPage", () => {
@@ -226,7 +326,7 @@ describe("BuildStatusPage", () => {
     });
 
     mockedBuildApi.getSession.mockResolvedValue({
-      session: makeSession("building"),
+      session: { ...makeSession("building"), is_demo: 1 },
       messages: [makeAssistantEvent(makeParsedResponse("ready")), issueEvent],
     });
     mockedBuildApi.streamBuildEvents.mockImplementation((_sessionId, onEvent) => {
@@ -272,7 +372,7 @@ describe("BuildStatusPage", () => {
     let streamListener: ((event: BuildEvent) => void) | null = null;
 
     mockedBuildApi.getSession.mockResolvedValue({
-      session: makeSession("ready"),
+      session: { ...makeSession("ready"), is_demo: 1 },
       messages: [makeAssistantEvent(makeParsedResponse("ready"))],
     });
     mockedBuildApi.provisionRepo.mockResolvedValue({
@@ -321,7 +421,7 @@ describe("BuildStatusPage", () => {
 
   it("forwards an e2e repo override when auto-provisioning", async () => {
     mockedBuildApi.getSession.mockResolvedValue({
-      session: makeSession("ready"),
+      session: { ...makeSession("ready"), is_demo: 1 },
       messages: [makeAssistantEvent(makeParsedResponse("ready"))],
     });
     mockedBuildApi.provisionRepo.mockResolvedValue({
@@ -352,7 +452,7 @@ describe("BuildStatusPage", () => {
 
   it("shows the install CTA and lets the user continue after app installation", async () => {
     mockedBuildApi.getSession.mockResolvedValue({
-      session: makeSession("ready"),
+      session: { ...makeSession("ready"), is_demo: 1 },
       messages: [makeAssistantEvent(makeParsedResponse("ready"))],
     });
     mockedBuildApi.provisionRepo

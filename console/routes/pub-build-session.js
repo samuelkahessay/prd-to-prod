@@ -43,8 +43,7 @@ function registerBuildSessionRoutes(app, { db, buildSessionStore, serviceResolve
       const authSessionId = createMockSession(db, userId);
 
       // Create a mock OAuth grant so provisioner can consume it
-      const DEMO_MODE = process.env.DEMO_MODE === "true";
-      if (!process.env.ENCRYPTION_KEY && DEMO_MODE) {
+      if (!process.env.ENCRYPTION_KEY) {
         process.env.ENCRYPTION_KEY = crypto.randomBytes(32).toString("hex");
       }
 

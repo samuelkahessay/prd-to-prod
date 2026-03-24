@@ -14,6 +14,18 @@ export interface IsoViewport {
   canvasH: number;
 }
 
+export interface ScreenPoint {
+  x: number;
+  y: number;
+}
+
+export interface ScreenQuad {
+  bl: ScreenPoint;
+  br: ScreenPoint;
+  tr: ScreenPoint;
+  tl: ScreenPoint;
+}
+
 export function toIso(x: number, y: number): { x: number; y: number } {
   return {
     x: (x - y) * COS30,
@@ -50,6 +62,32 @@ export function worldToScreen(
     x: vp.offsetX + iso.x * vp.cellSize,
     y: vp.offsetY + iso.y * vp.cellSize,
   };
+}
+
+export function getScreenQuadFromEdge(
+  edgeStart: ScreenPoint,
+  edgeEnd: ScreenPoint,
+  lift: number,
+  height: number
+): ScreenQuad {
+  return {
+    bl: { x: edgeStart.x, y: edgeStart.y - lift },
+    br: { x: edgeEnd.x, y: edgeEnd.y - lift },
+    tr: { x: edgeEnd.x, y: edgeEnd.y - lift - height },
+    tl: { x: edgeStart.x, y: edgeStart.y - lift - height },
+  };
+}
+
+export function traceScreenQuad(
+  ctx: CanvasRenderingContext2D,
+  quad: ScreenQuad
+) {
+  ctx.beginPath();
+  ctx.moveTo(quad.bl.x, quad.bl.y);
+  ctx.lineTo(quad.br.x, quad.br.y);
+  ctx.lineTo(quad.tr.x, quad.tr.y);
+  ctx.lineTo(quad.tl.x, quad.tl.y);
+  ctx.closePath();
 }
 
 export function drawIsoFloor(

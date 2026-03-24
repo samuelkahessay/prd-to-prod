@@ -4,11 +4,11 @@ export function Pricing() {
   return (
     <section id="pricing" className={styles.section}>
       <span className={styles.label}>Pricing</span>
-      <h2 className={styles.heading}>$1. One PRD. One deployed app.</h2>
+      <h2 className={styles.heading}>$1. One PRD. One governed pipeline run.</h2>
       <p className={styles.subtitle}>
-        We&apos;re building case studies with early adopters on Platform Calgary.
-        For $1, you get a real pipeline run — same agents, same CI/CD, same
-        deployment.
+        Early adopter runs use the same multi-agent pipeline you see in the
+        demo. Repo handoff is included. Deploy proof is included when Vercel is
+        configured for the run.
       </p>
 
       <div className={styles.cards}>
@@ -21,18 +21,18 @@ export function Pricing() {
           <p className={styles.pricePer}>per pipeline run</p>
 
           <ul className={styles.features}>
-            <li>You send a PRD</li>
-            <li>Agents build, review, and deploy autonomously</li>
-            <li>You get a GitHub repo you own — full commit history, CI/CD, agentic workflows pre-wired</li>
-            <li>Live deployment on Vercel for 30 days</li>
-            <li>After 30 days, you take over hosting (Vercel free tier works for most projects)</li>
-            <li>The agentic pipeline in your repo activates when you add your own OpenRouter key</li>
+            <li>You paste a PRD and launch a governed run</li>
+            <li>Agents plan, code, review, and merge inside the pipeline</li>
+            <li>You get a GitHub repo you own with commit history and workflows pre-wired</li>
+            <li>Deploy proof is included when Vercel credentials are configured</li>
+            <li>After handoff, you own hosting and follow-on work</li>
+            <li>Your repo-side agent loop activates when you add your own compatible LLM key</li>
           </ul>
 
-          <a href="/build" className={styles.ctaPrimary}>Send your PRD</a>
+          <a href="/demo" className={styles.ctaPrimary}>Watch guided demo</a>
           <p className={styles.contactNote}>
-            Email <a href="mailto:kahessay@icloud.com?subject=PRD%20Submission" className={styles.contactLink}>kahessay@icloud.com</a> with
-            your PRD to get an access code.
+            Need an access code for the assisted run? Email{" "}
+            <a href="mailto:kahessay@icloud.com?subject=PRD%20Submission" className={styles.contactLink}>kahessay@icloud.com</a>.
           </p>
         </div>
 

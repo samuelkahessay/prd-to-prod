@@ -1,13 +1,19 @@
 "use client";
 
 import { useRef, useEffect, useCallback } from "react";
-import type { FactoryState, AgentId, CharacterState } from "../factory-types";
-import { ALL_AGENTS, AGENT_WORKSTATION } from "../factory-types";
+import type { MutableRefObject } from "react";
+import type {
+  AgentId,
+  CharacterState,
+  FactoryState,
+  WorkItem,
+} from "../factory-types";
+import { ALL_AGENTS } from "../factory-types";
 import {
   createViewport,
   drawIsoFloor,
+  type IsoViewport,
   worldToScreen,
-  WORLD_STATIONS,
 } from "./isometric";
 import {
   drawBackdrop,
@@ -16,20 +22,55 @@ import {
   drawSunbeam,
   drawVignette,
   drawDustMotes,
+  getCoffeeMachineSteamAnchor,
 } from "./environment";
 import { drawCharacter, drawSpeechBubble } from "./characters-v2";
 import { IdleBehaviorManager } from "./idle-behaviors";
 import { MovementSystem } from "./movement";
 import { ParticleSystem } from "./particles";
+import { createSeededRandom } from "./random";
+import {
+  CENTER_STAGE,
+  getAgentHomePosition,
+  getCelebrationRoute,
+  getDeployerLaunchRoute,
+  getEffectAnchor,
+  getPlannerKickoffRoute,
+  getReviewRoutes,
+  getSpeechBubbleText,
+  getTransitPath,
+  sampleRoutePoint,
+  type WorldPoint,
+} from "./choreography";
+import {
+  getFactoryReplaySeed,
+  type FactoryReplayProfile,
+} from "../factory-replay";
 
 interface FactoryCanvasProps {
   state: FactoryState;
   height?: number;
+  replayProfile?: FactoryReplayProfile;
+}
+
+interface TransitTrack {
+  id: string;
+  item: WorkItem;
+  path: WorldPoint[];
+  progress: number;
+  speed: number;
+  arrivedAt: number | null;
 }
 
 const C = {
   bg: "#f5f3f0",
   good: "#3d9a6a",
+};
+
+const ITEM_COLORS: Record<WorkItem["type"], string> = {
+  issue: "#c97d52",
+  pr: "#3d9a6a",
+  deployment: "#4a6fd8",
 };
 
 function getSpeechBubble(
@@ -38,35 +79,38 @@ function getSpeechBubble(
   time: number
 ): string | null {
   const agent = state.agents[agentId];
-  if (agent.state === "idle") return null;
+  const cycle = Math.floor(time * 0.35);
 
-  const cycle = Math.floor(time * 0.25) % 6;
-  if (cycle > 2) return null;
-
-  if (agent.state === "celebrating") return "🎉";
-  if (agent.state === "blocked") return "⏳ Waiting...";
-
-  if (agentId === "planner" && agent.state === "working") {
-    return agent.currentTask?.includes("Creating") ? "Setting up..." : "Planning...";
+  if (cycle % 6 > 2) {
+    return null;
   }
-  if (agentId === "developer" && agent.state === "working") return "Building...";
-  if (agentId === "frontend-designer" && agent.state === "working") return "Designing...";
-  if (agentId === "reviewer" && agent.state === "working") return "Reviewing PR...";
-  if (agentId === "deployer" && agent.state === "working") return "3... 2... 1...";
 
-  return null;
+  return getSpeechBubbleText(
+    agentId,
+    agent.state,
+    agent.currentTask,
+    cycle
+  );
 }
 
-export function FactoryCanvas({ state, height = 420 }: FactoryCanvasProps) {
+export function FactoryCanvas({
+  state,
+  height = 420,
+  replayProfile = "demo",
+}: FactoryCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const stateRef = useRef(state);
   stateRef.current = state;
+  const replayProfileRef = useRef(replayProfile);
+  replayProfileRef.current = replayProfile;
 
-  // Rendering-internal systems (not tied to React state)
   const idleRef = useRef<IdleBehaviorManager | null>(null);
   const moveRef = useRef<MovementSystem | null>(null);
   const particleRef = useRef<ParticleSystem | null>(null);
+  const transitRef = useRef<Map<string, TransitTrack>>(new Map());
+  const effectTimerRef = useRef<Map<AgentId, number>>(new Map());
+  const steamTimerRef = useRef(0);
   const lastTimeRef = useRef(0);
   const initRef = useRef(false);
   const prevAgentStates = useRef(new Map<AgentId, CharacterState>());
@@ -79,30 +123,38 @@ export function FactoryCanvas({ state, height = 420 }: FactoryCanvasProps) {
     if (!ctx) return;
 
     const time = timestamp / 1000;
-    const deltaTime = lastTimeRef.current > 0 ? Math.min(time - lastTimeRef.current, 0.1) : 0.016;
+    const deltaTime =
+      lastTimeRef.current > 0 ? Math.min(time - lastTimeRef.current, 0.1) : 0.016;
     lastTimeRef.current = time;
 
     const s = stateRef.current;
 
-    // Lazy-init systems (avoids SSR issues with window access)
-    if (!idleRef.current) idleRef.current = new IdleBehaviorManager();
+    if (!idleRef.current) {
+      const seed = getFactoryReplaySeed(replayProfileRef.current);
+      idleRef.current = new IdleBehaviorManager({
+        random: seed === null ? Math.random : createSeededRandom(seed + 11),
+      });
+    }
     if (!moveRef.current) moveRef.current = new MovementSystem();
-    if (!particleRef.current) particleRef.current = new ParticleSystem();
+    if (!particleRef.current) {
+      const seed = getFactoryReplaySeed(replayProfileRef.current);
+      particleRef.current = new ParticleSystem({
+        random: seed === null ? Math.random : createSeededRandom(seed + 29),
+      });
+    }
 
     const idle = idleRef.current;
     const move = moveRef.current;
     const particles = particleRef.current;
 
-    // Initialize home positions once
     if (!initRef.current) {
       for (const agentId of ALL_AGENTS) {
-        const ws = WORLD_STATIONS[AGENT_WORKSTATION[agentId]];
-        move.setHome(agentId, ws.x + 0.8, ws.y + 0.5);
+        const home = getAgentHomePosition(agentId);
+        move.setHome(agentId, home.x, home.y);
       }
       initRef.current = true;
     }
 
-    // DPR scaling
     const dpr = window.devicePixelRatio || 1;
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
@@ -117,46 +169,68 @@ export function FactoryCanvas({ state, height = 420 }: FactoryCanvasProps) {
 
     const vp = createViewport(w, h);
 
-    // ── Update systems ──
+    syncTransitTracks(s, move, transitRef.current);
 
     for (const agentId of ALL_AGENTS) {
       const curr = s.agents[agentId].state;
       const prev = prevAgentStates.current.get(agentId);
 
       idle.update(agentId, curr, deltaTime);
+      updateAgentEffectTimer(effectTimerRef.current, agentId, curr, deltaTime);
 
-      // Movement triggers on state transitions
       if (prev !== undefined && curr !== prev) {
-        if (agentId === "reviewer" && curr === "working") {
-          // Reviewer walks to developer's station
-          const devWs = WORLD_STATIONS["code-forge"];
-          move.moveTo("reviewer", devWs.x + 1.5, devWs.y + 0.5);
-        } else if (agentId === "reviewer" && prev === "working" && curr === "idle") {
-          move.returnHome("reviewer");
+        if (agentId === "planner" && curr === "working") {
+          const kickoffRoute = getPlannerKickoffRoute(
+            s.agents[agentId].currentTask
+          );
+          if (kickoffRoute) {
+            move.moveAlong(agentId, kickoffRoute);
+          }
         }
 
-        if (curr === "celebrating") {
-          // All celebrating characters walk to center
-          move.moveTo(agentId, 5.5, 5);
-        } else if (prev === "celebrating") {
+        if (agentId === "deployer" && curr === "working") {
+          move.moveAlong(agentId, getDeployerLaunchRoute());
+        } else if (
+          prev === "celebrating" &&
+          curr !== "celebrating" &&
+          curr !== "working" &&
+          s.ambient !== "celebrating"
+        ) {
           move.returnHome(agentId);
+        }
+
+        if (curr === "celebrating" && s.ambient !== "celebrating") {
+          emitCelebrationSparkle(agentId, particles, vp);
         }
       }
 
+      maybeEmitWorkEffect(agentId, s.agents[agentId].state, effectTimerRef.current, particles, vp);
       prevAgentStates.current.set(agentId, curr);
     }
 
-    // Celebration confetti burst
+    updateTransitAnimations(transitRef.current, deltaTime, time, particles, vp);
+    updateCoffeeSteam(s, deltaTime, particles, vp, steamTimerRef);
+
     if (s.ambient === "celebrating" && prevAmbient.current !== "celebrating") {
-      const center = worldToScreen(vp, 5.5, 5);
+      for (const agentId of ALL_AGENTS) {
+        move.moveAlong(agentId, getCelebrationRoute(agentId));
+      }
+      const center = worldToScreen(vp, CENTER_STAGE.x, CENTER_STAGE.y);
       particles.emitConfetti(center.x, center.y, 40);
+    } else if (
+      prevAmbient.current === "celebrating" &&
+      s.ambient !== "celebrating"
+    ) {
+      for (const agentId of ALL_AGENTS) {
+        move.returnHome(agentId);
+      }
     }
-    // Periodic confetti during celebration
+
     if (s.ambient === "celebrating") {
       const sec = Math.floor(time);
       const prevSec = Math.floor(time - deltaTime);
       if (sec !== prevSec && sec % 3 === 0) {
-        const center = worldToScreen(vp, 5.5, 5);
+        const center = worldToScreen(vp, CENTER_STAGE.x, CENTER_STAGE.y);
         particles.emitConfetti(center.x, center.y, 15);
       }
     }
@@ -165,31 +239,17 @@ export function FactoryCanvas({ state, height = 420 }: FactoryCanvasProps) {
     move.update(deltaTime);
     particles.update(deltaTime);
 
-    // ── Draw ──
-
-    // Background
     ctx.fillStyle = C.bg;
     ctx.fillRect(0, 0, w, h);
 
-    // Backdrop (window, pendant lamps, back wall)
     drawBackdrop(ctx, vp, time);
-
-    // Isometric floor
     drawIsoFloor(ctx, vp);
-
-    // Sunbeam (behind furniture, on floor)
     drawSunbeam(ctx, vp, time);
-
-    // Dust motes floating in sunbeam
     drawDustMotes(ctx, vp, time);
-
-    // Ambient objects (bookshelf, kanban, server rack, etc.)
     drawAmbientObjects(ctx, vp, time, s);
-
-    // Workstation furniture (sorted by y for depth)
     drawAllFurniture(ctx, vp, s, time);
+    drawTransitTracks(ctx, vp, transitRef.current, time);
 
-    // Characters (sorted by world y for depth ordering)
     const sortedAgents = [...ALL_AGENTS].sort((a, b) => {
       const posA = move.getPosition(a);
       const posB = move.getPosition(b);
@@ -209,22 +269,22 @@ export function FactoryCanvas({ state, height = 420 }: FactoryCanvasProps) {
         state: s.agents[agentId].state,
         time,
         agentId,
-        facing: agentId === "reviewer" && !move.isWalking(agentId) ? "left" : "right",
+        facing:
+          move.isWalking(agentId) || agentId !== "reviewer"
+            ? move.getFacing(agentId)
+            : "left",
         idle: idle.getIdleState(agentId),
         walking: move.isWalking(agentId),
       });
 
-      // Speech bubbles
       const bubble = getSpeechBubble(s, agentId, time);
       if (bubble) {
         drawSpeechBubble(ctx, screenPos.x, screenPos.y - charScale * 20, bubble, time);
       }
     }
 
-    // Particles (confetti, sparkles, etc.)
     particles.draw(ctx);
 
-    // Celebration banner
     if (s.ambient === "celebrating") {
       ctx.font = `700 ${Math.max(12, w * 0.018)}px 'JetBrains Mono', monospace`;
       ctx.textAlign = "center";
@@ -232,7 +292,6 @@ export function FactoryCanvas({ state, height = 420 }: FactoryCanvasProps) {
       ctx.fillText("BUILD COMPLETE", w / 2, h - 20);
     }
 
-    // Vignette (last — sits on top of everything)
     drawVignette(ctx, vp);
 
     ctx.restore();
@@ -256,4 +315,240 @@ export function FactoryCanvas({ state, height = 420 }: FactoryCanvasProps) {
       }}
     />
   );
+}
+
+function syncTransitTracks(
+  state: FactoryState,
+  move: MovementSystem,
+  tracks: Map<string, TransitTrack>
+) {
+  for (const conveyorItem of state.conveyor) {
+    if (tracks.has(conveyorItem.id)) {
+      continue;
+    }
+
+    tracks.set(conveyorItem.id, {
+      id: conveyorItem.id,
+      item: conveyorItem.item,
+      path: getTransitPath(conveyorItem.from, conveyorItem.to),
+      progress: 0,
+      speed: conveyorItem.item.type === "deployment" ? 0.36 : 0.46,
+      arrivedAt: null,
+    });
+
+    if (conveyorItem.item.type === "pr") {
+      const routes = getReviewRoutes(conveyorItem.from);
+      if (routes) {
+        move.moveAlong(routes.sourceAgent, routes.sourceRoute);
+        move.moveAlong("reviewer", routes.reviewerRoute);
+      }
+    }
+  }
+}
+
+function updateTransitAnimations(
+  tracks: Map<string, TransitTrack>,
+  deltaTime: number,
+  time: number,
+  particles: ParticleSystem,
+  vp: IsoViewport
+) {
+  for (const track of tracks.values()) {
+    if (track.arrivedAt !== null) {
+      continue;
+    }
+
+    track.progress = Math.min(1, track.progress + deltaTime * track.speed);
+    if (track.progress >= 1) {
+      track.progress = 1;
+      track.arrivedAt = time;
+      const destination = sampleRoutePoint(track.path, 1);
+      const screen = worldToScreen(vp, destination.x, destination.y);
+      particles.emitSparkle(screen.x, screen.y - 8, 4);
+    }
+  }
+}
+
+function updateCoffeeSteam(
+  state: FactoryState,
+  deltaTime: number,
+  particles: ParticleSystem,
+  vp: IsoViewport,
+  steamTimerRef: MutableRefObject<number>
+) {
+  steamTimerRef.current += deltaTime;
+
+  const interval = state.ambient === "busy" ? 0.18 : 0.42;
+  if (steamTimerRef.current < interval) {
+    return;
+  }
+
+  steamTimerRef.current = 0;
+  const steamOrigin = getCoffeeMachineSteamAnchor(vp);
+  particles.emitSteam(
+    steamOrigin.x,
+    steamOrigin.y,
+    state.ambient === "busy" ? 3 : 1
+  );
+}
+
+function updateAgentEffectTimer(
+  timers: Map<AgentId, number>,
+  agentId: AgentId,
+  state: CharacterState,
+  deltaTime: number
+) {
+  if (state !== "working") {
+    timers.set(agentId, 0);
+    return;
+  }
+
+  const current = timers.get(agentId) ?? 0;
+  timers.set(agentId, current + deltaTime);
+}
+
+function maybeEmitWorkEffect(
+  agentId: AgentId,
+  state: CharacterState,
+  timers: Map<AgentId, number>,
+  particles: ParticleSystem,
+  vp: IsoViewport
+) {
+  if (state !== "working") {
+    return;
+  }
+
+  const interval =
+    agentId === "deployer" ? 0.95 : agentId === "planner" ? 1.2 : 0.75;
+  const elapsed = timers.get(agentId) ?? 0;
+  if (elapsed < interval) {
+    return;
+  }
+
+  timers.set(agentId, 0);
+  const anchor = getEffectAnchor(agentId);
+  const screen = worldToScreen(vp, anchor.x, anchor.y);
+
+  if (agentId === "frontend-designer" || agentId === "deployer") {
+    particles.emitSparkle(screen.x, screen.y - 8, agentId === "deployer" ? 5 : 3);
+    return;
+  }
+
+  particles.emitCode(
+    screen.x,
+    screen.y - 4,
+    agentId === "planner" ? "#c97d52" : "#61afef"
+  );
+}
+
+function emitCelebrationSparkle(
+  agentId: AgentId,
+  particles: ParticleSystem,
+  vp: IsoViewport
+) {
+  const anchor = getEffectAnchor(agentId);
+  const screen = worldToScreen(vp, anchor.x, anchor.y);
+  particles.emitSparkle(screen.x, screen.y - 8, 4);
+}
+
+function drawTransitTracks(
+  ctx: CanvasRenderingContext2D,
+  vp: IsoViewport,
+  tracks: Map<string, TransitTrack>,
+  time: number
+) {
+  for (const track of tracks.values()) {
+    const fadeAlpha =
+      track.arrivedAt === null
+        ? 1
+        : Math.max(0, 1 - Math.min(0.6, time - track.arrivedAt) / 0.6);
+    if (fadeAlpha <= 0) {
+      continue;
+    }
+
+    drawTransitPath(ctx, vp, track.path, fadeAlpha);
+    drawTransitPayload(ctx, vp, track, fadeAlpha);
+  }
+}
+
+function drawTransitPath(
+  ctx: CanvasRenderingContext2D,
+  vp: IsoViewport,
+  path: WorldPoint[],
+  alpha: number
+) {
+  if (path.length < 2) {
+    return;
+  }
+
+  ctx.save();
+  ctx.strokeStyle = `rgba(104, 96, 87, ${0.18 * alpha})`;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 5]);
+  ctx.beginPath();
+
+  path.forEach((point, index) => {
+    const screen = worldToScreen(vp, point.x, point.y);
+    if (index === 0) {
+      ctx.moveTo(screen.x, screen.y);
+      return;
+    }
+    ctx.lineTo(screen.x, screen.y);
+  });
+
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawTransitPayload(
+  ctx: CanvasRenderingContext2D,
+  vp: IsoViewport,
+  track: TransitTrack,
+  alpha: number
+) {
+  const point = sampleRoutePoint(track.path, track.progress);
+  const screen = worldToScreen(vp, point.x, point.y);
+  const label = getTransitLabel(track.item.type);
+  const color = ITEM_COLORS[track.item.type];
+  const width = 32;
+  const height = 14;
+
+  ctx.save();
+  ctx.translate(screen.x, screen.y - 8);
+  ctx.globalAlpha = alpha;
+
+  ctx.beginPath();
+  ctx.ellipse(0, 8, 12, 4, 0, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(80, 68, 56, 0.12)";
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.roundRect(-width / 2, -height / 2, width, height, 6);
+  ctx.fillStyle = "#fffaf3";
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.roundRect(-width / 2 + 3, -height / 2 + 3, 8, height - 6, 3);
+  ctx.fillStyle = color;
+  ctx.fill();
+
+  ctx.fillStyle = "#5d554d";
+  ctx.font = "700 7px 'JetBrains Mono', monospace";
+  ctx.textAlign = "center";
+  ctx.fillText(label, 5, 2.5);
+
+  ctx.restore();
+}
+
+function getTransitLabel(type: WorkItem["type"]): string {
+  if (type === "issue") {
+    return "SPEC";
+  }
+  if (type === "deployment") {
+    return "SHIP";
+  }
+  return "PR";
 }

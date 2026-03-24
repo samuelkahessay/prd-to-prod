@@ -14,10 +14,16 @@
   margin-bottom: 28px;
   line-height: 1.5;
 }
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
 .contact {
   font-size: 14px;
   color: var(--ink-muted);
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 
 .contact a {
@@ -36,13 +42,17 @@
   font-family: inherit;
   text-decoration: none;
 }
-.ctaLink {
+
+.ctaSecondary {
   display: inline-block;
-  margin-top: 12px;
-  font-size: 14px;
-  color: var(--ink-muted);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  padding: 16px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--rule);
+  background: transparent;
 }
 
 @media (max-width: 640px) {

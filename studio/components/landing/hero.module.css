@@ -1,5 +1,13 @@
 .hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 520px);
+  gap: 40px;
   padding: 120px 48px 60px;
+  align-items: start;
+}
+
+.copy {
+  min-width: 0;
 }
 
 .eyebrow {
@@ -74,8 +82,88 @@
   letter-spacing: 0.02em;
 }
 
+.media {
+  position: relative;
+  min-height: 520px;
+}
+
+.frame {
+  position: absolute;
+  width: min(100%, 460px);
+  background: rgba(255, 252, 248, 0.92);
+  border: 1px solid rgba(40, 36, 30, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 24px 80px rgba(42, 33, 22, 0.12);
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+}
+
+.framePrimary {
+  top: 0;
+  right: 0;
+  transform: rotate(-2deg);
+}
+
+.frameSecondary {
+  right: 24px;
+  bottom: 0;
+  width: min(82%, 320px);
+  transform: rotate(4deg);
+}
+
+.frameMeta {
+  padding: 14px 18px 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.frameImageWrap {
+  position: relative;
+  margin: 12px 14px 0;
+  border-radius: 14px;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, rgba(74, 111, 216, 0.08), rgba(61, 154, 106, 0.12));
+}
+
+.frameImage {
+  object-fit: cover;
+}
+
+.frameCaption {
+  padding: 14px 18px 18px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
 @media (max-width: 768px) {
   .hero {
+    grid-template-columns: 1fr;
     padding: 100px 24px 48px;
+  }
+
+  .media {
+    min-height: 0;
+    display: grid;
+    gap: 18px;
+  }
+
+  .frame {
+    position: relative;
+    width: 100%;
+  }
+
+  .framePrimary,
+  .frameSecondary {
+    top: auto;
+    right: auto;
+    bottom: auto;
+    transform: none;
   }
 }

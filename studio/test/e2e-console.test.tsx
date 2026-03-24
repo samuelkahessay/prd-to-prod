@@ -82,6 +82,33 @@ test("dashboard launches a lane and refreshes the run list", async () => {
   expect(await screen.findByText(/Run run-2 started/i)).toBeInTheDocument();
 });
 
+test("dashboard can launch the public demo smoke lane", async () => {
+  mockedApi.startE2ERun.mockResolvedValue({
+    runId: "run-3",
+    run: makeRun({ id: "run-3", lane: "demo-browser-canary" }),
+  });
+  mockedApi.listE2ERuns.mockResolvedValue([
+    makeRun({ id: "run-3", lane: "demo-browser-canary", status: "queued" }),
+  ]);
+
+  render(
+    <E2EDashboard initialRuns={[]} defaultCookieJarPath="/tmp/.e2e-cookiejar" />
+  );
+
+  fireEvent.change(screen.getByLabelText("Lane"), {
+    target: { value: "demo-browser-canary" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Start lane" }));
+
+  await waitFor(() => {
+    expect(mockedApi.startE2ERun).toHaveBeenCalledWith({
+      lane: "demo-browser-canary",
+      keepRepo: true,
+      cookieJarPath: "/tmp/.e2e-cookiejar",
+    });
+  });
+});
+
 test("detail view streams run updates and shows report content", async () => {
   let streamListener: ((event: unknown) => void) | null = null;
   mockedApi.streamE2ERun.mockImplementation((_id, onEvent) => {

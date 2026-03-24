@@ -19,6 +19,7 @@ interface ChatInterfaceProps {
   onFinalize: () => void;
   user: BuildUser | null;
   error: string | null;
+  mode?: "build" | "demo";
 }
 
 export function ChatInterface({
@@ -30,6 +31,7 @@ export function ChatInterface({
   onFinalize,
   user,
   error,
+  mode = "build",
 }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -67,16 +69,21 @@ export function ChatInterface({
 
   const placeholder =
     messages.length === 0
-      ? "Describe what you want to build, or paste a PRD..."
-      : "Answer the question above...";
+      ? mode === "demo"
+        ? "Paste a PRD or describe the app you want the floor to build..."
+        : "Describe what you want to build, or paste a PRD..."
+      : mode === "demo"
+        ? "Answer the question so the demo can keep moving..."
+        : "Answer the question above...";
 
   return (
     <div className={styles.chat}>
       <div className={styles.messages} ref={messagesRef}>
         {messages.length === 0 && !streamingContent && (
           <div className={styles.empty}>
-            Start by describing your idea. It can be a rough sketch or a
-            detailed spec.
+            {mode === "demo"
+              ? "Start with a rough brief or a full PRD. We&apos;ll tighten it, then hand it to the floor."
+              : "Start by describing your idea. It can be a rough sketch or a detailed spec."}
           </div>
         )}
 
@@ -117,11 +124,17 @@ export function ChatInterface({
           <div>
             {!user && (
               <span className={styles.authHint}>
-                Sign in with GitHub to continue{" "}
+                {mode === "demo"
+                  ? "Demo runs can continue without GitHub sign-in "
+                  : "Sign in with GitHub to continue "}
               </span>
             )}
             <button className={styles.buildButton} onClick={onFinalize}>
-              {user ? "Build it" : "Sign in & build"}
+              {mode === "demo"
+                ? "Launch factory floor"
+                : user
+                  ? "Launch pipeline"
+                  : "Sign in with GitHub to launch"}
             </button>
           </div>
         </div>
@@ -144,7 +157,7 @@ export function ChatInterface({
             onClick={handleSubmit}
             disabled={disabled || !input.trim()}
           >
-            Send
+            {mode === "demo" ? "Shape PRD" : "Send"}
           </button>
         </div>
       )}

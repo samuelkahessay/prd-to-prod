@@ -229,7 +229,6 @@ function itemTransit(
 function computeAmbient(state: FactoryState): AmbientState {
   const agents = Object.values(state.agents);
   if (agents.some((a) => a.state === "blocked")) return "blocked";
-  if (agents.some((a) => a.state === "celebrating")) return "celebrating";
   if (agents.some((a) => a.state === "working")) return "busy";
   return "quiet";
 }

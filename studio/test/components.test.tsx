@@ -16,12 +16,11 @@ import type { EvidenceRow, Run } from "@/lib/types";
 describe("Hero", () => {
   it("renders headline and CTA", () => {
     render(<Hero />);
-    expect(screen.getByText("Powered by GitHub Agentic Workflows")).toBeInTheDocument();
-    expect(screen.getByText(/Send a PRD/)).toBeInTheDocument();
-    expect(screen.getByText(/Get a deployed app/)).toBeInTheDocument();
-    expect(screen.getByText(/\$1\./)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Send your PRD" })).toHaveAttribute("href", "/build");
-    expect(screen.getByRole("link", { name: "Watch it build" })).toHaveAttribute("href", "/build?demo=true");
+    expect(screen.getByText("Five agents. One room. One governed build.")).toBeInTheDocument();
+    expect(screen.getByText(/Paste a PRD/i)).toBeInTheDocument();
+    expect(screen.getByText(/Watch five agents build it/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Watch demo" })).toHaveAttribute("href", "/demo");
+    expect(screen.getByRole("link", { name: "Run your own PRD" })).toHaveAttribute("href", "/build");
   });
 });
 
@@ -29,13 +28,14 @@ describe("StickyNav", () => {
   it("renders anchor links and CTA", () => {
     render(<StickyNav />);
     expect(screen.getByRole("link", { name: "prd to prod" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Run your PRD" })).toHaveAttribute("href", "/build");
     expect(screen.getByRole("link", { name: "Pricing" })).toHaveAttribute("href", "#pricing");
     expect(screen.getByRole("link", { name: "How it works" })).toHaveAttribute("href", "#how-it-works");
     expect(screen.getByRole("link", { name: "GitHub" })).toHaveAttribute(
       "href",
       "https://github.com/samuelkahessay/prd-to-prod",
     );
-    expect(screen.getByRole("link", { name: "Send your PRD" })).toHaveAttribute("href", "/build");
+    expect(screen.getByRole("link", { name: "Watch demo" })).toHaveAttribute("href", "/demo");
   });
 
   it("adds the scrolled class after scrolling past the threshold", () => {
@@ -57,11 +57,11 @@ describe("StickyNav", () => {
 describe("Pricing", () => {
   it("renders the $1 offer and self-hosted option", () => {
     render(<Pricing />);
-    expect(screen.getByRole("heading", { name: "$1. One PRD. One deployed app." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "$1. One PRD. One governed pipeline run." })).toBeInTheDocument();
     expect(screen.getByText("Early adopter")).toBeInTheDocument();
     expect(screen.getByText("Run it yourself")).toBeInTheDocument();
     expect(screen.getByText("Scope")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Send your PRD" })).toHaveAttribute("href", "/build");
+    expect(screen.getByRole("link", { name: "Watch guided demo" })).toHaveAttribute("href", "/demo");
     expect(screen.getByRole("link", { name: "View on GitHub" })).toHaveAttribute(
       "href",
       "https://github.com/samuelkahessay/prd-to-prod",
@@ -72,9 +72,9 @@ describe("Pricing", () => {
 describe("WhatYouGet", () => {
   it("renders the core deliverables", () => {
     render(<WhatYouGet />);
-    expect(screen.getByRole("heading", { name: "Not a demo. A real repo handoff." })).toBeInTheDocument();
-    expect(screen.getByText("A real repo")).toBeInTheDocument();
-    expect(screen.getByText("An inspectable beta run")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "The demo is cinematic. The handoff is real." })).toBeInTheDocument();
+    expect(screen.getByText("A guided factory-floor demo")).toBeInTheDocument();
+    expect(screen.getByText("A real repo handoff")).toBeInTheDocument();
     expect(screen.getByText("Optional deploy validation")).toBeInTheDocument();
   });
 });
@@ -82,7 +82,7 @@ describe("WhatYouGet", () => {
 describe("HowItWorks", () => {
   it("renders the human boundary link", () => {
     render(<HowItWorks />);
-    expect(screen.getByRole("heading", { name: "Agents build inside a human-owned boundary." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Paste the PRD. Then watch the room work." })).toBeInTheDocument();
     expect(screen.getByText("Human boundary")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Read the autonomy policy" })).toHaveAttribute(
       "href",
@@ -149,12 +149,9 @@ describe("Pipeline animation queues", () => {
 describe("BottomCta", () => {
   it("renders the final call to action", () => {
     render(<BottomCta />);
-    expect(screen.getByRole("heading", { name: "Send a PRD. Get a deployed app. $1." })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Send your PRD" })).toHaveAttribute("href", "/build");
-    expect(screen.getByRole("link", { name: "View on GitHub" })).toHaveAttribute(
-      "href",
-      "https://github.com/samuelkahessay/prd-to-prod",
-    );
+    expect(screen.getByRole("heading", { name: "Start with the floor. End with repo proof." })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Watch demo" })).toHaveAttribute("href", "/demo");
+    expect(screen.getByRole("link", { name: "Run your own PRD" })).toHaveAttribute("href", "/build");
   });
 });
 

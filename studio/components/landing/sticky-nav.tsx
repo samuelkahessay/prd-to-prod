@@ -23,6 +23,7 @@ export function StickyNav() {
       <a href="/" className={styles.logo}>prd to prod</a>
       <div className={styles.right}>
         <div className={styles.links}>
+          <a href="/build" className={styles.link}>Run your PRD</a>
           <a href="#pricing" className={styles.link}>Pricing</a>
           <a href="#how-it-works" className={styles.link}>How it works</a>
           <a
@@ -34,7 +35,7 @@ export function StickyNav() {
             GitHub
           </a>
         </div>
-        <a href="/build" className={styles.cta}>Send your PRD</a>
+        <a href="/demo" className={styles.cta}>Watch demo</a>
         <button
           className={`${styles.menuBtn} ${menuOpen ? styles.menuOpen : ""}`}
           onClick={() => setMenuOpen(!menuOpen)}
@@ -47,6 +48,8 @@ export function StickyNav() {
       </div>
       {menuOpen && (
         <div className={styles.dropdown}>
+          <a href="/demo" className={styles.dropLink} onClick={() => setMenuOpen(false)}>Watch demo</a>
+          <a href="/build" className={styles.dropLink} onClick={() => setMenuOpen(false)}>Run your PRD</a>
           <a href="#pricing" className={styles.dropLink} onClick={() => setMenuOpen(false)}>Pricing</a>
           <a href="#how-it-works" className={styles.dropLink} onClick={() => setMenuOpen(false)}>How it works</a>
           <a

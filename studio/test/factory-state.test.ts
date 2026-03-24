@@ -1,27 +1,34 @@
 import { createInitialState, factoryReducer } from "@/components/factory/factory-state";
 
-describe("factoryReducer", () => {
-  it("recomputes ambient after an agent is unblocked", () => {
+describe("factory ambient state", () => {
+  it("keeps ambient busy for intermediate celebrate beats while work is still active", () => {
     let state = createInitialState();
+    state = factoryReducer(state, {
+      type: "AGENT_START_WORK",
+      agent: "developer",
+      task: "Building",
+    });
 
     state = factoryReducer(state, {
-      type: "AGENT_BLOCKED",
+      type: "AGENT_CELEBRATE",
       agent: "planner",
-      reason: "Waiting for installation",
     });
-    expect(state.ambient).toBe("blocked");
 
-    state = factoryReducer(state, {
-      type: "AGENT_UNBLOCKED",
-      agent: "planner",
-    });
-    expect(state.ambient).toBe("quiet");
+    expect(state.ambient).toBe("busy");
   });
 
-  it("switches ambient to celebrating when an agent completes work", () => {
-    const state = factoryReducer(createInitialState(), {
+  it("still allows the explicit terminal celebration ambient", () => {
+    let state = createInitialState();
+    state = factoryReducer(state, {
       type: "AGENT_CELEBRATE",
-      agent: "reviewer",
+      agent: "deployer",
+    });
+
+    expect(state.ambient).toBe("quiet");
+
+    state = factoryReducer(state, {
+      type: "AMBIENT_CHANGE",
+      ambient: "celebrating",
     });
 
     expect(state.ambient).toBe("celebrating");

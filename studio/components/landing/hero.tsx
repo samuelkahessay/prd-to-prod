@@ -1,25 +1,63 @@
+import Image from "next/image";
 import styles from "./hero.module.css";
 
 export function Hero() {
   return (
     <section className={styles.hero}>
-      <p className={styles.eyebrow}>Powered by GitHub Agentic Workflows</p>
-      <h1 className={styles.headline}>
-        Send a PRD.<br />
-        Get a deployed app for $1.
-      </h1>
-      <p className={styles.subtitle}>
-        Autonomous agents decompose your PRD into issues, implement each one,
-        pass automated review, and deploy to Vercel. You get a GitHub repo you
-        own with the full agentic CI/CD pipeline wired in.
-      </p>
-      <div className={styles.actions}>
-        <a href="/build" className={styles.ctaPrimary}>Send your PRD</a>
-        <a href="/build?demo=true" className={styles.ctaSecondary}>Watch it build</a>
+      <div className={styles.copy}>
+        <p className={styles.eyebrow}>Five agents. One room. One governed build.</p>
+        <h1 className={styles.headline}>
+          Paste a PRD.<br />
+          Watch five agents build it.
+        </h1>
+        <p className={styles.subtitle}>
+          prd-to-prod turns a product brief into a real GitHub repo through a
+          governed multi-agent pipeline. The factory floor gives you the
+          spectacle. The repo handoff and deploy proof close the loop.
+        </p>
+        <div className={styles.actions}>
+          <a href="/demo" className={styles.ctaPrimary}>Watch demo</a>
+          <a href="/build" className={styles.ctaSecondary}>Run your own PRD</a>
+        </div>
+        <p className={styles.scope}>
+          Web apps only. Repo handoff always. Deploy proof when configured.
+        </p>
       </div>
-      <p className={styles.scope}>
-        Web apps only. Next.js, Express, Node.
-      </p>
+
+      <div className={styles.media} aria-label="Demo stills">
+        <article className={`${styles.frame} ${styles.framePrimary}`}>
+          <div className={styles.frameMeta}>Factory floor</div>
+          <div className={styles.frameImageWrap}>
+            <Image
+              src="/demo/demo-floor.png"
+              alt="Factory floor replay with five animated agents at isometric workstations"
+              fill
+              priority
+              className={styles.frameImage}
+              sizes="(max-width: 900px) 100vw, 44vw"
+            />
+          </div>
+          <p className={styles.frameCaption}>
+            The viral moment: agents plan, code, review, and merge inside the room.
+          </p>
+        </article>
+
+        <article className={`${styles.frame} ${styles.frameSecondary}`}>
+          <div className={styles.frameMeta}>Proof endcap</div>
+          <div className={styles.frameImageWrap}>
+            <Image
+              src="/demo/demo-proof.png"
+              alt="Proof endcap showing repository and deployment evidence after the floor completes"
+              fill
+              className={styles.frameImage}
+              sizes="(max-width: 900px) 100vw, 28vw"
+            />
+          </div>
+          <p className={styles.frameCaption}>
+            Then cut to repo and deploy evidence so the spectacle stays credible.
+          </p>
+        </article>
+      </div>
     </section>
   );
 }

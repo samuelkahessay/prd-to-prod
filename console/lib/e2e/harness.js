@@ -211,7 +211,9 @@ function createE2EHarness({
         } else {
           appendStep(runId, run.activeLane || run.lane, "pre-e2e-gate", "passed", "Preflight gate skipped (E2E_SKIP_PREFLIGHT).");
         }
-        const auth = await validateHarnessAuth(runId, run.cookieJarPath);
+        const auth = requiresHarnessAuth(run.lane)
+          ? await validateHarnessAuth(runId, run.cookieJarPath)
+          : null;
 
         if (run.lane === "full-ladder") {
           for (const lane of FULL_LADDER_SEQUENCE) {
@@ -315,6 +317,10 @@ function createE2EHarness({
   }
 
   async function executeLane(runId, lane, auth) {
+    if (lane === "demo-browser-canary") {
+      return runDemoBrowserCanaryLane(runId, lane);
+    }
+
     if (lane === "browser-canary") {
       return runBrowserCanaryLane(runId, lane, auth);
     }
@@ -733,6 +739,119 @@ function createE2EHarness({
         buildEvents: pipelineStart.buildEvents,
         githubSnapshot,
         rootIssueNumber: pipelineStart.event?.data?.rootIssueNumber || null,
+        passed: true,
+      };
+    } finally {
+      await browser.close();
+    }
+  }
+
+  async function runDemoBrowserCanaryLane(runId, lane) {
+    appendStep(runId, lane, "browser.launch", "running", "Launching public demo smoke.");
+
+    let playwright;
+    try {
+      playwright = require("playwright");
+    } catch {
+      return failLaneResult(lane, null, {
+        detail: "The demo-browser-canary lane requires the `playwright` package on the local machine.",
+        uiFlowFailed: true,
+      });
+    }
+
+    const requestedRepoName = buildHarnessRepoName({
+      lane,
+      runId,
+      prdMarkdown: STANDARD_PRD_TEXT,
+    });
+    const browser = await playwright.chromium.launch({
+      headless: process.env.E2E_HEADLESS !== "false",
+    });
+
+    try {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+
+      await page.goto(
+        `${stripTrailingSlash(studioUrl)}/demo?${new URLSearchParams({
+          e2e_repo_name: requestedRepoName,
+          preset: "recording",
+        }).toString()}`,
+        {
+          waitUntil: "networkidle",
+        }
+      );
+
+      await page.getByRole("textbox").waitFor({ timeout: 60_000 });
+      appendStep(runId, lane, "demo.entry", "passed", "Public demo entry loaded.");
+
+      await page.getByRole("textbox").fill(STANDARD_PRD_TEXT);
+      await page.getByRole("button", { name: "Shape PRD" }).click();
+      await page.getByRole("button", { name: "Launch factory floor" }).waitFor({
+        timeout: 60_000,
+      });
+      await page.getByRole("button", { name: "Launch factory floor" }).click();
+
+      await page.waitForURL(/\/demo\/[A-Za-z0-9-]+/, { timeout: 90_000 });
+      const sessionId = page.url().split("/demo/")[1]?.split("?")[0];
+      if (!sessionId) {
+        return failLaneResult(lane, null, {
+          detail: "Demo smoke did not reach a demo session page.",
+          uiFlowFailed: true,
+        });
+      }
+
+      e2eStore.updateRun(runId, {
+        build_session_id: sessionId,
+      });
+      syncLocalSession(sessionId, {
+        status: "building",
+        is_demo: true,
+      });
+      appendStep(runId, lane, "browser.launch", "passed", `Demo smoke reached session ${sessionId}.`);
+
+      const floorLocator = page.locator('[data-capture="factory-floor"]').first();
+      await floorLocator.waitFor({ state: "visible", timeout: 90_000 });
+      appendStep(runId, lane, "factory-floor", "passed", "Factory floor stage rendered.");
+
+      const proofLocator = page
+        .locator('[data-capture="proof-endcap"][data-proof-ready="true"]')
+        .first();
+      await proofLocator.waitFor({ state: "visible", timeout: 120_000 });
+      appendStep(runId, lane, "proof", "passed", "Proof endcap reached terminal state.");
+
+      const repoLink = page.locator(
+        '[data-capture="proof-endcap"] a[href*="github.com"]'
+      );
+      const repoUrl = (await repoLink.count()) > 0
+        ? (await repoLink.first().getAttribute("href")) || ""
+        : "";
+      const repoFullName = (await repoLink.count()) > 0
+        ? (await repoLink.first().textContent())?.trim() || ""
+        : "";
+
+      e2eStore.updateRun(runId, {
+        repo_full_name: repoFullName || requestedRepoName,
+        repo_url: repoUrl,
+      });
+      syncLocalSession(sessionId, {
+        status: "complete",
+        github_repo: repoFullName || requestedRepoName,
+        github_repo_url: repoUrl || null,
+        is_demo: true,
+      });
+
+      return {
+        lane,
+        sessionId,
+        session: {
+          id: sessionId,
+          status: "complete",
+          github_repo: repoFullName || requestedRepoName,
+          github_repo_url: repoUrl || null,
+          is_demo: true,
+        },
+        githubSnapshot: baseSnapshot(),
         passed: true,
       };
     } finally {
@@ -1290,7 +1409,12 @@ function laneToRepoCode(lane) {
   if (lane === "decomposer-only") return "dc";
   if (lane === "first-pr") return "fp";
   if (lane === "browser-canary") return "bc";
+  if (lane === "demo-browser-canary") return "db";
   return "run";
+}
+
+function requiresHarnessAuth(lane) {
+  return lane !== "demo-browser-canary";
 }
 
 function readEnvValue(primary, fallback) {

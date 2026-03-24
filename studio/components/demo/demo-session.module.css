@@ -1,0 +1,377 @@
+.page {
+  min-height: 100vh;
+  padding: 40px 24px 56px;
+  background:
+    radial-gradient(circle at top left, rgba(74, 111, 216, 0.12), transparent 28%),
+    radial-gradient(circle at top right, rgba(61, 154, 106, 0.11), transparent 24%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, white) 0%, var(--cream) 100%);
+}
+
+.shell {
+  width: min(1220px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 28px;
+}
+
+.header {
+  display: grid;
+  gap: 20px;
+  align-items: end;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.headerCopy {
+  display: grid;
+  gap: 10px;
+}
+
+.kickerRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kicker {
+  color: var(--accent);
+}
+
+.kickerDivider {
+  width: 28px;
+  height: 1px;
+  background: var(--rule-strong);
+}
+
+.kickerMuted {
+  color: var(--ink-muted);
+}
+
+.title {
+  font-size: clamp(34px, 6vw, 68px);
+  line-height: 0.94;
+  letter-spacing: -0.05em;
+  max-width: 12ch;
+}
+
+.subtitle {
+  max-width: 58ch;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--ink-mid);
+}
+
+.animationDock {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 0 6px;
+}
+
+.stageCard,
+.infoCard,
+.proofCard {
+  border: 1px solid var(--rule);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(6px);
+}
+
+.stageCard {
+  overflow: hidden;
+}
+
+.stageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px 16px;
+}
+
+.stageLabel,
+.cardLabel,
+.factLabel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.stageBeat {
+  margin-top: 8px;
+  font-size: 22px;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  max-width: 22ch;
+}
+
+.metricRail {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.metricChip {
+  min-height: 34px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--rule));
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.lowerGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+}
+
+.infoCard,
+.proofCard {
+  padding: 22px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.cardCopy {
+  color: var(--ink-mid);
+  line-height: 1.65;
+}
+
+.statusList {
+  display: grid;
+  gap: 10px;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-mid);
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--good));
+  flex: 0 0 auto;
+}
+
+.error {
+  color: var(--danger);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.proofCard {
+  position: relative;
+  border-color: color-mix(in srgb, var(--good) 28%, var(--rule));
+  transform: translateY(12px);
+  opacity: 0.72;
+  transition: transform 360ms ease, opacity 360ms ease, border-color 360ms ease;
+}
+
+.proofCardVisible {
+  transform: translateY(0);
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--good) 55%, var(--rule));
+}
+
+.proofTitle {
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.proofFacts {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.proofStepRail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.proofStep {
+  min-height: 30px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--rule-strong) 55%, transparent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.proofStepDone {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--good) 45%, var(--rule));
+  background: color-mix(in srgb, white 72%, var(--good) 28%);
+}
+
+.fact {
+  display: grid;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+
+.factValue {
+  font-size: 16px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.factLink {
+  font-size: 16px;
+  line-height: 1.45;
+  word-break: break-word;
+  color: inherit;
+  text-decoration-color: color-mix(in srgb, var(--good) 45%, var(--rule));
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+
+.factNote {
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.proofTrail {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.proofTrailItem {
+  display: grid;
+  gap: 4px;
+  padding: 12px 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--good) 18%, var(--rule));
+}
+
+.proofTrailLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.proofTrailDetail,
+.proofTrailLink {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.proofTrailLink {
+  text-decoration-color: color-mix(in srgb, var(--good) 45%, var(--rule));
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.actionPrimary,
+.actionSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.actionPrimary {
+  background: var(--good);
+  color: white;
+}
+
+.actionSecondary {
+  border: 1px solid var(--rule-strong);
+}
+
+.inlineNote {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
+@media (max-width: 980px) {
+  .header,
+  .lowerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .animationDock {
+    justify-content: flex-start;
+  }
+
+  .stageHeader {
+    display: grid;
+  }
+
+  .metricRail {
+    justify-content: flex-start;
+  }
+
+  .proofFacts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 28px 16px 40px;
+  }
+
+  .title {
+    max-width: none;
+  }
+
+  .subtitle {
+    font-size: 16px;
+  }
+
+  .stageBeat {
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proofCard {
+    transform: none;
+    transition: none;
+  }
+}

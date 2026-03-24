@@ -4,6 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatInterface } from "@/components/build/chat-interface";
 import { buildApi } from "@/lib/build-api";
 import { navigateTo, replaceCurrentUrl } from "@/lib/browser-navigation";
+import {
+  appendDemoReplayPreset,
+  normalizeDemoReplayPreset,
+  type DemoReplayPreset,
+} from "@/lib/demo-preset";
 import type {
   BuildEvent,
   BuildSession,
@@ -18,9 +23,15 @@ interface ChatMessage {
   parsed?: LLMParsedResponse;
 }
 
+interface BuildPageProps {
+  initialMode?: "build" | "demo";
+}
+
 const RESUME_ACTION_FINALIZE = "finalize";
 
-export default function BuildPage() {
+export default function BuildPage({
+  initialMode = "build",
+}: BuildPageProps) {
   const [user, setUser] = useState<BuildUser | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -31,6 +42,7 @@ export default function BuildPage() {
   const [resumeAction, setResumeAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [demo, setDemo] = useState(false);
+  const [entryMode, setEntryMode] = useState<"build" | "demo">(initialMode);
   const autoResumeHandledRef = useRef(false);
 
   const [authChecked, setAuthChecked] = useState(false);
@@ -38,7 +50,12 @@ export default function BuildPage() {
   // Check auth status on mount — redirect to OAuth if not authenticated (unless demo)
   useEffect(() => {
     const url = new URL(window.location.href);
-    const isDemo = url.searchParams.get("demo") === "true";
+    const isDemo = entryMode === "demo" || url.searchParams.get("demo") === "true";
+    const hasPersistedSession = url.searchParams.has("session");
+
+    if (isDemo && entryMode !== "demo") {
+      setEntryMode("demo");
+    }
 
     buildApi
       .getMe()
@@ -49,13 +66,15 @@ export default function BuildPage() {
       .catch(() => {
         setUser(null);
         setAuthChecked(true);
-        if (!isDemo) {
+        if (!isDemo && !hasPersistedSession) {
           navigateTo(
-            `/pub/auth/github?return_to=${encodeURIComponent("/build" + url.search)}`
+            `/pub/auth/github?return_to=${encodeURIComponent(
+              `${url.pathname}${url.search}`
+            )}`
           );
         }
       });
-  }, []);
+  }, [entryMode]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -84,6 +103,9 @@ export default function BuildPage() {
       .then(({ session, messages: storedMessages }) => {
         setSessionId(session.id);
         setDemo(!!session.is_demo);
+        if (session.is_demo) {
+          setEntryMode("demo");
+        }
         setMessages(storedMessages.map(toChatMessage).filter(isChatMessage));
         setPrdReady(hasReadyPrd(session, storedMessages));
       })
@@ -100,25 +122,40 @@ export default function BuildPage() {
   // Auto-start demo session when ?demo=true is in the URL
   useEffect(() => {
     const url = new URL(window.location.href);
-    if (url.searchParams.get("demo") !== "true") return;
+    const isDemoEntry =
+      entryMode === "demo" || url.searchParams.get("demo") === "true";
+    const persistedSessionId = url.searchParams.get("session");
 
-    // Remove demo param from URL immediately
-    url.searchParams.delete("demo");
-    replaceCurrentUrl(toRelativeUrl(url));
+    if (!isDemoEntry || persistedSessionId) {
+      return;
+    }
 
-    // Create demo session (startSession isn't available yet, so call API directly)
-    buildApi.createSession(true).then(({ sessionId: id }) => {
-      setSessionId(id);
-      setDemo(true);
-      // Re-fetch auth since demo session sets a cookie
-      buildApi.getMe().then(setUser).catch(() => setUser(null));
-      const nextUrl = new URL(window.location.href);
-      nextUrl.searchParams.set("session", id);
-      replaceCurrentUrl(toRelativeUrl(nextUrl));
-    }).catch((err) => {
-      setError(err instanceof Error ? err.message : "Failed to start demo session");
-    });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const replayPreset = normalizeDemoReplayPreset(url.searchParams.get("preset"));
+
+    if (url.searchParams.get("demo") === "true") {
+      url.searchParams.delete("demo");
+      appendDemoReplayPreset(url.searchParams, replayPreset);
+      replaceCurrentUrl(toRelativeUrl(url));
+    }
+
+    buildApi
+      .createSession(true)
+      .then(({ sessionId: id }) => {
+        setSessionId(id);
+        setDemo(true);
+        setEntryMode("demo");
+        buildApi.getMe().then(setUser).catch(() => setUser(null));
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set("session", id);
+        appendDemoReplayPreset(nextUrl.searchParams, replayPreset);
+        replaceCurrentUrl(toRelativeUrl(nextUrl));
+      })
+      .catch((err) => {
+        setError(
+          err instanceof Error ? err.message : "Failed to start demo session"
+        );
+      });
+  }, [entryMode]);
 
   const persistSessionInUrl = useCallback(
     (nextSessionId: string, nextResumeAction?: string | null) => {
@@ -134,12 +171,16 @@ export default function BuildPage() {
     []
   );
 
-  const startSession = useCallback(async (demo = false) => {
-    const { sessionId: id } = await buildApi.createSession(demo);
-    setSessionId(id);
-    persistSessionInUrl(id);
-    return id;
-  }, [persistSessionInUrl]);
+  const startSession = useCallback(
+    async (demoMode = entryMode === "demo") => {
+      const { sessionId: id } = await buildApi.createSession(demoMode);
+      setSessionId(id);
+      setDemo(demoMode);
+      persistSessionInUrl(id);
+      return id;
+    },
+    [entryMode, persistSessionInUrl]
+  );
 
   const finalizeAndRedirect = useCallback(
     async (id: string) => {
@@ -147,10 +188,15 @@ export default function BuildPage() {
       persistSessionInUrl(id, null);
       const result = await buildApi.finalizeSession(id);
       navigateTo(
-        buildStatusPath(result.sessionId, readRequestedRepoNameFromLocation())
+        buildStatusPath(
+          result.sessionId,
+          readRequestedRepoNameFromLocation(),
+          demo,
+          readReplayPresetFromLocation()
+        )
       );
     },
-    [persistSessionInUrl]
+    [demo, persistSessionInUrl]
   );
 
   const sendMessage = useCallback(
@@ -214,11 +260,18 @@ export default function BuildPage() {
 
     if (!user) {
       const requestedRepoName = readRequestedRepoNameFromLocation();
+      const replayPreset = readReplayPresetFromLocation();
       setResumeAction(RESUME_ACTION_FINALIZE);
       persistSessionInUrl(sessionId, RESUME_ACTION_FINALIZE);
       navigateTo(
         `/pub/auth/github?return_to=${encodeURIComponent(
-          buildPagePath(sessionId, RESUME_ACTION_FINALIZE, requestedRepoName)
+          buildPagePath(
+            sessionId,
+            RESUME_ACTION_FINALIZE,
+            requestedRepoName,
+            entryMode,
+            replayPreset
+          )
         )}`
       );
       return;
@@ -231,7 +284,14 @@ export default function BuildPage() {
         err instanceof Error ? err.message : "Failed to finalize"
       );
     }
-  }, [finalizeAndRedirect, persistSessionInUrl, sessionId, user]);
+  }, [entryMode, finalizeAndRedirect, persistSessionInUrl, sessionId, user]);
+
+  const isDemoExperience = demo || entryMode === "demo";
+  const hasPendingSessionRestore =
+    sessionId !== null ||
+    hydratingSession ||
+    (typeof window !== "undefined" &&
+      new URL(window.location.href).searchParams.has("session"));
 
   useEffect(() => {
     if (
@@ -262,18 +322,20 @@ export default function BuildPage() {
     return (
       <div className={styles.page}>
         <header className={styles.header}>
-          <h1 className={styles.title}>Build something</h1>
+          <h1 className={styles.title}>
+            {isDemoExperience ? "Watch the floor take over" : "Launch a governed build"}
+          </h1>
           <p className={styles.subtitle}>Checking authentication&hellip;</p>
         </header>
       </div>
     );
   }
 
-  if (!user && !demo) {
+  if (!user && !isDemoExperience && !hasPendingSessionRestore) {
     return (
       <div className={styles.page}>
         <header className={styles.header}>
-          <h1 className={styles.title}>Build something</h1>
+          <h1 className={styles.title}>Launch a governed build</h1>
           <p className={styles.subtitle}>Redirecting to GitHub for authentication&hellip;</p>
         </header>
       </div>
@@ -283,12 +345,17 @@ export default function BuildPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Build something</h1>
+        <h1 className={styles.title}>
+          {isDemoExperience
+            ? "Paste a PRD. Watch five agents build it."
+            : "Refine the PRD, then launch the pipeline."}
+        </h1>
         <p className={styles.subtitle}>
-          Describe what you want to build. We&apos;ll refine it together, then
-          our agents will build it for you.
+          {isDemoExperience
+            ? "Shape the brief in a few turns, then cut to the factory floor for the cinematic replay."
+            : "Describe what you want to build. We&apos;ll refine the scope together, then launch a governed pipeline run."}
         </p>
-        {demo && <span className={styles.demoPill}>Demo</span>}
+        {isDemoExperience && <span className={styles.demoPill}>Demo</span>}
       </header>
 
       <ChatInterface
@@ -300,6 +367,7 @@ export default function BuildPage() {
         onFinalize={handleFinalize}
         user={user}
         error={error}
+        mode={isDemoExperience ? "demo" : "build"}
       />
     </div>
   );
@@ -308,7 +376,9 @@ export default function BuildPage() {
 function buildPagePath(
   sessionId: string,
   resumeAction?: string | null,
-  requestedRepoName?: string | null
+  requestedRepoName?: string | null,
+  entryMode: "build" | "demo" = "build",
+  replayPreset: DemoReplayPreset = "demo"
 ): string {
   const params = new URLSearchParams({ session: sessionId });
   if (resumeAction) {
@@ -317,15 +387,28 @@ function buildPagePath(
   if (requestedRepoName) {
     params.set("e2e_repo_name", requestedRepoName);
   }
-  return `/build?${params.toString()}`;
+  if (entryMode === "demo") {
+    appendDemoReplayPreset(params, replayPreset);
+  }
+  const basePath = entryMode === "demo" ? "/demo" : "/build";
+  return `${basePath}?${params.toString()}`;
 }
 
-function buildStatusPath(sessionId: string, requestedRepoName?: string | null): string {
+function buildStatusPath(
+  sessionId: string,
+  requestedRepoName?: string | null,
+  isDemo = false,
+  replayPreset: DemoReplayPreset = "demo"
+): string {
   const params = new URLSearchParams();
   if (requestedRepoName) {
     params.set("e2e_repo_name", requestedRepoName);
   }
-  return `/build/${sessionId}${params.size > 0 ? `?${params.toString()}` : ""}`;
+  if (isDemo) {
+    appendDemoReplayPreset(params, replayPreset);
+  }
+  const basePath = isDemo ? `/demo/${sessionId}` : `/build/${sessionId}`;
+  return `${basePath}${params.size > 0 ? `?${params.toString()}` : ""}`;
 }
 
 function toRelativeUrl(url: URL): string {
@@ -339,6 +422,16 @@ function readRequestedRepoNameFromLocation(): string | null {
   }
 
   return new URL(window.location.href).searchParams.get("e2e_repo_name");
+}
+
+function readReplayPresetFromLocation(): DemoReplayPreset {
+  if (typeof window === "undefined") {
+    return "demo";
+  }
+
+  return normalizeDemoReplayPreset(
+    new URL(window.location.href).searchParams.get("preset")
+  );
 }
 
 function hasReadyPrd(session: BuildSession, buildEvents: BuildEvent[]): boolean {

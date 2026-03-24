@@ -2,11 +2,11 @@ import { PipelineAnimation } from "./pipeline-animation";
 import styles from "./how-it-works.module.css";
 
 const STEPS = [
-  { num: "01", title: "Unlock", body: "Manual $1 entitlement, GitHub auth, and BYOK credentials", color: "accent" },
-  { num: "02", title: "Decompose", body: "PRD to scoped GitHub issues with acceptance criteria", color: "accent" },
-  { num: "03", title: "Build", body: "Agents implement each issue and open PRs with tests", color: "accent" },
-  { num: "04", title: "Review", body: "Automated review checks the spec while policy gates keep control with humans", color: "policy" },
-  { num: "05", title: "Handoff", body: "Repo link always. Deployment validation when Vercel credentials are configured", color: "good" },
+  { num: "01", title: "Paste PRD", body: "Start from a rough brief or a full product requirements doc", color: "accent" },
+  { num: "02", title: "Agents plan", body: "The planner decomposes the brief into issues and queues the room", color: "accent" },
+  { num: "03", title: "Agents code", body: "Implementation agents open PRs, react to checks, and keep the floor moving", color: "accent" },
+  { num: "04", title: "Review and merge", body: "The reviewer inspects the work while policy keeps the final boundary human-owned", color: "policy" },
+  { num: "05", title: "Repo proof", body: "Repo handoff always. Deploy proof when Vercel is configured", color: "good" },
 ];
 const HUMAN_BOUNDARY_URL =
   "https://github.com/samuelkahessay/prd-to-prod/blob/main/autonomy-policy.yml";
@@ -31,11 +31,11 @@ export function HowItWorks() {
         <span className={styles.labelGhaw}>Powered by GitHub Agentic Workflows</span>
       </div>
       <h2 className={styles.heading}>
-        Agents build inside a human-owned boundary.
+        Paste the PRD. Then watch the room work.
       </h2>
       <p className={styles.subtitle}>
-        The beta flow is explicit: entitlement, GitHub auth, BYOK, repo
-        provisioning, then bounded agent execution inside policy.
+        The public path is simple: shape the brief, launch the guided demo or a
+        governed run, then cut to repo proof and optional deploy proof.
       </p>
 
       <div className={styles.animation}>
@@ -60,8 +60,8 @@ export function HowItWorks() {
       <div className={styles.credibility}>
         <p className={styles.credibilityBody}>
           Built on <strong>GitHub Agentic Workflows</strong> — an open framework
-          from GitHub for autonomous development workflows. 31 upstream findings
-          filed, 17 fixes shipped across 7 releases.
+          from GitHub for autonomous development workflows. The floor is the
+          interface layer; the repo and policy boundary keep the system honest.
         </p>
       </div>
 
@@ -81,15 +81,15 @@ export function HowItWorks() {
           <div className={styles.boundaryBlock}>
             <p className={styles.boundaryTitle}>Humans own</p>
             <p className={styles.boundaryBody}>
-              Access codes, workflow authority, secrets, deploy routing, and
+              Access codes, secrets, deploy routing, workflow authority, and
               any expansion of scope.
             </p>
           </div>
           <div className={styles.boundaryBlock}>
             <p className={styles.boundaryTitle}>Agents own</p>
             <p className={styles.boundaryBody}>
-              Bounded implementation inside the repo once the beta gates are
-              satisfied.
+              Bounded implementation inside the repo once the run is authorized
+              and the PRD is locked.
             </p>
           </div>
         </div>

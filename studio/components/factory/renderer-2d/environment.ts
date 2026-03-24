@@ -3,13 +3,14 @@ import {
   IsoViewport,
   worldToScreen,
   drawIsoBlock,
+  drawIsoFlatQuad,
   drawWallQuad,
   strokeWallQuad,
-  ceilingAnchor,
   computeRoomAnchors,
   WORLD_STATIONS,
   ROOM_W,
-  ROOM_D,
+  getScreenQuadFromEdge,
+  traceScreenQuad,
 } from "./isometric";
 
 // Extended palette
@@ -34,6 +35,51 @@ const E = {
   wallBg: "#f0ebe4",
 };
 
+function fillQuad(
+  ctx: CanvasRenderingContext2D,
+  quad: ReturnType<typeof getScreenQuadFromEdge>,
+  fill: string
+) {
+  traceScreenQuad(ctx, quad);
+  ctx.fillStyle = fill;
+  ctx.fill();
+}
+
+function strokeQuad(
+  ctx: CanvasRenderingContext2D,
+  quad: ReturnType<typeof getScreenQuadFromEdge>,
+  stroke: string,
+  lineWidth: number
+) {
+  traceScreenQuad(ctx, quad);
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+}
+
+function clipQuad(
+  ctx: CanvasRenderingContext2D,
+  quad: ReturnType<typeof getScreenQuadFromEdge>
+) {
+  traceScreenQuad(ctx, quad);
+  ctx.clip();
+}
+
+function lerp(start: number, end: number, t: number): number {
+  return start + (end - start) * t;
+}
+
+function quadBounds(quad: ReturnType<typeof getScreenQuadFromEdge>) {
+  const xs = [quad.bl.x, quad.br.x, quad.tr.x, quad.tl.x];
+  const ys = [quad.bl.y, quad.br.y, quad.tr.y, quad.tl.y];
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+  };
+}
+
 // ── Backdrop (window, lamps) ──────────────────────────────
 
 export function drawBackdrop(
@@ -57,19 +103,55 @@ export function drawBackdrop(
   ctx.closePath();
   ctx.fill();
 
-  // Window frame
-  ctx.fillStyle = "#d4ccc0";
-  ctx.beginPath();
-  ctx.roundRect(cx - 4, wy - 4, ww + 8, wh + 8, 4);
-  ctx.fill();
+  const wallSlope =
+    (wallRight.y - wallTop.y) / Math.max(1, wallRight.x - wallTop.x);
+  const outerBottomLeft = { x: cx - 4, y: wy + wh + 4 };
+  const outerBottomRight = {
+    x: cx + ww + 4,
+    y: wy + wh + 4 + (ww + 8) * wallSlope,
+  };
+  const outerWindow = getScreenQuadFromEdge(
+    outerBottomLeft,
+    outerBottomRight,
+    0,
+    wh + 8
+  );
+  const innerBottomLeft = { x: cx + 6, y: wy + wh - 6 };
+  const innerBottomRight = {
+    x: cx + ww - 6,
+    y: wy + wh - 6 + (ww - 12) * wallSlope,
+  };
+  const innerWindow = getScreenQuadFromEdge(
+    innerBottomLeft,
+    innerBottomRight,
+    0,
+    wh - 12
+  );
 
-  // Sky gradient inside window
-  const skyGrad = ctx.createLinearGradient(cx, wy, cx, wy + wh);
+  fillQuad(ctx, outerWindow, "#d4ccc0");
+  fillQuad(ctx, innerWindow, "#7bb5dd");
+
+  // Sky gradient inside the skewed window
+  const skyBounds = quadBounds(innerWindow);
+  const skyGrad = ctx.createLinearGradient(
+    skyBounds.minX,
+    skyBounds.minY,
+    skyBounds.minX,
+    skyBounds.maxY
+  );
   skyGrad.addColorStop(0, E.skyTop);
   skyGrad.addColorStop(0.6, E.sky);
   skyGrad.addColorStop(1, "#b8dff0");
+
+  ctx.save();
+  clipQuad(ctx, innerWindow);
   ctx.fillStyle = skyGrad;
-  ctx.fillRect(cx, wy, ww, wh);
+  ctx.fillRect(
+    skyBounds.minX - 8,
+    skyBounds.minY - 8,
+    skyBounds.maxX - skyBounds.minX + 16,
+    skyBounds.maxY - skyBounds.minY + 16
+  );
 
   // Sun
   const sunX = cx + ww * 0.75;
@@ -124,14 +206,23 @@ export function drawBackdrop(
     }
   }
 
+  ctx.restore();
+
   // Window divider cross
+  const dividerBottomX = lerp(innerWindow.bl.x, innerWindow.br.x, 0.5);
   ctx.strokeStyle = "#c4bbb0";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(cx + ww / 2, wy);
-  ctx.lineTo(cx + ww / 2, wy + wh);
-  ctx.moveTo(cx, wy + wh * 0.45);
-  ctx.lineTo(cx + ww, wy + wh * 0.45);
+  ctx.moveTo(dividerBottomX, innerWindow.tl.y);
+  ctx.lineTo(dividerBottomX, innerWindow.bl.y);
+  ctx.moveTo(
+    lerp(innerWindow.tl.x, innerWindow.bl.x, 0.45),
+    lerp(innerWindow.tl.y, innerWindow.bl.y, 0.45)
+  );
+  ctx.lineTo(
+    lerp(innerWindow.tr.x, innerWindow.br.x, 0.45),
+    lerp(innerWindow.tr.y, innerWindow.br.y, 0.45)
+  );
   ctx.stroke();
 
   // Pendant lamps — x from back-wall projection, y near top of canvas
@@ -173,22 +264,39 @@ function drawPendantLamp(
   ctx.lineTo(x, lampY);
   ctx.stroke();
 
-  // Shade (trapezoid)
+  // Shade (skewed to match the isometric room)
+  const shade = [
+    { x, y: lampY },
+    { x: x + 7, y: lampY + 3 },
+    { x: x + 4, y: lampY + 9 },
+    { x: x - 7, y: lampY + 9 },
+    { x: x - 11, y: lampY + 5 },
+  ];
   ctx.fillStyle = "#c8a86e";
   ctx.beginPath();
-  ctx.moveTo(x - 6, lampY);
-  ctx.lineTo(x + 6, lampY);
-  ctx.lineTo(x + 10, lampY + 8);
-  ctx.lineTo(x - 10, lampY + 8);
+  ctx.moveTo(shade[0].x, shade[0].y);
+  for (let i = 1; i < shade.length; i += 1) {
+    ctx.lineTo(shade[i].x, shade[i].y);
+  }
   ctx.closePath();
   ctx.fill();
 
+  ctx.strokeStyle = "#ad8d58";
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(shade[4].x, shade[4].y);
+  ctx.lineTo(shade[1].x, shade[1].y);
+  ctx.lineTo(shade[2].x, shade[2].y);
+  ctx.stroke();
+
   // Warm glow
-  const glow = ctx.createRadialGradient(x, lampY + 12, 2, x, lampY + 12, 35);
+  const glow = ctx.createRadialGradient(x, lampY + 14, 2, x, lampY + 14, 30);
   glow.addColorStop(0, "rgba(255,220,150,0.1)");
   glow.addColorStop(1, "rgba(255,220,150,0)");
   ctx.fillStyle = glow;
-  ctx.fillRect(x - 35, lampY, 70, 50);
+  ctx.beginPath();
+  ctx.ellipse(x + 2, lampY + 22, 30, 14, Math.PI / 8, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // ── Workstation Furniture ─────────────────────────────────
@@ -241,7 +349,7 @@ function drawBlueprintTable(
   wx: number,
   wy: number,
   active: boolean,
-  time: number,
+  _time: number,
   state: FactoryState
 ) {
   // Warm wood desk
@@ -250,8 +358,6 @@ function drawBlueprintTable(
     front: E.deskFront,
     side: E.deskSide,
   });
-
-  const deskTop = worldToScreen(vp, wx + 1, wy + 0.6);
   const h = vp.cellSize * 0.7;
 
   // Whiteboard behind desk — on back-wall plane
@@ -290,21 +396,8 @@ function drawBlueprintTable(
 
   // Scattered papers on desk
   if (active) {
-    ctx.fillStyle = "#fff";
-    ctx.save();
-    ctx.translate(deskTop.x - 8, deskTop.y - h - 2);
-    ctx.rotate(-0.1);
-    ctx.fillRect(0, 0, 10, 13);
-    ctx.strokeStyle = "#ddd";
-    ctx.lineWidth = 0.5;
-    ctx.strokeRect(0, 0, 10, 13);
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(deskTop.x + 5, deskTop.y - h - 1);
-    ctx.rotate(0.05);
-    ctx.fillRect(0, 0, 10, 13);
-    ctx.restore();
+    drawIsoFlatQuad(ctx, vp, wx + 0.45, wy + 0.26, 0.34, 0.24, h + 2, "#fff");
+    drawIsoFlatQuad(ctx, vp, wx + 0.95, wy + 0.42, 0.36, 0.26, h + 1, "#fbfaf7");
   }
 }
 
@@ -324,7 +417,6 @@ function drawCodeForge(
   });
 
   const h = vp.cellSize * 0.65;
-  const monBase = worldToScreen(vp, wx + 0.3, wy + 0.2);
 
   // Triple monitors — wall quads standing on desk, facing back wall
   const monWorldW = 0.6; // each monitor width in world units
@@ -378,23 +470,9 @@ function drawCodeForge(
 
   // Mechanical keyboard
   if (active) {
-    const kbPos = worldToScreen(vp, wx + 0.8, wy + 0.7);
-    ctx.fillStyle = "#2a2a2a";
-    ctx.beginPath();
-    ctx.roundRect(kbPos.x, kbPos.y - h - 1, vp.cellSize * 0.8, vp.cellSize * 0.2, 1);
-    ctx.fill();
-    // Key rows
-    ctx.fillStyle = "#3a3a3a";
-    for (let r = 0; r < 2; r++) {
-      for (let c = 0; c < 8; c++) {
-        ctx.fillRect(
-          kbPos.x + 2 + c * (vp.cellSize * 0.09),
-          kbPos.y - h + r * (vp.cellSize * 0.08),
-          vp.cellSize * 0.07,
-          vp.cellSize * 0.06
-        );
-      }
-    }
+    drawIsoFlatQuad(ctx, vp, wx + 0.74, wy + 0.58, 0.72, 0.2, h + 1, "#2a2a2a");
+    drawIsoFlatQuad(ctx, vp, wx + 0.79, wy + 0.61, 0.28, 0.05, h + 2, "#3a3a3a");
+    drawIsoFlatQuad(ctx, vp, wx + 1.1, wy + 0.65, 0.28, 0.05, h + 2, "#3a3a3a");
   }
 
   // Coffee mug
@@ -567,18 +645,12 @@ function drawInspectionBay(
 
   // Documents with checkmark
   if (active) {
-    const docPos = worldToScreen(vp, wx + 1.5, wy + 0.8);
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(docPos.x, docPos.y - h - 1, 9, 12);
-    ctx.strokeStyle = "#ccc";
-    ctx.lineWidth = 0.5;
-    ctx.strokeRect(docPos.x, docPos.y - h - 1, 9, 12);
-    // Text lines
-    for (let i = 0; i < 4; i++) {
-      ctx.fillStyle = "#ddd";
-      ctx.fillRect(docPos.x + 2, docPos.y - h + 1 + i * 2.5, 5, 0.8);
-    }
+    drawIsoFlatQuad(ctx, vp, wx + 1.42, wy + 0.74, 0.28, 0.2, h + 1, "#fff");
+    drawIsoFlatQuad(ctx, vp, wx + 1.46, wy + 0.78, 0.18, 0.03, h + 2, "#ddd");
+    drawIsoFlatQuad(ctx, vp, wx + 1.48, wy + 0.84, 0.16, 0.03, h + 2, "#ddd");
+    drawIsoFlatQuad(ctx, vp, wx + 1.5, wy + 0.9, 0.14, 0.03, h + 2, "#ddd");
     // Red pen
+    const docPos = worldToScreen(vp, wx + 1.5, wy + 0.8);
     ctx.strokeStyle = "#c45a3c";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -702,6 +774,15 @@ export function drawAmbientObjects(
   drawClock(ctx, vp, time, state);
 }
 
+export function getCoffeeMachineSteamAnchor(vp: IsoViewport): { x: number; y: number } {
+  const pos = worldToScreen(vp, 0.7, 8.65);
+  const h = vp.cellSize * 0.5;
+  return {
+    x: pos.x + vp.cellSize * 0.08,
+    y: pos.y - h - 10,
+  };
+}
+
 function drawBookshelf(
   ctx: CanvasRenderingContext2D,
   vp: IsoViewport,
@@ -715,7 +796,7 @@ function drawBookshelf(
     side: E.woodDark,
   });
 
-  const pos = worldToScreen(vp, wx + 0.1, wy + 0.1);
+  const shelfFrontY = wy + 0.5;
   const h = vp.cellSize * 1.3;
 
   // Book spines
@@ -723,29 +804,55 @@ function drawBookshelf(
     "#c45a3c", "#4a6fd8", "#3d9a6a", "#9b7ed8", "#e8c547",
     "#2d2d2d", "#c45a3c", "#4a6fd8",
   ];
-  const shelfW = vp.cellSize * 0.8;
+  const ledgeStart = worldToScreen(vp, wx + 0.08, shelfFrontY);
+  const ledgeEnd = worldToScreen(vp, wx + 1.12, shelfFrontY);
+
+  for (const lift of [h * 0.28, h * 0.62]) {
+    ctx.strokeStyle = "rgba(120, 92, 64, 0.35)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(ledgeStart.x, ledgeStart.y - lift);
+    ctx.lineTo(ledgeEnd.x, ledgeEnd.y - lift);
+    ctx.stroke();
+  }
 
   for (let shelf = 0; shelf < 2; shelf++) {
-    const sy = pos.y - h + shelf * (h * 0.45) + 4;
-    let bx = pos.x + 2;
+    let bookWx = wx + 0.12;
+    const lift = shelf === 0 ? h * 0.16 : h * 0.5;
     for (let i = 0; i < 4; i++) {
       const seed = shelf * 4 + i + 1;
-      const bw = 2 + (Math.sin(seed * 7.31) * 0.5 + 0.5) * 2;
+      const worldWidth = 0.11 + (Math.sin(seed * 7.31) * 0.5 + 0.5) * 0.09;
       const bh = h * 0.3 - (Math.sin(seed * 3.17) * 0.5 + 0.5) * 4;
-      ctx.fillStyle = bookColors[(shelf * 4 + i) % bookColors.length];
-      ctx.fillRect(bx, sy + (h * 0.35 - bh), bw, bh);
-      bx += bw + 1;
+      const bookQuad = getScreenQuadFromEdge(
+        worldToScreen(vp, bookWx, shelfFrontY),
+        worldToScreen(vp, bookWx + worldWidth, shelfFrontY),
+        lift,
+        bh
+      );
+      fillQuad(ctx, bookQuad, bookColors[(shelf * 4 + i) % bookColors.length]);
+      strokeQuad(ctx, bookQuad, "rgba(40, 40, 40, 0.12)", 0.5);
+      bookWx += worldWidth + 0.03;
     }
   }
 
   // Tiny succulent on top
-  const topPos = worldToScreen(vp, wx + 0.5, wy + 0.25);
-  ctx.fillStyle = "#6b8c5a";
-  ctx.beginPath();
-  ctx.arc(topPos.x, topPos.y - h - 3, 3, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#8b6c4a";
-  ctx.fillRect(topPos.x - 2, topPos.y - h, 4, 3);
+  drawIsoBlock(ctx, vp, wx + 0.44, wy + 0.18, 0.14, vp.cellSize * 0.14, 0.14, {
+    top: "#9a7551",
+    front: "#875f3d",
+    side: "#7a5534",
+  });
+  const topPos = worldToScreen(vp, wx + 0.51, wy + 0.25);
+  for (const leaf of [-0.8, -0.1, 0.55]) {
+    ctx.strokeStyle = "#6b8c5a";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(topPos.x, topPos.y - h - 3);
+    ctx.lineTo(
+      topPos.x + Math.sin(leaf) * 5,
+      topPos.y - h - 8 - Math.cos(leaf) * 3
+    );
+    ctx.stroke();
+  }
 }
 
 function drawCoffeeMachine(
@@ -753,7 +860,7 @@ function drawCoffeeMachine(
   vp: IsoViewport,
   wx: number,
   wy: number,
-  time: number
+  _time: number
 ) {
   drawIsoBlock(ctx, vp, wx, wy, 0.8, vp.cellSize * 0.5, 0.6, {
     top: "#444",
@@ -763,19 +870,27 @@ function drawCoffeeMachine(
 
   const pos = worldToScreen(vp, wx + 0.2, wy + 0.15);
   const h = vp.cellSize * 0.5;
+  const displayQuad = getScreenQuadFromEdge(
+    worldToScreen(vp, wx + 0.08, wy + 0.6),
+    worldToScreen(vp, wx + 0.32, wy + 0.6),
+    h * 0.28,
+    vp.cellSize * 0.11
+  );
 
   // Display
-  ctx.fillStyle = "#2d5a2d";
-  ctx.fillRect(pos.x, pos.y - h - 2, vp.cellSize * 0.3, vp.cellSize * 0.12);
-  ctx.fillStyle = "#5aff5a";
-  ctx.font = `${Math.max(5, vp.cellSize * 0.12)}px monospace`;
-  ctx.textAlign = "left";
-  ctx.fillText("RDY", pos.x + 2, pos.y - h + 1);
+  fillQuad(ctx, displayQuad, "#2d5a2d");
+  const innerDisplay = getScreenQuadFromEdge(
+    worldToScreen(vp, wx + 0.11, wy + 0.6),
+    worldToScreen(vp, wx + 0.29, wy + 0.6),
+    h * 0.29,
+    vp.cellSize * 0.05
+  );
+  fillQuad(ctx, innerDisplay, "#5aff5a");
 
   // Brew button
   ctx.fillStyle = "#3d9a6a";
   ctx.beginPath();
-  ctx.arc(pos.x + vp.cellSize * 0.35, pos.y - h + 3, 2, 0, Math.PI * 2);
+  ctx.ellipse(pos.x + vp.cellSize * 0.35, pos.y - h + 3, 2.4, 1.8, -0.2, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -889,22 +1004,45 @@ function drawServerRack(
     front: "#2a2a2a",
     side: "#333",
   });
-
-  const pos = worldToScreen(vp, wx + 0.1, wy + 0.1);
   const h = vp.cellSize * 1.1;
+  const rackFaceY = wy + 0.6;
 
   // Drive bays
   for (let i = 0; i < 4; i++) {
-    const by = pos.y - h + 4 + i * (h * 0.2);
-    ctx.fillStyle = "#1a1a1a";
-    ctx.fillRect(pos.x, by, vp.cellSize * 0.45, h * 0.15);
+    const slotLift = h * 0.14 + i * (h * 0.19);
+    const slotHeight = h * 0.12;
+    const slotQuad = getScreenQuadFromEdge(
+      worldToScreen(vp, wx + 0.12, rackFaceY),
+      worldToScreen(vp, wx + 0.5, rackFaceY),
+      slotLift,
+      slotHeight
+    );
+    fillQuad(ctx, slotQuad, "#1a1a1a");
 
     // Blinking LEDs
     const phase = Math.sin(time * 3 + i * 1.7);
-    ctx.beginPath();
-    ctx.arc(pos.x + vp.cellSize * 0.38, by + h * 0.075, 1.5, 0, Math.PI * 2);
-    ctx.fillStyle = phase > 0 ? "#3d9a6a" : "#1a3a1a";
-    ctx.fill();
+    const ledQuad = getScreenQuadFromEdge(
+      worldToScreen(vp, wx + 0.44, rackFaceY),
+      worldToScreen(vp, wx + 0.49, rackFaceY),
+      slotLift + slotHeight * 0.28,
+      slotHeight * 0.34
+    );
+    fillQuad(ctx, ledQuad, phase > 0 ? "#3d9a6a" : "#1a3a1a");
+    if (phase > 0) {
+      const glowBounds = quadBounds(ledQuad);
+      ctx.fillStyle = "rgba(61,154,106,0.18)";
+      ctx.beginPath();
+      ctx.ellipse(
+        (glowBounds.minX + glowBounds.maxX) / 2,
+        (glowBounds.minY + glowBounds.maxY) / 2,
+        4,
+        2.5,
+        0.15,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
   }
 }
 
@@ -914,21 +1052,14 @@ function drawPottedPlant(
   wx: number,
   wy: number
 ) {
+  drawIsoBlock(ctx, vp, wx - 0.18, wy - 0.16, 0.36, vp.cellSize * 0.22, 0.32, {
+    top: "#c37a4d",
+    front: "#b8724a",
+    side: "#9f643f",
+  });
   const pos = worldToScreen(vp, wx, wy);
 
-  // Pot
-  ctx.fillStyle = "#b8724a";
-  ctx.beginPath();
-  ctx.moveTo(pos.x - 6, pos.y);
-  ctx.lineTo(pos.x + 6, pos.y);
-  ctx.lineTo(pos.x + 5, pos.y - 10);
-  ctx.lineTo(pos.x - 5, pos.y - 10);
-  ctx.closePath();
-  ctx.fill();
-
-  // Pot rim
-  ctx.fillStyle = "#a8623a";
-  ctx.fillRect(pos.x - 6, pos.y - 10, 12, 2);
+  const stemOriginY = pos.y - vp.cellSize * 0.22 - 3;
 
   // Leaves
   const leaves = [
@@ -943,14 +1074,14 @@ function drawPottedPlant(
 
   for (const leaf of leaves) {
     const tx = pos.x + Math.sin(leaf.angle) * leaf.len;
-    const ty = pos.y - 12 - Math.cos(leaf.angle) * leaf.len;
+    const ty = stemOriginY - 2 - Math.cos(leaf.angle) * leaf.len;
     ctx.strokeStyle = "#4a7a3a";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y - 10);
+    ctx.moveTo(pos.x, stemOriginY);
     ctx.quadraticCurveTo(
       pos.x + Math.sin(leaf.angle) * leaf.len * 0.5,
-      pos.y - 12 - Math.cos(leaf.angle) * leaf.len * 0.7,
+      stemOriginY - 2 - Math.cos(leaf.angle) * leaf.len * 0.7,
       tx,
       ty
     );
@@ -975,10 +1106,15 @@ function drawClock(
   const cx = clockWallPos.x;
   const cy = vp.canvasH * 0.06;
   const r = vp.cellSize * 0.4;
+  const clockScaleX = 0.9;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(clockScaleX, 1);
 
   // Face
   ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
   ctx.fillStyle = "#fff";
   ctx.fill();
   ctx.strokeStyle = "#c4bbb0";
@@ -989,8 +1125,8 @@ function drawClock(
   for (let i = 0; i < 12; i++) {
     const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
     ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(angle) * (r - 3), cy + Math.sin(angle) * (r - 3));
-    ctx.lineTo(cx + Math.cos(angle) * (r - 1), cy + Math.sin(angle) * (r - 1));
+    ctx.moveTo(Math.cos(angle) * (r - 3), Math.sin(angle) * (r - 3));
+    ctx.lineTo(Math.cos(angle) * (r - 1), Math.sin(angle) * (r - 1));
     ctx.strokeStyle = "#888";
     ctx.lineWidth = 1;
     ctx.stroke();
@@ -1001,29 +1137,27 @@ function drawClock(
   const minutes = elapsed > 0 ? (elapsed / 60) % 60 : 30;
   const hours = elapsed > 0 ? (elapsed / 3600) % 12 : 2;
 
-  // Hour hand
   const hourAngle = (hours / 12) * Math.PI * 2 - Math.PI / 2;
   ctx.beginPath();
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(cx + Math.cos(hourAngle) * r * 0.5, cy + Math.sin(hourAngle) * r * 0.5);
+  ctx.moveTo(0, 0);
+  ctx.lineTo(Math.cos(hourAngle) * r * 0.5, Math.sin(hourAngle) * r * 0.5);
   ctx.strokeStyle = "#333";
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Minute hand
   const minAngle = (minutes / 60) * Math.PI * 2 - Math.PI / 2;
   ctx.beginPath();
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(cx + Math.cos(minAngle) * r * 0.7, cy + Math.sin(minAngle) * r * 0.7);
+  ctx.moveTo(0, 0);
+  ctx.lineTo(Math.cos(minAngle) * r * 0.7, Math.sin(minAngle) * r * 0.7);
   ctx.strokeStyle = "#555";
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Center dot
   ctx.beginPath();
-  ctx.arc(cx, cy, 1.5, 0, Math.PI * 2);
+  ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
   ctx.fillStyle = "#333";
   ctx.fill();
+  ctx.restore();
 }
 
 // ── Atmosphere ────────────────────────────────────────────

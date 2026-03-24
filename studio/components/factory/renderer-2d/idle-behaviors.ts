@@ -67,6 +67,11 @@ interface AgentIdleState {
   cooldown: number;
 }
 
+interface IdleBehaviorManagerOptions {
+  random?: () => number;
+  reducedMotion?: boolean;
+}
+
 function getBehaviorsForAgent(agentId: AgentId): BehaviorDef[] {
   const override = AGENT_OVERRIDES[agentId];
   if (!override) return DEFAULT_BEHAVIORS;
@@ -76,9 +81,12 @@ function getBehaviorsForAgent(agentId: AgentId): BehaviorDef[] {
   );
 }
 
-function pickWeightedRandom(behaviors: BehaviorDef[]): BehaviorDef {
+function pickWeightedRandom(
+  behaviors: BehaviorDef[],
+  random: () => number
+): BehaviorDef {
   const totalWeight = behaviors.reduce((sum, b) => sum + b.weight, 0);
-  let r = Math.random() * totalWeight;
+  let r = random() * totalWeight;
   for (const b of behaviors) {
     r -= b.weight;
     if (r <= 0) return b;
@@ -89,11 +97,15 @@ function pickWeightedRandom(behaviors: BehaviorDef[]): BehaviorDef {
 export class IdleBehaviorManager {
   private states: Map<AgentId, AgentIdleState> = new Map();
   private reducedMotion = false;
+  private readonly random: () => number;
 
-  constructor() {
+  constructor(options: IdleBehaviorManagerOptions = {}) {
+    this.random = options.random ?? Math.random;
     this.reducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      options.reducedMotion ??
+      (typeof window !== "undefined" &&
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }
 
   update(agentId: AgentId, agentState: CharacterState, deltaTime: number) {
@@ -121,7 +133,7 @@ export class IdleBehaviorManager {
       const elapsed = s.idleTimer - s.currentBehavior.startTime;
       if (elapsed >= s.currentBehavior.duration) {
         s.currentBehavior = null;
-        s.cooldown = 3 + Math.random() * 4; // 3-7s between behaviors
+        s.cooldown = 3 + this.random() * 4; // 3-7s between behaviors
       }
       return;
     }
@@ -135,7 +147,7 @@ export class IdleBehaviorManager {
 
     // Pick a new behavior
     const behaviors = getBehaviorsForAgent(agentId);
-    const picked = pickWeightedRandom(behaviors);
+    const picked = pickWeightedRandom(behaviors, this.random);
     s.currentBehavior = {
       type: picked.type,
       startTime: s.idleTimer,

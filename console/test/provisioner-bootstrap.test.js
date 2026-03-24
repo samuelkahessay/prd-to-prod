@@ -207,3 +207,66 @@ test("bootstrap treats repo memory state.json conflicts as a warning", async () 
     expect.stringContaining("Repo memory state was not fully updated")
   );
 });
+
+test("demo bootstrap skips pipeline secret requirements", async () => {
+  jest.resetModules();
+  delete process.env.PIPELINE_APP_ID;
+  delete process.env.PIPELINE_APP_PRIVATE_KEY;
+  delete process.env.OPENAI_API_KEY;
+  delete process.env.PUBLIC_BETA_OPENAI_API_KEY;
+  ({ createProvisioner } = require("../lib/provisioner"));
+
+  const buildSessionStore = createBuildSessionStore(db);
+  const now = "2026-03-21T00:00:00.000Z";
+
+  db.prepare(
+    `INSERT INTO users (id, github_id, github_login, github_avatar_url, created_at, updated_at)
+     VALUES ('user-1', 0, 'demo-user', '', ?, ?)`
+  ).run(now, now);
+  db.prepare(
+    `INSERT INTO build_sessions (id, user_id, status, prd_final, is_demo, created_at, updated_at)
+     VALUES ('demo-build', 'user-1', 'ready', '# PRD: Demo portal', 1, ?, ?)`
+  ).run(now, now);
+  db.prepare(
+    `INSERT INTO oauth_grants (id, user_id, github_access_token, created_at, expires_at)
+     VALUES ('grant-1', 'user-1', ?, ?, '2099-03-21T00:00:00.000Z')`
+  ).run(encrypt("demo-oauth-token"), now);
+
+  const githubClient = {
+    createRepoFromTemplate: jest.fn().mockResolvedValue({
+      id: 99,
+      html_url: "https://github.com/demo-user/demo-portal",
+    }),
+    waitForRepo: jest.fn().mockResolvedValue(undefined),
+    checkAppInstallation: jest.fn().mockResolvedValue({
+      installed: true,
+      installationId: 77,
+    }),
+    getInstallationToken: jest.fn().mockResolvedValue("installation-token"),
+    createLabel: jest.fn().mockResolvedValue(undefined),
+    configureActionsPermissions: jest.fn().mockResolvedValue(undefined),
+    enableAutoMerge: jest.fn().mockResolvedValue(undefined),
+    ensureRepoMemoryBranch: jest.fn().mockResolvedValue(undefined),
+    upsertActionsVariable: jest.fn().mockResolvedValue(undefined),
+    createOrUpdateActionsSecret: jest.fn().mockResolvedValue(undefined),
+    ensureBranchProtection: jest.fn().mockResolvedValue(undefined),
+  };
+
+  const provisioner = createProvisioner({
+    db,
+    buildSessionStore,
+    githubClient,
+  });
+
+  const result = await provisioner.provisionRepo("demo-build", {
+    repoName: "demo-portal",
+  });
+
+  expect(result).toEqual({
+    sessionId: "demo-build",
+    status: "ready_to_launch",
+    installRequired: false,
+  });
+  expect(githubClient.upsertActionsVariable).not.toHaveBeenCalled();
+  expect(githubClient.createOrUpdateActionsSecret).not.toHaveBeenCalled();
+});
