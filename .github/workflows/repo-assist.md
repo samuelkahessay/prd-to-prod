@@ -163,6 +163,29 @@ In Targeted Issue Dispatch Mode:
 - If the issue is closed, missing, non-actionable, or still blocked by dependencies, exit without substituting a different issue.
 - Do not rotate to unrelated implementation tasks in this run. After the targeted issue path completes, you may still perform Task 5 and Task 6.
 
+Before ending a targeted-dispatch run, leave exactly one structured outcome comment on the bound issue using `add_comment`. Reuse your final source-issue comment if you already planned to leave one; otherwise add a short one just for this marker.
+
+That comment must include a hidden marker in exactly this format:
+
+```md
+<!-- self-healing-dispatch-outcome:v1
+agent_run_id=<workflow-run-id from GitHub context>
+issue_number=${{ github.event.inputs.issue_number }}
+outcome=<pr_created|blocked|already_covered|non_actionable|noop|missing_tool|missing_data|not_evaluated>
+pr_number=<PR number or empty>
+recorded_at=<ISO 8601 UTC timestamp>
+-->
+```
+
+Outcome rules:
+- `pr_created`: you created a `[Pipeline]` PR for the bound issue in this run.
+- `blocked`: you meaningfully evaluated the bound issue, but a dependency, prerequisite, or other real blocker prevented implementation.
+- `already_covered`: the bound issue was already satisfied by existing merged/open work and did not need a new PR.
+- `non_actionable`: the bound issue is not valid work for this lane.
+- `noop`: you intentionally called `noop` after meaningfully re-evaluating the bound issue.
+- `missing_tool` or `missing_data`: use these only when the bound issue could not be completed because the required tool or data was unavailable.
+- `not_evaluated`: use this if the run must exit before the bound issue was meaningfully evaluated. Never claim `blocked`, `already_covered`, or `noop` unless you actually re-read and assessed the bound issue.
+
 ## Architecture Context
 
 Before implementing any issue, check if an architecture plan exists:
@@ -222,6 +245,14 @@ Use persistent repo memory to track:
 - A backlog cursor for round-robin processing
 - Which tasks were last worked on (timestamps)
 - Dependency resolution state
+- One resumable in-flight checkpoint for the issue currently being worked
+
+Keep repo-memory bounded:
+- Store all mutable repo-assist state in a single JSON file at `/tmp/gh-aw/repo-memory/default/state/repo-assist.json`.
+- Reuse that file on every run and overwrite/update it in place.
+- Do not create one file per issue, PR, stage, or run.
+- Retain only open PRs, unresolved dependencies, the backlog cursor, the current in-flight checkpoint, and a compact recent history of the most recent 20 attempted issues.
+- The repo-memory branch must stay comfortably below the 100-file validation limit.
 
 Read memory at the **start** of every run; update at the **end**.
 Memory may be stale — always verify against current repo state.
@@ -230,28 +261,55 @@ Memory may be stale — always verify against current repo state.
 
 Save your progress so you can resume if the run times out.
 
-Write structured checkpoint entries to repo-memory at these key moments during Task 1 (implementing issues):
+Before reading or writing memory on each run:
+- Delete any legacy repo-assist checkpoint files left by older prompt versions. Remove files whose basename starts with `checkpoint:` under `/tmp/gh-aw/repo-memory/default/`.
+- Do not recreate those legacy checkpoint files.
 
-1. **Plan checkpoint** — after reading the issue and forming an implementation plan, before writing any code. Key: `checkpoint:<issue-number>:plan`
-2. **Progress checkpoint** — after completing a significant code change (creating a new file, making a test pass, completing a logical unit of work). Key: `checkpoint:<issue-number>:progress`
-3. **Pre-PR checkpoint** — immediately before creating a PR or pushing to a PR branch. Key: `checkpoint:<issue-number>:pre-pr`
+Store resumable progress inside the shared state file at `/tmp/gh-aw/repo-memory/default/state/repo-assist.json` under a single `checkpoint` object, updating that object at these moments during Task 1:
 
-Each checkpoint value is a JSON string:
+1. **Plan checkpoint** — after reading the issue and forming an implementation plan, before writing any code
+2. **Progress checkpoint** — after completing a significant code change (creating a new file, making a test pass, completing a logical unit of work)
+3. **Pre-PR checkpoint** — immediately before creating a PR or pushing to a PR branch
+
+State file shape:
 ```json
 {
-  "timestamp": "ISO 8601",
-  "stage": "plan | progress | pre-pr",
-  "issue": 123,
-  "summary": "Read issue #123, plan: add AuthService with 2 endpoints",
-  "files_touched": ["PRDtoProd/Services/AuthService.cs"],
-  "blockers": [],
-  "next_step": "Create test file and write failing tests"
+  "updated_at": "ISO 8601",
+  "cursor": {
+    "last_issue": 123
+  },
+  "issues": {
+    "123": {
+      "outcome": "blocked",
+      "summary": "Waiting on issue #122",
+      "last_touched": "ISO 8601"
+    }
+  },
+  "prs": {
+    "456": {
+      "issue": 123,
+      "state": "open"
+    }
+  },
+  "dependencies": {
+    "123": {
+      "blocked_by": [122]
+    }
+  },
+  "checkpoint": {
+    "issue": 123,
+    "stage": "plan | progress | pre-pr",
+    "summary": "Read issue #123, plan: add AuthService with 2 endpoints",
+    "files_touched": ["PRDtoProd/Services/AuthService.cs"],
+    "blockers": [],
+    "next_step": "Create test file and write failing tests"
+  }
 }
 ```
 
-**Resumption**: At the start of every run, after reading memory, check for any `checkpoint:*` entries. If a checkpoint exists for an issue you are about to work on, read it and resume from that state rather than re-reading the issue and re-planning from scratch. Update the checkpoint as you progress.
+**Resumption**: At the start of every run, after reading the shared state file, check whether `checkpoint.issue` matches the issue you are about to work on. If it does, resume from that state rather than re-reading the issue and re-planning from scratch. Update the single `checkpoint` object as you progress.
 
-**Cleanup**: After a PR is created or an issue is closed, delete all `checkpoint:<issue-number>:*` entries for that issue.
+**Cleanup**: After a PR is created or an issue is closed, clear the shared `checkpoint` object if it belongs to that issue and collapse the issue record to a compact outcome entry. Never leave per-stage checkpoint files behind.
 
 ## Workflow
 

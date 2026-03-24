@@ -76,6 +76,7 @@ scripts/resolve-nextjs-app-root.sh
 scripts/run-lifecycle-lib.sh
 scripts/start-run.sh
 scripts/tests/fixtures/push-to-existing/expected-second-body.md
+scripts/tests/test-agent-memory-bounds.sh
 scripts/tests/test-analyze-target-degraded.sh
 scripts/tests/test-analyze-target.sh
 scripts/tests/test-auto-dispatch-requeue.sh
@@ -125,6 +126,7 @@ scripts/tests/test-push-to-existing.sh
 scripts/tests/test-push-to-pipeline-dryrun.sh
 scripts/tests/test-render-ci-repair-command.sh
 scripts/tests/test-repo-assist-no-project-status.sh
+scripts/tests/test-repo-assist-targeted-outcome-marker.sh
 scripts/tests/test-resolve-deployment-url.sh
 scripts/tests/test-resolve-nextjs-app-root.sh
 scripts/tests/test-retry-state.sh

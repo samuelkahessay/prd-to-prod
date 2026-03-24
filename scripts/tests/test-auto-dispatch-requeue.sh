@@ -31,4 +31,19 @@ grep -F -- '-f issue_number="$ISSUE_NUMBER"' "$WORKFLOW" >/dev/null || {
   exit 1
 }
 
+grep -F "<!-- self-healing-dispatch-outcome:v1" "$WORKFLOW" >/dev/null || {
+  echo "FAIL: auto-dispatch-requeue must inspect targeted dispatch outcome markers" >&2
+  exit 1
+}
+
+grep -F 'MAX_STALE_REDISPATCHES=3' "$WORKFLOW" >/dev/null || {
+  echo "FAIL: auto-dispatch-requeue must cap stale re-dispatch loops" >&2
+  exit 1
+}
+
+grep -F 'gh run view "$run_id" --repo "$REPO" --json status,conclusion' "$WORKFLOW" >/dev/null || {
+  echo "FAIL: auto-dispatch-requeue must inspect the linked agent run state before treating a dispatch marker as terminal" >&2
+  exit 1
+}
+
 echo "auto-dispatch-requeue.yml tests passed"

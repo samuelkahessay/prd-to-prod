@@ -263,34 +263,55 @@ After creating the PR, run `gh workflow run pr-review-agent.lock.yml` to dispatc
 
 ## Memory / Checkpoint Protocol
 
-Write structured checkpoints to repo-memory, not issue comments.
+Keep repo-memory bounded:
+- Store all mutable frontend-agent state in a single JSON file at `/tmp/gh-aw/repo-memory/default/state/frontend-agent.json`.
+- Reuse that file on every run and overwrite/update it in place.
+- Do not create one file per issue, PR, stage, or run.
+- Retain only the current in-flight checkpoint, open PRs, open issue outcomes, and a compact recent history of the most recent 20 attempted issues.
+- The repo-memory branch must stay comfortably below the 100-file validation limit.
 
-```
-Key: frontend-checkpoint:<issue-number>:<stage>
-```
+Before reading or writing memory on each run:
+- Delete any legacy frontend-agent checkpoint files left by older prompt versions. Remove files whose basename starts with `frontend-checkpoint:` under `/tmp/gh-aw/repo-memory/default/`.
+- Do not recreate those legacy checkpoint files.
 
-Value (JSON):
+Store resumable progress inside the shared state file at `/tmp/gh-aw/repo-memory/default/state/frontend-agent.json` under a single `checkpoint` object.
+
+State file shape:
 ```json
 {
-  "timestamp": "ISO 8601",
-  "stage": "plan | progress | pre-pr",
-  "issue": 123,
-  "package_path": "studio",
-  "files_modified": ["studio/app/page.tsx"],
-  "viewports_verified": [375, 768, 1440],
-  "overflow_detected": false,
-  "validation": {
-    "lint": "pass",
-    "test": "pass",
-    "build": "pass"
+  "updated_at": "ISO 8601",
+  "issues": {
+    "123": {
+      "outcome": "in_progress",
+      "last_touched": "ISO 8601"
+    }
   },
-  "next_step": "Start dev server and run Playwright screenshots"
+  "prs": {
+    "456": {
+      "issue": 123,
+      "state": "open"
+    }
+  },
+  "checkpoint": {
+    "issue": 123,
+    "stage": "plan | progress | pre-pr",
+    "package_path": "studio",
+    "files_modified": ["studio/app/page.tsx"],
+    "viewports_verified": [375, 768, 1440],
+    "overflow_detected": false,
+    "validation": {
+      "lint": "pass",
+      "test": "pass",
+      "build": "pass"
+    },
+    "next_step": "Start dev server and run Playwright screenshots"
+  }
 }
 ```
 
-**Resumption**: At the start of every run, check for `frontend-checkpoint:*` entries. If a checkpoint exists for an issue you are about to work on, read it and resume from that state.
+**Resumption**: At the start of every run, read the shared state file and check whether `checkpoint.issue` matches the issue you are about to work on. If it does, resume from that state and update the same `checkpoint` object as you progress.
 
-**Cleanup**: After a PR is created or an issue is closed, delete all `frontend-checkpoint:<issue-number>:*` entries for that issue.
+**Cleanup**: After a PR is created or an issue is closed, clear the shared `checkpoint` object if it belongs to that issue and collapse the issue record to a compact outcome entry. Never leave per-stage checkpoint files behind.
 
 ## Design Guardrails (hardcoded, universal)
 

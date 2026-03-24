@@ -187,6 +187,8 @@ jobs:
 
           DEFERRED_MARKER='<!-- self-healing-dispatch-deferred:v1'
           DISPATCH_MARKER='<!-- self-healing-dispatch:v1'
+          OUTCOME_MARKER='<!-- self-healing-dispatch-outcome:v1'
+          MAX_STALE_REDISPATCHES=3
 
           read_marker_field() {
             local body=$1
@@ -194,12 +196,49 @@ jobs:
             printf '%s\n' "$body" | sed -n "s/^${field}=//p" | head -1
           }
 
-          find_marker_comment() {
+          find_marker_comments() {
             local issue_number=$1
             local marker=$2
             local comments_json
             comments_json=$(gh api "/repos/${REPO}/issues/${issue_number}/comments?per_page=100" 2>/dev/null || echo '[]')
-            printf '%s' "$comments_json" | jq -c --arg marker "$marker" '[.[] | select(.body | contains($marker))] | last // {}'
+            printf '%s' "$comments_json" | jq -c --arg marker "$marker" '[.[] | select(.body | contains($marker))]'
+          }
+
+          find_marker_comment() {
+            local issue_number=$1
+            local marker=$2
+            printf '%s' "$(find_marker_comments "$issue_number" "$marker")" | jq -c 'last // {}'
+          }
+
+          find_matching_outcome_comment() {
+            local issue_number=$1
+            local agent_run_id=$2
+            printf '%s' "$(find_marker_comments "$issue_number" "$OUTCOME_MARKER")" | jq -c --arg run_id "$agent_run_id" '
+              [.[] | select(
+                ($run_id == "") or
+                ((.body | contains("agent_run_id=" + $run_id)) or (.body | contains("repo_assist_run_id=" + $run_id)))
+              )] | last // {}'
+          }
+
+          dispatch_count_after() {
+            local comments_json=$1
+            local threshold=$2
+            printf '%s' "$comments_json" | jq --arg threshold "$threshold" '
+              [ .[]
+                | . as $comment
+                | ((try (.body | capture("(?m)^dispatched_at=(?<value>[^\\n]+)") | .value) catch "") // "") as $marker_time
+                | (($marker_time | select(. != "")) // ($comment.created_at // "")) as $effective_time
+                | select($effective_time != "" and $effective_time >= $threshold)
+              ] | length'
+          }
+
+          run_state_json() {
+            local run_id=$1
+            if [ -z "$run_id" ]; then
+              echo '{}'
+              return
+            fi
+            gh run view "$run_id" --repo "$REPO" --json status,conclusion 2>/dev/null || echo '{}'
           }
 
           to_epoch() {
@@ -262,6 +301,7 @@ jobs:
               DEFERRED_AT=$(read_marker_field "$DEFERRED_BODY" "deferred_at")
             fi
 
+            DISPATCH_COMMENTS=$(find_marker_comments "$ISSUE_NUM" "$DISPATCH_MARKER")
             DISPATCH_JSON=$(find_marker_comment "$ISSUE_NUM" "$DISPATCH_MARKER")
             DISPATCH_BODY=$(printf '%s' "$DISPATCH_JSON" | jq -r '.body // ""')
             DISPATCHED_AT=$(read_marker_field "$DISPATCH_BODY" "dispatched_at")
@@ -270,8 +310,55 @@ jobs:
             fi
 
             if [ -n "$DISPATCHED_AT" ] && [ "$(to_epoch "$DISPATCHED_AT")" -ge "$(to_epoch "$DEFERRED_AT")" ]; then
-              echo "Issue #${ISSUE_NUM}: already dispatched after the most recent deferred marker."
-              continue
+              DISPATCH_COUNT_AFTER_DEFERRED=$(dispatch_count_after "$DISPATCH_COMMENTS" "$DEFERRED_AT")
+              AGENT_RUN_ID=$(read_marker_field "$DISPATCH_BODY" "agent_run_id")
+              if [ -z "$AGENT_RUN_ID" ]; then
+                AGENT_RUN_ID=$(read_marker_field "$DISPATCH_BODY" "repo_assist_run_id")
+              fi
+
+              OUTCOME_JSON=$(find_matching_outcome_comment "$ISSUE_NUM" "$AGENT_RUN_ID")
+              OUTCOME_BODY=$(printf '%s' "$OUTCOME_JSON" | jq -r '.body // ""')
+              OUTCOME_VALUE=$(read_marker_field "$OUTCOME_BODY" "outcome")
+              OUTCOME_RECORDED_AT=$(read_marker_field "$OUTCOME_BODY" "recorded_at")
+              if [ -z "$OUTCOME_RECORDED_AT" ]; then
+                OUTCOME_RECORDED_AT=$(printf '%s' "$OUTCOME_JSON" | jq -r '.created_at // empty')
+              fi
+
+              if [ -n "$OUTCOME_VALUE" ] && { [ -z "$OUTCOME_RECORDED_AT" ] || [ "$(to_epoch "$OUTCOME_RECORDED_AT")" -ge "$(to_epoch "$DISPATCHED_AT")" ]; }; then
+                case "$OUTCOME_VALUE" in
+                  already_covered|non_actionable)
+                    echo "Issue #${ISSUE_NUM}: latest targeted dispatch reported terminal outcome '${OUTCOME_VALUE}'."
+                    continue
+                    ;;
+                  *)
+                    if [ "${DISPATCH_COUNT_AFTER_DEFERRED:-0}" -ge "$MAX_STALE_REDISPATCHES" ]; then
+                      echo "Issue #${ISSUE_NUM}: latest targeted dispatch outcome is '${OUTCOME_VALUE}', but stale re-dispatch retry cap (${MAX_STALE_REDISPATCHES}) is already exhausted."
+                      continue
+                    fi
+                    echo "Issue #${ISSUE_NUM}: latest targeted dispatch outcome is '${OUTCOME_VALUE}'; allowing bounded re-dispatch."
+                    ;;
+                esac
+              else
+                RUN_STATE=$(run_state_json "$AGENT_RUN_ID")
+                RUN_STATUS=$(printf '%s' "$RUN_STATE" | jq -r '.status // ""')
+                RUN_CONCLUSION=$(printf '%s' "$RUN_STATE" | jq -r '.conclusion // ""')
+
+                if [ "$RUN_STATUS" = "queued" ] || [ "$RUN_STATUS" = "in_progress" ]; then
+                  echo "Issue #${ISSUE_NUM}: latest dispatched run ${AGENT_RUN_ID} is still ${RUN_STATUS}."
+                  continue
+                fi
+
+                if [ "${DISPATCH_COUNT_AFTER_DEFERRED:-0}" -ge "$MAX_STALE_REDISPATCHES" ]; then
+                  echo "Issue #${ISSUE_NUM}: dispatch marker is stale, but bounded re-dispatch retry cap (${MAX_STALE_REDISPATCHES}) is exhausted."
+                  continue
+                fi
+
+                if [ -n "$AGENT_RUN_ID" ]; then
+                  echo "Issue #${ISSUE_NUM}: dispatched run ${AGENT_RUN_ID} completed (${RUN_CONCLUSION:-unknown}) without a terminal outcome marker; allowing re-dispatch."
+                else
+                  echo "Issue #${ISSUE_NUM}: dispatch marker lacks a linked agent run; allowing re-dispatch."
+                fi
+              fi
             fi
 
             ISSUE_ACTIVE=$(workflow_active_count "$ISSUE_WORKFLOW")

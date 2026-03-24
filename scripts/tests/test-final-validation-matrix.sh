@@ -34,6 +34,7 @@ run_check "leak-test" "bash scripts/tests/test-leak-test.sh"
 run_check "bootstrap-test" "bash scripts/tests/test-bootstrap-test.sh"
 run_check "publish-scaffold-template" "bash scripts/tests/test-publish-scaffold-template.sh"
 run_check "publish-scaffold-template-workflow" "bash scripts/tests/test-publish-scaffold-template-workflow.sh"
+run_check "agent-memory-bounds" "bash scripts/tests/test-agent-memory-bounds.sh"
 run_check "repo-assist-no-project-status" "bash scripts/tests/test-repo-assist-no-project-status.sh"
 
 # Extraction contracts
