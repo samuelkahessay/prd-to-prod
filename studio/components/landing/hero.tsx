@@ -40,7 +40,7 @@ export function Hero() {
             />
           </div>
           <p className={styles.frameCaption}>
-            The viral moment: agents plan, code, review, and merge inside the room.
+            Agents plan, code, review, and merge — live.
           </p>
         </article>
 
@@ -56,7 +56,7 @@ export function Hero() {
             />
           </div>
           <p className={styles.frameCaption}>
-            Then cut to repo and deploy evidence so the spectacle stays credible.
+            Repo handoff and deploy evidence when the build finishes.
           </p>
         </article>
       </div>
