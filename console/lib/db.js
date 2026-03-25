@@ -156,6 +156,15 @@ function createDatabase(dataDir) {
     );
     CREATE INDEX IF NOT EXISTS idx_access_codes_redeemed ON access_codes(redeemed_by);
 
+    CREATE TABLE IF NOT EXISTS waitlist (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL UNIQUE,
+      github_username TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      notes TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_waitlist_email ON waitlist(email);
+
     -- Dedicated E2E harness tables
 
     CREATE TABLE IF NOT EXISTS e2e_runs (
