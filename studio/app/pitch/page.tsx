@@ -27,9 +27,10 @@ export default function PitchPage() {
           </h1>
 
           <p className={styles.lede}>
-            AI can write code. It can&rsquo;t ship software. We build the
-            orchestration layer that turns capable agents into a governed,
-            autonomous delivery pipeline.
+            AI agents can write code, but shipping software requires
+            decomposing specs, independent review, deployment, CI repair, and
+            audit trails. We build the orchestration layer that governs the
+            full pipeline.
           </p>
 
           <div className={styles.stats}>
@@ -43,7 +44,7 @@ export default function PitchPage() {
             </div>
             <div className={styles.stat}>
               <span className={styles.statNumber}>6</span>
-              <span className={styles.statLabel}>Days</span>
+              <span className={styles.statLabel}>First 6 days</span>
             </div>
             <div className={styles.stat}>
               <span className={styles.statNumber}>28</span>
@@ -56,12 +57,12 @@ export default function PitchPage() {
           <h2>Problem</h2>
 
           <p>
-            Every company using AI to write code still needs engineers for
-            everything around the code: decomposing specs, independent review,
-            deployment, CI repair, and audit trails. The models are capable
-            individually. The bottleneck is the orchestration&mdash;the
-            infrastructure that wraps around agents to make them reliable and
-            governable.
+            Companies using AI to write code still hire engineers for
+            the work around it: decomposing specs into parallelizable tasks,
+            reviewing code where the reviewer is independent from the author,
+            deploying, repairing CI failures, and maintaining audit trails.
+            The models are capable. The orchestration around them is the
+            bottleneck.
           </p>
 
           <hr className={styles.divider} />
@@ -88,8 +89,7 @@ export default function PitchPage() {
             The governance layer is repo-owned: an autonomy policy defining
             what agents can and cannot do, identity separation between builder
             and reviewer, dependency-aware orchestration, and self-healing
-            loops with independent review on every fix. Agents operate inside
-            the system, not above it.
+            loops with independent review on every fix.
           </p>
 
           <hr className={styles.divider} />
@@ -108,8 +108,8 @@ export default function PitchPage() {
             , a Calgary startup accelerator, is replacing a static site with a
             12-module platform (event management, judge scoring, audience
             validation, mentor matching, Stripe payments, public directory). 80
-            agent-merged PRs across 133 issues in 6 days so far. Build is
-            ongoing.
+            agent-merged PRs across 133 issues in its first 6 days, as of March
+            27, 2026. Build is ongoing.
           </p>
 
           <p>
@@ -123,8 +123,8 @@ export default function PitchPage() {
               Agentic Workflows
             </a>
             . 28 issues filed, 24 fixes shipped across 8 releases, 15 release
-            credits. Our depth-testing surfaced bugs that GitHub&rsquo;s own
-            165-agent fleet didn&rsquo;t catch.
+            credits. We surfaced bugs that GitHub&rsquo;s own 165-agent fleet
+            did not catch.
           </p>
 
           <p>
@@ -146,8 +146,8 @@ export default function PitchPage() {
               &ldquo;The Agent Interface&rdquo;
             </a>{" "}
             reposted by Don Syme (F# creator, Microsoft Research). Three
-            active threads with Microsoft/GitHub&mdash;all initiated by the
-            other side.
+            active threads with Microsoft/GitHub, all initiated by the other
+            side.
           </p>
 
           <hr className={styles.divider} />
@@ -155,12 +155,11 @@ export default function PitchPage() {
           <h2>Market</h2>
 
           <p>
-            GitHub has 100M+ developers and is actively building agent-native
+            GitHub has 100M+ developers and is building agent-native
             infrastructure. Factory raised $70M (Sequoia). Mendral (YC W26,
-            Docker founders) is automating CI self-heal. The developer tooling
-            market is converging on agent-first workflows, and the governance
-            layer&mdash;who decides what ships, with what evidence&mdash;is
-            where the opportunity is.
+            Docker founders) automates CI self-heal. These companies are
+            building pieces of agent-first delivery. The governance layer,
+            who decides what ships and with what evidence, is unsolved.
           </p>
 
           <hr className={styles.divider} />
@@ -169,12 +168,12 @@ export default function PitchPage() {
 
           <ul className={styles.list}>
             <li>
-              <strong>Founder builds</strong> ($750&ndash;$5K)&mdash;we
-              deliver a working app with the autonomous pipeline baked in
+              <strong>Founder builds</strong> ($750&ndash;$5K). We
+              deliver a working app with the autonomous pipeline baked in.
             </li>
             <li>
               <strong>Team setups</strong> ($3K&ndash;$7.5K +
-              $1.5K/mo)&mdash;install the pipeline in an existing repo
+              $1.5K/mo). We install the pipeline in your existing repo.
             </li>
           </ul>
 
@@ -197,11 +196,12 @@ export default function PitchPage() {
                 Samuel Kahessay
               </a>
             </strong>
-            &mdash;solo founder. Former Amazon SDE (Alexa Edge ML), ATB
-            Financial (data science), University of Calgary research
-            (algorithmic botany, NSERC grant). Currently full-stack developer
-            at Upzoids building smart city platforms for Canadian
-            municipalities.
+
+
+            . Solo founder. Former Amazon SDE (Alexa Edge ML), ATB Financial
+            (data science), University of Calgary research (algorithmic
+            botany, NSERC grant). Full-stack developer at Upzoids, building
+            smart city platforms for Canadian municipalities.
           </p>
 
           <p>
