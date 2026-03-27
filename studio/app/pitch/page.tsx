@@ -155,11 +155,17 @@ export default function PitchPage() {
           <h2>Market</h2>
 
           <p>
+            The first buyers are founders and small product teams building on
+            the standard SaaS stack who need to ship software without hiring a
+            full engineering team for every change. Code generation is
+            commoditized. Orchestration, review, deploy, and recovery are not.
+          </p>
+
+          <p>
             GitHub has 100M+ developers and is building agent-native
-            infrastructure. Factory raised $70M (Sequoia). Mendral (YC W26,
-            Docker founders) automates CI self-heal. These companies are
-            building pieces of agent-first delivery. The governance layer,
-            who decides what ships and with what evidence, is unsolved.
+            infrastructure. Factory raised $70M. Mendral is automating CI
+            self-heal. These companies are solving pieces of agent-first
+            delivery. The governance layer is unsolved.
           </p>
 
           <hr className={styles.divider} />
@@ -168,18 +174,20 @@ export default function PitchPage() {
 
           <ul className={styles.list}>
             <li>
-              <strong>Founder builds</strong> ($750&ndash;$5K). We
-              deliver a working app with the autonomous pipeline baked in.
+              <strong>Paid initial engagements.</strong> We either deliver a
+              working app with the pipeline baked in or install the pipeline in
+              an existing repo.
             </li>
             <li>
-              <strong>Team setups</strong> ($3K&ndash;$7.5K +
-              $1.5K/mo). We install the pipeline in your existing repo.
+              <strong>Expansion revenue.</strong> Recurring software revenue
+              for orchestration, policy controls, review boundaries, and
+              self-healing workflows.
             </li>
           </ul>
 
           <p>
-            Services revenue today. The pipeline itself is the long-term
-            product.
+            Services fund the wedge. The long-term product is the control plane
+            for governed autonomous delivery.
           </p>
 
           <hr className={styles.divider} />
@@ -197,17 +205,13 @@ export default function PitchPage() {
               </a>
             </strong>
 
-
             . Solo founder. Former Amazon SDE (Alexa Edge ML), ATB Financial
-            (data science), University of Calgary research (algorithmic
-            botany, NSERC grant). Full-stack developer at Upzoids, building
-            smart city platforms for Canadian municipalities.
+            (data science), University of Calgary researcher (NSERC grant).
           </p>
 
           <p>
-            Built the pipeline, wrote the thesis, filed the upstream bugs,
-            delivered the first client. Looking to bring on a co-founder with
-            go-to-market or infrastructure experience as the product matures.
+            Built the pipeline, wrote the thesis, surfaced upstream platform
+            bugs, and delivered the first client.
           </p>
 
           <hr className={styles.divider} />
@@ -215,10 +219,15 @@ export default function PitchPage() {
           <h2>Ask: design partners</h2>
 
           <p>
-            Looking for early-stage companies that need software built and want
-            to be the first users of autonomous delivery infrastructure. Each
-            engagement hardens the pipeline. Strongest fit: founders building
-            on the standard SaaS stack (Next.js, Postgres, Stripe, auth).
+            Looking for early-stage companies that need to ship software and
+            want to be early users of autonomous delivery infrastructure. Each
+            engagement hardens the product. Strongest fit: founders building on
+            the standard SaaS stack (Next.js, Postgres, Stripe, auth).
+          </p>
+
+          <p>
+            Also building relationships with investors who understand developer
+            tooling, workflow infrastructure, and AI systems.
           </p>
 
           <p className={styles.contact}>
