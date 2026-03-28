@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 
 const { createDatabase } = require("./lib/db");
 const { startAuthStateCleanup } = require("./lib/auth-store");
+const { startDataCleanup } = require("./lib/data-cleanup");
 const { createEventStore } = require("./lib/event-store");
 const { createOrchestrator } = require("./lib/orchestrator");
 const { createPublicRouteGuards } = require("./lib/public-route-guards");
@@ -88,6 +89,7 @@ app.use("/internal", (req, res, next) => {
 const dataDir = process.env.DATA_DIR || path.join(__dirname, "data");
 const db = createDatabase(dataDir);
 startAuthStateCleanup(db);
+startDataCleanup(db);
 const eventStore = createEventStore(db);
 const orchestrator = createOrchestrator({
   projectRoot: path.resolve(__dirname, ".."),
