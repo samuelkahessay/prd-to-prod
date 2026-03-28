@@ -48,14 +48,71 @@ esac
 exit 0
 STUB
 chmod +x "$TMPDIR/bin/gh"
+
+install_yq_stub() {
+  cat > "$TMPDIR/bin/yq" <<'STUB'
+#!/usr/bin/env ruby
+require "json"
+require "psych"
+
+args = ARGV.dup
+json_output = false
+
+loop do
+  case args.first
+  when "-r"
+    args.shift
+  when "-o=json"
+    json_output = true
+    args.shift
+  else
+    break
+  end
+end
+
+query = args.shift
+path = args.shift
+abort("unsupported yq invocation") unless query && path
+
+data = Psych.safe_load(File.read(path), aliases: true) || {}
+
+case query
+when ".forbidden_paths[]"
+  Array(data["forbidden_paths"]).each { |value| puts(value) }
+when ".exception_paths[]"
+  Array(data["exception_paths"]).each { |value| puts(value) }
+when ".include[]"
+  Array(data["include"]).each { |value| puts(value) }
+when '.directory_remap // {} | to_entries[] | "\(.key)\t\(.value)"'
+  (data["directory_remap"] || {}).each { |key, value| puts("#{key}\t#{value}") }
+when '.rename // {} | to_entries[] | "\(.key)\t\(.value)"'
+  (data["rename"] || {}).each { |key, value| puts("#{key}\t#{value}") }
+when ".render // {}"
+  abort("expected -o=json") unless json_output
+  print JSON.generate(data["render"] || {})
+else
+  abort("unsupported yq query: #{query}")
+end
+STUB
+  chmod +x "$TMPDIR/bin/yq"
+}
+
 ln -sf "$(command -v jq)" "$TMPDIR/bin/jq"
-ln -sf "$(command -v yq)" "$TMPDIR/bin/yq"
+install_yq_stub
 export PATH="$TMPDIR/bin:$PATH"
 
-bash "$EXPORT_SCRIPT" >/dev/null 2>&1
+DIAG_LOG="$TMPDIR/bootstrap-diag.log"
+bash "$EXPORT_SCRIPT" >"$DIAG_LOG" 2>&1 || {
+  echo "FAIL: export-scaffold.sh failed during test setup" >&2
+  cat "$DIAG_LOG" >&2
+  exit 1
+}
 
-if ! bash "$BOOTSTRAP_SCRIPT" >/dev/null 2>&1; then
+if ! bash "$BOOTSTRAP_SCRIPT" >"$DIAG_LOG" 2>&1; then
   echo "FAIL: Test 1: valid scaffold should pass bootstrap test" >&2
+  echo "--- bootstrap-test.sh output ---" >&2
+  cat "$DIAG_LOG" >&2
+  echo "--- end output ---" >&2
   exit 1
 fi
 echo "Test 1 passed: valid scaffold passes bootstrap"

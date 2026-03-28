@@ -16,6 +16,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Verify v2 contracts
         run: |
           if [[ -d scaffold && -d extraction ]]; then
