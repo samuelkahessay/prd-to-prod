@@ -34,13 +34,7 @@ case "$1" in
         for source in .github/workflows/*.md; do
           [ -f "$source" ] || continue
           lock="${source%.md}.lock.yml"
-          if command -v shasum >/dev/null 2>&1; then
-            checksum=$(shasum "$source" | awk '{print $1}')
-          elif command -v sha1sum >/dev/null 2>&1; then
-            checksum=$(sha1sum "$source" | awk '{print $1}')
-          else
-            checksum=$(cksum "$source" | awk '{print $1}')
-          fi
+          checksum=$(shasum "$source" | awk '{print $1}')
           {
             printf 'compiled-from:%s\n' "$source"
             printf 'checksum:%s\n' "$checksum"
