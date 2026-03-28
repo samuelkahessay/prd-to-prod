@@ -101,10 +101,18 @@ ln -sf "$(command -v jq)" "$TMPDIR/bin/jq"
 install_yq_stub
 export PATH="$TMPDIR/bin:$PATH"
 
-bash "$EXPORT_SCRIPT" >/dev/null 2>&1
+DIAG_LOG="$TMPDIR/bootstrap-diag.log"
+bash "$EXPORT_SCRIPT" >"$DIAG_LOG" 2>&1 || {
+  echo "FAIL: export-scaffold.sh failed during test setup" >&2
+  cat "$DIAG_LOG" >&2
+  exit 1
+}
 
-if ! bash "$BOOTSTRAP_SCRIPT" >/dev/null 2>&1; then
+if ! bash "$BOOTSTRAP_SCRIPT" >"$DIAG_LOG" 2>&1; then
   echo "FAIL: Test 1: valid scaffold should pass bootstrap test" >&2
+  echo "--- bootstrap-test.sh output ---" >&2
+  cat "$DIAG_LOG" >&2
+  echo "--- end output ---" >&2
   exit 1
 fi
 echo "Test 1 passed: valid scaffold passes bootstrap"
