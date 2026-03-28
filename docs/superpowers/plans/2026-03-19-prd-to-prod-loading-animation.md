@@ -16,29 +16,29 @@
 
 | File | Action | Responsibility |
 |------|--------|---------------|
-| `studio/components/shared/prd-to-prod-animation.tsx` | Create | React component: maps props to CSS variables, handles reduced motion, renders letter spans |
-| `studio/components/shared/prd-to-prod-animation.module.css` | Create | All keyframes (4), base styles, CSS variable defaults, reduced-motion media query |
-| `studio/test/prd-to-prod-animation.test.tsx` | Create | Unit tests: rendering, props, accessibility, reduced motion |
+| `web/components/shared/prd-to-prod-animation.tsx` | Create | React component: maps props to CSS variables, handles reduced motion, renders letter spans |
+| `web/components/shared/prd-to-prod-animation.module.css` | Create | All keyframes (4), base styles, CSS variable defaults, reduced-motion media query |
+| `web/test/prd-to-prod-animation.test.tsx` | Create | Unit tests: rendering, props, accessibility, reduced motion |
 
 ---
 
 ### Task 1: CSS Module — Base Styles and "o" Drop Keyframe
 
 **Files:**
-- Create: `studio/components/shared/prd-to-prod-animation.module.css`
+- Create: `web/components/shared/prd-to-prod-animation.module.css`
 
 This task builds the CSS foundation: the container layout, letter styles, CSS variable defaults, and the primary "o" drop keyframe.
 
 - [ ] **Step 0: Create the shared directory**
 
 ```bash
-mkdir -p studio/components/shared
+mkdir -p web/components/shared
 ```
 
 - [ ] **Step 1: Create the CSS Module file with base styles**
 
 ```css
-/* studio/components/shared/prd-to-prod-animation.module.css */
+/* web/components/shared/prd-to-prod-animation.module.css */
 
 .container {
   display: flex;
@@ -308,7 +308,7 @@ Append to the same file:
 - [ ] **Step 6: Commit**
 
 ```bash
-cd studio && git add components/shared/prd-to-prod-animation.module.css
+cd web && git add components/shared/prd-to-prod-animation.module.css
 git commit -m "feat: add CSS keyframes for prd-to-prod loading animation"
 ```
 
@@ -317,12 +317,12 @@ git commit -m "feat: add CSS keyframes for prd-to-prod loading animation"
 ### Task 2: React Component
 
 **Files:**
-- Create: `studio/components/shared/prd-to-prod-animation.tsx`
+- Create: `web/components/shared/prd-to-prod-animation.tsx`
 
 - [ ] **Step 1: Write the component**
 
 ```tsx
-// studio/components/shared/prd-to-prod-animation.tsx
+// web/components/shared/prd-to-prod-animation.tsx
 "use client";
 
 import { useMemo } from "react";
@@ -396,14 +396,14 @@ export function PrdToProdAnimation({
 
 - [ ] **Step 2: Verify the build compiles**
 
-Run: `cd studio && npx next build 2>&1 | head -30`
+Run: `cd web && npx next build 2>&1 | head -30`
 
 Expected: No TypeScript or CSS errors.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-cd studio && git add components/shared/prd-to-prod-animation.tsx
+cd web && git add components/shared/prd-to-prod-animation.tsx
 git commit -m "feat: add PrdToProdAnimation React component"
 ```
 
@@ -412,14 +412,14 @@ git commit -m "feat: add PrdToProdAnimation React component"
 ### Task 3: Tests
 
 **Files:**
-- Create: `studio/test/prd-to-prod-animation.test.tsx`
+- Create: `web/test/prd-to-prod-animation.test.tsx`
 
-**Reference:** Tests follow the pattern in `studio/test/components.test.tsx` — render with `@testing-library/react`, assert DOM structure and attributes. CSS Modules are mocked via `studio/test/__mocks__/styleMock.ts` (returns class names as-is).
+**Reference:** Tests follow the pattern in `web/test/components.test.tsx` — render with `@testing-library/react`, assert DOM structure and attributes. CSS Modules are mocked via `web/test/__mocks__/styleMock.ts` (returns class names as-is).
 
 - [ ] **Step 1: Write the test file**
 
 ```tsx
-// studio/test/prd-to-prod-animation.test.tsx
+// web/test/prd-to-prod-animation.test.tsx
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
@@ -518,20 +518,20 @@ describe("PrdToProdAnimation", () => {
 
 - [ ] **Step 2: Run the tests**
 
-Run: `cd studio && npx jest test/prd-to-prod-animation.test.tsx --verbose`
+Run: `cd web && npx jest test/prd-to-prod-animation.test.tsx --verbose`
 
 Expected: All 11 tests pass.
 
 - [ ] **Step 3: Run the full test suite to check for regressions**
 
-Run: `cd studio && npm test`
+Run: `cd web && npm test`
 
 Expected: All existing tests still pass.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-cd studio && git add test/prd-to-prod-animation.test.tsx
+cd web && git add test/prd-to-prod-animation.test.tsx
 git commit -m "test: add PrdToProdAnimation unit tests"
 ```
 
@@ -543,7 +543,7 @@ This task is manual verification — no code changes.
 
 - [ ] **Step 1: Create a temporary test page to see the animation**
 
-Create a temporary file `studio/app/test-animation/page.tsx`:
+Create a temporary file `web/app/test-animation/page.tsx`:
 
 ```tsx
 import { PrdToProdAnimation } from "@/components/shared/prd-to-prod-animation";
@@ -574,7 +574,7 @@ export default function TestPage() {
 
 - [ ] **Step 2: Run dev server and verify**
 
-Run: `cd studio && npm run dev`
+Run: `cd web && npm run dev`
 
 Open: `http://localhost:3000/test-animation`
 
@@ -588,7 +588,7 @@ Verify:
 - [ ] **Step 3: Delete the test page**
 
 ```bash
-rm -rf studio/app/test-animation
+rm -rf web/app/test-animation
 ```
 
 - [ ] **Step 4: Final commit with any tweaks**
@@ -596,7 +596,7 @@ rm -rf studio/app/test-animation
 If animation values needed tuning during visual review, commit the CSS changes:
 
 ```bash
-cd studio && git add -A && git commit -m "fix: tune animation values after visual review"
+cd web && git add -A && git commit -m "fix: tune animation values after visual review"
 ```
 
 If no changes were needed, skip this step.

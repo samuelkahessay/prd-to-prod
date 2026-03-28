@@ -12,7 +12,7 @@ SCRIPT="$ROOT_DIR/scripts/validate-implementation.sh"
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
-mkdir -p "$TMPDIR/scripts" "$TMPDIR/.github/deploy-profiles" "$TMPDIR/studio" "$TMPDIR/console" "$TMPDIR/bin"
+mkdir -p "$TMPDIR/scripts" "$TMPDIR/.github/deploy-profiles" "$TMPDIR/web" "$TMPDIR/console" "$TMPDIR/bin"
 cp "$ROOT_DIR/scripts/validate-implementation.sh" "$TMPDIR/scripts/"
 cp "$ROOT_DIR/scripts/require-node.sh" "$TMPDIR/scripts/"
 cp "$ROOT_DIR/scripts/resolve-nextjs-app-root.sh" "$TMPDIR/scripts/"
@@ -27,10 +27,10 @@ build:
   build: npm run build
   test: npm test
 YAML
-cat > "$TMPDIR/studio/package.json" <<'JSON'
-{"name":"studio","private":true}
+cat > "$TMPDIR/web/package.json" <<'JSON'
+{"name":"web","private":true}
 JSON
-cat > "$TMPDIR/studio/next.config.ts" <<'TS'
+cat > "$TMPDIR/web/next.config.ts" <<'TS'
 export default {};
 TS
 cat > "$TMPDIR/console/package.json" <<'JSON'
@@ -66,17 +66,17 @@ chmod +x "$TMPDIR/bin/node" "$TMPDIR/bin/npm"
   PATH="$TMPDIR/bin:$PATH" bash scripts/validate-implementation.sh >/dev/null
 )
 
-grep -F "$TMPDIR/studio|ci" "$LOG_FILE" >/dev/null || {
+grep -F "$TMPDIR/web|ci" "$LOG_FILE" >/dev/null || {
   echo "FAIL: validate-implementation.sh must run npm ci in the app root" >&2
   exit 1
 }
 
-grep -F "$TMPDIR/studio|run build" "$LOG_FILE" >/dev/null || {
+grep -F "$TMPDIR/web|run build" "$LOG_FILE" >/dev/null || {
   echo "FAIL: validate-implementation.sh must run npm run build in the app root" >&2
   exit 1
 }
 
-grep -F "$TMPDIR/studio|test" "$LOG_FILE" >/dev/null || {
+grep -F "$TMPDIR/web|test" "$LOG_FILE" >/dev/null || {
   echo "FAIL: validate-implementation.sh must run npm test in the app root" >&2
   exit 1
 }

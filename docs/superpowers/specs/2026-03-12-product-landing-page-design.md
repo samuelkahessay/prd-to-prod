@@ -22,7 +22,7 @@ The landing page needs to sell Offer A as the primary conversion path, position 
 
 ## Architecture: Approach B — Product Page with Anchored Nav
 
-Single-page layout with a sticky navigation bar that lets visitors jump between sections. Same codebase structure (Next.js app in `studio/`, CSS modules, server components with `fetchEvidenceData()`).
+Single-page layout with a sticky navigation bar that lets visitors jump between sections. Same codebase structure (Next.js app in `web/`, CSS modules, server components with `fetchEvidenceData()`).
 
 ### Page Structure (top to bottom)
 
@@ -50,8 +50,8 @@ Replaces the current static nav.
 - **Behavior:** Anchor links smooth-scroll to sections. "For Teams" scrolls to an `id="for-teams"` wrapper around Card B within the pricing section.
 
 ### Component changes
-- **Modify:** `studio/app/page.tsx` — replace current `<nav>` with new sticky nav component
-- **New component:** `studio/components/landing/sticky-nav.tsx` + `.module.css` (client component for scroll detection)
+- **Modify:** `web/app/page.tsx` — replace current `<nav>` with new sticky nav component
+- **New component:** `web/components/landing/sticky-nav.tsx` + `.module.css` (client component for scroll detection)
 
 ---
 
@@ -73,7 +73,7 @@ Replaces the current hero. The pipeline animation moves out.
 - Generous vertical padding (80px top, 60px bottom)
 
 ### Component changes
-- **Modify:** `studio/components/landing/hero.tsx` + `hero.module.css` — remove `<PipelineAnimation />` import, rewrite copy and CTAs
+- **Modify:** `web/components/landing/hero.tsx` + `hero.module.css` — remove `<PipelineAnimation />` import, rewrite copy and CTAs
 - The `PipelineAnimation` component is not deleted — it moves to Section 4
 
 ---
@@ -130,7 +130,7 @@ Two-column card layout:
 - Heading: `Pricing` (clean, one word — matches the minimal voice of the rest of the page)
 
 ### Component changes
-- **New component:** `studio/components/landing/pricing.tsx` + `pricing.module.css`
+- **New component:** `web/components/landing/pricing.tsx` + `pricing.module.css`
 
 ---
 
@@ -151,7 +151,7 @@ Three-column grid, each with a top border accent:
 3. **It stays healthy** — CI failures are detected, diagnosed, and fixed through the same pipeline. The system treats its own failures as work items.
 
 ### Component changes
-- **Modify:** `studio/components/landing/contrast-list.tsx` → rename to `what-you-get.tsx` + `what-you-get.module.css` (or replace in-place)
+- **Modify:** `web/components/landing/contrast-list.tsx` → rename to `what-you-get.tsx` + `what-you-get.module.css` (or replace in-place)
 - Update import in `page.tsx`
 
 ---
@@ -180,7 +180,7 @@ Replaces the current "How It Works" section. Absorbs the pipeline animation from
    `Built on GitHub Agentic Workflows — an open framework from GitHub for autonomous development workflows. We've filed 31 upstream findings, with 17 fixes shipped across 7 releases. The pipeline is real infrastructure, not a demo.`
 
 ### Component changes
-- **Modify:** `studio/components/landing/how-it-works.tsx` + `how-it-works.module.css` — restructure to include `PipelineAnimation`, new 5-step strip, credibility box
+- **Modify:** `web/components/landing/how-it-works.tsx` + `how-it-works.module.css` — restructure to include `PipelineAnimation`, new 5-step strip, credibility box
 - The `PipelineAnimation` component (`pipeline-animation.tsx`) is reused as-is, just rendered in a different parent
 
 ---
@@ -201,7 +201,7 @@ The subtitle addition ("with policy gates deciding what needs human approval") a
 - Footer: `Showing N events · View all on GitHub →`
 
 ### Component changes
-- **Modify:** `studio/components/landing/evidence-ledger.tsx` + `evidence-ledger.module.css` — update heading and subtitle text only. Structure unchanged.
+- **Modify:** `web/components/landing/evidence-ledger.tsx` + `evidence-ledger.module.css` — update heading and subtitle text only. Structure unchanged.
 
 ---
 
@@ -216,7 +216,7 @@ Replaces the current bottom CTA. Closes the loop with the offer.
 - Secondary: `View on GitHub` (text link)
 
 ### Component changes
-- **Modify:** `studio/components/landing/bottom-cta.tsx` + `bottom-cta.module.css` — rewrite copy and CTA targets
+- **Modify:** `web/components/landing/bottom-cta.tsx` + `bottom-cta.module.css` — rewrite copy and CTA targets
 
 ---
 
@@ -283,24 +283,24 @@ For now, all CTAs point to the same destination. The page does not need a built-
 
 | File | Action | Notes |
 |---|---|---|
-| `studio/app/page.tsx` | Modify | New section order, new imports, remove section numbers/dividers, add anchor IDs |
-| `studio/app/page.module.css` | Modify | Update nav styles for sticky behavior, adjust divider/spacing |
-| `studio/app/globals.css` | Minor modify | Add `html { scroll-behavior: smooth; }` for anchor link scrolling |
-| `studio/components/landing/hero.tsx` | Modify | New copy, remove animation, new CTAs |
-| `studio/components/landing/hero.module.css` | Modify | Single-column layout, no animation container |
-| `studio/components/landing/sticky-nav.tsx` | **New** | Client component with scroll detection, backdrop blur |
-| `studio/components/landing/sticky-nav.module.css` | **New** | Sticky positioning, blur, CTA button |
-| `studio/components/landing/pricing.tsx` | **New** | Two-card layout with tiers and scope box |
-| `studio/components/landing/pricing.module.css` | **New** | Card styles, tier lists, CTA buttons |
-| `studio/components/landing/contrast-list.tsx` | **Rename/Rewrite** | Becomes `what-you-get.tsx` — 3-column deliverables |
-| `studio/components/landing/contrast-list.module.css` | **Rename/Rewrite** | Becomes `what-you-get.module.css` |
-| `studio/components/landing/how-it-works.tsx` | Modify | Add PipelineAnimation, 5-step strip, credibility box |
-| `studio/components/landing/how-it-works.module.css` | Modify | Layout for animation + steps + credibility |
-| `studio/components/landing/evidence-ledger.tsx` | Modify | Update heading and subtitle text |
-| `studio/components/landing/bottom-cta.tsx` | Modify | New copy and CTA targets |
-| `studio/components/landing/bottom-cta.module.css` | Modify | Minor adjustments if needed |
-| `studio/components/landing/pipeline-animation.tsx` | No change | Reused as-is, rendered in new parent |
-| `studio/components/landing/pipeline-animation.module.css` | No change | — |
+| `web/app/page.tsx` | Modify | New section order, new imports, remove section numbers/dividers, add anchor IDs |
+| `web/app/page.module.css` | Modify | Update nav styles for sticky behavior, adjust divider/spacing |
+| `web/app/globals.css` | Minor modify | Add `html { scroll-behavior: smooth; }` for anchor link scrolling |
+| `web/components/landing/hero.tsx` | Modify | New copy, remove animation, new CTAs |
+| `web/components/landing/hero.module.css` | Modify | Single-column layout, no animation container |
+| `web/components/landing/sticky-nav.tsx` | **New** | Client component with scroll detection, backdrop blur |
+| `web/components/landing/sticky-nav.module.css` | **New** | Sticky positioning, blur, CTA button |
+| `web/components/landing/pricing.tsx` | **New** | Two-card layout with tiers and scope box |
+| `web/components/landing/pricing.module.css` | **New** | Card styles, tier lists, CTA buttons |
+| `web/components/landing/contrast-list.tsx` | **Rename/Rewrite** | Becomes `what-you-get.tsx` — 3-column deliverables |
+| `web/components/landing/contrast-list.module.css` | **Rename/Rewrite** | Becomes `what-you-get.module.css` |
+| `web/components/landing/how-it-works.tsx` | Modify | Add PipelineAnimation, 5-step strip, credibility box |
+| `web/components/landing/how-it-works.module.css` | Modify | Layout for animation + steps + credibility |
+| `web/components/landing/evidence-ledger.tsx` | Modify | Update heading and subtitle text |
+| `web/components/landing/bottom-cta.tsx` | Modify | New copy and CTA targets |
+| `web/components/landing/bottom-cta.module.css` | Modify | Minor adjustments if needed |
+| `web/components/landing/pipeline-animation.tsx` | No change | Reused as-is, rendered in new parent |
+| `web/components/landing/pipeline-animation.module.css` | No change | — |
 
 ---
 
@@ -313,6 +313,6 @@ For now, all CTAs point to the same destination. The page does not need a built-
 5. Pipeline animation renders in the "How It Works" section (not the hero)
 6. Evidence ledger still pulls live data from GitHub API
 7. Page is responsive — pricing cards and deliverables stack on mobile, nav adapts
-8. Build passes (`npm run build` in studio/)
+8. Build passes (`npm run build` in web/)
 9. No console errors on load
 10. "Powered by GitHub Agentic Workflows" appears in hero eyebrow and How It Works section label

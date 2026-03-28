@@ -320,7 +320,7 @@ export const WORLD_STATIONS: Record<
 > = {
   "blueprint-table": { x: 2, y: 2.5, label: "BLUEPRINT" },
   "code-forge": { x: 6.5, y: 2, label: "CODE FORGE" },
-  "design-studio": { x: 2, y: 6.5, label: "DESIGN STUDIO" },
+  "design-web": { x: 2, y: 6.5, label: "DESIGN STUDIO" },
   "inspection-bay": { x: 7, y: 6, label: "INSPECTION" },
   "launch-pad": { x: 10, y: 4.5, label: "LAUNCH PAD" },
 };

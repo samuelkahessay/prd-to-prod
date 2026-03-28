@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Consolidate two web stacks (Node console + .NET operator dashboard) into a single Next.js frontend (`studio/`) backed by the existing Express API, with a public landing page at `/` and an operator console at `/console`.
+**Goal:** Consolidate two web stacks (Node console + .NET operator dashboard) into a single Next.js frontend (`web/`) backed by the existing Express API, with a public landing page at `/` and an operator console at `/console`.
 
-**Architecture:** `studio/` (Next.js 15 + React 19) serves all UI. `console/` stays as the persistent Express API with SQLite-backed event store. Landing page is SSG with build-time GitHub data. Console pages are dynamic, hitting the Express API via Next.js rewrites. Auth middleware on all `/api/*` routes (enforcement boundary only — full auth deferred).
+**Architecture:** `web/` (Next.js 15 + React 19) serves all UI. `console/` stays as the persistent Express API with SQLite-backed event store. Landing page is SSG with build-time GitHub data. Console pages are dynamic, hitting the Express API via Next.js rewrites. Auth middleware on all `/api/*` routes (enforcement boundary only — full auth deferred).
 
 **Tech Stack:** Next.js 15 (App Router), React 19, TypeScript, better-sqlite3, DM Sans + JetBrains Mono, oklch color palette
 
@@ -15,10 +15,10 @@
 
 ## File Structure
 
-### studio/ (new files)
+### web/ (new files)
 
 ```
-studio/
+web/
 ├── package.json              (update — add dependencies)
 ├── tsconfig.json              (create — TypeScript config)
 ├── next.config.ts             (create — API rewrites to Express)
@@ -81,22 +81,22 @@ console/
 ### Task 1: Initialize Studio Project
 
 **Files:**
-- Modify: `studio/package.json`
-- Create: `studio/tsconfig.json`
-- Create: `studio/next.config.ts`
-- Create: `studio/app/layout.tsx`
-- Create: `studio/app/globals.css`
-- Create: `studio/app/page.tsx`
+- Modify: `web/package.json`
+- Create: `web/tsconfig.json`
+- Create: `web/next.config.ts`
+- Create: `web/app/layout.tsx`
+- Create: `web/app/globals.css`
+- Create: `web/app/page.tsx`
 
 - [ ] **Step 1: Install Next.js dependencies**
 
 ```bash
-cd studio && npm install next@latest react@latest react-dom@latest && npm install -D typescript @types/react @types/node
+cd web && npm install next@latest react@latest react-dom@latest && npm install -D typescript @types/react @types/node
 ```
 
 - [ ] **Step 2: Create TypeScript config**
 
-Create `studio/tsconfig.json`:
+Create `web/tsconfig.json`:
 
 ```json
 {
@@ -124,7 +124,7 @@ Create `studio/tsconfig.json`:
 
 - [ ] **Step 3: Create Next.js config with API rewrites**
 
-Create `studio/next.config.ts`:
+Create `web/next.config.ts`:
 
 ```typescript
 import type { NextConfig } from "next";
@@ -146,7 +146,7 @@ export default config;
 
 - [ ] **Step 4: Create design tokens**
 
-Create `studio/app/globals.css` with the full oklch palette, type scale, and shared traits from the spec. Reference: spec lines 169-208 and mockup `landing-v2.html` CSS variables.
+Create `web/app/globals.css` with the full oklch palette, type scale, and shared traits from the spec. Reference: spec lines 169-208 and mockup `landing-v2.html` CSS variables.
 
 ```css
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,900;1,400&family=JetBrains+Mono:wght@400;500&display=swap");
@@ -198,7 +198,7 @@ a {
 
 - [ ] **Step 5: Create root layout**
 
-Create `studio/app/layout.tsx`:
+Create `web/app/layout.tsx`:
 
 ```tsx
 import type { Metadata } from "next";
@@ -225,7 +225,7 @@ export default function RootLayout({
 
 - [ ] **Step 6: Create placeholder landing page**
 
-Create `studio/app/page.tsx`:
+Create `web/app/page.tsx`:
 
 ```tsx
 export default function LandingPage() {
@@ -241,7 +241,7 @@ export default function LandingPage() {
 - [ ] **Step 7: Verify the dev server starts**
 
 ```bash
-cd studio && npm run dev
+cd web && npm run dev
 ```
 
 Open http://localhost:3001 (or whatever port Next.js picks). Verify the placeholder page renders with correct fonts and cream background.
@@ -249,8 +249,8 @@ Open http://localhost:3001 (or whatever port Next.js picks). Verify the placehol
 - [ ] **Step 8: Commit**
 
 ```bash
-git add studio/
-git commit -m "feat(studio): initialize Next.js project with design tokens and API rewrites"
+git add web/
+git commit -m "feat(web): initialize Next.js project with design tokens and API rewrites"
 ```
 
 ---
@@ -258,11 +258,11 @@ git commit -m "feat(studio): initialize Next.js project with design tokens and A
 ### Task 2: Create Shared Types
 
 **Files:**
-- Create: `studio/lib/types.ts`
+- Create: `web/lib/types.ts`
 
 - [ ] **Step 1: Define TypeScript types matching the API contract**
 
-Create `studio/lib/types.ts`:
+Create `web/lib/types.ts`:
 
 ```typescript
 // Run types
@@ -375,8 +375,8 @@ export interface EvidenceRow {
 - [ ] **Step 2: Commit**
 
 ```bash
-git add studio/lib/types.ts
-git commit -m "feat(studio): add shared TypeScript types for API contract"
+git add web/lib/types.ts
+git commit -m "feat(web): add shared TypeScript types for API contract"
 ```
 
 ---
@@ -384,11 +384,11 @@ git commit -m "feat(studio): add shared TypeScript types for API contract"
 ### Task 3: Create API Client
 
 **Files:**
-- Create: `studio/lib/api.ts`
+- Create: `web/lib/api.ts`
 
 - [ ] **Step 1: Write the API client**
 
-Create `studio/lib/api.ts`. This wraps `fetch` calls to the Express API (proxied through Next.js rewrites in dev, reverse proxy in prod).
+Create `web/lib/api.ts`. This wraps `fetch` calls to the Express API (proxied through Next.js rewrites in dev, reverse proxy in prod).
 
 ```typescript
 import type {
@@ -467,8 +467,8 @@ export const api = {
 - [ ] **Step 2: Commit**
 
 ```bash
-git add studio/lib/api.ts
-git commit -m "feat(studio): add API client for Express backend"
+git add web/lib/api.ts
+git commit -m "feat(web): add API client for Express backend"
 ```
 
 ---
@@ -1326,13 +1326,13 @@ git commit -m "feat(console): add queue, decisions, audit endpoints with auth bo
 ### Task 8: GitHub Data Fetcher for Evidence Section
 
 **Files:**
-- Create: `studio/lib/github.ts`
+- Create: `web/lib/github.ts`
 
 - [ ] **Step 1: Create GitHub API data fetcher**
 
 This runs at build time (SSG) to fetch recent pipeline activity from the GitHub repo.
 
-Create `studio/lib/github.ts`:
+Create `web/lib/github.ts`:
 
 ```typescript
 import type { EvidenceRow, EvidenceOutcome } from "./types";
@@ -1472,8 +1472,8 @@ export async function fetchEvidenceData(): Promise<EvidenceRow[]> {
 - [ ] **Step 2: Commit**
 
 ```bash
-git add studio/lib/github.ts
-git commit -m "feat(studio): add GitHub data fetcher for landing page evidence"
+git add web/lib/github.ts
+git commit -m "feat(web): add GitHub data fetcher for landing page evidence"
 ```
 
 ---
@@ -1481,12 +1481,12 @@ git commit -m "feat(studio): add GitHub data fetcher for landing page evidence"
 ### Task 9: Build Landing Page
 
 **Files:**
-- Modify: `studio/app/page.tsx`
-- Create: `studio/components/landing/hero.tsx`
-- Create: `studio/components/landing/how-it-works.tsx`
-- Create: `studio/components/landing/contrast-list.tsx`
-- Create: `studio/components/landing/evidence-ledger.tsx`
-- Create: `studio/components/landing/bottom-cta.tsx`
+- Modify: `web/app/page.tsx`
+- Create: `web/components/landing/hero.tsx`
+- Create: `web/components/landing/how-it-works.tsx`
+- Create: `web/components/landing/contrast-list.tsx`
+- Create: `web/components/landing/evidence-ledger.tsx`
+- Create: `web/components/landing/bottom-cta.tsx`
 
 Reference mockup: `.superpowers/brainstorm/53633-1773285939/landing-v2.html`
 
@@ -1494,7 +1494,7 @@ The landing page components translate the approved mockup into React. The CSS us
 
 - [ ] **Step 1: Create hero component**
 
-Create `studio/components/landing/hero.tsx` and `studio/components/landing/hero.module.css`.
+Create `web/components/landing/hero.tsx` and `web/components/landing/hero.module.css`.
 
 The hero implements the left-aligned, asymmetric two-column layout from the mockup:
 - Left: headline (900 weight first line, 300 italic second), subtitle, CTA buttons
@@ -1505,7 +1505,7 @@ CSS module uses the expressive register type scale: `clamp(52px, 6.5vw, 88px)` f
 
 - [ ] **Step 2: Create how-it-works component**
 
-Create `studio/components/landing/how-it-works.tsx` and `studio/components/landing/how-it-works.module.css`.
+Create `web/components/landing/how-it-works.tsx` and `web/components/landing/how-it-works.module.css`.
 
 Three-column grid with the third column (Recover) at 1.4x width, heal-colored top border, and the concrete `BLOCKED` boundary example in monospace.
 
@@ -1513,7 +1513,7 @@ Reference: `landing-v2.html` lines 167-199
 
 - [ ] **Step 3: Create contrast-list component**
 
-Create `studio/components/landing/contrast-list.tsx` and `studio/components/landing/contrast-list.module.css`.
+Create `web/components/landing/contrast-list.tsx` and `web/components/landing/contrast-list.module.css`.
 
 NOT/IS flat list with muted/weighted text contrast.
 
@@ -1521,7 +1521,7 @@ Reference: `landing-v2.html` lines 206-240
 
 - [ ] **Step 4: Create evidence-ledger component**
 
-Create `studio/components/landing/evidence-ledger.tsx` and `studio/components/landing/evidence-ledger.module.css`.
+Create `web/components/landing/evidence-ledger.tsx` and `web/components/landing/evidence-ledger.module.css`.
 
 Server component that receives evidence data as props. Renders the ledger table with column headers (Time / Event / Duration / Outcome), color-coded outcome dots, and mono-styled refs that link to GitHub.
 
@@ -1531,7 +1531,7 @@ Fallback when no data: "Recent activity unavailable" message.
 
 - [ ] **Step 5: Create bottom-cta component**
 
-Create `studio/components/landing/bottom-cta.tsx` and `studio/components/landing/bottom-cta.module.css`.
+Create `web/components/landing/bottom-cta.tsx` and `web/components/landing/bottom-cta.module.css`.
 
 Left-aligned CTA section: "See the pipeline run." + "Open console" button + "View on GitHub →" link.
 
@@ -1539,7 +1539,7 @@ Reference: `landing-v2.html` lines 293-302
 
 - [ ] **Step 6: Assemble landing page**
 
-Update `studio/app/page.tsx`:
+Update `web/app/page.tsx`:
 
 ```tsx
 import { fetchEvidenceData } from "@/lib/github";
@@ -1581,12 +1581,12 @@ export default async function LandingPage() {
 }
 ```
 
-Create `studio/app/page.module.css` with the page-level layout styles (nav, dividers, spacing matching the expressive register).
+Create `web/app/page.module.css` with the page-level layout styles (nav, dividers, spacing matching the expressive register).
 
 - [ ] **Step 7: Verify landing page renders**
 
 ```bash
-cd studio && npm run dev
+cd web && npm run dev
 ```
 
 Open http://localhost:3001. Verify:
@@ -1599,8 +1599,8 @@ Open http://localhost:3001. Verify:
 - [ ] **Step 8: Commit**
 
 ```bash
-git add studio/app/ studio/components/landing/
-git commit -m "feat(studio): build landing page with all sections"
+git add web/app/ web/components/landing/
+git commit -m "feat(web): build landing page with all sections"
 ```
 
 ---
@@ -1610,13 +1610,13 @@ git commit -m "feat(studio): build landing page with all sections"
 ### Task 10: Console Layout and Nav
 
 **Files:**
-- Create: `studio/app/console/layout.tsx`
-- Create: `studio/components/console/console-nav.tsx`
-- Create: `studio/components/console/console-nav.module.css`
+- Create: `web/app/console/layout.tsx`
+- Create: `web/components/console/console-nav.tsx`
+- Create: `web/components/console/console-nav.module.css`
 
 - [ ] **Step 1: Create console nav component**
 
-Create `studio/components/console/console-nav.tsx` and its CSS module.
+Create `web/components/console/console-nav.tsx` and its CSS module.
 
 Compact tab bar with Launch / Runs / Queue tabs, queue badge count, pipeline health status. Uses the functional register (tighter type scale, denser spacing).
 
@@ -1682,7 +1682,7 @@ export function ConsoleNav({ queueCount, pipelineHealthy }: ConsoleNavProps) {
 
 - [ ] **Step 2: Create console layout**
 
-Create `studio/app/console/layout.tsx`:
+Create `web/app/console/layout.tsx`:
 
 ```tsx
 import { ConsoleNav } from "@/components/console/console-nav";
@@ -1721,7 +1721,7 @@ export default async function ConsoleLayout({
 
 - [ ] **Step 3: Create placeholder console page**
 
-Create `studio/app/console/page.tsx`:
+Create `web/app/console/page.tsx`:
 
 ```tsx
 export default function ConsolePage() {
@@ -1735,7 +1735,7 @@ Start both servers:
 
 ```bash
 cd console && node server.js &
-cd studio && npm run dev
+cd web && npm run dev
 ```
 
 Open http://localhost:3001/console. Verify the nav bar renders with tabs, logo, and pipeline status.
@@ -1743,8 +1743,8 @@ Open http://localhost:3001/console. Verify the nav bar renders with tabs, logo, 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add studio/app/console/ studio/components/console/
-git commit -m "feat(studio): add console layout with nav"
+git add web/app/console/ web/components/console/
+git commit -m "feat(web): add console layout with nav"
 ```
 
 ---
@@ -1752,16 +1752,16 @@ git commit -m "feat(studio): add console layout with nav"
 ### Task 11: Console Main Page — Launch + Queue + Runs
 
 **Files:**
-- Modify: `studio/app/console/page.tsx`
-- Create: `studio/components/console/launch-form.tsx`
-- Create: `studio/components/console/preflight-panel.tsx`
-- Create: `studio/components/console/queue-panel.tsx`
-- Create: `studio/components/console/runs-table.tsx`
+- Modify: `web/app/console/page.tsx`
+- Create: `web/components/console/launch-form.tsx`
+- Create: `web/components/console/preflight-panel.tsx`
+- Create: `web/components/console/queue-panel.tsx`
+- Create: `web/components/console/runs-table.tsx`
 - Create CSS modules for each
 
 - [ ] **Step 1: Create launch form component**
 
-Create `studio/components/console/launch-form.tsx` and CSS module.
+Create `web/components/console/launch-form.tsx` and CSS module.
 
 Client component (`"use client"`) with:
 - Toggle: Raw notes / WorkIQ query
@@ -1775,7 +1775,7 @@ Reference: `console-structure.html` lines 244-287
 
 - [ ] **Step 2: Create preflight panel component**
 
-Create `studio/components/console/preflight-panel.tsx` and CSS module.
+Create `web/components/console/preflight-panel.tsx` and CSS module.
 
 Receives preflight checks as props. Shows green/warn/off dots with labels and version values.
 
@@ -1783,7 +1783,7 @@ Reference: `console-structure.html` lines 290-315
 
 - [ ] **Step 3: Create queue panel component**
 
-Create `studio/components/console/queue-panel.tsx` and CSS module.
+Create `web/components/console/queue-panel.tsx` and CSS module.
 
 Client component that:
 - Shows pending human actions with Approve/Reject buttons
@@ -1797,7 +1797,7 @@ Per spec refinement: queue gets stronger urgency hierarchy than other sections.
 
 - [ ] **Step 4: Create runs table component**
 
-Create `studio/components/console/runs-table.tsx` and CSS module.
+Create `web/components/console/runs-table.tsx` and CSS module.
 
 Tabular ledger with columns: # / Title / Started / Duration / Status.
 - Color-coded status dots
@@ -1809,7 +1809,7 @@ Reference: `console-structure.html` lines 351-395
 
 - [ ] **Step 5: Assemble console main page**
 
-Update `studio/app/console/page.tsx`:
+Update `web/app/console/page.tsx`:
 
 ```tsx
 "use client";
@@ -1855,7 +1855,7 @@ export default function ConsolePage() {
 }
 ```
 
-Create `studio/app/console/page.module.css` with the two-column launch panel grid (form + preflight sidebar) matching `console-structure.html` layout.
+Create `web/app/console/page.module.css` with the two-column launch panel grid (form + preflight sidebar) matching `console-structure.html` layout.
 
 - [ ] **Step 6: Verify console page renders**
 
@@ -1868,8 +1868,8 @@ Start both servers, open http://localhost:3001/console. Verify:
 - [ ] **Step 7: Commit**
 
 ```bash
-git add studio/app/console/ studio/components/console/
-git commit -m "feat(studio): build console main page with launch, queue, and runs"
+git add web/app/console/ web/components/console/
+git commit -m "feat(web): build console main page with launch, queue, and runs"
 ```
 
 ---
@@ -1879,15 +1879,15 @@ git commit -m "feat(studio): build console main page with launch, queue, and run
 ### Task 12: Run Detail Page
 
 **Files:**
-- Create: `studio/app/console/runs/[id]/page.tsx`
-- Create: `studio/components/console/stage-track.tsx`
-- Create: `studio/components/console/decision-trail.tsx`
-- Create: `studio/components/console/artifacts-list.tsx`
+- Create: `web/app/console/runs/[id]/page.tsx`
+- Create: `web/components/console/stage-track.tsx`
+- Create: `web/components/console/decision-trail.tsx`
+- Create: `web/components/console/artifacts-list.tsx`
 - Create CSS modules for each
 
 - [ ] **Step 1: Create stage track component**
 
-Create `studio/components/console/stage-track.tsx` and CSS module.
+Create `web/components/console/stage-track.tsx` and CSS module.
 
 5-stage horizontal strip: Extract → Build → Review → Policy → Deploy.
 Each stage has a colored top border and state label. States: done (green), active (blue), blocked (orange), pending (gray). Blocked stages get a wash background.
@@ -1957,7 +1957,7 @@ export function StageTrack({ events }: { events: RunEvent[] }) {
 
 - [ ] **Step 2: Create decision trail component**
 
-Create `studio/components/console/decision-trail.tsx` and CSS module.
+Create `web/components/console/decision-trail.tsx` and CSS module.
 
 Timestamped audit entries with colored indicator dots. Dot colors: blue (auto), orange (blocked), purple (human), gray (system).
 
@@ -1965,7 +1965,7 @@ Reference: `console-structure.html` lines 425-468
 
 - [ ] **Step 3: Create artifacts list component**
 
-Create `studio/components/console/artifacts-list.tsx` and CSS module.
+Create `web/components/console/artifacts-list.tsx` and CSS module.
 
 Linked references to GitHub issue, PR, CI run, Vercel deploy, policy decision log.
 
@@ -1973,7 +1973,7 @@ Reference: `console-structure.html` lines 471-480
 
 - [ ] **Step 4: Create run detail page**
 
-Create `studio/app/console/runs/[id]/page.tsx`:
+Create `web/app/console/runs/[id]/page.tsx`:
 
 ```tsx
 import { api } from "@/lib/api";
@@ -2022,7 +2022,7 @@ export default async function RunDetailPage({
 }
 ```
 
-Create `studio/app/console/runs/[id]/page.module.css` with run detail layout styles.
+Create `web/app/console/runs/[id]/page.module.css` with run detail layout styles.
 
 - [ ] **Step 5: Verify run detail page**
 
@@ -2034,8 +2034,8 @@ Start both servers. If there are existing runs, navigate to one via the runs tab
 - [ ] **Step 6: Commit**
 
 ```bash
-git add studio/app/console/runs/ studio/components/console/stage-track.* studio/components/console/decision-trail.* studio/components/console/artifacts-list.*
-git commit -m "feat(studio): build run detail page with stage track, decisions, and artifacts"
+git add web/app/console/runs/ web/components/console/stage-track.* web/components/console/decision-trail.* web/components/console/artifacts-list.*
+git commit -m "feat(web): build run detail page with stage track, decisions, and artifacts"
 ```
 
 ---
@@ -2043,11 +2043,11 @@ git commit -m "feat(studio): build run detail page with stage track, decisions, 
 ### Task 13: Runs List Page
 
 **Files:**
-- Create: `studio/app/console/runs/page.tsx`
+- Create: `web/app/console/runs/page.tsx`
 
 - [ ] **Step 1: Create runs list page**
 
-Create `studio/app/console/runs/page.tsx`:
+Create `web/app/console/runs/page.tsx`:
 
 ```tsx
 import { api } from "@/lib/api";
@@ -2075,8 +2075,8 @@ export default async function RunsPage() {
 - [ ] **Step 2: Commit**
 
 ```bash
-git add studio/app/console/runs/page.tsx
-git commit -m "feat(studio): add runs list page"
+git add web/app/console/runs/page.tsx
+git commit -m "feat(web): add runs list page"
 ```
 
 ---
@@ -2095,7 +2095,7 @@ In `console/server.js`, remove:
 - `app.use(express.static(path.join(__dirname, "public")));`
 - The `/run/:id` and `/history` catch-all routes
 
-The Express server now only serves API routes. All UI is served by `studio`.
+The Express server now only serves API routes. All UI is served by `web`.
 
 - [ ] **Step 2: Delete old console frontend**
 
@@ -2139,7 +2139,7 @@ rm -rf PRDtoProd/
 
 ```bash
 git add -A PRDtoProd/
-git commit -m "chore: delete .NET operator dashboard — replaced by studio console"
+git commit -m "chore: delete .NET operator dashboard — replaced by web console"
 ```
 
 ---
@@ -2153,7 +2153,7 @@ git commit -m "chore: delete .NET operator dashboard — replaced by studio cons
 cd console && node server.js
 
 # Terminal 2: Next.js frontend
-cd studio && npm run dev
+cd web && npm run dev
 ```
 
 Verify all success criteria from the spec:
@@ -2162,7 +2162,7 @@ Verify all success criteria from the spec:
 2. ✅ Console at `/console` — launch form, queue, runs table
 3. ✅ Queue items are first-class — visible on console main page
 4. ✅ Run detail at `/console/runs/[id]` — stage track, decision trail, artifacts
-5. ✅ Single frontend codebase (`studio/`), single API (`console/`)
+5. ✅ Single frontend codebase (`web/`), single API (`console/`)
 6. ✅ No `PRDtoProd/` directory
 7. ✅ No `console/public/` directory
 8. ✅ API routes respond at `/api/*` via Next.js rewrites

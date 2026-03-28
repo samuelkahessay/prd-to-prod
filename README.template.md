@@ -8,7 +8,7 @@
 ./setup.sh
 ```
 
-The default `nextjs-vercel` scaffold ships the web app in `studio/`. Start feature
+The default `nextjs-vercel` scaffold ships the web app in `web/`. Start feature
 work there unless your PRD explicitly changes the app foundation.
 
 ## How It Works

@@ -16,11 +16,11 @@
 ### Task 1: Create pitch page CSS module
 
 **Files:**
-- Create: `studio/app/pitch/page.module.css`
+- Create: `web/app/pitch/page.module.css`
 
 - [ ] **Step 1: Create the CSS module**
 
-Copy the article page pattern from `studio/app/case-studies/aurrin-ventures/page.module.css` and add the stat strip styles.
+Copy the article page pattern from `web/app/case-studies/aurrin-ventures/page.module.css` and add the stat strip styles.
 
 ```css
 .shell {
@@ -195,7 +195,7 @@ Copy the article page pattern from `studio/app/case-studies/aurrin-ventures/page
 - [ ] **Step 2: Commit**
 
 ```bash
-git add studio/app/pitch/page.module.css
+git add web/app/pitch/page.module.css
 git commit -m "style: add pitch page CSS module"
 ```
 
@@ -204,11 +204,11 @@ git commit -m "style: add pitch page CSS module"
 ### Task 2: Create pitch page component
 
 **Files:**
-- Create: `studio/app/pitch/page.tsx`
+- Create: `web/app/pitch/page.tsx`
 
 - [ ] **Step 1: Create the page**
 
-Follow the same pattern as `studio/app/case-studies/aurrin-ventures/page.tsx`. All content is static — no data fetching needed.
+Follow the same pattern as `web/app/case-studies/aurrin-ventures/page.tsx`. All content is static — no data fetching needed.
 
 ```tsx
 import { Metadata } from "next";
@@ -457,7 +457,7 @@ export default function PitchPage() {
 - [ ] **Step 2: Verify build**
 
 ```bash
-cd studio && npm run build
+cd web && npm run build
 ```
 
 Expected: Build succeeds with no errors. The `/pitch` route is included in the output.
@@ -465,7 +465,7 @@ Expected: Build succeeds with no errors. The `/pitch` route is included in the o
 - [ ] **Step 3: Verify dev server**
 
 ```bash
-cd studio && npm run dev
+cd web && npm run dev
 ```
 
 Visit `http://localhost:3000/pitch`. Verify:
@@ -477,6 +477,6 @@ Visit `http://localhost:3000/pitch`. Verify:
 - [ ] **Step 4: Commit**
 
 ```bash
-git add studio/app/pitch/page.tsx
-git commit -m "feat(studio): add /pitch one-pager for investor outreach"
+git add web/app/pitch/page.tsx
+git commit -m "feat(web): add /pitch one-pager for investor outreach"
 ```

@@ -54,7 +54,7 @@ CTA card (6th):
 **Header**: "Built by the pipeline" heading with explanatory subtitle about the autonomous process.
 
 **Each card includes**:
-- Preview area (180px tall) — static screenshots of each app's landing state. Implementation must create `studio/public/showcase/` and capture a screenshot per app after each app is built
+- Preview area (180px tall) — static screenshots of each app's landing state. Implementation must create `web/public/showcase/` and capture a screenshot per app after each app is built
 - Run number and app name
 - Tech stack badge ("Originally ASP.NET + C#" for ported apps)
 - One-line description

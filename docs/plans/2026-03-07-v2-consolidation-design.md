@@ -15,7 +15,7 @@ meeting-to-main, so prd-to-prod must hold the migration doc before that happens.
 Today, three repos maintain overlapping pipeline infrastructure with no automated sync:
 
 - **prd-to-prod** — reference implementation (26 workflows, .NET app, operational scripts)
-- **prd-to-prod-template** — hand-maintained fork of prd-to-prod's workflows (27 workflows, studio UI, setup wizard)
+- **prd-to-prod-template** — hand-maintained fork of prd-to-prod's workflows (27 workflows, web UI, setup wizard)
 - **meeting-to-main** — thin ingress/extraction layer that triggers the template
 
 Drift is inevitable. Workflows, deploy profiles, and scripts diverge. Changes must be applied to two or three places. The template is a maintenance liability.
@@ -61,7 +61,7 @@ prd-to-prod/
 │   ├── copilot-instructions.md
 │   └── ISSUE_TEMPLATE/
 │
-├── studio/                           ← Next.js dashboard + landing page
+├── web/                           ← Next.js dashboard + landing page
 ├── scripts/                          ← operational scripts (subset exported)
 │   └── classify-ci-failure.sh        ← deterministic CI failure classifier
 ├── docs/
@@ -163,7 +163,7 @@ include:
   - .github/ISSUE_TEMPLATE/
 
   # ── Dashboard ──
-  - studio/
+  - web/
 
   # ── Scripts (runtime dependencies of workflows) ──
   # Rule: if any workflow sparse-checkouts or calls scripts/foo.sh, it must be here.
@@ -353,7 +353,7 @@ not a scaffold export gate.
 An empty `showcase/README.md` is included in the scaffold. Rationale:
 
 - `archive-run.sh` writes to `showcase/{run}/README.md` — the directory must exist
-- `studio/app/api/showcase/route.ts` degrades cleanly when empty (returns `{ entries: [] }`)
+- `web/app/api/showcase/route.ts` degrades cleanly when empty (returns `{ entries: [] }`)
 - The archive lifecycle and docs treat `showcase/` as a permanent repo surface
 - Forbidding it entirely would break the run lifecycle scripts
 
@@ -838,7 +838,7 @@ Retry count is tracked via a reserved HTML comment block in the CI failure issue
 ### Phase 1: Create the single maintained source repo
 - [x] Move `extraction/`, `trigger/`, `mocks/` into prd-to-prod
 - [x] Port scaffold-only assets from the legacy template repo into prd-to-prod:
-  `studio/`, `setup.sh`, `setup-verify.sh`, `README.template.md`, and any
+  `web/`, `setup.sh`, `setup-verify.sh`, `README.template.md`, and any
   template-owned docs/config needed by the exported scaffold
 - [ ] Verify v1 greenfield flow works end-to-end from the consolidated repo
 - [ ] Archive meeting-to-main repo
@@ -971,7 +971,7 @@ console/
     └── .gitkeep
 ```
 
-**Relationship to `studio/`:** Siblings, not parent-child. Studio is exported to generated repos (dashboard for pipeline status). Console is source-repo-only (operator control plane). No shared code at runtime. Visual consistency via shared CSS custom properties.
+**Relationship to `web/`:** Siblings, not parent-child. Studio is exported to generated repos (dashboard for pipeline status). Console is source-repo-only (operator control plane). No shared code at runtime. Visual consistency via shared CSS custom properties.
 
 ### 9.3 User Journey
 

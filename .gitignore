@@ -50,8 +50,14 @@ linkedin-posts-full.png
 output/
 generated-prd.md
 
+# Generated course
+prd-to-prod-course.html
+
 # Local tool state
 .playwright-mcp/
 .sisyphus/
 .superpowers/
 .worktrees/
+
+# Local playbook drafts
+docs/playbook/

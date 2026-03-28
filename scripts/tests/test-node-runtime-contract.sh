@@ -28,13 +28,13 @@ jq -e '.engines.node == "22.x"' "$ROOT_DIR/console/package.json" >/dev/null || {
   exit 1
 }
 
-jq -e '.engines.node == "22.x"' "$ROOT_DIR/studio/package.json" >/dev/null || {
-  echo "FAIL: studio/package.json must declare Node 22.x" >&2
+jq -e '.engines.node == "22.x"' "$ROOT_DIR/web/package.json" >/dev/null || {
+  echo "FAIL: web/package.json must declare Node 22.x" >&2
   exit 1
 }
 
-jq -e '.engines.node == "22.x"' "$ROOT_DIR/scaffold/studio-shell/package.json" >/dev/null || {
-  echo "FAIL: scaffold/studio-shell/package.json must declare Node 22.x" >&2
+jq -e '.engines.node == "22.x"' "$ROOT_DIR/scaffold/web-shell/package.json" >/dev/null || {
+  echo "FAIL: scaffold/web-shell/package.json must declare Node 22.x" >&2
   exit 1
 }
 
@@ -43,13 +43,13 @@ jq -e '.engines.node == "22.x"' "$ROOT_DIR/scaffold/studio-shell/package.json" >
   exit 1
 }
 
-[ "$(tr -d '[:space:]' < "$ROOT_DIR/studio/.npmrc")" = "engine-strict=true" ] || {
-  echo "FAIL: studio/.npmrc must enable engine-strict" >&2
+[ "$(tr -d '[:space:]' < "$ROOT_DIR/web/.npmrc")" = "engine-strict=true" ] || {
+  echo "FAIL: web/.npmrc must enable engine-strict" >&2
   exit 1
 }
 
-[ "$(tr -d '[:space:]' < "$ROOT_DIR/scaffold/studio-shell/.npmrc")" = "engine-strict=true" ] || {
-  echo "FAIL: scaffold/studio-shell/.npmrc must enable engine-strict" >&2
+[ "$(tr -d '[:space:]' < "$ROOT_DIR/scaffold/web-shell/.npmrc")" = "engine-strict=true" ] || {
+  echo "FAIL: scaffold/web-shell/.npmrc must enable engine-strict" >&2
   exit 1
 }
 

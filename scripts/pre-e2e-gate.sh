@@ -222,13 +222,13 @@ check_fly_health() {
     | jq -e '.status == "ok"' >/dev/null
 }
 
-check_vercel_studio() {
+check_vercel_web() {
   local code
   code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 https://prdtoprod.com)
   case "$code" in
     200|301|302|307|308) ;;
     *)
-      echo "Unexpected studio status code: $code" >&2
+      echo "Unexpected web status code: $code" >&2
       return 1
       ;;
   esac
@@ -239,8 +239,8 @@ check_template_repo() {
 }
 
 check_template_files() {
-  gh api repos/samuelkahessay/prd-to-prod-template/contents/studio/package.json --jq '.name' | grep -qx 'package.json'
-  gh api repos/samuelkahessay/prd-to-prod-template/contents/studio/next.config.ts --jq '.name' | grep -qx 'next.config.ts'
+  gh api repos/samuelkahessay/prd-to-prod-template/contents/web/package.json --jq '.name' | grep -qx 'package.json'
+  gh api repos/samuelkahessay/prd-to-prod-template/contents/web/next.config.ts --jq '.name' | grep -qx 'next.config.ts'
   gh api repos/samuelkahessay/prd-to-prod-template/contents/.deploy-profile --jq '.content' \
     | base64 -d \
     | tr -d '\n' \
@@ -355,10 +355,10 @@ run_check "Local: console preflight required checks pass" check_console_prefligh
 run_check "Local: resolved AI API key authenticates with OpenAI" check_local_agent_api_key
 
 run_check "App: console dependencies ready" ensure_node_dependencies "console" "console"
-run_check "App: studio dependencies ready" ensure_node_dependencies "studio" "studio"
+run_check "App: web dependencies ready" ensure_node_dependencies "web" "web"
 run_check_eval "App: console Jest" "cd console && npm test"
-run_check_eval "App: studio Jest" "cd studio && npm test"
-run_check_eval "App: studio build" "cd studio && npm run build"
+run_check_eval "App: web Jest" "cd web && npm test"
+run_check_eval "App: web build" "cd web && npm run build"
 
 run_check_eval "Contracts: final validation matrix" "bash scripts/tests/test-final-validation-matrix.sh"
 run_check_eval "Contracts: auto-dispatch requeue" "bash scripts/tests/test-auto-dispatch-requeue.sh"
@@ -371,7 +371,7 @@ if [ "$SKIP_LIVE" = false ]; then
   run_check "Live: GitHub Actions operational" check_github_actions_health
   run_check "Live: main CI green" check_main_ci_green
   run_check "Live: Fly console health" check_fly_health
-  run_check "Live: Vercel studio reachable" check_vercel_studio
+  run_check "Live: Vercel web reachable" check_vercel_web
   run_check "Live: template repo is published" check_template_repo
   run_check "Live: template scaffold files and deploy profile exist" check_template_files
   run_check "Live: Fly runtime AI API key exists" check_runtime_agent_api_key

@@ -14,8 +14,8 @@ include:
   - .github/copilot-instructions.md
   - .github/ISSUE_TEMPLATE/
 
-  # ── App shell (template gets minimal scaffold, not product studio) ──
-  # studio/ is remapped from scaffold/studio-shell/ via directory_remap below
+  # ── App shell (template gets minimal scaffold, not product web) ──
+  # web/ is remapped from scaffold/web-shell/ via directory_remap below
 
   # ── Scripts (runtime dependencies of workflows) ──
   - scripts/healing-control.sh
@@ -93,4 +93,4 @@ rename:
   README.template.md: README.md
 
 directory_remap:
-  scaffold/studio-shell: studio
+  scaffold/web-shell: web

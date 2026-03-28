@@ -172,7 +172,7 @@ if [[ -n "$APP_DIR" ]]; then
   # Already set via --app-dir flag
   true
 else
-  prompt APP_DIR "Where will your application source code live?" "studio"
+  prompt APP_DIR "Where will your application source code live?" "web"
 fi
 
 # Strip trailing slashes

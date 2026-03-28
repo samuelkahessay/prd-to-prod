@@ -10,7 +10,7 @@ has_next_config() {
     [ -f "$candidate/next.config.ts" ]
 }
 
-for candidate in "$REPO_ROOT/studio" "$REPO_ROOT"; do
+for candidate in "$REPO_ROOT/web" "$REPO_ROOT"; do
   if [ -f "$candidate/package.json" ] && has_next_config "$candidate"; then
     if [ "$candidate" = "$REPO_ROOT" ]; then
       echo "."
@@ -21,5 +21,5 @@ for candidate in "$REPO_ROOT/studio" "$REPO_ROOT"; do
   fi
 done
 
-echo "Could not resolve Next.js app root. Expected studio/ or repo root to contain package.json and next.config.*." >&2
+echo "Could not resolve Next.js app root. Expected web/ or repo root to contain package.json and next.config.*." >&2
 exit 1

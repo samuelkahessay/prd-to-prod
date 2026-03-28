@@ -23,7 +23,8 @@ const harness = createE2EHarness({
     process.env.E2E_CONSOLE_URL ||
     process.env.API_URL ||
     `http://127.0.0.1:${process.env.CONSOLE_PORT || 3000}`,
-  studioUrl:
+  webUrl:
+    process.env.E2E_WEB_URL ||
     process.env.E2E_STUDIO_URL ||
     process.env.FRONTEND_URL ||
     "http://127.0.0.1:3001",

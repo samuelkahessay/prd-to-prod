@@ -102,19 +102,22 @@ real work also produced 31 upstream findings and 17 bug fixes merged into
 | 04 | [Ticket Deflection Service](showcase/04-ticket-deflection/) | ASP.NET Core + C# |
 | 05 | [Compliance Scan Service](showcase/05-compliance-scan/) | ASP.NET Core + C# |
 
-## Upstream contributions
+## Filing issues
 
-The most active external contributor to gh-aw in its first month. 31 findings
-cataloged, 19 issues filed, 17 fixes shipped across 7 releases, 14 credited
-by name in release notes.
+Issues drive the pipeline. For an issue to be picked up automatically:
 
-| Release | Fixes |
-|---|---|
-| [`v0.51.3`](https://github.com/github/gh-aw/releases/tag/v0.51.3) | Concurrency group collapse, malformed reference validation |
-| [`v0.51.6`](https://github.com/github/gh-aw/releases/tag/v0.51.6) | JSON state collapse, auto-merge gating |
-| [`v0.53.0`](https://github.com/github/gh-aw/releases/tag/v0.53.0) | Push retry/backoff, stderr leak, ENOENT noise, model flag |
-| [`v0.53.3`](https://github.com/github/gh-aw/releases/tag/v0.53.3) | PR error crash, duplicate issue creation, missing labels |
-| [`v0.56.1`](https://github.com/github/gh-aw/releases/tag/v0.56.1) | Safe-outputs escalation, dispatch validation, bot identity matching |
+1. **Add the `pipeline` label** — this routes it to auto-dispatch.
+2. **Add a type label** — `bug`, `feature`, `enhancement`, `infra`, `docs`, or `test`. Without a type label the dispatcher classifies the issue as `missing_issue_type` and skips it.
+3. **Optionally add a category label** — `frontend` routes to the visual agent instead of `repo-assist`.
+
+**Writing good issues:**
+- Describe the desired experience, not the implementation
+- Include a "Scope" section with boundaries (what should and shouldn't change)
+- Don't name specific files — the agent reads the codebase itself
+- Acceptance criteria should be verifiable (build passes, behavior observable)
+- Target ~1,000 characters — enough for the agent to act without ambiguity
+
+Once labeled, `auto-dispatch.yml` fires and the appropriate agent picks it up. You can also manually trigger an agent by commenting `/repo-assist` on any issue.
 
 ## Self-hosting reference
 

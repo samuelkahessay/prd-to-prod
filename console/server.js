@@ -114,7 +114,7 @@ const e2eHarness = createE2EHarness({
   serviceResolver,
   projectRoot: path.resolve(__dirname, ".."),
   baseUrl: process.env.API_URL || `http://${host}:${port}`,
-  studioUrl: process.env.FRONTEND_URL || "http://127.0.0.1:3001",
+  webUrl: process.env.FRONTEND_URL || "http://127.0.0.1:3001",
 });
 
 registerE2ERunRoutes(app, { harness: e2eHarness });

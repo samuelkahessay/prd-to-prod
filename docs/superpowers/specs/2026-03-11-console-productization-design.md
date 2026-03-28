@@ -17,7 +17,7 @@ Two surfaces, one frontend, shared design language.
 ### Architecture
 
 ```
-studio/  (Next.js 15 + React 19)
+web/  (Next.js 15 + React 19)
 ├── /              Landing page (SSG)
 ├── /console       Operator console (dynamic)
 ├── /console/runs         Run history
@@ -40,17 +40,17 @@ DELETE after migration:
 ```
 
 **Key constraints:**
-- `studio` is the canonical frontend. All UI lives here.
+- `web` is the canonical frontend. All UI lives here.
 - `console` remains as the persistent Node API/orchestrator. SSE + SQLite requires a long-lived process.
 - API route shape is normalized to resource-first: `/api/run/:id/stream` (not `/api/run/stream/:id`), `/api/runs` (not `/api/history`). Existing `POST /api/run` keeps its shape. Preflight remains `GET /api/preflight` to match the current implementation.
 - One public domain. In dev: Next.js rewrites in `next.config.js` proxy `/api/*` to Express on `:3000`. In production: reverse proxy or Vercel rewrites route `/api/*` to the persistent Node host. The Express API must not be forced into Vercel serverless — SSE + SQLite requires a long-lived process.
-- Shared design tokens live in `studio`, not as cross-project raw CSS.
+- Shared design tokens live in `web`, not as cross-project raw CSS.
 - `/` is public. `/console/*` and all `/api/*` endpoints are operator-authenticated. The console is an operator surface, not a public dashboard. Public proof for the landing page comes from build-time GitHub data, not from exposing the console API anonymously.
 
 ### Migration order
 
-1. Build `studio` with landing page (`/`) and console routes (`/console/*`)
-2. Wire `studio` to existing Express API endpoints
+1. Build `web` with landing page (`/`) and console routes (`/console/*`)
+2. Wire `web` to existing Express API endpoints
 3. Add new API endpoints (queue, decisions, audit)
 4. Reach feature parity with `console/public/` and retire it
 5. Delete `PRDtoProd/` after replacement is complete
@@ -352,8 +352,8 @@ The Evidence section on `/` requires real pipeline activity data. Data strategy:
 
 ## What Gets Deleted
 
-- `PRDtoProd/` — entire .NET project (after `studio` replaces its functionality per the mapping above)
-- `console/public/` — vanilla HTML/CSS/JS frontend (after `studio` reaches feature parity)
+- `PRDtoProd/` — entire .NET project (after `web` replaces its functionality per the mapping above)
+- `console/public/` — vanilla HTML/CSS/JS frontend (after `web` reaches feature parity)
 - Any Azure deployment configuration for the .NET app
 
 ## What stays
@@ -370,7 +370,7 @@ The Evidence section on `/` requires real pipeline activity data. Data strategy:
 2. Console at `/console` replaces both the old console UI and the .NET operator dashboard
 3. Queue items and policy boundaries are first-class, not buried
 4. Decision trail is inspectable per run with timestamps, refs, and artifact links
-5. Single frontend codebase (`studio`), single API (`console`), no .NET dependency
+5. Single frontend codebase (`web`), single API (`console`), no .NET dependency
 6. Proof section on landing page shows real pipeline activity, not static marketing copy
 7. Drills are labeled honestly as verification runs
 8. Both surfaces share visual tokens but operate at different registers

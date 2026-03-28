@@ -143,7 +143,7 @@ The frontend redirects to OAuth with `return_to` pointing back to the build stat
 | `console/routes/pub-build-session.js` | Add auth check to session creation, apply `resolveSessionAccess` to GET, message, finalize. Remove `user_id` binding from finalize. |
 | `console/routes/pub-build-stream.js` | Apply `resolveSessionAccess` before SSE connection. |
 | `console/routes/pub-provision.js` | Return structured error on expired OAuth grant. |
-| `studio/app/build/page.tsx` | Check auth before creating real session. Show sign-in CTA if unauthenticated. Handle `oauth_grant_expired` error. |
+| `web/app/build/page.tsx` | Check auth before creating real session. Show sign-in CTA if unauthenticated. Handle `oauth_grant_expired` error. |
 
 4 files. No new files, no new abstractions.
 
@@ -185,7 +185,7 @@ The frontend redirects to OAuth with `return_to` pointing back to the build stat
 
 - `console/test/pub-provision.test.js` — ownership checks already tested
 - `console/test/build-flow.test.tsx` — demo flow should be unaffected
-- `studio/test/build-flow.test.tsx` — demo flow should be unaffected
+- `web/test/build-flow.test.tsx` — demo flow should be unaffected
 
 ---
 

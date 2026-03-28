@@ -323,7 +323,7 @@ export function drawAllFurniture(
       case "code-forge":
         drawCodeForge(ctx, vp, ws.x, ws.y, isActive, time);
         break;
-      case "design-studio":
+      case "design-web":
         drawDesignStudio(ctx, vp, ws.x, ws.y, isActive, time);
         break;
       case "inspection-bay":

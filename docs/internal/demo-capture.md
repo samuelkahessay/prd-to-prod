@@ -24,10 +24,10 @@ cd console
 FRONTEND_URL=http://127.0.0.1:3001 node server.js
 ```
 
-Start the studio:
+Start the web:
 
 ```bash
-cd studio
+cd web
 API_URL=http://127.0.0.1:3000 npm run dev -- --hostname 127.0.0.1 --port 3001
 ```
 

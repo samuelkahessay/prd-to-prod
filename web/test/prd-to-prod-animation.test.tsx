@@ -1,4 +1,4 @@
-// studio/test/prd-to-prod-animation.test.tsx
+// web/test/prd-to-prod-animation.test.tsx
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";

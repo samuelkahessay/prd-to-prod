@@ -5,8 +5,8 @@ ROOT_DIR=$(cd "$(dirname "$0")/../.." && pwd)
 SCRIPT="$ROOT_DIR/scripts/resolve-nextjs-app-root.sh"
 
 APP_ROOT=$(bash "$SCRIPT" "$ROOT_DIR")
-[ "$APP_ROOT" = "studio" ] || {
-  echo "FAIL: expected repo app root to resolve to studio, got '$APP_ROOT'" >&2
+[ "$APP_ROOT" = "web" ] || {
+  echo "FAIL: expected repo app root to resolve to web, got '$APP_ROOT'" >&2
   exit 1
 }
 

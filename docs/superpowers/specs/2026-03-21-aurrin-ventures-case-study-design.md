@@ -303,7 +303,7 @@ The architecture page additionally needs:
 ## 4. File Structure
 
 ```
-studio/app/case-studies/aurrin-ventures/
+web/app/case-studies/aurrin-ventures/
   page.tsx              — partnership overview (Server Component)
   page.module.css       — styles for partnership page
   architecture/

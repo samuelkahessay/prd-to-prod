@@ -4,7 +4,7 @@
 
 **Goal:** Redesign the prd-to-prod landing page from a technical showcase into a product page with two service offerings, sticky nav, and buyer-focused messaging.
 
-**Architecture:** Next.js 16 app in `studio/` using CSS modules + server components. All landing page components live in `studio/components/landing/`. The page is server-rendered with one async data fetch (`fetchEvidenceData()`). One new client component (sticky nav with scroll detection). Existing `PipelineAnimation` client component reused in a new location.
+**Architecture:** Next.js 16 app in `web/` using CSS modules + server components. All landing page components live in `web/components/landing/`. The page is server-rendered with one async data fetch (`fetchEvidenceData()`). One new client component (sticky nav with scroll detection). Existing `PipelineAnimation` client component reused in a new location.
 
 **Tech Stack:** Next.js 16, React 19, TypeScript 5.9, CSS Modules
 
@@ -17,11 +17,11 @@
 ### Task 1: Add smooth scrolling to globals.css
 
 **Files:**
-- Modify: `studio/app/globals.css`
+- Modify: `web/app/globals.css`
 
 - [ ] **Step 1: Add scroll-behavior rule**
 
-Add to `studio/app/globals.css`, inside the existing `body` block or as a new `html` rule at the top of the file (after `:root`):
+Add to `web/app/globals.css`, inside the existing `body` block or as a new `html` rule at the top of the file (after `:root`):
 
 ```css
 html {
@@ -34,13 +34,13 @@ The `scroll-padding-top` offsets anchor scroll targets so they don't land behind
 
 - [ ] **Step 2: Verify build**
 
-Run: `cd studio && npm run build`
+Run: `cd web && npm run build`
 Expected: Build succeeds
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add studio/app/globals.css
+git add web/app/globals.css
 git commit -m "feat: add smooth scroll behavior for anchor navigation"
 ```
 
@@ -49,12 +49,12 @@ git commit -m "feat: add smooth scroll behavior for anchor navigation"
 ### Task 2: Create sticky nav component
 
 **Files:**
-- Create: `studio/components/landing/sticky-nav.tsx`
-- Create: `studio/components/landing/sticky-nav.module.css`
+- Create: `web/components/landing/sticky-nav.tsx`
+- Create: `web/components/landing/sticky-nav.module.css`
 
 - [ ] **Step 1: Create the CSS module**
 
-Create `studio/components/landing/sticky-nav.module.css`:
+Create `web/components/landing/sticky-nav.module.css`:
 
 ```css
 .nav {
@@ -126,7 +126,7 @@ Create `studio/components/landing/sticky-nav.module.css`:
 
 - [ ] **Step 2: Create the component**
 
-Create `studio/components/landing/sticky-nav.tsx`:
+Create `web/components/landing/sticky-nav.tsx`:
 
 ```tsx
 "use client";
@@ -171,13 +171,13 @@ export function StickyNav() {
 
 - [ ] **Step 3: Verify build**
 
-Run: `cd studio && npm run build`
+Run: `cd web && npm run build`
 Expected: Build succeeds (component not yet mounted, just verifying it compiles)
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add studio/components/landing/sticky-nav.tsx studio/components/landing/sticky-nav.module.css
+git add web/components/landing/sticky-nav.tsx web/components/landing/sticky-nav.module.css
 git commit -m "feat: create sticky nav component with scroll detection"
 ```
 
@@ -186,12 +186,12 @@ git commit -m "feat: create sticky nav component with scroll detection"
 ### Task 3: Rewrite the hero component
 
 **Files:**
-- Modify: `studio/components/landing/hero.tsx`
-- Modify: `studio/components/landing/hero.module.css`
+- Modify: `web/components/landing/hero.tsx`
+- Modify: `web/components/landing/hero.module.css`
 
 - [ ] **Step 1: Rewrite hero.module.css**
 
-Replace the entire contents of `studio/components/landing/hero.module.css` with:
+Replace the entire contents of `web/components/landing/hero.module.css` with:
 
 ```css
 .hero {
@@ -267,7 +267,7 @@ Replace the entire contents of `studio/components/landing/hero.module.css` with:
 
 - [ ] **Step 2: Rewrite hero.tsx**
 
-Replace the entire contents of `studio/components/landing/hero.tsx` with:
+Replace the entire contents of `web/components/landing/hero.tsx` with:
 
 ```tsx
 import styles from "./hero.module.css";
@@ -298,13 +298,13 @@ export function Hero() {
 
 - [ ] **Step 3: Verify build**
 
-Run: `cd studio && npm run build`
+Run: `cd web && npm run build`
 Expected: Build succeeds
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add studio/components/landing/hero.tsx studio/components/landing/hero.module.css
+git add web/components/landing/hero.tsx web/components/landing/hero.module.css
 git commit -m "feat: rewrite hero with buyer-focused copy and CTAs"
 ```
 
@@ -315,12 +315,12 @@ git commit -m "feat: rewrite hero with buyer-focused copy and CTAs"
 ### Task 4: Create the pricing component
 
 **Files:**
-- Create: `studio/components/landing/pricing.tsx`
-- Create: `studio/components/landing/pricing.module.css`
+- Create: `web/components/landing/pricing.tsx`
+- Create: `web/components/landing/pricing.module.css`
 
 - [ ] **Step 1: Create pricing.module.css**
 
-Create `studio/components/landing/pricing.module.css`:
+Create `web/components/landing/pricing.module.css`:
 
 ```css
 .section {
@@ -518,7 +518,7 @@ Create `studio/components/landing/pricing.module.css`:
 
 - [ ] **Step 2: Create pricing.tsx**
 
-Create `studio/components/landing/pricing.tsx`:
+Create `web/components/landing/pricing.tsx`:
 
 ```tsx
 import styles from "./pricing.module.css";
@@ -628,13 +628,13 @@ export function Pricing() {
 
 - [ ] **Step 3: Verify build**
 
-Run: `cd studio && npm run build`
+Run: `cd web && npm run build`
 Expected: Build succeeds
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add studio/components/landing/pricing.tsx studio/components/landing/pricing.module.css
+git add web/components/landing/pricing.tsx web/components/landing/pricing.module.css
 git commit -m "feat: create pricing section with Offer A and Offer B tiers"
 ```
 
@@ -643,14 +643,14 @@ git commit -m "feat: create pricing section with Offer A and Offer B tiers"
 ### Task 5: Create "What You Get" component (replacing contrast list)
 
 **Files:**
-- Create: `studio/components/landing/what-you-get.tsx`
-- Create: `studio/components/landing/what-you-get.module.css`
-- Delete: `studio/components/landing/contrast-list.tsx`
-- Delete: `studio/components/landing/contrast-list.module.css`
+- Create: `web/components/landing/what-you-get.tsx`
+- Create: `web/components/landing/what-you-get.module.css`
+- Delete: `web/components/landing/contrast-list.tsx`
+- Delete: `web/components/landing/contrast-list.module.css`
 
 - [ ] **Step 1: Create what-you-get.module.css**
 
-Create `studio/components/landing/what-you-get.module.css`:
+Create `web/components/landing/what-you-get.module.css`:
 
 ```css
 .section {
@@ -721,7 +721,7 @@ Create `studio/components/landing/what-you-get.module.css`:
 
 - [ ] **Step 2: Create what-you-get.tsx**
 
-Create `studio/components/landing/what-you-get.tsx`:
+Create `web/components/landing/what-you-get.tsx`:
 
 ```tsx
 import styles from "./what-you-get.module.css";
@@ -766,7 +766,7 @@ export function WhatYouGet() {
 - [ ] **Step 3: Commit new component only (do NOT delete contrast-list yet — page.tsx still imports it)**
 
 ```bash
-git add studio/components/landing/what-you-get.tsx studio/components/landing/what-you-get.module.css
+git add web/components/landing/what-you-get.tsx web/components/landing/what-you-get.module.css
 git commit -m "feat: create buyer-focused 'What You Get' section"
 ```
 
@@ -779,12 +779,12 @@ The old `contrast-list.tsx` and `contrast-list.module.css` will be deleted in Ta
 ### Task 6: Rewrite "How It Works" to include pipeline animation
 
 **Files:**
-- Modify: `studio/components/landing/how-it-works.tsx`
-- Modify: `studio/components/landing/how-it-works.module.css`
+- Modify: `web/components/landing/how-it-works.tsx`
+- Modify: `web/components/landing/how-it-works.module.css`
 
 - [ ] **Step 1: Rewrite how-it-works.module.css**
 
-Replace the entire contents of `studio/components/landing/how-it-works.module.css` with:
+Replace the entire contents of `web/components/landing/how-it-works.module.css` with:
 
 ```css
 .section {
@@ -927,7 +927,7 @@ Replace the entire contents of `studio/components/landing/how-it-works.module.cs
 
 - [ ] **Step 2: Rewrite how-it-works.tsx**
 
-Replace the entire contents of `studio/components/landing/how-it-works.tsx` with:
+Replace the entire contents of `web/components/landing/how-it-works.tsx` with:
 
 ```tsx
 import { PipelineAnimation } from "./pipeline-animation";
@@ -1003,13 +1003,13 @@ export function HowItWorks() {
 
 - [ ] **Step 3: Verify build**
 
-Run: `cd studio && npm run build`
+Run: `cd web && npm run build`
 Expected: Build succeeds. `page.tsx` still imports `HowItWorks` by name, and `contrast-list.tsx` still exists, so no broken imports.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add studio/components/landing/how-it-works.tsx studio/components/landing/how-it-works.module.css
+git add web/components/landing/how-it-works.tsx web/components/landing/how-it-works.module.css
 git commit -m "feat: restructure How It Works with pipeline animation and gh-aw credibility"
 ```
 
@@ -1018,14 +1018,14 @@ git commit -m "feat: restructure How It Works with pipeline animation and gh-aw 
 ### Task 7: Update evidence ledger and bottom CTA copy
 
 **Files:**
-- Modify: `studio/components/landing/evidence-ledger.tsx`
-- Modify: `studio/components/landing/evidence-ledger.module.css`
-- Modify: `studio/components/landing/bottom-cta.tsx`
-- Modify: `studio/components/landing/bottom-cta.module.css`
+- Modify: `web/components/landing/evidence-ledger.tsx`
+- Modify: `web/components/landing/evidence-ledger.module.css`
+- Modify: `web/components/landing/bottom-cta.tsx`
+- Modify: `web/components/landing/bottom-cta.module.css`
 
 - [ ] **Step 1: Replace evidence-ledger.tsx**
 
-Replace the entire contents of `studio/components/landing/evidence-ledger.tsx` with:
+Replace the entire contents of `web/components/landing/evidence-ledger.tsx` with:
 
 ```tsx
 import type { EvidenceRow } from "@/lib/types";
@@ -1114,7 +1114,7 @@ export function EvidenceLedger({ rows }: { rows: EvidenceRow[] }) {
 
 - [ ] **Step 2: Update evidence-ledger.module.css**
 
-In `studio/components/landing/evidence-ledger.module.css`, delete the `.num` block (the 9-line block starting with `.num {` and ending with `display: block;` + `}`). These lines:
+In `web/components/landing/evidence-ledger.module.css`, delete the `.num` block (the 9-line block starting with `.num {` and ending with `display: block;` + `}`). These lines:
 
 ```css
 /* DELETE THIS BLOCK */
@@ -1133,7 +1133,7 @@ Leave all other classes unchanged.
 
 - [ ] **Step 3: Replace bottom-cta.tsx**
 
-Replace the entire contents of `studio/components/landing/bottom-cta.tsx` with:
+Replace the entire contents of `web/components/landing/bottom-cta.tsx` with:
 
 ```tsx
 import styles from "./bottom-cta.module.css";
@@ -1164,7 +1164,7 @@ export function BottomCta() {
 
 - [ ] **Step 4: Update bottom-cta.module.css**
 
-In `studio/components/landing/bottom-cta.module.css`, change `.ctaLink` to remove `margin-left` (the link is now on a separate line, not inline):
+In `web/components/landing/bottom-cta.module.css`, change `.ctaLink` to remove `margin-left` (the link is now on a separate line, not inline):
 
 Replace:
 ```css
@@ -1182,13 +1182,13 @@ With:
 
 - [ ] **Step 5: Verify build**
 
-Run: `cd studio && npm run build`
+Run: `cd web && npm run build`
 Expected: Build succeeds. `page.tsx` still imports `ContrastList` but the file still exists (we deferred deletion to Task 8).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add studio/components/landing/evidence-ledger.tsx studio/components/landing/evidence-ledger.module.css studio/components/landing/bottom-cta.tsx studio/components/landing/bottom-cta.module.css
+git add web/components/landing/evidence-ledger.tsx web/components/landing/evidence-ledger.module.css web/components/landing/bottom-cta.tsx web/components/landing/bottom-cta.module.css
 git commit -m "feat: update evidence ledger and bottom CTA with product copy"
 ```
 
@@ -1199,18 +1199,18 @@ git commit -m "feat: update evidence ledger and bottom CTA with product copy"
 ### Task 8: Rewire page.tsx with new section order and components
 
 **Files:**
-- Modify: `studio/app/page.tsx`
-- Modify: `studio/app/page.module.css`
+- Modify: `web/app/page.tsx`
+- Modify: `web/app/page.module.css`
 
 - [ ] **Step 1: Delete old contrast list files**
 
 ```bash
-git rm studio/components/landing/contrast-list.tsx studio/components/landing/contrast-list.module.css
+git rm web/components/landing/contrast-list.tsx web/components/landing/contrast-list.module.css
 ```
 
 - [ ] **Step 2: Rewrite page.tsx**
 
-Replace the entire contents of `studio/app/page.tsx` with:
+Replace the entire contents of `web/app/page.tsx` with:
 
 ```tsx
 import { fetchEvidenceData } from "@/lib/github";
@@ -1253,7 +1253,7 @@ export default async function LandingPage() {
 
 - [ ] **Step 3: Update page.module.css**
 
-Replace the entire contents of `studio/app/page.module.css` with:
+Replace the entire contents of `web/app/page.module.css` with:
 
 ```css
 .page {
@@ -1277,19 +1277,19 @@ The old `.nav`, `.logo`, `.links` classes are removed — the sticky nav compone
 
 - [ ] **Step 4: Verify build**
 
-Run: `cd studio && npm run build`
+Run: `cd web && npm run build`
 Expected: Build succeeds. All imports resolve, no type errors.
 
 - [ ] **Step 5: Verify dev server renders**
 
-Run: `cd studio && npm run dev`
+Run: `cd web && npm run dev`
 Open: `http://localhost:3000`
 Expected: Page loads with all sections in order. Sticky nav appears on scroll. All CTAs point to mailto link. Pipeline animation renders in How It Works section. Evidence ledger shows live data (or empty state if no GitHub token).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add studio/app/page.tsx studio/app/page.module.css studio/components/landing/contrast-list.tsx studio/components/landing/contrast-list.module.css
+git add web/app/page.tsx web/app/page.module.css web/components/landing/contrast-list.tsx web/components/landing/contrast-list.module.css
 git commit -m "feat: rewire landing page with product section order and sticky nav
 
 Removes old contrast-list component (replaced by what-you-get in Task 5)."
@@ -1304,7 +1304,7 @@ Removes old contrast-list component (replaced by what-you-get in Task 5)."
 
 - [ ] **Step 1: Full build check**
 
-Run: `cd studio && npm run build`
+Run: `cd web && npm run build`
 Expected: Build succeeds with no errors and no warnings about unused exports.
 
 - [ ] **Step 2: Check for dead imports**
@@ -1312,7 +1312,7 @@ Expected: Build succeeds with no errors and no warnings about unused exports.
 Verify that no file still imports from `contrast-list.tsx` or references the old `ContrastList` component:
 
 ```bash
-grep -r "contrast-list\|ContrastList" studio/
+grep -r "contrast-list\|ContrastList" web/
 ```
 
 Expected: No results.

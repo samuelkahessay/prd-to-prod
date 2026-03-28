@@ -14,7 +14,7 @@ export interface WorldPoint {
 export const CENTER_STAGE: WorldPoint = { x: 5.5, y: 5 };
 
 const REVIEW_HANDOFF: Record<
-  Extract<WorkstationId, "code-forge" | "design-studio">,
+  Extract<WorkstationId, "code-forge" | "design-web">,
   {
     sourceAgent: AgentId;
     sourceRoute: WorldPoint[];
@@ -32,7 +32,7 @@ const REVIEW_HANDOFF: Record<
       getAgentHomePosition("reviewer"),
     ],
   },
-  "design-studio": {
+  "design-web": {
     sourceAgent: "frontend-designer",
     sourceRoute: [
       { x: 4.9, y: 5.9 },
@@ -56,16 +56,16 @@ const CELEBRATION_APPROACH: Record<AgentId, WorldPoint> = {
 const TRANSIT_ANCHORS: Record<WorkstationId, WorldPoint> = {
   "blueprint-table": { x: 3.4, y: 3.1 },
   "code-forge": { x: 8.1, y: 3.0 },
-  "design-studio": { x: 3.4, y: 7.1 },
+  "design-web": { x: 3.4, y: 7.1 },
   "inspection-bay": { x: 7.9, y: 6.7 },
   "launch-pad": { x: 10.9, y: 5.4 },
 };
 
 const TRANSIT_HUBS: Partial<Record<`${WorkstationId}:${WorkstationId}`, WorldPoint[]>> = {
   "blueprint-table:code-forge": [{ x: 4.9, y: 3.9 }],
-  "blueprint-table:design-studio": [{ x: 3.9, y: 4.9 }],
+  "blueprint-table:design-web": [{ x: 3.9, y: 4.9 }],
   "code-forge:inspection-bay": [{ x: 7.1, y: 4.2 }, { x: 7.3, y: 5.6 }],
-  "design-studio:inspection-bay": [{ x: 4.8, y: 6.1 }, { x: 6, y: 6.2 }],
+  "design-web:inspection-bay": [{ x: 4.8, y: 6.1 }, { x: 6, y: 6.2 }],
   "inspection-bay:launch-pad": [{ x: 8.8, y: 5.8 }, { x: 9.7, y: 5.2 }],
 };
 
@@ -109,7 +109,7 @@ export function getReviewRoutes(
   sourceRoute: WorldPoint[];
   reviewerRoute: WorldPoint[];
 } | null {
-  if (from !== "code-forge" && from !== "design-studio") {
+  if (from !== "code-forge" && from !== "design-web") {
     return null;
   }
 

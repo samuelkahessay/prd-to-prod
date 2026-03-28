@@ -14,8 +14,8 @@
 
 | File | Action | Responsibility |
 |------|--------|---------------|
-| `studio/components/shared/prd-to-prod-animation.module.css` | Modify | Change `translateX` values in `@keyframes shiftD` from px to em |
-| `studio/test/prd-to-prod-animation.test.tsx` | No change | Existing tests cover rendering and props; this is a CSS-only change with no component logic changes |
+| `web/components/shared/prd-to-prod-animation.module.css` | Modify | Change `translateX` values in `@keyframes shiftD` from px to em |
+| `web/test/prd-to-prod-animation.test.tsx` | No change | Existing tests cover rendering and props; this is a CSS-only change with no component logic changes |
 
 ---
 
@@ -34,11 +34,11 @@ The gap grows with font size because the shift is fixed pixels while the charact
 ### Task 1: Fix shiftD Keyframes
 
 **Files:**
-- Modify: `studio/components/shared/prd-to-prod-animation.module.css:112-148` (`@keyframes shiftD`)
+- Modify: `web/components/shared/prd-to-prod-animation.module.css:112-148` (`@keyframes shiftD`)
 
 - [ ] **Step 1: Run existing tests to confirm green baseline**
 
-Run: `cd studio && npx jest test/prd-to-prod-animation.test.tsx --verbose`
+Run: `cd web && npx jest test/prd-to-prod-animation.test.tsx --verbose`
 Expected: All 11 tests pass
 
 - [ ] **Step 2: Update the shiftD keyframes**
@@ -89,12 +89,12 @@ Note: The overshoot values at 36% (`2px` → `0.03em`) and 43% (`-1px` → `-0.0
 
 - [ ] **Step 3: Run tests to confirm nothing broke**
 
-Run: `cd studio && npx jest test/prd-to-prod-animation.test.tsx --verbose`
+Run: `cd web && npx jest test/prd-to-prod-animation.test.tsx --verbose`
 Expected: All 11 tests still pass (this is CSS-only, no component logic changed)
 
 - [ ] **Step 4: Visual verification**
 
-Run: `cd studio && npm run dev`
+Run: `cd web && npm run dev`
 Open `http://localhost:3000/animation` and verify:
 1. Initial state shows "prd" with no visible gap between "r" and "d"
 2. The `o` drops in cleanly between `r` and `d`
@@ -113,6 +113,6 @@ The correct value depends on the exact monospace font metrics. Adjust and re-ver
 - [ ] **Step 6: Commit**
 
 ```bash
-git add studio/components/shared/prd-to-prod-animation.module.css
+git add web/components/shared/prd-to-prod-animation.module.css
 git commit -m "fix: close prd gap in animation initial state by using em-based translateX"
 ```

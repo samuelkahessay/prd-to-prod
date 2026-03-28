@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <rect width="400" height="400" fill="#f8f6f4"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&amp;display=swap');
+  </style>
+  <text x="172" y="272" font-family="'JetBrains Mono', monospace" font-size="200" font-weight="700" fill="#1c1814">p</text>
+  <text x="278" y="168" font-family="'JetBrains Mono', monospace" font-size="65" font-weight="700" fill="#1c1814">2</text>
+</svg>

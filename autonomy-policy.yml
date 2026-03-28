@@ -42,7 +42,7 @@ actions:
     default_mode: autonomous
     requires_human_reason: null
     allowed_targets:
-      - studio/**
+      - web/**
       - console/**
       - src/**
       - tests/**
@@ -76,7 +76,7 @@ actions:
       - scripts/demo-preflight.sh
       - console/**/operator/**
       - console/**/autonomy/**
-      - studio/**/operator/**
+      - web/**/operator/**
     evidence_required:
       - Existing workflow events or drill outputs to render
       - No authority expansion in the underlying workflows
@@ -101,13 +101,13 @@ actions:
       and require human review before merge.
     allowed_targets:
       - console/server.js
-      - studio/lib/api.ts
+      - web/lib/api.ts
       - console/**/auth/**
       - console/**/compliance/**
       - console/**/payments/**
-      - studio/**/auth/**
-      - studio/**/compliance/**
-      - studio/**/payments/**
+      - web/**/auth/**
+      - web/**/compliance/**
+      - web/**/payments/**
       - src/**/auth/**
       - src/**/compliance/**
       - src/**/payments/**

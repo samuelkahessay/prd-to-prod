@@ -55,7 +55,7 @@ if [ ! -f "${SHOWCASE_DIR}/README.md" ]; then
 
   RESTORE_TARGETS=$(run_lifecycle_existing_app_paths "${REPO_ROOT}" | paste -sd ' ' -)
   if [ -z "${RESTORE_TARGETS}" ]; then
-    RESTORE_TARGETS="studio/"
+    RESTORE_TARGETS="web/"
   fi
 
   # Gather stats
@@ -202,7 +202,7 @@ Enhancement runs are allowed. A new PRD may evolve the current application in pl
 - `README.md`, `LICENSE`, `.gitignore`
 
 ### Ephemeral files (removed on archive)
-- `studio/`, `src/`, `PRDtoProd/`, `PRDtoProd.Tests/` — Application code for the active PRD
+- `web/`, `src/`, `PRDtoProd/`, `PRDtoProd.Tests/` — Application code for the active PRD
 - `package.json`, `tsconfig.json`, `PRDtoProd.sln`, `Dockerfile`, `global.json`, etc. — PRD-specific project and runtime configs
 - `docs/plans/` — Design documents for the active PRD
 - `node_modules/`, `.next/`, `dist/`, `drills/reports/*.json` — Build and generated runtime artifacts

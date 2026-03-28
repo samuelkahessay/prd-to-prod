@@ -101,10 +101,10 @@ Create a dedicated demo-first route and page composition.
 
 **Likely files**
 
-- `studio/app/build/page.tsx`
-- `studio/components/build/build-status.tsx`
-- `studio/app/build/[id]/page.tsx`
-- new demo route files under `studio/app/demo/` or `studio/app/build/demo/`
+- `web/app/build/page.tsx`
+- `web/components/build/build-status.tsx`
+- `web/app/build/[id]/page.tsx`
+- new demo route files under `web/app/demo/` or `web/app/build/demo/`
 
 **Acceptance criteria**
 
@@ -127,9 +127,9 @@ Introduce a replay engine that decouples demo pacing from event arrival time.
 
 **Likely files**
 
-- `studio/components/factory/factory-scene.tsx`
-- `studio/components/factory/event-mapper.ts`
-- new replay utility under `studio/components/factory/` or `studio/lib/`
+- `web/components/factory/factory-scene.tsx`
+- `web/components/factory/event-mapper.ts`
+- new replay utility under `web/components/factory/` or `web/lib/`
 - potentially `console/lib/mock-services.js` if mock event emission needs richer demo beats
 
 **Acceptance criteria**
@@ -155,12 +155,12 @@ Deepen agent-to-agent behavior so the room reads as coordinated work, not just s
 
 **Likely files**
 
-- `studio/components/factory/renderer-2d/factory-canvas.tsx`
-- `studio/components/factory/renderer-2d/movement.ts`
-- `studio/components/factory/renderer-2d/characters-v2.ts`
-- `studio/components/factory/renderer-2d/environment.ts`
-- `studio/components/factory/renderer-2d/particles.ts`
-- `studio/components/factory/renderer-2d/idle-behaviors.ts`
+- `web/components/factory/renderer-2d/factory-canvas.tsx`
+- `web/components/factory/renderer-2d/movement.ts`
+- `web/components/factory/renderer-2d/characters-v2.ts`
+- `web/components/factory/renderer-2d/environment.ts`
+- `web/components/factory/renderer-2d/particles.ts`
+- `web/components/factory/renderer-2d/idle-behaviors.ts`
 
 **Acceptance criteria**
 
@@ -182,8 +182,8 @@ Change the surrounding story so the visual system is positioned accurately and s
 
 **Likely files**
 
-- landing page components under `studio/components/landing/`
-- build/demo CTA copy in `studio/app/page.tsx` and related landing components
+- landing page components under `web/components/landing/`
+- build/demo CTA copy in `web/app/page.tsx` and related landing components
 - supporting docs if public-facing repo copy is updated
 
 **Acceptance criteria**
@@ -207,8 +207,8 @@ Make the "proof it is real" ending fast and credible.
 
 **Likely files**
 
-- `studio/components/build/build-status.tsx`
-- `studio/components/factory/factory-hud.tsx`
+- `web/components/build/build-status.tsx`
+- `web/components/factory/factory-hud.tsx`
 - possibly new shared proof/evidence component
 
 **Acceptance criteria**
@@ -233,7 +233,7 @@ Demo polish must be tested as a product, not only as a component.
 
 **Likely files**
 
-- e2e tests under `console/test/` or `studio/test/` depending on current pattern
+- e2e tests under `console/test/` or `web/test/` depending on current pattern
 - screenshot capture utility or documented manual flow
 
 **Acceptance criteria**
@@ -315,16 +315,16 @@ Recommended hardening:
 
 | File / Area | Action | Purpose |
 |---|---|---|
-| `studio/components/build/build-status.tsx` | Modify | Split demo presentation from real run detail |
-| `studio/components/factory/factory-scene.tsx` | Modify | Support replay pacing, not only immediate reduction |
-| `studio/components/factory/event-mapper.ts` | Modify | Expand beat mapping and event-to-motion semantics |
-| `studio/components/factory/renderer-2d/factory-canvas.tsx` | Modify | Add choreography triggers and presentation polish |
-| `studio/components/factory/renderer-2d/movement.ts` | Modify | Support richer multi-stop motion behavior |
-| `studio/components/factory/renderer-2d/environment.ts` | Modify | Increase room liveliness, coffee-machine presentation |
-| `studio/components/factory/renderer-2d/particles.ts` | Modify | Add emitted steam or other ambient particles |
+| `web/components/build/build-status.tsx` | Modify | Split demo presentation from real run detail |
+| `web/components/factory/factory-scene.tsx` | Modify | Support replay pacing, not only immediate reduction |
+| `web/components/factory/event-mapper.ts` | Modify | Expand beat mapping and event-to-motion semantics |
+| `web/components/factory/renderer-2d/factory-canvas.tsx` | Modify | Add choreography triggers and presentation polish |
+| `web/components/factory/renderer-2d/movement.ts` | Modify | Support richer multi-stop motion behavior |
+| `web/components/factory/renderer-2d/environment.ts` | Modify | Increase room liveliness, coffee-machine presentation |
+| `web/components/factory/renderer-2d/particles.ts` | Modify | Add emitted steam or other ambient particles |
 | `console/lib/mock-services.js` | Modify | Provide richer demo beats when using demo mode |
-| `studio/app/build/page.tsx` | Modify | Route demo users into the productized demo flow |
-| `studio/app/demo/*` or similar | Add | Dedicated cinematic demo surface |
+| `web/app/build/page.tsx` | Modify | Route demo users into the productized demo flow |
+| `web/app/demo/*` or similar | Add | Dedicated cinematic demo surface |
 
 ---
 

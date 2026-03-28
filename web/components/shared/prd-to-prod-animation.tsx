@@ -1,4 +1,4 @@
-// studio/components/shared/prd-to-prod-animation.tsx
+// web/components/shared/prd-to-prod-animation.tsx
 "use client";
 
 import { useMemo } from "react";

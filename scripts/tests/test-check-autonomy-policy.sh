@@ -24,14 +24,14 @@ printf '%s' "$WORKFLOW_MATCH_JSON" | jq -e '.found == true' >/dev/null
 printf '%s' "$WORKFLOW_MATCH_JSON" | jq -e '.matched == true' >/dev/null
 printf '%s' "$WORKFLOW_MATCH_JSON" | jq -e '.mode == "human_required"' >/dev/null
 
-APP_MATCH_JSON=$(bash "$SCRIPT" match app_code_change "studio/components/landing/hero.tsx" "$POLICY")
+APP_MATCH_JSON=$(bash "$SCRIPT" match app_code_change "web/components/landing/hero.tsx" "$POLICY")
 printf '%s' "$APP_MATCH_JSON" | jq -e '.matched == true' >/dev/null
 printf '%s' "$APP_MATCH_JSON" | jq -e '.mode == "autonomous"' >/dev/null
 
 # --- Regression: sensitive_app_change must match the real auth boundary ---
 SENSITIVE_FILES=(
   "console/server.js"
-  "studio/lib/api.ts"
+  "web/lib/api.ts"
 )
 
 for FILE in "${SENSITIVE_FILES[@]}"; do

@@ -141,7 +141,7 @@ export function mapBuildEvent(event: BuildEvent): FactoryAction[] {
       // Move item from developer/designer to reviewer
       actions.push({
         type: "ITEM_TRANSIT",
-        from: agent === "frontend-designer" ? "design-studio" : "code-forge",
+        from: agent === "frontend-designer" ? "design-web" : "code-forge",
         to: "inspection-bay",
         item: prItem,
       });

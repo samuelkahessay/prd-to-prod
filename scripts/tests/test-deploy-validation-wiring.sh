@@ -33,8 +33,8 @@ grep -F 'APP_ROOT="${{ steps.app-root.outputs.path }}"' "$DEPLOY_WORKFLOW" >/dev
   exit 1
 }
 
-grep -F 'studio/package.json' "$DEPLOY_PROFILE" >/dev/null || {
-  echo "FAIL: nextjs-vercel profile must detect the scaffolded studio/package.json" >&2
+grep -F 'web/package.json' "$DEPLOY_PROFILE" >/dev/null || {
+  echo "FAIL: nextjs-vercel profile must detect the scaffolded web/package.json" >&2
   exit 1
 }
 

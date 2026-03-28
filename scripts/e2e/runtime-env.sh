@@ -10,7 +10,7 @@ fi
 OUTPUT_PATH="${E2E_RUNTIME_ENV_FILE:-$ROOT_DIR/docs/internal/.e2e-runtime-env}"
 FLY_APP="${E2E_FLY_APP:-prd-to-prod}"
 CONSOLE_URL="${E2E_CONSOLE_URL:-https://prd-to-prod.fly.dev}"
-STUDIO_URL="${E2E_STUDIO_URL:-https://www.prdtoprod.com}"
+WEB_URL="${E2E_WEB_URL:-${E2E_STUDIO_URL:-https://www.prdtoprod.com}}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -26,8 +26,8 @@ while [[ $# -gt 0 ]]; do
       CONSOLE_URL="$2"
       shift 2
       ;;
-    --studio-url)
-      STUDIO_URL="$2"
+    --web-url)
+      WEB_URL="$2"
       shift 2
       ;;
     *)
@@ -71,7 +71,7 @@ write_env_file() {
     printf 'export PIPELINE_APP_PRIVATE_KEY=%q\n' "$app_key"
     printf 'export BUILD_INTERNAL_SECRET=%q\n' "$internal"
     printf 'export E2E_CONSOLE_URL=%q\n' "$CONSOLE_URL"
-    printf 'export E2E_STUDIO_URL=%q\n' "$STUDIO_URL"
+    printf 'export E2E_WEB_URL=%q\n' "$WEB_URL"
   } > "$OUTPUT_PATH"
   chmod 600 "$OUTPUT_PATH"
 }

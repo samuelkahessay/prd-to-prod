@@ -135,7 +135,7 @@ copy_worktree_dependencies() {
   local worktree_dir="$1"
   local app_dir
 
-  for app_dir in console studio; do
+  for app_dir in console web; do
     copy_dependency_dir "$DEPENDENCY_SOURCE_ROOT/$app_dir/node_modules" "$worktree_dir/$app_dir/node_modules"
   done
 }

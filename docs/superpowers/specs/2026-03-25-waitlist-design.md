@@ -13,7 +13,7 @@ This is pre-beta lead capture — no access codes, no queue positions, no transa
 
 ### New component: `<WaitlistForm />`
 
-**File:** `studio/components/landing/waitlist-form.tsx`
+**File:** `web/components/landing/waitlist-form.tsx`
 
 Client component with two fields:
 - **Email** (required) — standard email input
@@ -33,10 +33,10 @@ Submit button labeled "Join the waitlist."
 
 ### Modified files
 
-**`studio/components/landing/pricing.tsx`**
+**`web/components/landing/pricing.tsx`**
 - In the $1 "Early Adopter" card: replace the "Need an access code? Email kahessay@icloud.com" paragraph with `<WaitlistForm />`
 
-**`studio/components/landing/bottom-cta.tsx`**
+**`web/components/landing/bottom-cta.tsx`**
 - Replace the email contact link with `<WaitlistForm />`
 
 ## Backend

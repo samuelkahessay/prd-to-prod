@@ -32,7 +32,7 @@ esac
 EOF
 chmod +x "$TMPDIR/bin/fly"
 
-PATH="$TMPDIR/bin:$PATH" bash "$SCRIPT" refresh --path "$ENV_FILE" --app fake-app --console-url https://console.example.com --studio-url https://studio.example.com >/dev/null
+PATH="$TMPDIR/bin:$PATH" bash "$SCRIPT" refresh --path "$ENV_FILE" --app fake-app --console-url https://console.example.com --web-url https://web.example.com >/dev/null
 
 if [[ ! -f "$ENV_FILE" ]]; then
   echo "FAIL: expected env file to be created" >&2
@@ -48,11 +48,11 @@ VALUES=$(
       \"\$PIPELINE_APP_PRIVATE_KEY\" \
       \"\$BUILD_INTERNAL_SECRET\" \
       \"\$E2E_CONSOLE_URL\" \
-      \"\$E2E_STUDIO_URL\"
+      \"\$E2E_WEB_URL\"
   "
 )
 
-if [[ "$VALUES" != "sk-or-v1-test|12345|private-key|internal-secret|https://console.example.com|https://studio.example.com" ]]; then
+if [[ "$VALUES" != "sk-or-v1-test|12345|private-key|internal-secret|https://console.example.com|https://web.example.com" ]]; then
   echo "FAIL: env file did not round-trip expected values" >&2
   exit 1
 fi

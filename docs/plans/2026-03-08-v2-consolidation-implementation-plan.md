@@ -79,7 +79,7 @@
    - `.github/`
    - `scripts/`
    - root files (`setup.sh`, `setup-verify.sh`, `vercel.json`, `README`, `AGENTS.md`)
-   - `studio/`
+   - `web/`
    - stable docs
 2. Diff `meeting-to-main` against the desired future `extraction/`, `trigger/`, and `mocks/` layout.
 3. Mark each differing file as one of:
@@ -162,13 +162,13 @@
 **Validation**
 - `rg -n "source \\\"\\$HOME/.env\\\"|PIPELINE_BOT_LOGIN|app/prd-to-prod-pipeline|PIPELINE_APP_PRIVATE_KEY" trigger/push-to-pipeline.sh trigger/smoke-pipeline.sh`
 
-### Task 1.2: Port the `studio/` application into `prd-to-prod`
+### Task 1.2: Port the `web/` application into `prd-to-prod`
 
 **Files**
-- Create: `studio/`
+- Create: `web/`
 
 **Steps**
-1. Copy `studio/` from `prd-to-prod-template`.
+1. Copy `web/` from `prd-to-prod-template`.
 2. Remove generated artifacts that should not become canonical source:
    - `node_modules/`
    - `.next/`
@@ -176,13 +176,13 @@
    - `test-results/`
    - `*.log`
    - `*.tsbuildinfo`
-3. Verify `.gitignore` in the root still ignores the studio build outputs.
-4. Confirm `studio` tolerates an empty `showcase/` directory.
+3. Verify `.gitignore` in the root still ignores the web build outputs.
+4. Confirm `web` tolerates an empty `showcase/` directory.
 
 **Validation**
-- `find studio -maxdepth 2 -type d | sort`
-- `test ! -d studio/node_modules`
-- `test ! -d studio/.next`
+- `find web -maxdepth 2 -type d | sort`
+- `test ! -d web/node_modules`
+- `test ! -d web/.next`
 
 ### Task 1.3: Reconcile workflow drift and decide the canonical workflow set
 
@@ -194,7 +194,7 @@
    - `_reusable-dispatch.yml`
    - `_reusable-dispatch-requeue.yml`
    - `_reusable-review-submit.yml`
-   - `ci-studio.yml`
+   - `ci-web.yml`
 2. For each file, choose one:
    - port into `prd-to-prod`
    - replace with existing canonical logic

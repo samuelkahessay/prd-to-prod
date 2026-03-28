@@ -2,10 +2,10 @@
 # Read by prd-decomposer and repo-assist to configure CI/CD for this stack.
 stack: nextjs
 name: "Next.js + Vercel"
-app_root: studio
+app_root: web
 
 detect:
-  files: ["studio/package.json", "studio/next.config.*", "package.json", "next.config.*"]
+  files: ["web/package.json", "web/next.config.*", "package.json", "next.config.*"]
 
 build:
   runtime: node

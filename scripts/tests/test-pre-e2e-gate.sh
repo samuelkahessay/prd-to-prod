@@ -16,7 +16,7 @@ export LOG_FILE
 
 ln -s "$ROOT_DIR/scripts/require-node.sh" "$TMPDIR/scripts/require-node.sh"
 ln -s "$ROOT_DIR/console" "$TMPDIR/console"
-ln -s "$ROOT_DIR/studio" "$TMPDIR/studio"
+ln -s "$ROOT_DIR/web" "$TMPDIR/web"
 
 cat > "$TMPDIR/.deploy-profile" <<'EOF'
 nextjs-vercel
@@ -80,12 +80,12 @@ if [ "$1" = "repo" ] && [ "$2" = "view" ]; then
   exit 0
 fi
 
-if [ "$1" = "api" ] && [[ "$2" == *"studio/package.json"* ]]; then
+if [ "$1" = "api" ] && [[ "$2" == *"web/package.json"* ]]; then
   echo "package.json"
   exit 0
 fi
 
-if [ "$1" = "api" ] && [[ "$2" == *"studio/next.config.ts"* ]]; then
+if [ "$1" = "api" ] && [[ "$2" == *"web/next.config.ts"* ]]; then
   echo "next.config.ts"
   exit 0
 fi

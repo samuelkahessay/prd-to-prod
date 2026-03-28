@@ -153,7 +153,7 @@ Do not assume any specific project structure. Discover everything:
 1. **Read project conventions**: Read `CLAUDE.md` / `AGENTS.md` for project-specific design rules and conventions.
 2. **Read deploy profile**: Read `.deploy-profile` if present, then read the referenced deploy profile for stack-specific commands.
 3. **Find candidate app projects**:
-   - Look for `package.json` files (may be root or nested, e.g., `studio/`)
+   - Look for `package.json` files (may be root or nested, e.g., `web/`)
    - Read `package.json` to identify framework (Next.js, Vite, etc.)
    - Prefer the package that serves the user-facing UI mentioned by the issue
    - If multiple packages qualify, score them by: frontend framework presence, build+dev scripts, app/pages directory, and issue file references
@@ -295,8 +295,8 @@ State file shape:
   "checkpoint": {
     "issue": 123,
     "stage": "plan | progress | pre-pr",
-    "package_path": "studio",
-    "files_modified": ["studio/app/page.tsx"],
+    "package_path": "web",
+    "files_modified": ["web/app/page.tsx"],
     "viewports_verified": [375, 768, 1440],
     "overflow_detected": false,
     "validation": {

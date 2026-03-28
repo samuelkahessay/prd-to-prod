@@ -47,7 +47,7 @@ function createE2EHarness({
   serviceResolver,
   projectRoot,
   baseUrl,
-  studioUrl,
+  webUrl,
 }) {
   const e2eStore = createE2EStore(db);
   const reportWriter = createE2EReportWriter({ projectRoot });
@@ -122,7 +122,7 @@ function createE2EHarness({
       const normalized = ensureBuildSessionCookie(cookieHeader);
       saveCookieJar(targetPath, {
         baseUrl,
-        studioUrl,
+        webUrl,
         cookieHeader: normalized,
         capturedAt: new Date().toISOString(),
         user: user || null,
@@ -139,7 +139,7 @@ function createE2EHarness({
       if (exportRequestId) {
         params.set("export", exportRequestId);
       }
-      return `${stripTrailingSlash(studioUrl)}/console/e2e/auth?${params.toString()}`;
+      return `${stripTrailingSlash(webUrl)}/console/e2e/auth?${params.toString()}`;
     },
 
     async consumeAuthExport(exportRequestId) {
@@ -645,7 +645,7 @@ function createE2EHarness({
 
     try {
       const context = await browser.newContext();
-      const studio = new URL(studioUrl);
+      const web = new URL(webUrl);
       const buildSessionCookie = parseCookieValue(auth.cookieHeader, "build_session");
       if (!buildSessionCookie) {
         return failLaneResult(lane, null, {
@@ -658,17 +658,17 @@ function createE2EHarness({
         {
           name: "build_session",
           value: buildSessionCookie,
-          domain: studio.hostname,
+          domain: web.hostname,
           path: "/",
           httpOnly: true,
-          secure: studio.protocol === "https:",
+          secure: web.protocol === "https:",
           sameSite: "Lax",
         },
       ]);
 
       const page = await context.newPage();
       await page.goto(
-        `${stripTrailingSlash(studioUrl)}/build?e2e_repo_name=${encodeURIComponent(requestedRepoName)}`,
+        `${stripTrailingSlash(webUrl)}/build?e2e_repo_name=${encodeURIComponent(requestedRepoName)}`,
         {
           waitUntil: "networkidle",
         }
@@ -773,7 +773,7 @@ function createE2EHarness({
       const page = await context.newPage();
 
       await page.goto(
-        `${stripTrailingSlash(studioUrl)}/demo?${new URLSearchParams({
+        `${stripTrailingSlash(webUrl)}/demo?${new URLSearchParams({
           e2e_repo_name: requestedRepoName,
           preset: "recording",
         }).toString()}`,

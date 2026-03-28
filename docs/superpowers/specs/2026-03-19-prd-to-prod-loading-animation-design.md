@@ -37,7 +37,7 @@ These axes are independent and composable via component props.
 ### Component API
 
 ```tsx
-// studio/components/shared/prd-to-prod-animation.tsx
+// web/components/shared/prd-to-prod-animation.tsx
 
 interface PrdToProdAnimationProps {
   /** Animation intensity — controls fall distance, squash, hop height */
@@ -58,7 +58,7 @@ Default: `amplitude="medium"`, `rotation={false}`, `squashPropagation={false}`, 
 ### Implementation Approach
 
 - **Pure CSS `@keyframes`** — no animation libraries. Matches the existing codebase (all hand-rolled animations, no framer-motion/GSAP).
-- **CSS Modules** — `prd-to-prod-animation.module.css` with scoped class names, consistent with `studio/` patterns.
+- **CSS Modules** — `prd-to-prod-animation.module.css` with scoped class names, consistent with `web/` patterns.
 - **HTML structure:** Each letter is an `inline-block <span>` inside a flex container. The "o" is hidden via `opacity: 0` + `translateY(off-screen)`, not `width: 0` — this keeps all animation on compositor-friendly properties (`transform`, `opacity`) and avoids layout reflow. The "d" uses `translateX(-18px)` to close the gap in the start state, then animates to `translateX(0)` to make room.
 - **`transform-origin: center bottom`** on all letters so squash deformation anchors at the text baseline, not the center.
 - **`will-change: transform, opacity`** on each animated span to promote to compositor layers for smooth 60fps looping.
@@ -71,7 +71,7 @@ Default: `amplitude="medium"`, `rotation={false}`, `squashPropagation={false}`, 
 ### File Structure
 
 ```
-studio/components/shared/
+web/components/shared/
   prd-to-prod-animation.tsx          # React component
   prd-to-prod-animation.module.css   # Keyframes + styles
 ```

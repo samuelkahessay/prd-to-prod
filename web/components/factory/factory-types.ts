@@ -15,7 +15,7 @@ export type CharacterState =
 export type WorkstationId =
   | "blueprint-table"
   | "code-forge"
-  | "design-studio"
+  | "design-web"
   | "inspection-bay"
   | "launch-pad";
 
@@ -89,7 +89,7 @@ export type FactoryAction =
 export const AGENT_WORKSTATION: Record<AgentId, WorkstationId> = {
   planner: "blueprint-table",
   developer: "code-forge",
-  "frontend-designer": "design-studio",
+  "frontend-designer": "design-web",
   reviewer: "inspection-bay",
   deployer: "launch-pad",
 };
@@ -105,7 +105,7 @@ export const ALL_AGENTS: AgentId[] = [
 export const ALL_WORKSTATIONS: WorkstationId[] = [
   "blueprint-table",
   "code-forge",
-  "design-studio",
+  "design-web",
   "inspection-bay",
   "launch-pad",
 ];

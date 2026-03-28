@@ -10,7 +10,7 @@ Primary audience: seed-stage investors (White Star Capital — $50M Canadian see
 
 ## Route
 
-`/pitch` — new page in `studio/app/pitch/`
+`/pitch` — new page in `web/app/pitch/`
 
 ## Format
 

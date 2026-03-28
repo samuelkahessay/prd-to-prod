@@ -175,6 +175,21 @@ requires reading, reasoning, and generating.
 
 That split is why the system is useful.
 
+## Upstream contributions
+
+The most active external contributor to gh-aw in its first month. 31 findings
+cataloged, 19 issues filed, 17 fixes shipped across 8 releases, 15 credited
+by name in release notes.
+
+| Release | Fixes |
+|---|---|
+| [`v0.51.3`](https://github.com/github/gh-aw/releases/tag/v0.51.3) | Concurrency group collapse, malformed reference validation |
+| [`v0.51.6`](https://github.com/github/gh-aw/releases/tag/v0.51.6) | JSON state collapse, auto-merge gating |
+| [`v0.53.0`](https://github.com/github/gh-aw/releases/tag/v0.53.0) | Push retry/backoff, stderr leak, ENOENT noise, model flag |
+| [`v0.53.3`](https://github.com/github/gh-aw/releases/tag/v0.53.3) | PR error crash, duplicate issue creation, missing labels |
+| [`v0.56.1`](https://github.com/github/gh-aw/releases/tag/v0.56.1) | Safe-outputs escalation, dispatch validation, bot identity matching |
+| [`v0.63.0`](https://github.com/github/gh-aw/releases/tag/v0.63.0) | Release attribution missing fixes when resolution flows through follow-up issues |
+
 ## References
 
 - [gh-aw repository](https://github.com/github/gh-aw)

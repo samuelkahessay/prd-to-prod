@@ -23,7 +23,7 @@ export PIPELINE_APP_ID='12345'
 export PIPELINE_APP_PRIVATE_KEY='private-key'
 export BUILD_INTERNAL_SECRET='internal-secret'
 export E2E_CONSOLE_URL='https://console.example.com'
-export E2E_STUDIO_URL='https://studio.example.com'
+export E2E_WEB_URL='https://web.example.com'
 ENV
 EOF
 
@@ -84,10 +84,10 @@ STATE_ROOT="$TMPDIR/state-root"
 
 mkdir -p \
   "$DEPENDENCY_SOURCE_ROOT/console/node_modules/better-sqlite3" \
-  "$DEPENDENCY_SOURCE_ROOT/studio/node_modules/next"
+  "$DEPENDENCY_SOURCE_ROOT/web/node_modules/next"
 touch \
   "$DEPENDENCY_SOURCE_ROOT/console/node_modules/better-sqlite3/package.json" \
-  "$DEPENDENCY_SOURCE_ROOT/studio/node_modules/next/package.json"
+  "$DEPENDENCY_SOURCE_ROOT/web/node_modules/next/package.json"
 
 cat > "$WORKTREE_GIT" <<'EOF'
 #!/usr/bin/env bash
@@ -105,23 +105,23 @@ case "$1" in
       add)
         worktree_dir="$4"
         echo "git worktree add $worktree_dir" >> "$CALLS_FILE"
-        mkdir -p "$worktree_dir/scripts/e2e" "$worktree_dir/console" "$worktree_dir/studio"
+        mkdir -p "$worktree_dir/scripts/e2e" "$worktree_dir/console" "$worktree_dir/web"
         cat > "$worktree_dir/scripts/e2e/provision-smoke.sh" <<'EOS'
 #!/usr/bin/env bash
 set -euo pipefail
 child_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 console_copy=0
-studio_copy=0
+web_copy=0
 if [[ -d "$child_root/console/node_modules" && ! -L "$child_root/console/node_modules" ]]; then
   console_copy=1
 fi
-if [[ -d "$child_root/studio/node_modules" && ! -L "$child_root/studio/node_modules" ]]; then
-  studio_copy=1
+if [[ -d "$child_root/web/node_modules" && ! -L "$child_root/web/node_modules" ]]; then
+  web_copy=1
 fi
 mkdir -p "$child_root/output/e2e/run-123" "$child_root/docs/internal/e2e-runs"
 printf '{}\n' > "$child_root/output/e2e/run-123/report.json"
 printf '# report\n' > "$child_root/docs/internal/e2e-runs/report.md"
-echo "child worktree run state-root=$E2E_STATE_ROOT env-file=$E2E_RUNTIME_ENV_FILE cookie=$E2E_COOKIE_JAR_PATH child=$E2E_PROVISION_SMOKE_CHILD console-copy=$console_copy studio-copy=$studio_copy" >> "$CALLS_FILE"
+echo "child worktree run state-root=$E2E_STATE_ROOT env-file=$E2E_RUNTIME_ENV_FILE cookie=$E2E_COOKIE_JAR_PATH child=$E2E_PROVISION_SMOKE_CHILD console-copy=$console_copy web-copy=$web_copy" >> "$CALLS_FILE"
 EOS
         chmod +x "$worktree_dir/scripts/e2e/provision-smoke.sh"
         ;;
@@ -171,8 +171,8 @@ if ! grep -qF "console-copy=1" "$CALLS_FILE"; then
   exit 1
 fi
 
-if ! grep -qF "studio-copy=1" "$CALLS_FILE"; then
-  echo "FAIL: expected provision-smoke to copy studio/node_modules into the clean worktree" >&2
+if ! grep -qF "web-copy=1" "$CALLS_FILE"; then
+  echo "FAIL: expected provision-smoke to copy web/node_modules into the clean worktree" >&2
   exit 1
 fi
 

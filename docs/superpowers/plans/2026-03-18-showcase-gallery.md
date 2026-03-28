@@ -17,16 +17,16 @@
 ### Task 1: Showcase data types and loader
 
 **Files:**
-- Create: `studio/lib/showcase-data.ts`
+- Create: `web/lib/showcase-data.ts`
 
 This is the single source of truth for showcase metadata. It reads `showcase/*/manifest.json` at build time using `fs.readFileSync` (safe in Next.js server context — runs at build, not runtime). Curated fields (slug, description, originalStack, extra metrics) are defined in a separate map.
 
-**Important:** `showcase/` is a sibling of `studio/`, not inside it. Use `path.resolve(__dirname, '../../showcase')` or `process.cwd()` + `../showcase` to resolve paths.
+**Important:** `showcase/` is a sibling of `web/`, not inside it. Use `path.resolve(__dirname, '../../showcase')` or `process.cwd()` + `../showcase` to resolve paths.
 
 - [ ] **Step 1: Write the type definitions and data loader**
 
 ```typescript
-// studio/lib/showcase-data.ts
+// web/lib/showcase-data.ts
 import fs from "fs";
 import path from "path";
 
@@ -134,7 +134,7 @@ export function getShowcaseApp(slug: string): ShowcaseApp | undefined {
 - [ ] **Step 2: Write test for data loader**
 
 ```typescript
-// studio/test/showcase-data.test.ts
+// web/test/showcase-data.test.ts
 import { SHOWCASE_APPS, getShowcaseApp } from "@/lib/showcase-data";
 
 describe("showcase-data", () => {
@@ -193,13 +193,13 @@ describe("showcase-data", () => {
 
 - [ ] **Step 3: Run tests**
 
-Run: `cd studio && npm test -- test/showcase-data.test.ts`
+Run: `cd web && npm test -- test/showcase-data.test.ts`
 Expected: PASS
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add studio/lib/showcase-data.ts studio/test/showcase-data.test.ts
+git add web/lib/showcase-data.ts web/test/showcase-data.test.ts
 git commit -m "feat: add showcase data types and loader"
 ```
 
@@ -210,9 +210,9 @@ git commit -m "feat: add showcase data types and loader"
 ### Task 2: Showcase carousel component
 
 **Files:**
-- Create: `studio/components/landing/showcase-strip.tsx`
-- Create: `studio/components/landing/showcase-strip.module.css`
-- Modify: `studio/app/page.tsx` (insert carousel between WhatYouGet and HowItWorks)
+- Create: `web/components/landing/showcase-strip.tsx`
+- Create: `web/components/landing/showcase-strip.module.css`
+- Modify: `web/app/page.tsx` (insert carousel between WhatYouGet and HowItWorks)
 
 - [ ] **Step 1: Create the carousel component**
 
@@ -249,7 +249,7 @@ Reference tagged source behavior and the existing landing page component pattern
 
 - [ ] **Step 2: Add the strip to the landing page**
 
-Modify `studio/app/page.tsx`:
+Modify `web/app/page.tsx`:
 - Import `ShowcaseStrip` from `@/components/landing/showcase-strip`
 - `ShowcaseStrip` is a server component, so it can be imported directly into the server component `LandingPage` with no special handling
 - Insert between `<WhatYouGet />` and `<HowItWorks />` with dividers:
@@ -267,7 +267,7 @@ Modify `studio/app/page.tsx`:
 
 - [ ] **Step 3: Verify locally**
 
-Run: `cd studio && npm run dev`
+Run: `cd web && npm run dev`
 - Open http://localhost:3000
 - Scroll to the carousel section
 - Verify 5 app cards + CTA card render
@@ -278,7 +278,7 @@ Run: `cd studio && npm run dev`
 - [ ] **Step 4: Commit**
 
 ```bash
-git add studio/components/landing/showcase-strip.tsx studio/components/landing/showcase-strip.module.css studio/app/page.tsx
+git add web/components/landing/showcase-strip.tsx web/components/landing/showcase-strip.module.css web/app/page.tsx
 git commit -m "feat: add showcase carousel strip to landing page"
 ```
 
@@ -289,8 +289,8 @@ git commit -m "feat: add showcase carousel strip to landing page"
 ### Task 3: /showcase gallery page
 
 **Files:**
-- Create: `studio/app/showcase/page.tsx`
-- Create: `studio/app/showcase/page.module.css`
+- Create: `web/app/showcase/page.tsx`
+- Create: `web/app/showcase/page.module.css`
 
 - [ ] **Step 1: Create the gallery page**
 
@@ -313,7 +313,7 @@ Import `SHOWCASE_APPS` from `@/lib/showcase-data` for card data.
 
 - [ ] **Step 2: Verify locally**
 
-Run: `cd studio && npm run dev`
+Run: `cd web && npm run dev`
 - Open http://localhost:3000/showcase
 - Verify all 5 app cards render in 2-column grid
 - Verify "Open app →" links work
@@ -324,16 +324,16 @@ Run: `cd studio && npm run dev`
 - [ ] **Step 3: Commit**
 
 ```bash
-git add studio/app/showcase/page.tsx studio/app/showcase/page.module.css
+git add web/app/showcase/page.tsx web/app/showcase/page.module.css
 git commit -m "feat: add /showcase gallery page"
 ```
 
 ### Task 4: /showcase/[slug] layout with sidebar
 
 **Files:**
-- Create: `studio/app/showcase/[slug]/layout.tsx`
-- Create: `studio/app/showcase/[slug]/layout.module.css`
-- Create: `studio/app/showcase/[slug]/page.tsx` (placeholder that renders the correct app component)
+- Create: `web/app/showcase/[slug]/layout.tsx`
+- Create: `web/app/showcase/[slug]/layout.module.css`
+- Create: `web/app/showcase/[slug]/page.tsx` (placeholder that renders the correct app component)
 
 - [ ] **Step 1: Create the split-view layout**
 
@@ -399,11 +399,11 @@ export default function ShowcaseAppPage({ params }: { params: Promise<{ slug: st
 Create 5 placeholder files so the dynamic imports resolve:
 
 ```
-studio/components/showcase/code-snippets/app.tsx
-studio/components/showcase/observatory/app.tsx
-studio/components/showcase/devcard/app.tsx
-studio/components/showcase/ticket-deflection/app.tsx
-studio/components/showcase/compliance/app.tsx
+web/components/showcase/code-snippets/app.tsx
+web/components/showcase/observatory/app.tsx
+web/components/showcase/devcard/app.tsx
+web/components/showcase/ticket-deflection/app.tsx
+web/components/showcase/compliance/app.tsx
 ```
 
 Each one is a minimal placeholder:
@@ -417,7 +417,7 @@ export default function App() {
 
 - [ ] **Step 4: Verify locally**
 
-Run: `cd studio && npm run dev`
+Run: `cd web && npm run dev`
 - Open http://localhost:3000/showcase/devcard
 - Verify sidebar renders with correct DevCard metadata
 - Verify "← Back to showcase" link works
@@ -427,13 +427,13 @@ Run: `cd studio && npm run dev`
 
 - [ ] **Step 5: Run tests**
 
-Run: `cd studio && npm test`
+Run: `cd web && npm test`
 Expected: All existing tests still pass
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add studio/app/showcase/[slug]/ studio/components/showcase/
+git add web/app/showcase/[slug]/ web/components/showcase/
 git commit -m "feat: add showcase app shell with sidebar layout"
 ```
 
@@ -444,9 +444,9 @@ git commit -m "feat: add showcase app shell with sidebar layout"
 ### Task 5: Code Snippet Manager app
 
 **Files:**
-- Create: `studio/components/showcase/code-snippets/app.tsx`
-- Create: `studio/components/showcase/code-snippets/app.module.css`
-- Create: `studio/components/showcase/code-snippets/store.ts`
+- Create: `web/components/showcase/code-snippets/app.tsx`
+- Create: `web/components/showcase/code-snippets/app.module.css`
+- Create: `web/components/showcase/code-snippets/store.ts`
 
 **Behavioral source of truth:** Restore with `git checkout v1.0.0 -- src/ package.json tsconfig.json` to inspect the Express + TypeScript CRUD app with EJS templates. Read `showcase/01-code-snippet-manager/README.md` for feature inventory.
 
@@ -493,7 +493,7 @@ interface Snippet {
 
 - [ ] **Step 3: Verify locally**
 
-Run: `cd studio && npm run dev`
+Run: `cd web && npm run dev`
 - Open http://localhost:3000/showcase/code-snippets
 - Verify seed data populates on first visit
 - Create a snippet, refresh, verify it persists
@@ -503,7 +503,7 @@ Run: `cd studio && npm run dev`
 - [ ] **Step 4: Commit**
 
 ```bash
-git add studio/components/showcase/code-snippets/
+git add web/components/showcase/code-snippets/
 git commit -m "feat: add Code Snippet Manager showcase app"
 ```
 
@@ -514,9 +514,9 @@ git commit -m "feat: add Code Snippet Manager showcase app"
 ### Task 6: Pipeline Observatory app
 
 **Files:**
-- Create: `studio/components/showcase/observatory/app.tsx`
-- Create: `studio/components/showcase/observatory/app.module.css`
-- Create: `studio/components/showcase/observatory/fixtures.ts`
+- Create: `web/components/showcase/observatory/app.tsx`
+- Create: `web/components/showcase/observatory/app.module.css`
+- Create: `web/components/showcase/observatory/fixtures.ts`
 
 **Behavioral source of truth:** Restore with `git checkout v2.0.0 -- src/ package.json tsconfig.json tailwind.config.ts postcss.config.js next.config.js vitest.config.ts vercel.json next-env.d.ts`. Read `showcase/02-pipeline-observatory/README.md` for feature inventory.
 
@@ -555,7 +555,7 @@ git commit -m "feat: add Code Snippet Manager showcase app"
 - [ ] **Step 4: Commit**
 
 ```bash
-git add studio/components/showcase/observatory/
+git add web/components/showcase/observatory/
 git commit -m "feat: add Pipeline Observatory showcase app"
 ```
 
@@ -566,10 +566,10 @@ git commit -m "feat: add Pipeline Observatory showcase app"
 ### Task 7: DevCard app
 
 **Files:**
-- Create: `studio/components/showcase/devcard/app.tsx`
-- Create: `studio/components/showcase/devcard/app.module.css`
-- Create: `studio/components/showcase/devcard/fixtures.ts`
-- Create: `studio/components/showcase/devcard/themes.ts`
+- Create: `web/components/showcase/devcard/app.tsx`
+- Create: `web/components/showcase/devcard/app.module.css`
+- Create: `web/components/showcase/devcard/fixtures.ts`
+- Create: `web/components/showcase/devcard/themes.ts`
 
 **Behavioral source of truth:** Restore with `git checkout v3.0.0 -- src/ package.json tsconfig.json tailwind.config.ts postcss.config.js next.config.js vitest.config.ts`. Read `showcase/03-devcard/README.md` for feature inventory.
 
@@ -616,7 +616,7 @@ Themes: Midnight (dark blue), Aurora (green/purple gradient), Sunset (warm orang
 - [ ] **Step 5: Commit**
 
 ```bash
-git add studio/components/showcase/devcard/
+git add web/components/showcase/devcard/
 git commit -m "feat: add DevCard showcase app"
 ```
 
@@ -627,11 +627,11 @@ git commit -m "feat: add DevCard showcase app"
 ### Task 8: Ticket Deflection app
 
 **Files:**
-- Create: `studio/components/showcase/ticket-deflection/app.tsx`
-- Create: `studio/components/showcase/ticket-deflection/app.module.css`
-- Create: `studio/components/showcase/ticket-deflection/store.ts`
-- Create: `studio/components/showcase/ticket-deflection/classifier.ts`
-- Create: `studio/components/showcase/ticket-deflection/seed-data.ts`
+- Create: `web/components/showcase/ticket-deflection/app.tsx`
+- Create: `web/components/showcase/ticket-deflection/app.module.css`
+- Create: `web/components/showcase/ticket-deflection/store.ts`
+- Create: `web/components/showcase/ticket-deflection/classifier.ts`
+- Create: `web/components/showcase/ticket-deflection/seed-data.ts`
 
 **Behavioral source of truth:** Restore with `git checkout v4.0.0 -- TicketDeflection/ TicketDeflection.sln`. Read `showcase/04-ticket-deflection/README.md` for feature inventory and C# source structure.
 
@@ -720,7 +720,7 @@ Styling: Follow the Blueprint×Terminal aesthetic from the original (dark navy b
 - [ ] **Step 6: Commit**
 
 ```bash
-git add studio/components/showcase/ticket-deflection/
+git add web/components/showcase/ticket-deflection/
 git commit -m "feat: add Ticket Deflection showcase app (ported from ASP.NET)"
 ```
 
@@ -731,11 +731,11 @@ git commit -m "feat: add Ticket Deflection showcase app (ported from ASP.NET)"
 ### Task 9: Compliance Scanner app
 
 **Files:**
-- Create: `studio/components/showcase/compliance/app.tsx`
-- Create: `studio/components/showcase/compliance/app.module.css`
-- Create: `studio/components/showcase/compliance/scanner.ts`
-- Create: `studio/components/showcase/compliance/seed-data.ts`
-- Create: `studio/components/showcase/compliance/store.ts`
+- Create: `web/components/showcase/compliance/app.tsx`
+- Create: `web/components/showcase/compliance/app.module.css`
+- Create: `web/components/showcase/compliance/scanner.ts`
+- Create: `web/components/showcase/compliance/seed-data.ts`
+- Create: `web/components/showcase/compliance/store.ts`
 
 **Behavioral source of truth:** Restore with `git checkout v5.0.0 -- TicketDeflection/ TicketDeflection.sln`. Read `showcase/05-compliance-scan/README.md` for feature inventory and C# source structure.
 
@@ -825,7 +825,7 @@ Styling: Dark theme scoped to the app. Use red for AUTO_BLOCK, amber for HUMAN_R
 - [ ] **Step 6: Commit**
 
 ```bash
-git add studio/components/showcase/compliance/
+git add web/components/showcase/compliance/
 git commit -m "feat: add Compliance Scanner showcase app (ported from ASP.NET)"
 ```
 
@@ -836,19 +836,19 @@ git commit -m "feat: add Compliance Scanner showcase app (ported from ASP.NET)"
 ### Task 10: Capture screenshots and final polish
 
 **Files:**
-- Create: `studio/public/showcase/` (directory)
-- Create: `studio/public/showcase/code-snippets.png`
-- Create: `studio/public/showcase/observatory.png`
-- Create: `studio/public/showcase/devcard.png`
-- Create: `studio/public/showcase/ticket-deflection.png`
-- Create: `studio/public/showcase/compliance.png`
-- Modify: `studio/app/showcase/page.tsx` (wire screenshot images into preview areas)
+- Create: `web/public/showcase/` (directory)
+- Create: `web/public/showcase/code-snippets.png`
+- Create: `web/public/showcase/observatory.png`
+- Create: `web/public/showcase/devcard.png`
+- Create: `web/public/showcase/ticket-deflection.png`
+- Create: `web/public/showcase/compliance.png`
+- Modify: `web/app/showcase/page.tsx` (wire screenshot images into preview areas)
 
 - [ ] **Step 1: Capture screenshots**
 
 With the dev server running at `localhost:3000`, capture each app's landing state. Use the Playwright MCP `browser_take_screenshot` tool (navigate to each URL, take screenshot at 1200×800 viewport) or take manual screenshots.
 
-Save to `studio/public/showcase/`:
+Save to `web/public/showcase/`:
 - `code-snippets.png`
 - `observatory.png`
 - `devcard.png`
@@ -856,14 +856,14 @@ Save to `studio/public/showcase/`:
 - `compliance.png`
 
 ```bash
-mkdir -p studio/public/showcase
+mkdir -p web/public/showcase
 ```
 
 If screenshots cannot be captured (e.g., no browser available), the gallery page should fall back to gradient placeholders — the `<Image>` tags should be wrapped in a conditional that checks if the file exists, with a styled `<div>` fallback using a gradient derived from the run number.
 
 - [ ] **Step 2: Wire screenshots into gallery page**
 
-Update the gallery cards in `studio/app/showcase/page.tsx` to use `<Image>` from `next/image` in the preview areas:
+Update the gallery cards in `web/app/showcase/page.tsx` to use `<Image>` from `next/image` in the preview areas:
 
 ```tsx
 import Image from "next/image";
@@ -879,7 +879,7 @@ import Image from "next/image";
 
 - [ ] **Step 3: End-to-end verification**
 
-Run: `cd studio && npm run build && npm run start`
+Run: `cd web && npm run build && npm run start`
 
 Full flow check:
 1. Landing page → scroll to carousel → see 5 cards + CTA
@@ -893,13 +893,13 @@ Full flow check:
 
 - [ ] **Step 4: Run all tests**
 
-Run: `cd studio && npm test`
+Run: `cd web && npm test`
 Expected: All tests pass
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add studio/public/showcase/ studio/app/showcase/
+git add web/public/showcase/ web/app/showcase/
 git commit -m "feat: add showcase screenshots and final gallery integration"
 ```
 
@@ -910,10 +910,10 @@ git commit -m "feat: add showcase screenshots and final gallery integration"
 ### Task 11: Tests for showcase components and logic
 
 **Files:**
-- Create: `studio/test/showcase-strip.test.tsx`
-- Create: `studio/test/showcase-gallery.test.tsx`
-- Create: `studio/test/showcase-classifier.test.ts`
-- Create: `studio/test/showcase-scanner.test.ts`
+- Create: `web/test/showcase-strip.test.tsx`
+- Create: `web/test/showcase-gallery.test.tsx`
+- Create: `web/test/showcase-classifier.test.ts`
+- Create: `web/test/showcase-scanner.test.ts`
 
 Per AGENTS.md: "Write tests for all new functionality."
 
@@ -943,13 +943,13 @@ For each store (snippets, tickets, compliance): verify that importing the store 
 
 - [ ] **Step 7: Run all tests**
 
-Run: `cd studio && npm test`
+Run: `cd web && npm test`
 Expected: All tests pass including new showcase tests.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add studio/test/showcase-*.test.*
+git add web/test/showcase-*.test.*
 git commit -m "test: add showcase component, classifier, and scanner tests"
 ```
 

@@ -9,7 +9,7 @@ on:
       - .github/agents/agentic-workflows.agent.md
       - .github/copilot-instructions.md
       - .github/ISSUE_TEMPLATE/**
-      - studio/**
+      - web/**
       - scripts/**
       - docs/ARCHITECTURE.md
       - docs/why-gh-aw.md

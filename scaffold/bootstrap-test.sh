@@ -63,7 +63,7 @@ PROFILE=$(tr -d '[:space:]' < "$OUTPUT_DIR/.deploy-profile" 2>/dev/null || true)
 if [ "$PROFILE" = "nextjs-vercel" ]; then
   if ! APP_ROOT=$(bash "$OUTPUT_DIR/scripts/resolve-nextjs-app-root.sh" "$OUTPUT_DIR" 2>/dev/null); then
     report_failure "nextjs-vercel scaffold could not resolve an app root"
-  elif [ "$APP_ROOT" != "studio" ] && [ "$APP_ROOT" != "." ]; then
+  elif [ "$APP_ROOT" != "web" ] && [ "$APP_ROOT" != "." ]; then
     report_failure "nextjs-vercel scaffold resolved unexpected app root: $APP_ROOT"
   fi
 
