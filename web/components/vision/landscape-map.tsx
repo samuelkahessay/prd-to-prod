@@ -1,5 +1,3 @@
-"use client";
-
 import styles from "./landscape-map.module.css";
 
 interface Company {
@@ -12,43 +10,57 @@ interface Company {
 
 export function LandscapeMap({
   companies,
-  xLabel = "Pipeline depth →",
-  yLabel = "↑ Human boundary",
+  xLabel = "Pipeline depth",
+  yLabel = "Human control boundary",
 }: {
-  companies: Company[];
+  companies: readonly Company[];
   xLabel?: string;
   yLabel?: string;
 }) {
   return (
-    <div
-      className={styles.map}
-      role="img"
-      aria-label="Competitive landscape positioning map"
-    >
-      <div className={styles.yLabel}>{yLabel}</div>
-      <div className={styles.xLabel}>{xLabel}</div>
+    <div className={styles.frame}>
+      <div
+        className={styles.map}
+        role="img"
+        aria-label="Competitive landscape positioning map"
+      >
+        <div className={styles.yLabel}>{yLabel}</div>
+        <div className={styles.xLabel}>{xLabel}</div>
 
-      <div className={styles.grid}>
-        <div className={`${styles.gridLine} ${styles.h}`} style={{ bottom: "25%" }} />
-        <div className={`${styles.gridLine} ${styles.h}`} style={{ bottom: "50%" }} />
-        <div className={`${styles.gridLine} ${styles.h}`} style={{ bottom: "75%" }} />
-        <div className={`${styles.gridLine} ${styles.v}`} style={{ left: "25%" }} />
-        <div className={`${styles.gridLine} ${styles.v}`} style={{ left: "50%" }} />
-        <div className={`${styles.gridLine} ${styles.v}`} style={{ left: "75%" }} />
+        <div className={styles.grid}>
+          <div className={`${styles.gridLine} ${styles.h}`} aria-hidden="true" style={{ bottom: "25%" }} />
+          <div className={`${styles.gridLine} ${styles.h}`} aria-hidden="true" style={{ bottom: "50%" }} />
+          <div className={`${styles.gridLine} ${styles.h}`} aria-hidden="true" style={{ bottom: "75%" }} />
+          <div className={`${styles.gridLine} ${styles.v}`} aria-hidden="true" style={{ left: "25%" }} />
+          <div className={`${styles.gridLine} ${styles.v}`} aria-hidden="true" style={{ left: "50%" }} />
+          <div className={`${styles.gridLine} ${styles.v}`} aria-hidden="true" style={{ left: "75%" }} />
 
-        {companies.map((c) => (
-          <span
-            key={c.name}
-            className={`${styles.dot} ${c.highlight ? styles.highlight : ""}`}
-            style={{ left: `${c.x}%`, bottom: `${c.y}%` }}
-            data-tooltip={c.detail}
-            tabIndex={0}
-            role="button"
-            aria-label={`${c.name}: ${c.detail}`}
+          {companies.map((company) => (
+            <span
+              key={company.name}
+              className={`${styles.dot} ${company.highlight ? styles.highlight : ""}`}
+              style={{ left: `${company.x}%`, bottom: `${company.y}%` }}
+              data-tooltip={company.detail}
+              tabIndex={0}
+              aria-label={`${company.name}: ${company.detail}`}
+            >
+              <span className={styles.marker} />
+              <span className={styles.label}>{company.name}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.legend} role="list" aria-label="Competitive landscape details">
+        {companies.map((company) => (
+          <div
+            key={`${company.name}-legend`}
+            className={`${styles.legendItem} ${company.highlight ? styles.legendHighlight : ""}`}
+            role="listitem"
           >
-            <span className={styles.marker} />
-            <span className={styles.label}>{c.name}</span>
-          </span>
+            <strong>{company.name}</strong>
+            <span>{company.detail}</span>
+          </div>
         ))}
       </div>
     </div>

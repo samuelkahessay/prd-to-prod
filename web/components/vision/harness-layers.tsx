@@ -1,5 +1,4 @@
-"use client";
-
+import type { CSSProperties } from "react";
 import styles from "./harness-layers.module.css";
 
 interface Layer {
@@ -8,28 +7,21 @@ interface Layer {
   color?: string;
 }
 
-export function HarnessLayers({ layers }: { layers: Layer[] }) {
+export function HarnessLayers({ layers }: { layers: readonly Layer[] }) {
   return (
-    <div className={styles.stack} role="list">
-      {layers.map((layer, i) => (
+    <div className={styles.stack} role="list" aria-label="Harness layers">
+      {layers.map((layer, index) => (
         <div
           key={layer.label}
           className={styles.layer}
           role="listitem"
-          tabIndex={0}
-          style={{ "--layer-accent": layer.color || "var(--ink-faint)" } as React.CSSProperties}
+          style={{ "--layer-accent": layer.color || "var(--ink-faint)" } as CSSProperties}
         >
-          <div className={styles.bar}>
-            <span className={styles.index}>
-              {String(i + 1).padStart(2, "0")}
-            </span>
-            <span className={styles.label}>{layer.label}</span>
-            <span className={styles.expand} aria-hidden="true">
-              +
-            </span>
-          </div>
-          <div className={styles.detail}>
-            <p>{layer.description}</p>
+          <span className={styles.index}>{String(index + 1).padStart(2, "0")}</span>
+
+          <div className={styles.copy}>
+            <p className={styles.label}>{layer.label}</p>
+            <p className={styles.description}>{layer.description}</p>
           </div>
         </div>
       ))}

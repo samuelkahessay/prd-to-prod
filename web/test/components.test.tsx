@@ -13,14 +13,25 @@ import { BUILD_QUEUE, REVIEW_QUEUE } from "@/components/landing/pipeline-animati
 import { RunsTable } from "@/components/console/runs-table";
 import type { EvidenceRow, Run } from "@/lib/types";
 
+jest.mock("@/components/landing/pipeline-animation", () => ({
+  PipelineAnimation: () => <div data-testid="pipeline-animation" />,
+}));
+
 describe("Hero", () => {
   it("renders headline and CTA", () => {
     render(<Hero />);
-    expect(screen.getByText("Five agents. One room. One governed build.")).toBeInTheDocument();
-    expect(screen.getByText(/Paste a PRD/i)).toBeInTheDocument();
-    expect(screen.getByText(/Watch five agents build it/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Watch demo" })).toHaveAttribute("href", "/demo");
-    expect(screen.getByRole("link", { name: "Run your own PRD" })).toHaveAttribute("href", "/build");
+    expect(
+      screen.getByRole("heading", { name: /Code generation is solved\. Delivery isn't\./i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/AI agents can write code/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Book a call" })).toHaveAttribute(
+      "href",
+      "https://calendly.com/kahessay",
+    );
+    expect(screen.getByRole("link", { name: "Read the full thesis →" })).toHaveAttribute(
+      "href",
+      "/vision",
+    );
   });
 });
 
@@ -28,14 +39,16 @@ describe("StickyNav", () => {
   it("renders anchor links and CTA", () => {
     render(<StickyNav />);
     expect(screen.getByRole("link", { name: "prd to prod" })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("link", { name: "Run your PRD" })).toHaveAttribute("href", "/build");
-    expect(screen.getByRole("link", { name: "Pricing" })).toHaveAttribute("href", "#pricing");
     expect(screen.getByRole("link", { name: "How it works" })).toHaveAttribute("href", "#how-it-works");
+    expect(screen.getByRole("link", { name: "Vision" })).toHaveAttribute("href", "/vision");
     expect(screen.getByRole("link", { name: "GitHub" })).toHaveAttribute(
       "href",
       "https://github.com/samuelkahessay/prd-to-prod",
     );
-    expect(screen.getByRole("link", { name: "Watch demo" })).toHaveAttribute("href", "/demo");
+    expect(screen.getByRole("link", { name: "Book a call" })).toHaveAttribute(
+      "href",
+      "https://calendly.com/kahessay",
+    );
   });
 
   it("adds the scrolled class after scrolling past the threshold", () => {
@@ -149,9 +162,19 @@ describe("Pipeline animation queues", () => {
 describe("BottomCta", () => {
   it("renders the final call to action", () => {
     render(<BottomCta />);
-    expect(screen.getByRole("heading", { name: "Start with the floor. End with repo proof." })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Watch demo" })).toHaveAttribute("href", "/demo");
-    expect(screen.getByRole("link", { name: "Run your own PRD" })).toHaveAttribute("href", "/build");
+    expect(screen.getByRole("heading", { name: "Let's talk about your project." })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Book a call" })).toHaveAttribute(
+      "href",
+      "https://calendly.com/kahessay",
+    );
+    expect(screen.getByRole("link", { name: "Technical vision →" })).toHaveAttribute(
+      "href",
+      "/vision",
+    );
+    expect(screen.getByRole("link", { name: "Full pitch deck →" })).toHaveAttribute(
+      "href",
+      "/pitch",
+    );
   });
 });
 
