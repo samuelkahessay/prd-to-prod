@@ -1,19 +1,13 @@
-import { fetchEvidenceData } from "@/lib/github";
 import { StickyNav } from "@/components/landing/sticky-nav";
 import { SplashIntro } from "@/components/landing/splash-intro";
 import { Hero } from "@/components/landing/hero";
-import { Pricing } from "@/components/landing/pricing";
-import { WhatYouGet } from "@/components/landing/what-you-get";
-import { ShowcaseStrip } from "@/components/landing/showcase-strip";
-import { HowItWorks } from "@/components/landing/how-it-works";
-import { Credibility } from "@/components/landing/credibility";
-import { EvidenceLedger } from "@/components/landing/evidence-ledger";
+import { Pipeline } from "@/components/landing/pipeline";
+import { Proof } from "@/components/landing/proof";
+import { Audience } from "@/components/landing/audience";
 import { BottomCta } from "@/components/landing/bottom-cta";
 import styles from "./page.module.css";
 
-export default async function LandingPage() {
-  const evidence = await fetchEvidenceData();
-
+export default function LandingPage() {
   return (
     <div className={styles.shell}>
       <SplashIntro />
@@ -25,22 +19,13 @@ export default async function LandingPage() {
         <Hero />
 
         <hr className={styles.divider} />
-        <Pricing />
+        <Pipeline />
 
         <hr className={styles.divider} />
-        <WhatYouGet />
+        <Proof />
 
         <hr className={styles.divider} />
-        <ShowcaseStrip />
-
-        <hr className={styles.divider} />
-        <HowItWorks />
-
-        <hr className={styles.divider} />
-        <Credibility />
-
-        <hr className={styles.divider} />
-        <EvidenceLedger rows={evidence} />
+        <Audience />
 
         <hr className={styles.divider} />
       </main>

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import styles from "./sticky-nav.module.css";
 
-
 export function StickyNav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -23,9 +22,8 @@ export function StickyNav() {
       <a href="/" className={styles.logo}>prd to prod</a>
       <div className={styles.right}>
         <div className={styles.links}>
-          <a href="/build" className={styles.link}>Run your PRD</a>
-          <a href="#pricing" className={styles.link}>Pricing</a>
           <a href="#how-it-works" className={styles.link}>How it works</a>
+          <a href="/vision" className={styles.link}>Vision</a>
           <a
             href="https://github.com/samuelkahessay/prd-to-prod"
             className={styles.link}
@@ -35,7 +33,14 @@ export function StickyNav() {
             GitHub
           </a>
         </div>
-        <a href="/demo" className={styles.cta}>Watch demo</a>
+        <a
+          href="https://calendly.com/kahessay"
+          className={styles.cta}
+          target="_blank"
+          rel="noopener"
+        >
+          Book a call
+        </a>
         <button
           className={`${styles.menuBtn} ${menuOpen ? styles.menuOpen : ""}`}
           onClick={() => setMenuOpen(!menuOpen)}
@@ -48,10 +53,17 @@ export function StickyNav() {
       </div>
       {menuOpen && (
         <div className={styles.dropdown}>
-          <a href="/demo" className={styles.dropLink} onClick={() => setMenuOpen(false)}>Watch demo</a>
-          <a href="/build" className={styles.dropLink} onClick={() => setMenuOpen(false)}>Run your PRD</a>
-          <a href="#pricing" className={styles.dropLink} onClick={() => setMenuOpen(false)}>Pricing</a>
+          <a
+            href="https://calendly.com/kahessay"
+            className={styles.dropLink}
+            target="_blank"
+            rel="noopener"
+            onClick={() => setMenuOpen(false)}
+          >
+            Book a call
+          </a>
           <a href="#how-it-works" className={styles.dropLink} onClick={() => setMenuOpen(false)}>How it works</a>
+          <a href="/vision" className={styles.dropLink} onClick={() => setMenuOpen(false)}>Vision</a>
           <a
             href="https://github.com/samuelkahessay/prd-to-prod"
             className={styles.dropLink}

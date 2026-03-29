@@ -1,0 +1,97 @@
+.section {
+  padding: 80px 48px 0;
+  max-width: 720px;
+}
+
+.heading {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
+
+.caseStudy {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 32px;
+  margin-bottom: 32px;
+}
+
+.caseLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--good);
+  margin-bottom: 12px;
+}
+
+.caseTitle {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.caseBody {
+  font-size: 15px;
+  color: var(--ink-mid);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.metrics {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.metric {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.metric strong {
+  color: var(--ink);
+}
+
+.metric span {
+  color: var(--ink-muted);
+}
+
+.credibility {
+  list-style: none;
+  padding: 0;
+}
+
+.credibility li {
+  font-size: 14px;
+  color: var(--ink-mid);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+  line-height: 1.5;
+}
+
+.credibility li:last-child {
+  border-bottom: none;
+}
+
+.credibility strong {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 60px 24px 0;
+  }
+
+  .caseStudy {
+    padding: 24px;
+  }
+
+  .metrics {
+    gap: 16px;
+  }
+}

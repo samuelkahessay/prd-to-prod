@@ -1,19 +1,40 @@
 import styles from "./bottom-cta.module.css";
-import { WaitlistForm } from "./waitlist-form";
 
 export function BottomCta() {
   return (
     <footer className={styles.section}>
-      <h2 className={styles.heading}>Start with the floor. End with repo proof.</h2>
+      <h2 className={styles.heading}>Let&apos;s talk about your project.</h2>
       <p className={styles.body}>
-        Watch the guided demo first, then launch your own governed run when
-        you&apos;re ready to hand a real PRD to the pipeline.
+        15 minutes. Tell me what you&apos;re building, I&apos;ll tell you if the
+        pipeline is a fit.
       </p>
-      <div className={styles.actions}>
-        <a href="/demo" className={styles.ctaPrimary}>Watch demo</a>
-        <a href="/build" className={styles.ctaSecondary}>Run your own PRD</a>
+      <a
+        href="https://calendly.com/kahessay"
+        className={styles.ctaPrimary}
+        target="_blank"
+        rel="noopener"
+      >
+        Book a call
+      </a>
+      <p className={styles.email}>or email kahessay@icloud.com</p>
+      <div className={styles.links}>
+        <a href="/pitch">Full pitch deck →</a>
+        <a href="/vision">Technical vision →</a>
+        <a
+          href="https://github.com/samuelkahessay/prd-to-prod"
+          target="_blank"
+          rel="noopener"
+        >
+          GitHub →
+        </a>
+        <a
+          href="https://linkedin.com/in/samuelkahessay"
+          target="_blank"
+          rel="noopener"
+        >
+          LinkedIn →
+        </a>
       </div>
-      <WaitlistForm />
     </footer>
   );
 }
