@@ -1,7 +1,13 @@
+.frame {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 0.5rem 0 0;
+}
+
 .map {
   position: relative;
-  margin: 2.5rem 0;
-  padding: 2rem 0 2rem 2.5rem;
+  padding: 1.5rem 0 2rem 2.75rem;
 }
 
 .grid {
@@ -20,22 +26,22 @@
   left: 0;
   right: 0;
   border-top: 1px solid var(--rule);
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
 .v {
   top: 0;
   bottom: 0;
   border-left: 1px solid var(--rule);
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
 .yLabel,
 .xLabel {
   position: absolute;
   font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.1em;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-faint);
   font-weight: 500;
@@ -50,7 +56,7 @@
 }
 
 .xLabel {
-  bottom: -1.5rem;
+  bottom: -1.4rem;
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
@@ -59,67 +65,61 @@
 .dot {
   position: absolute;
   transform: translate(-50%, 50%);
-  cursor: help;
+  cursor: default;
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.4rem;
 }
 
 .marker {
   display: block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
   background: var(--ink-faint);
-  border: 1.5px solid var(--cream);
+  border: 2px solid var(--cream);
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .label {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--ink-faint);
+  font-size: 0.72rem;
+  color: var(--ink-mid);
   white-space: nowrap;
   letter-spacing: 0.02em;
   transition: color 0.15s ease;
 }
 
-/* Highlighted dot (prd-to-prod) */
 .highlight .marker {
   background: var(--accent);
-  width: 10px;
-  height: 10px;
-  box-shadow: 0 0 8px oklch(56% 0.1 255 / 0.35);
+  width: 12px;
+  height: 12px;
+  box-shadow: 0 0 10px color-mix(in oklch, var(--accent) 35%, white 65%);
 }
 
 .highlight .label {
   color: var(--accent);
   font-weight: 600;
-  font-size: 0.7rem;
 }
 
-/* Tooltip */
 .dot::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: calc(100% + 10px);
+  bottom: calc(100% + 12px);
   left: 50%;
   transform: translateX(-50%);
-  padding: 0.4rem 0.7rem;
+  width: min(240px, 42vw);
+  padding: 0.55rem 0.75rem;
   background: var(--ink);
-  border: 1px solid var(--ink-mid);
-  border-radius: 4px;
+  border: 1px solid color-mix(in oklch, var(--ink) 78%, white 22%);
+  border-radius: 10px;
   color: var(--cream);
-  font-family: var(--font-sans);
-  font-size: 0.7rem;
-  font-weight: 400;
-  line-height: 1.4;
-  white-space: normal;
-  max-width: 240px;
-  pointer-events: none;
+  font-size: 0.78rem;
+  line-height: 1.5;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.15s ease;
   z-index: 10;
 }
@@ -132,7 +132,7 @@
 
 .dot:hover .marker,
 .dot:focus .marker {
-  transform: scale(1.4);
+  transform: scale(1.25);
   background: var(--ink);
 }
 
@@ -151,21 +151,66 @@
   opacity: 1;
 }
 
+.legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.legendItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 14px 16px;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: color-mix(in oklch, var(--surface) 90%, white 10%);
+}
+
+.legendItem strong {
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.legendItem span {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-mid);
+}
+
+.legendHighlight {
+  border-color: color-mix(in oklch, var(--accent) 35%, var(--rule) 65%);
+  background: color-mix(in oklch, var(--accent-wash) 68%, white 32%);
+}
+
 @media (max-width: 768px) {
   .map {
-    padding-left: 1.5rem;
+    padding-left: 1.8rem;
   }
 
   .grid {
     aspect-ratio: 4 / 3;
   }
 
-  .label {
-    font-size: 0.55rem;
+  .marker {
+    width: 18px;
+    height: 18px;
   }
 
-  .dot::after {
-    font-size: 0.6rem;
-    max-width: 180px;
+  .highlight .marker {
+    width: 20px;
+    height: 20px;
+  }
+
+  .dot {
+    padding: 8px;
+  }
+
+  .label {
+    font-size: 0.58rem;
+  }
+
+  .legend {
+    grid-template-columns: 1fr;
   }
 }
