@@ -39,7 +39,7 @@ describe("StickyNav", () => {
   it("renders anchor links and CTA", () => {
     render(<StickyNav />);
     expect(screen.getByRole("link", { name: "prd to prod" })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("link", { name: "How it works" })).toHaveAttribute("href", "#how-it-works");
+    expect(screen.getByRole("link", { name: "How it works" })).toHaveAttribute("href", "/#how-it-works");
     expect(screen.getByRole("link", { name: "Vision" })).toHaveAttribute("href", "/vision");
     expect(screen.getByRole("link", { name: "GitHub" })).toHaveAttribute(
       "href",

@@ -22,7 +22,7 @@ export function StickyNav() {
       <a href="/" className={styles.logo}>prd to prod</a>
       <div className={styles.right}>
         <div className={styles.links}>
-          <a href="#how-it-works" className={styles.link}>How it works</a>
+          <a href="/#how-it-works" className={styles.link}>How it works</a>
           <a href="/vision" className={styles.link}>Vision</a>
           <a
             href="https://github.com/samuelkahessay/prd-to-prod"
@@ -62,7 +62,7 @@ export function StickyNav() {
           >
             Book a call
           </a>
-          <a href="#how-it-works" className={styles.dropLink} onClick={() => setMenuOpen(false)}>How it works</a>
+          <a href="/#how-it-works" className={styles.dropLink} onClick={() => setMenuOpen(false)}>How it works</a>
           <a href="/vision" className={styles.dropLink} onClick={() => setMenuOpen(false)}>Vision</a>
           <a
             href="https://github.com/samuelkahessay/prd-to-prod"
