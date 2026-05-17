@@ -70,9 +70,9 @@ jobs:
           node-version: 22
 
       - name: Install gh-aw CLI
-        uses: github/gh-aw-actions/setup-cli@v0.62.5
+        uses: github/gh-aw-actions/setup-cli@v0.72.1
         with:
-          version: v0.62.5
+          version: v0.72.1
 
       - name: Export scaffold
         run: bash scaffold/export-scaffold.sh

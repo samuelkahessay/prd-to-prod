@@ -1,7 +1,7 @@
 # PRD to Prod
 
 Send a PRD, get an invite-only beta run. The current public path is manual
-$1 entitlement -> single-use access code -> GitHub auth -> BYOK OpenRouter key
+$1 entitlement -> single-use access code -> GitHub auth -> BYOK Copilot token
 -> private repo provisioned from the public scaffold. Runs finish at repo
 handoff by default, with deployment validation when Vercel credentials are
 configured.
@@ -33,13 +33,13 @@ Today, `$1` is a manual entitlement, not a checkout flow.
 
 - We email a single-use access code
 - You authenticate with GitHub
-- You paste a BYOK OpenRouter key
+- You paste a BYOK `COPILOT_GITHUB_TOKEN`
 - Vercel credentials are optional; include them if you want validated deployment
 - Supported lane: greenfield `nextjs-vercel` only
 
 ### Run it yourself
 
-The code is MIT. Fork it, bring your own OpenAI-compatible LLM key,
+The code is MIT. Fork it, bring your own Copilot token for the gh-aw agents,
 deploy anywhere.
 
 ```bash
@@ -47,14 +47,14 @@ git clone https://github.com/samuelkahessay/prd-to-prod.git
 cd prd-to-prod
 
 gh extension install github/gh-aw
-bash scripts/bootstrap.sh
-gh aw secrets bootstrap
+./setup.sh
+./setup-verify.sh
 git push
 ```
 
 Then create an issue with your product spec and comment `/decompose`.
 
-**You'll need:** a GitHub repo with Actions, an LLM license (~$19/mo), and
+**You'll need:** a GitHub repo with Actions, a Copilot-capable GitHub token, and
 hosting when you want deployment. Vercel free tier works for the default lane.
 
 See [`llms.txt`](llms.txt) for a machine-readable overview of the pipeline,
@@ -121,9 +121,22 @@ Once labeled, `auto-dispatch.yml` fires and the appropriate agent picks it up. Y
 
 ## Self-hosting reference
 
+### Repository boundaries
+
+`prd-to-prod` is the hand-edited source product. The customer-facing
+`samuelkahessay/prd-to-prod-template` repo is generated from this source and
+should not receive hand-authored fixes. Customer repos created from the template
+are runtime instances: they own app code, repo secrets, activation variables,
+and operational history.
+
+Downstream discoveries become upstream candidates through PRs in this source
+repo. Instance findings are useful evidence, but private product code and
+instance-specific state stay downstream.
+
 ### Required secrets
 
 - `GH_AW_GITHUB_TOKEN` — PAT for issue creation and auto-merge
+- `COPILOT_GITHUB_TOKEN` — Copilot engine token for gh-aw agent execution
 - `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` — optional, for Vercel deploy validation
 
 ### Required repo settings
@@ -131,6 +144,7 @@ Once labeled, `auto-dispatch.yml` fires and the appropriate agent picks it up. Y
 - Auto-merge enabled
 - Delete branch on merge enabled
 - Active `Protect main` ruleset on `main`
+- `PIPELINE_ENABLED=true` after `./setup-verify.sh` passes
 
 ### Self-Serve Template Publication
 
@@ -141,6 +155,8 @@ If you use the `/build` flow, keep the template coordinates aligned in both plac
 
 `publish-scaffold-template.yml` republishes `dist/scaffold/` into that template
 repo. Edit only `prd-to-prod`; the template repo is generated output.
+Published scaffolds are setup-activated: scheduled agent workflows skip until a
+customer-created repo completes setup and sets `PIPELINE_ENABLED=true`.
 
 ### Emergency controls
 

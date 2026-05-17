@@ -6,10 +6,16 @@
 
 ```bash
 ./setup.sh
+./setup-verify.sh
 ```
 
 The default `nextjs-vercel` scaffold ships the web app in `web/`. Start feature
 work there unless your PRD explicitly changes the app foundation.
+
+This repository is setup-activated. Scheduled agents stay idle until setup
+verification passes and the repo variable `PIPELINE_ENABLED=true` is set. Manual
+commands such as `/decompose` and `/repo-assist` require `COPILOT_GITHUB_TOKEN`
+plus the GitHub App or PAT credentials configured by `./setup.sh`.
 
 ## How It Works
 

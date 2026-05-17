@@ -162,7 +162,7 @@ PIPELINE_REQUIRED_STATUS_CHECKS="${PIPELINE_REQUIRED_STATUS_CHECKS:-review,Node 
 PIPELINE_APP_PRIVATE_KEY_FILE="${PIPELINE_APP_PRIVATE_KEY_FILE:-$HOME/.config/prd-to-prod/prd-to-prod-pipeline.2026-03-02.private-key.pem}"
 VISIBILITY_FLAG=$(visibility_flag "$PIPELINE_VISIBILITY")
 
-require_env OPENAI_API_KEY
+require_env COPILOT_GITHUB_TOKEN
 require_env VERCEL_TOKEN
 require_env VERCEL_ORG_ID
 [ -n "$PIPELINE_APP_ID" ] || fail "PIPELINE_APP_ID must not be empty"
@@ -239,6 +239,7 @@ log "Auto-merge and branch protection configured"
 log "Configuring pipeline variables and secrets on $REPO..."
 gh variable set PIPELINE_APP_ID --repo "$REPO" --body "$PIPELINE_APP_ID"
 gh variable set PIPELINE_BOT_LOGIN --repo "$REPO" --body "$PIPELINE_BOT_LOGIN"
+gh variable set PIPELINE_ENABLED --repo "$REPO" --body "true"
 
 if [ -n "${PIPELINE_APP_PRIVATE_KEY:-}" ]; then
   gh secret set PIPELINE_APP_PRIVATE_KEY --repo "$REPO" --body "$PIPELINE_APP_PRIVATE_KEY"
@@ -246,7 +247,7 @@ else
   gh secret set PIPELINE_APP_PRIVATE_KEY --repo "$REPO" < "$PIPELINE_APP_PRIVATE_KEY_FILE"
 fi
 
-gh secret set OPENAI_API_KEY --repo "$REPO" --body "$OPENAI_API_KEY"
+gh secret set COPILOT_GITHUB_TOKEN --repo "$REPO" --body "$COPILOT_GITHUB_TOKEN"
 gh secret set VERCEL_TOKEN --repo "$REPO" --body "$VERCEL_TOKEN"
 gh secret set VERCEL_ORG_ID --repo "$REPO" --body "$VERCEL_ORG_ID"
 
@@ -257,8 +258,9 @@ fi
 
 verify_repo_variable "$REPO" PIPELINE_APP_ID "$PIPELINE_APP_ID"
 verify_repo_variable "$REPO" PIPELINE_BOT_LOGIN "$PIPELINE_BOT_LOGIN"
+verify_repo_variable "$REPO" PIPELINE_ENABLED "true"
 verify_repo_secret "$REPO" PIPELINE_APP_PRIVATE_KEY
-verify_repo_secret "$REPO" OPENAI_API_KEY
+verify_repo_secret "$REPO" COPILOT_GITHUB_TOKEN
 verify_repo_secret "$REPO" VERCEL_TOKEN
 verify_repo_secret "$REPO" VERCEL_ORG_ID
 
@@ -274,8 +276,6 @@ if ! (cd "$CLONE_DIR" && gh aw compile >/dev/null 2>&1); then
   log "First compile pass reported workflow dependency errors; retrying..."
 fi
 (cd "$CLONE_DIR" && gh aw compile >/dev/null 2>&1)
-(cd "$CLONE_DIR" && bash scripts/patch-codex-openrouter-http-locks.sh >/dev/null 2>&1)
-(cd "$CLONE_DIR" && bash scripts/patch-pr-review-agent-lock.sh .github/workflows/pr-review-agent.lock.yml >/dev/null 2>&1)
 (cd "$CLONE_DIR" && bash scripts/patch-runner-labels.sh .github/workflows >/dev/null 2>&1)
 
 for lock_file in \

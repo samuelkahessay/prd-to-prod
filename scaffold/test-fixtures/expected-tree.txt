@@ -65,8 +65,6 @@ scripts/extract-linked-issue-numbers.sh
 scripts/healing-control.sh
 scripts/log-decision.sh
 scripts/monitor-pipeline.sh
-scripts/patch-codex-openrouter-http-locks.sh
-scripts/patch-pr-review-agent-lock.sh
 scripts/patch-runner-labels.sh
 scripts/pipeline-watchdog.sh
 scripts/render-ci-repair-command.sh
@@ -94,6 +92,7 @@ scripts/tests/test-classify-transcript.sh
 scripts/tests/test-console-preflight.sh
 scripts/tests/test-console-server.sh
 scripts/tests/test-console-structure.sh
+scripts/tests/test-copilot-workflow-defaults.sh
 scripts/tests/test-demo-preflight.sh
 scripts/tests/test-deploy-validation-wiring.sh
 scripts/tests/test-disable-test-repo-workflows.sh
@@ -113,8 +112,6 @@ scripts/tests/test-manifest-completeness.sh
 scripts/tests/test-manifest-parse.sh
 scripts/tests/test-no-stale-references.sh
 scripts/tests/test-node-runtime-contract.sh
-scripts/tests/test-patch-codex-openrouter-http-locks.sh
-scripts/tests/test-patch-pr-review-agent-lock.sh
 scripts/tests/test-pipeline-watchdog.sh
 scripts/tests/test-pr-review-agent-activation.sh
 scripts/tests/test-pr-review-agent-validation-review.sh
@@ -136,6 +133,7 @@ scripts/tests/test-retry-state.sh
 scripts/tests/test-run-lifecycle-lib.sh
 scripts/tests/test-self-healing-drill-dispatch-substate.sh
 scripts/tests/test-self-healing-drill-workflow-matching.sh
+scripts/tests/test-setup-activation.sh
 scripts/tests/test-validate-deployment.sh
 scripts/tests/test-validate-implementation.sh
 scripts/tests/test-validate-prd.sh
@@ -145,6 +143,7 @@ scripts/validate-implementation.sh
 scripts/verify-mvp.sh
 setup-verify.sh
 setup.sh
+vercel.json
 web/.gitignore
 web/.npmrc
 web/app/globals.css
@@ -158,4 +157,3 @@ web/package.json
 web/test/__mocks__/styleMock.ts
 web/test/smoke.test.tsx
 web/tsconfig.json
-vercel.json

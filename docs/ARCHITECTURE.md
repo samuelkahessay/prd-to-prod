@@ -15,6 +15,35 @@ model is not a flat count. It is a set of routing/safety workflows plus AI agent
 
 prd-to-prod is consolidating from three repos into one source repo with an exported scaffold artifact and a generated template publication target. The system supports two operating modes:
 
+### Repository Boundaries
+
+`prd-to-prod` is the source product. Workflow sources, scaffold files, setup
+scripts, product docs, and publication automation are hand-edited here only.
+
+`prd-to-prod-template` is the generated customer install artifact. It remains
+the GitHub template people start from, but it is published from this repo and is
+not a second source tree.
+
+Customer-created repositories are runtime instances. They hold customer code,
+repo secrets, activation variables, and operational history. They can diverge in
+application code, but pipeline framework changes flow back through source PRs in
+`prd-to-prod`.
+
+### Instance Feedback Loop
+
+Downstream product runs are evidence, not alternate authorities. When a runtime
+instance discovers a generic improvement, the promotion path is:
+
+1. Capture the instance finding with enough evidence to reproduce it.
+2. Strip product-specific code, data, and private repo state.
+3. Open or land the generic change in `prd-to-prod`.
+4. Regenerate and publish `prd-to-prod-template` from source.
+5. Let customer repos opt into the updated scaffold through their normal update
+   or setup flow.
+
+Downstream learnings follow this path too: the lesson can be upstreamed when
+generic, but the instance repo itself is not mutated by core recovery work.
+
 ### Operating Modes
 
 1. **greenfield** — Meeting transcript → PRD → new repo provisioned from scaffold
@@ -42,6 +71,9 @@ The scaffold is a build artifact generated from `template-manifest.yml`, not a h
 4. `publish-scaffold-template.yml` — mirrors `dist/scaffold/` into the generated template repo used by `/build`
 
 Output goes to `dist/scaffold/`, which is `.gitignore`d. The published template repo at `PUBLIC_BETA_TEMPLATE_OWNER/PUBLIC_BETA_TEMPLATE_REPO` is generated output, not a maintained source repo.
+The canonical template repo should not be operated as though it were a live
+customer instance; scheduled agent loops are activated only after a created repo
+passes setup verification and sets `PIPELINE_ENABLED=true`.
 
 ### Trigger Layer (`trigger/`)
 
@@ -57,6 +89,7 @@ The local greenfield trigger provisions directly from `dist/scaffold/`. The self
 - `TARGET_REPO` is required when `--mode existing` is set; omitting it fails fast
 - The scaffold never contains `extraction/`, `trigger/`, `PRDtoProd/`, or product-specific files
 - All hand edits happen in `prd-to-prod`; the published template repo is regenerated from `dist/scaffold/`
+- The published template is setup-activated: scheduled agent workflows no-op until `PIPELINE_ENABLED=true`
 - `classify.sh` is deterministic: same input always produces same output
 - Schema validation gates all inter-script data (JSON Schema files in `extraction/schemas/`)
 
@@ -332,8 +365,9 @@ refused to do, and why.
 
 | Variable | Purpose | Default |
 |---|---|---|
+| `PIPELINE_ENABLED` | Activation gate for scheduled agent workflows in template-created repos. Set to `true` only after setup verification passes. | unset/false |
 | `PIPELINE_HEALING_ENABLED` | Kill switch for autonomous healing. Set to `false` to pause dispatch, repair, and auto-merge while keeping detection and recording active. | unset (healing enabled) |
-| `GH_AW_MODEL_AGENT_COPILOT` | Model used by continuous improvement agents (`code-simplifier`, `duplicate-code-detector`). Older agents (`repo-assist`, `pipeline-status`) hardcode their model. | `gpt-5` |
+| `GH_AW_MODEL_AGENT_COPILOT` | Optional model override for Copilot-powered gh-aw agents. | gh-aw default |
 
 ## Repo Settings
 

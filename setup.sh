@@ -406,26 +406,65 @@ else
 fi
 
 ###############################################################################
-# Step 8: AI Engine Configuration
+# Step 8: Copilot Engine Configuration
 ###############################################################################
-header "Step 8: AI Engine Configuration"
+header "Step 8: Copilot Engine Configuration"
 
-echo "gh-aw needs an AI engine (GitHub Copilot, Claude, or Codex) configured"
-echo "to power the pipeline agents."
+echo "gh-aw uses GitHub Copilot as the default engine for pipeline agents."
+echo "Set COPILOT_GITHUB_TOKEN before activating scheduled agent runs."
 echo ""
 
 if [[ "$NON_INTERACTIVE" == true ]]; then
-  warn "Non-interactive mode: configure AI engine manually:"
-  echo "  gh aw secrets bootstrap"
+  warn "Non-interactive mode: set the Copilot token manually with:"
+  echo "  gh secret set COPILOT_GITHUB_TOKEN"
 else
-  prompt RUN_AW_SECRETS "Run 'gh aw secrets bootstrap' now? (y/n)" "y"
-  if [[ "$RUN_AW_SECRETS" =~ ^[Yy] ]]; then
-    gh aw secrets bootstrap || {
-      warn "gh aw secrets bootstrap failed — run it manually later"
-    }
+  prompt SETUP_COPILOT_NOW "Set COPILOT_GITHUB_TOKEN now? (y/n)" "y"
+  if [[ "$SETUP_COPILOT_NOW" =~ ^[Yy] ]]; then
+    prompt_secret COPILOT_VALUE "Paste your Copilot-capable GitHub token (input hidden)"
+    if [[ -n "$COPILOT_VALUE" ]]; then
+      echo "$COPILOT_VALUE" | gh secret set COPILOT_GITHUB_TOKEN
+      info "COPILOT_GITHUB_TOKEN set"
+    else
+      warn "Empty value — skipping. Set it later: gh secret set COPILOT_GITHUB_TOKEN"
+    fi
   else
-    warn "Skipped. Run it later with: gh aw secrets bootstrap"
+    warn "Skipped. Set it later with: gh secret set COPILOT_GITHUB_TOKEN"
   fi
+fi
+
+###############################################################################
+# Step 9: Activation Gate
+###############################################################################
+header "Step 9: Activation Gate"
+
+echo "Scheduled agent workflows stay disabled until setup is complete."
+echo "Manual runs can still be used for setup diagnostics, but missing secrets will"
+echo "fail with setup guidance."
+echo ""
+
+SECRET_LIST=$(gh secret list --json name -q '.[].name' 2>/dev/null || echo "")
+VAR_LIST=$(gh variable list --json name -q '.[].name' 2>/dev/null || echo "")
+
+COPILOT_READY=false
+AUTH_READY=false
+
+if echo "$SECRET_LIST" | grep -qx "COPILOT_GITHUB_TOKEN" 2>/dev/null; then
+  COPILOT_READY=true
+fi
+
+if { echo "$VAR_LIST" | grep -qx "PIPELINE_APP_ID" 2>/dev/null && echo "$SECRET_LIST" | grep -qx "PIPELINE_APP_PRIVATE_KEY" 2>/dev/null; } || \
+   echo "$SECRET_LIST" | grep -qx "GH_AW_GITHUB_TOKEN" 2>/dev/null; then
+  AUTH_READY=true
+fi
+
+if [[ "$COPILOT_READY" == true && "$AUTH_READY" == true ]]; then
+  gh variable set PIPELINE_ENABLED --body "true" >/dev/null 2>&1 || true
+  info "PIPELINE_ENABLED=true — scheduled agents are active"
+else
+  gh variable set PIPELINE_ENABLED --body "false" >/dev/null 2>&1 || true
+  warn "PIPELINE_ENABLED=false — scheduled agents will stay idle"
+  [[ "$COPILOT_READY" == true ]] || echo "  Missing: gh secret set COPILOT_GITHUB_TOKEN"
+  [[ "$AUTH_READY" == true ]] || echo "  Missing: GitHub App credentials or gh secret set GH_AW_GITHUB_TOKEN"
 fi
 
 ###############################################################################
@@ -447,6 +486,6 @@ echo "  3. Submit your first PRD:"
 echo "     Create an issue with your product requirements, then comment /decompose"
 echo "     Or: gh aw run prd-decomposer"
 echo ""
-echo "  Run ${BOLD}./setup-verify.sh${NC} to check your configuration."
+echo "  Run ${BOLD}./setup-verify.sh${NC} to confirm the activation contract."
 echo ""
 info "Happy building!"

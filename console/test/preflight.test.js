@@ -11,6 +11,7 @@ jest.mock("fs", () => ({
 
 const {
   classifyAgentApiKey,
+  classifyCopilotToken,
   classifyWorkflowToken,
   runPreflight,
 } = require("../lib/preflight");
@@ -36,6 +37,8 @@ describe("preflight", () => {
 
   afterEach(() => {
     delete process.env.OPENROUTER_API_KEY;
+    delete process.env.COPILOT_GITHUB_TOKEN;
+    delete process.env.PUBLIC_BETA_COPILOT_GITHUB_TOKEN;
     delete process.env.E2E_OPENAI_API_KEY;
     delete process.env.OPENAI_API_KEY;
     delete process.env.PUBLIC_BETA_OPENAI_API_KEY;
@@ -45,7 +48,8 @@ describe("preflight", () => {
     delete process.env.VERCEL_TOKEN;
   });
 
-  test("accepts an agent API key and workflow PAT", () => {
+  test("accepts a Copilot engine token, legacy agent API key, and workflow PAT", () => {
+    process.env.COPILOT_GITHUB_TOKEN = "github_pat_copilot";
     process.env.OPENROUTER_API_KEY = "or-key";
     process.env.OPENAI_API_KEY = "sk-or-v1-key";
     process.env.GH_AW_GITHUB_TOKEN = "ghp_workflow";
@@ -58,6 +62,11 @@ describe("preflight", () => {
     expect(requiredFailures).toHaveLength(0);
     expect(checks).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({
+          id: "copilot",
+          present: true,
+          detail: expect.stringContaining("Copilot"),
+        }),
         expect.objectContaining({
           id: "agent-api-key",
           present: true,
@@ -73,6 +82,7 @@ describe("preflight", () => {
   });
 
   test("accepts E2E_OPENAI_API_KEY for harness-driven runs", () => {
+    process.env.COPILOT_GITHUB_TOKEN = "github_pat_copilot";
     process.env.OPENROUTER_API_KEY = "or-key";
     process.env.E2E_OPENAI_API_KEY = "sk-or-v1-key";
     process.env.GH_AW_GITHUB_TOKEN = "ghp_workflow";
@@ -84,7 +94,53 @@ describe("preflight", () => {
 
     expect(agentKeyCheck).toEqual(
       expect.objectContaining({
-        required: true,
+        required: false,
+        present: true,
+        detail: expect.stringContaining("Agent API key"),
+      })
+    );
+  });
+
+  test("rejects missing Copilot token before activation", () => {
+    expect(classifyCopilotToken("")).toEqual(
+      expect.objectContaining({
+        present: false,
+        detail: expect.stringContaining("Missing COPILOT_GITHUB_TOKEN"),
+      })
+    );
+  });
+
+  test("treats legacy agent API key as optional support", () => {
+    process.env.COPILOT_GITHUB_TOKEN = "github_pat_copilot";
+    process.env.GH_AW_GITHUB_TOKEN = "ghp_workflow";
+    process.env.PIPELINE_APP_ID = "123";
+    process.env.PIPELINE_APP_PRIVATE_KEY = "private-key";
+
+    const checks = runPreflight("/repo");
+    const agentKeyCheck = checks.find((check) => check.id === "agent-api-key");
+
+    expect(agentKeyCheck).toEqual(
+      expect.objectContaining({
+        required: false,
+        present: false,
+        detail: expect.stringContaining("Missing OPENAI_API_KEY"),
+      })
+    );
+  });
+
+  test("accepts legacy agent API key when supplied", () => {
+    process.env.COPILOT_GITHUB_TOKEN = "github_pat_copilot";
+    process.env.E2E_OPENAI_API_KEY = "sk-or-v1-key";
+    process.env.GH_AW_GITHUB_TOKEN = "ghp_workflow";
+    process.env.PIPELINE_APP_ID = "123";
+    process.env.PIPELINE_APP_PRIVATE_KEY = "private-key";
+
+    const checks = runPreflight("/repo");
+    const agentKeyCheck = checks.find((check) => check.id === "agent-api-key");
+
+    expect(agentKeyCheck).toEqual(
+      expect.objectContaining({
+        required: false,
         present: true,
         detail: expect.stringContaining("Agent API key"),
       })
@@ -110,6 +166,7 @@ describe("preflight", () => {
   });
 
   test("marks missing pipeline credentials as required failures", () => {
+    process.env.COPILOT_GITHUB_TOKEN = "github_pat_copilot";
     process.env.OPENROUTER_API_KEY = "or-key";
     process.env.OPENAI_API_KEY = "sk-or-v1-key";
 
@@ -146,6 +203,12 @@ describe("preflight", () => {
     expect(requiredFailures).toEqual([]);
     expect(checks).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({
+          id: "copilot",
+          required: false,
+          present: false,
+          detail: expect.stringContaining("deployed runtime"),
+        }),
         expect.objectContaining({
           id: "gh-aw-github-token",
           required: false,

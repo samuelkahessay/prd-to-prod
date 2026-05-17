@@ -35,6 +35,13 @@ function classifyAgentApiKey(token) {
   return { present: true, detail: "Agent API key detected." };
 }
 
+function classifyCopilotToken(token) {
+  if (!token) {
+    return { present: false, detail: "Missing COPILOT_GITHUB_TOKEN." };
+  }
+  return { present: true, detail: "Copilot engine token detected." };
+}
+
 function classifyWorkflowToken(token) {
   if (!token) {
     return { present: false, detail: "Missing GH_AW_GITHUB_TOKEN." };
@@ -56,7 +63,7 @@ function requiredInMode(mode, id) {
     return true;
   }
 
-  return !["gh-aw-github-token", "pipeline-app-id", "pipeline-app-private-key"].includes(id);
+  return !["copilot", "gh-aw-github-token", "pipeline-app-id", "pipeline-app-private-key"].includes(id);
 }
 
 function makeCheck(mode, required, id, name, present, detail) {
@@ -77,6 +84,7 @@ function runPreflight(projectRoot, env = process.env, options = {}) {
   const ghAwPresent = commandExists("gh", ["aw", "version"]);
   const deployProfilePresent = fs.existsSync(path.join(projectRoot, ".deploy-profile"));
   const workIqPresent = fs.existsSync(path.join(projectRoot, "extraction", "workiq-client.ts"));
+  const copilotToken = classifyCopilotToken(env.COPILOT_GITHUB_TOKEN || env.PUBLIC_BETA_COPILOT_GITHUB_TOKEN || "");
   const agentApiKey = classifyAgentApiKey(
     env.E2E_OPENAI_API_KEY ||
       env.OPENAI_API_KEY ||
@@ -91,12 +99,20 @@ function runPreflight(projectRoot, env = process.env, options = {}) {
     makeCheck(
       mode,
       true,
+      "copilot",
+      "Copilot engine token",
+      copilotToken.present,
+      copilotToken.detail
+    ),
+    makeCheck(
+      mode,
+      false,
       "openrouter",
-      "OpenRouter API",
+      "Legacy OpenRouter API",
       Boolean(env.OPENROUTER_API_KEY || env.OPENAI_API_KEY),
       env.OPENROUTER_API_KEY || env.OPENAI_API_KEY
-        ? "OpenRouter-compatible API key is configured."
-        : "Missing OPENROUTER_API_KEY or OPENAI_API_KEY."
+        ? "OpenRouter-compatible API key is configured for legacy extraction paths."
+        : "OPENROUTER_API_KEY or OPENAI_API_KEY is not configured."
     ),
     makeCheck(
       mode,
@@ -122,7 +138,7 @@ function runPreflight(projectRoot, env = process.env, options = {}) {
       ghAwPresent,
       ghAwPresent ? "gh aw version succeeded." : "gh-aw is not installed or not available to gh."
     ),
-    makeCheck(mode, true, "agent-api-key", "Agent API key", agentApiKey.present, agentApiKey.detail),
+    makeCheck(mode, false, "agent-api-key", "Legacy agent API key", agentApiKey.present, agentApiKey.detail),
     makeCheck(
       mode,
       true,
@@ -178,6 +194,7 @@ function runPreflight(projectRoot, env = process.env, options = {}) {
 
 module.exports = {
   classifyAgentApiKey,
+  classifyCopilotToken,
   classifyWorkflowToken,
   runPreflight,
 };

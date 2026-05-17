@@ -29,9 +29,7 @@ include:
   - scripts/resolve-deployment-url.sh
   - scripts/pipeline-watchdog.sh
   - scripts/bootstrap.sh
-  - scripts/patch-codex-openrouter-http-locks.sh
   - scripts/patch-runner-labels.sh
-  - scripts/patch-pr-review-agent-lock.sh
   - scripts/capture-run-data.sh
   - scripts/start-run.sh
   - scripts/archive-run.sh
@@ -77,6 +75,8 @@ forbidden_paths:
   - mocks/
   - docs/prd/
   - docs/internal/
+  - scripts/tests/test-patch-codex-openrouter-http-locks.sh
+  - scripts/tests/test-patch-pr-review-agent-lock.sh
   - Dockerfile
   - global.json
   - CLAUDE.md

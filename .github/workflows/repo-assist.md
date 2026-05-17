@@ -6,8 +6,7 @@ description: |
   Can be triggered on-demand via /repo-assist <instructions>.
 
 on:
-  schedule:
-    - cron: "47 4 * * *"
+  schedule: daily
   workflow_dispatch:
     inputs:
       issue_number:
@@ -18,20 +17,34 @@ on:
     events: [issues, issue_comment, pull_request_comment, pull_request_review_comment, discussion, discussion_comment]
   reaction: "eyes"
 
+if: ${{ github.event_name != 'schedule' || vars.PIPELINE_ENABLED == 'true' }}
+
+checkout:
+  fetch:
+    - "*"
+  fetch-depth: 0
+
 concurrency:
   # Passive issue_comment events (App-authored follow-up comments from safe_outputs)
   # get a unique key so they don't cancel the primary run that spawned them.
   # Real /repo-assist slash commands still serialize by issue number.
   # See: docs/internal/gh-aw-upstream/findings/040-safe-outputs-self-cancellation-via-concurrency.md
   group: >-
-    gh-aw-${{ github.workflow }}-${{
-      github.event_name == 'issue_comment' &&
-      !(startsWith(github.event.comment.body, '/repo-assist ') || github.event.comment.body == '/repo-assist') &&
-      format('passive-comment-{0}', github.run_id) ||
-      github.event.issue.number ||
-      github.event.pull_request.number ||
-      github.event.inputs.issue_number ||
-      github.run_id
+    ${{
+      contains(github.actor, '[bot]') && format('gh-aw-{0}-{1}', github.workflow, github.run_id) ||
+      format(
+        'gh-aw-{0}-{1}',
+        github.workflow,
+        github.event_name == 'issue_comment' &&
+        !(startsWith(github.event.comment.body, '/repo-assist ') || github.event.comment.body == '/repo-assist') &&
+        format('passive-comment-{0}', github.run_id) ||
+        github.event.issue.number ||
+        github.event.pull_request.number ||
+        github.event.inputs.issue_number ||
+        (github.event_name == 'schedule' && 'backlog') ||
+        (github.event_name == 'workflow_dispatch' && 'backlog') ||
+        github.run_id
+      )
     }}
   cancel-in-progress: true
 
@@ -39,10 +52,6 @@ timeout-minutes: 60
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
-engine:
-  id: codex
-  model: openai/gpt-5-codex
 
 permissions: read-all
 
@@ -94,7 +103,7 @@ tools:
   web-fetch:
   github:
     toolsets: [all]
-    repos: all
+    allowed-repos: all
     min-integrity: none
   bash: true
   repo-memory:

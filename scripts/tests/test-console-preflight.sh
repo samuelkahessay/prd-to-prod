@@ -9,8 +9,13 @@ console.log(JSON.stringify(runPreflight(process.cwd())));
 NODE
 )
 
-printf '%s' "$OUTPUT" | jq -e '.[] | select(.id == "openrouter")' >/dev/null || {
-  echo "FAIL: preflight must include openrouter check" >&2
+printf '%s' "$OUTPUT" | jq -e '.[] | select(.id == "copilot" and .required == true)' >/dev/null || {
+  echo "FAIL: preflight must include required Copilot engine token check" >&2
+  exit 1
+}
+
+printf '%s' "$OUTPUT" | jq -e '.[] | select(.id == "openrouter" and .required == false)' >/dev/null || {
+  echo "FAIL: preflight must keep OpenRouter as optional legacy support" >&2
   exit 1
 }
 
