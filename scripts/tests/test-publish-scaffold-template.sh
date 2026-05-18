@@ -81,4 +81,32 @@ if ! grep -q "PUBLISHED_CHANGES=false" "$OUTPUT"; then
 fi
 echo "Test 2 passed: unchanged scaffold is a no-op"
 
+COMMIT_COUNT_BEFORE=$(git -C "$TARGET_REPO_DIR" rev-list --count HEAD)
+TARGET_REPO_DIR="$TARGET_REPO_DIR" \
+SOURCE_REPOSITORY="samuelkahessay/prd-to-prod" \
+SOURCE_SHA="def456" \
+bash "$SCRIPT" "$SOURCE_DIR" > "$OUTPUT"
+COMMIT_COUNT_AFTER=$(git -C "$TARGET_REPO_DIR" rev-list --count HEAD)
+
+if [ "$COMMIT_COUNT_AFTER" -ne $((COMMIT_COUNT_BEFORE + 1)) ]; then
+  echo "FAIL: Test 3: changed source SHA should create a metadata-only sync commit" >&2
+  exit 1
+fi
+
+if [ -n "$(git -C "$TARGET_REPO_DIR" status --short)" ]; then
+  echo "FAIL: Test 3: target repo should be clean after metadata sync commit" >&2
+  exit 1
+fi
+
+if ! git -C "$TARGET_REPO_DIR" log -1 --pretty=%B | grep -q "samuelkahessay/prd-to-prod@def456"; then
+  echo "FAIL: Test 3: metadata sync commit is missing source SHA traceability" >&2
+  exit 1
+fi
+
+if ! grep -q "PUBLISHED_CHANGES=true" "$OUTPUT"; then
+  echo "FAIL: Test 3: metadata sync should report publish changes" >&2
+  exit 1
+fi
+echo "Test 3 passed: unchanged scaffold with new source SHA creates metadata sync commit"
+
 echo "publish-scaffold-template tests passed"
