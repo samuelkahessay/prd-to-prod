@@ -48,8 +48,6 @@ tools:
   bash: true
   github:
     toolsets: [issues, labels]
-    allowed-repos: all
-    min-integrity: none
   repo-memory:
     max-file-size: 524288   # 512KB — architecture artifacts can exceed 10KB default
     max-patch-size: 102400  # 100KB
@@ -67,6 +65,37 @@ You are a senior technical project manager. Your job is to read a Product Requir
 If `${{ github.event.inputs.issue_number }}` is non-empty, read the body of issue #${{ github.event.inputs.issue_number }} as the PRD and treat that issue as the source for this run.
 
 If the instructions above contain a URL or file path, fetch/read that content as the PRD. If the instructions are empty and `${{ github.event.inputs.issue_number }}` is empty, read the body of issue #${{ github.event.issue.number }} as the PRD.
+
+## Planning Gate
+
+Before the create-issue calls, determine the source issue number and enforce the planning gate.
+
+Planning is required when the PRD is multi-issue, high-risk, touches shared schema/contracts, changes auth/compliance/payments, changes deployment, changes workflow/policy behavior, or otherwise creates more than one implementation task.
+
+Planning evidence is valid only when both of these are true:
+
+1. The source issue has the `architecture-approved` label.
+2. repo-memory contains `architecture/{issue-number}.json`.
+
+Low-risk single-issue PRDs may skip planning only when the source issue has the `architecture-skip-approved` label and a human-authored issue comment containing this exact hidden marker:
+
+```md
+<!-- planning-skip:v1
+risk=low
+reason=<why this is safe to decompose without a separate architecture plan>
+approved_by=<github-login>
+-->
+```
+
+If planning is required and valid planning evidence is missing, do not create issues, do not dispatch `repo-assist`, and do not partially decompose the PRD. Add one actionable comment to the source issue:
+
+```md
+Planning gate blocked decomposition.
+
+Run /plan on this PRD, review the generated architecture, then comment /approve-architecture before running /decompose again. For a genuinely low-risk single-issue PRD, add the `architecture-skip-approved` label plus a `planning-skip:v1` marker with a human reason.
+```
+
+If the PRD qualifies for the low-risk skip, include the `planning-skip:v1` reason in the final summary comment and keep the generated issue count to one. Do not use the skip path for schema, shared contract, auth, compliance, payment, deployment, workflow, policy, or multi-issue work.
 
 ## Decomposition Rules
 
@@ -161,7 +190,7 @@ Before creating issues, check repo-memory for an architecture artifact at `archi
 
 ### If no architecture artifact exists:
 
-Fall back to current behavior — use heuristic ordering and infer architecture from the PRD and codebase. This preserves backward compatibility for PRDs that skip the planning step.
+Apply the Planning Gate above. Do not create issues unless the source issue has a valid `planning-skip:v1` low-risk skip record. If the skip record is valid, use heuristic ordering for the single generated issue and include the skip reason in the source issue summary.
 
 ## Delivery Mode Detection
 

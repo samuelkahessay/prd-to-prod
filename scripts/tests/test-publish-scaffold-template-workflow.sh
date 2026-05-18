@@ -39,6 +39,10 @@ grep -q "bash scaffold/bootstrap-test.sh" "$WORKFLOW" || {
   echo "FAIL: Test 2: bootstrap-test gate missing" >&2
   exit 1
 }
+grep -q "bash scripts/scan-sensitive-output.sh dist/scaffold" "$WORKFLOW" || {
+  echo "FAIL: Test 2: sensitive output scan gate missing" >&2
+  exit 1
+}
 echo "Test 2 passed: publish gates present"
 
 grep -q "vars.PUBLIC_BETA_TEMPLATE_OWNER" "$WORKFLOW" || {

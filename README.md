@@ -14,11 +14,12 @@ Open source. MIT licensed. Powered by [gh-aw](https://github.com/github/gh-aw)
 ## How it works
 
 1. You write a product spec as a GitHub issue.
-2. `prd-decomposer` breaks it into ordered sub-issues with acceptance criteria.
-3. `repo-assist` picks up each issue, writes the code, and opens a PR.
-4. `pr-review-agent` reviews the diff against the spec and policy.
-5. `pr-review-submit` merges if everything passes, or stops and flags a human.
-6. `deploy-router` ships when deployment credentials are configured. Otherwise
+2. Multi-issue or risky specs go through `/plan` and `/approve-architecture`.
+3. `prd-decomposer` breaks it into ordered sub-issues with acceptance criteria.
+4. `repo-assist` picks up each issue, writes the code, and opens a PR.
+5. `pr-review-agent` reviews the diff against the spec and policy.
+6. `pr-review-submit` merges if everything passes, or stops and flags a human.
+7. `deploy-router` ships when deployment credentials are configured. Otherwise
    the run exits cleanly at repo handoff after validation confirms there is no
    deployment URL to check.
 
@@ -52,7 +53,9 @@ gh extension install github/gh-aw
 git push
 ```
 
-Then create an issue with your product spec and comment `/decompose`.
+Then create an issue with your product spec. For multi-issue or risky work,
+comment `/plan`, review the architecture, comment `/approve-architecture`, then
+comment `/decompose`.
 
 **You'll need:** a GitHub repo with Actions, a Copilot-capable GitHub token, and
 hosting when you want deployment. Vercel free tier works for the default lane.
@@ -145,6 +148,10 @@ instance-specific state stay downstream.
 - Delete branch on merge enabled
 - Active `Protect main` ruleset on `main`
 - `PIPELINE_ENABLED=true` after `./setup-verify.sh` passes
+- No `Protect main` ruleset bypass actors
+
+Run `bash scripts/verify-repo-protection.sh` for a machine-readable proof of
+the required branch/ruleset settings.
 
 ### Self-Serve Template Publication
 

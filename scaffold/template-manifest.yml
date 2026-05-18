@@ -13,6 +13,7 @@ include:
   - .github/agents/agentic-workflows.agent.md
   - .github/copilot-instructions.md
   - .github/ISSUE_TEMPLATE/
+  - .github/CODEOWNERS
 
   # ── App shell (template gets minimal scaffold, not product web) ──
   # web/ is remapped from scaffold/web-shell/ via directory_remap below
@@ -41,6 +42,9 @@ include:
   - scripts/resolve-nextjs-app-root.sh
   - scripts/require-node.sh
   - scripts/validate-implementation.sh
+  - scripts/scan-sensitive-output.sh
+  - scripts/verify-repo-protection.sh
+  - scripts/repo-memory-governance.sh
   - scripts/tests/
 
   # ── Docs (stable, exported) ──
@@ -48,6 +52,7 @@ include:
   - docs/why-gh-aw.md
   - docs/decision-ledger/README.md
   - docs/prd/sample-prd.md
+  - drills/decisions/
 
   # ── Root files ──
   - autonomy-policy.yml
@@ -83,6 +88,7 @@ forbidden_paths:
 
 exception_paths:
   - docs/prd/sample-prd.md
+  - drills/decisions/
   - showcase/README.md
 
 render:

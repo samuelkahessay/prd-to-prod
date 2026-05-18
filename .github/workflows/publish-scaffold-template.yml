@@ -8,6 +8,7 @@ on:
       - .github/deploy-profiles/**
       - .github/agents/agentic-workflows.agent.md
       - .github/copilot-instructions.md
+      - .github/CODEOWNERS
       - .github/ISSUE_TEMPLATE/**
       - web/**
       - scripts/**
@@ -79,6 +80,9 @@ jobs:
 
       - name: Leak test
         run: bash scaffold/leak-test.sh
+
+      - name: Sensitive output scan
+        run: bash scripts/scan-sensitive-output.sh dist/scaffold
 
       - name: Bootstrap test
         run: bash scaffold/bootstrap-test.sh

@@ -30,7 +30,7 @@ network:
 
 tools:
   github:
-    toolsets: [all]
+    toolsets: [repos, issues, labels, pull_requests, actions]
   bash: true
   repo-memory: true
   playwright:

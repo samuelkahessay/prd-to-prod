@@ -26,6 +26,7 @@ for label in "pipeline:0075ca:Pipeline-managed issue" \
              "ready:0e8a16:Ready for implementation" \
              "architecture-draft:7057ff:Architecture plan awaiting human review" \
              "architecture-approved:0e8a16:Architecture plan approved for decomposition" \
+             "architecture-skip-approved:FBCA04:Human-approved low-risk planning skip" \
              "completed:0e8a16:Completed and merged" \
              "report:c5def5:Status report" \
              "bug-intake:e4e669:Filed via bug-report template" \
@@ -82,11 +83,14 @@ fi
 echo "Configuring repo settings..."
 gh api repos/{owner}/{repo} --method PATCH \
   -f allow_auto_merge=true \
+  -f allow_squash_merge=true \
+  -f delete_branch_on_merge=true \
   -f squash_merge_commit_message="PR_BODY" \
   -f squash_merge_commit_title="PR_TITLE" \
   --silent 2>/dev/null || true
 echo "Squash merge set to use PR body (preserves Closes #N)."
 echo "Auto-merge enabled."
+echo "Delete branch on merge enabled."
 
 PIPELINE_BOT_LOGIN_VALUE="${PIPELINE_BOT_LOGIN:-prd-to-prod-pipeline}"
 gh variable set PIPELINE_BOT_LOGIN --body "$PIPELINE_BOT_LOGIN_VALUE" >/dev/null 2>&1 || true
@@ -118,7 +122,7 @@ echo "   - 'Protect main' ruleset exists and is active"
 echo "   - Ruleset requires 1 approving review"
 echo "   - Ruleset requires the 'review' status check"
 echo "   - Ruleset allows squash-only merges"
-echo "   - Admin bypass remains enabled"
+echo "   - Ruleset has no bypass actors"
 echo "3. Run: ./setup-verify.sh"
 echo "4. Activate scheduled agents after verification:"
 echo "   gh variable set PIPELINE_ENABLED --body true"

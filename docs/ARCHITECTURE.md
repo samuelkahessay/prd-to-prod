@@ -111,7 +111,7 @@ flowchart LR
   S --> F["Failure Detection"]
   F --> X["Repair or Escalate"]
   X --> A
-  O["Decision Ledger + /operator + /pipeline"] --- G
+  O["Decision Ledger + GitHub Actions + repo-memory status"] --- G
   O --- F
 ```
 
@@ -131,7 +131,7 @@ The system is designed to stop rather than silently widen its own authority.
 
 ## Planning Layer
 
-An optional architecture planning step sits between PRD intake and decomposition:
+An architecture planning step sits between PRD intake and decomposition:
 
 ```
 PRD Issue → /plan → prd-planner → Architecture Comment + JSON Artifact
@@ -140,15 +140,16 @@ PRD Issue → /plan → prd-planner → Architecture Comment + JSON Artifact
 
 - **`prd-planner`** (gh-aw agent): Reads the PRD + deploy profile + existing codebase. Produces a human-readable architecture comment on the issue and a structured JSON artifact in repo-memory at `architecture/{issue-number}.json`.
 - **`architecture-approve.yml`**: Listens for `/approve-architecture`, verifies write access, swaps `architecture-draft` → `architecture-approved`, dispatches the decomposer.
-- **Downstream integration**: If an architecture artifact exists, `prd-decomposer` uses it for issue sequencing, component references, and pattern consistency. `repo-assist` reads it for implementation context. Both fall back to current behavior when no artifact exists.
+- **Downstream integration**: `prd-decomposer` uses approved architecture artifacts for issue sequencing, component references, and pattern consistency. `repo-assist` reads them for implementation context.
 - **Autonomy policy**: `architecture_planning` is autonomous. The human approval gate (`/approve-architecture`) is the review boundary.
+- **Low-risk skip**: A genuinely single-issue, low-risk PRD may skip planning only with an `architecture-skip-approved` label and a human-authored `planning-skip:v1` marker explaining the reason.
 
 See `docs/plans/2026-03-03-architecture-planning-pipeline-design.md` for full design.
 
-> **Status**: The planning chain is wired in workflows but has not yet been
-> activated. No issues have been created with the `architecture-draft` label.
-> To use it, post `/plan` as a comment on a PRD issue to trigger
-> `prd-planner`, then `/approve-architecture` to dispatch the decomposer.
+> **Status**: Planning is mandatory for multi-issue, high-risk, shared-contract,
+> auth, compliance, payment, deployment, workflow, or policy work. To use it,
+> post `/plan` as a comment on a PRD issue, review the generated architecture,
+> then post `/approve-architecture` before `/decompose`.
 
 ## Workflow Groups
 
@@ -202,15 +203,16 @@ not a claim that every failure is automatically diagnosed or rolled back.
 
 ### 4. Planning Agents
 
-These workflows support the optional architecture planning step.
+These workflows support the architecture planning gate.
 
 | Workflow | Trigger | Role |
 |---|---|---|
 | `prd-planner.lock.yml` | `/plan` slash command on issues | Generates architecture comment and JSON artifact from a PRD |
 | `architecture-approve.yml` | `/approve-architecture` comment on `architecture-draft` issues | Swaps label to `architecture-approved`, dispatches decomposer |
 
-Key property: the planning chain is optional. Without it, PRDs go directly to
-`prd-decomposer` via `/decompose`.
+Key property: the planning chain is the default risk gate. Without an approved
+architecture artifact, `prd-decomposer` only proceeds when a human records a
+low-risk `planning-skip:v1` reason.
 
 ### 5. Continuous Improvement Agents
 
@@ -220,7 +222,7 @@ pipeline review.
 
 | Workflow | Trigger | Schedule | Role |
 |---|---|---|---|
-| `pipeline-status.lock.yml` | schedule | Daily 19:14 UTC | Maintains a rolling `[Pipeline] Status` issue |
+| `pipeline-status.lock.yml` | schedule | Daily 19:14 UTC | Maintains rolling pipeline status artifacts |
 | `ci-doctor.lock.yml` | `workflow_run` (CI/deploy failure on `main`) | Event-driven | Diagnoses CI failures and posts structured analysis |
 | `code-simplifier.lock.yml` | schedule | Daily 20:47 UTC | Proposes simplifications in recently changed code |
 | `duplicate-code-detector.lock.yml` | schedule | Daily 9:53 UTC | Scans for duplication patterns across the codebase |
@@ -258,11 +260,14 @@ GitHub Actions logs.
 |---|---|
 | `autonomy-policy.yml` | Machine-readable authority boundary |
 | `docs/decision-ledger/README.md` | Decision event schema |
-| `drills/decisions/` | Seed decision events and demo fixtures |
-| `/operator` | Queue, blocked actions, recent autonomous actions, and metrics |
-| `/pipeline` | Live GitHub-backed pipeline visualization |
-| `drills/reports/*.json` | Historical self-healing drill evidence |
-| `[Pipeline] Status` issue | Rolling operational summary |
+| `drills/decisions/` | Seed decision events and demo fixtures exported with the scaffold |
+| `repo-memory` status files | Rolling operational summaries written by agents |
+| GitHub Actions logs | Auditable execution traces for agent and deterministic workflows |
+| GitHub issues and PRs | Human-visible queue, review, escalation, and merge history |
+
+Core product experiments may add richer console views, but generated template
+repos should rely on the exported GitHub-native surfaces above unless they
+explicitly add their own operator UI.
 
 ## Boundary Enforcement
 
@@ -305,6 +310,25 @@ The repo currently ships three bounded recovery loops:
 
 These loops are useful because they reduce operator toil. They are not a claim
 of full autonomy.
+
+## Repo-Memory Governance
+
+Memory is advisory. Agents read it for continuity, but they must verify claims
+against live GitHub issues, pull requests, branches, and checked-out repository
+state before acting.
+
+Operators can inspect and repair memory without editing generated workflow files:
+
+```bash
+bash scripts/repo-memory-governance.sh inspect memory/repo-assist
+bash scripts/repo-memory-governance.sh prune memory/repo-assist
+bash scripts/repo-memory-governance.sh prune memory/repo-assist --apply
+bash scripts/repo-memory-governance.sh reset memory/repo-assist --apply
+```
+
+`prune` and `reset` are dry-run unless `--apply` is supplied. Use them when stale
+repo-memory would cause duplicate PRs, skipped required work, or a poisoned
+rerun.
 
 ## What the System Can Do Autonomously
 

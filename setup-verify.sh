@@ -131,7 +131,7 @@ done
 ###############################################################################
 header "Labels"
 
-REQUIRED_LABELS=(pipeline feature bug automation in-progress ci-failure ci-auth ci-rate-limit ci-timeout ci-infrastructure needs-human repair-in-progress repair-escalated)
+REQUIRED_LABELS=(pipeline feature bug automation in-progress architecture-draft architecture-approved architecture-skip-approved ci-failure ci-auth ci-rate-limit ci-timeout ci-infrastructure needs-human repair-in-progress repair-escalated)
 
 if [[ "$GH_AUTH_OK" == true ]]; then
   # Fetch all labels once
@@ -246,8 +246,15 @@ if [[ "$GH_AUTH_OK" == true ]]; then
   else
     fail "Auto-merge is not enabled (run: ./scripts/bootstrap.sh)"
   fi
+
+  if bash "$REPO_ROOT/scripts/verify-repo-protection.sh" >/dev/null 2>&1; then
+    pass "Repo protection proof passed"
+  else
+    fail "Repo protection proof failed (run: bash scripts/verify-repo-protection.sh)"
+  fi
 else
   skip "Auto-merge setting (gh auth required)"
+  skip "Repo protection proof (gh auth required)"
 fi
 
 # Check memory/repo-assist branch (uses git, no gh auth required)
