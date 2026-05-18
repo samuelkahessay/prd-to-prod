@@ -77,17 +77,36 @@ log "Mirroring $SOURCE_DIR into $TARGET_REPO_DIR"
 find "$TARGET_REPO_DIR" -mindepth 1 -maxdepth 1 ! -name ".git" -exec rm -rf {} +
 cp -R "$SOURCE_DIR"/. "$TARGET_REPO_DIR"/
 
+git -C "$TARGET_REPO_DIR" config user.name "${GIT_AUTHOR_NAME:-github-actions[bot]}"
+git -C "$TARGET_REPO_DIR" config user.email "${GIT_AUTHOR_EMAIL:-41898282+github-actions[bot]@users.noreply.github.com}"
+COMMIT_MESSAGE="chore: sync scaffold from ${SOURCE_REPOSITORY}@${SOURCE_SHA}"
+
 if [ -z "$(git -C "$TARGET_REPO_DIR" status --short)" ]; then
-  log "No template changes to publish"
-  echo "PUBLISHED_CHANGES=false"
+  if git -C "$TARGET_REPO_DIR" log -1 --pretty=%B | grep -F "${SOURCE_REPOSITORY}@${SOURCE_SHA}" >/dev/null; then
+    log "No template changes to publish"
+    echo "PUBLISHED_CHANGES=false"
+    exit 0
+  fi
+
+  log "No file changes, publishing source SHA traceability commit"
+  git -C "$TARGET_REPO_DIR" commit --quiet --allow-empty -m "$COMMIT_MESSAGE"
+  if [ "$PUSH_CHANGES" = "true" ]; then
+    PUSH_BRANCH="$TARGET_BRANCH"
+    if [ -z "$PUSH_BRANCH" ]; then
+      PUSH_BRANCH="$(git -C "$TARGET_REPO_DIR" rev-parse --abbrev-ref HEAD)"
+    fi
+    git -C "$TARGET_REPO_DIR" push --quiet origin "HEAD:${PUSH_BRANCH}"
+    log "Published generated template metadata to ${TEMPLATE_OWNER}/${TEMPLATE_REPO}@${PUSH_BRANCH}"
+  else
+    log "Created local metadata-only sync commit without pushing"
+  fi
+  echo "PUBLISHED_CHANGES=true"
+  echo "TARGET_REPO_DIR=$TARGET_REPO_DIR"
   exit 0
 fi
 
-git -C "$TARGET_REPO_DIR" config user.name "${GIT_AUTHOR_NAME:-github-actions[bot]}"
-git -C "$TARGET_REPO_DIR" config user.email "${GIT_AUTHOR_EMAIL:-41898282+github-actions[bot]@users.noreply.github.com}"
 git -C "$TARGET_REPO_DIR" add -A
 
-COMMIT_MESSAGE="chore: sync scaffold from ${SOURCE_REPOSITORY}@${SOURCE_SHA}"
 git -C "$TARGET_REPO_DIR" commit --quiet -m "$COMMIT_MESSAGE"
 
 if [ "$PUSH_CHANGES" = "true" ]; then
