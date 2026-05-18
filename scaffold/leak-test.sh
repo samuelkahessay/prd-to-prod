@@ -75,6 +75,11 @@ while IFS= read -r secret_file; do
   ((ERRORS++))
 done < <(find "$OUTPUT_DIR" -name "credentials*" -o -name "*.pem" -o -name "*.key" 2>/dev/null || true)
 
+if ! bash "$REPO_ROOT/scripts/scan-sensitive-output.sh" "$OUTPUT_DIR" >/tmp/scaffold-sensitive-output-scan.log 2>&1; then
+  cat /tmp/scaffold-sensitive-output-scan.log >&2
+  ((ERRORS++))
+fi
+
 if [ "$ERRORS" -gt 0 ]; then
   echo "FAIL: $ERRORS leak(s) detected in scaffold"
   exit 1

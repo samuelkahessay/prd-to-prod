@@ -26,13 +26,6 @@ permissions:
 network:
   allowed:
     - defaults
-    - openrouter.ai
-
-engine:
-  id: codex
-  model: openai/gpt-5-codex
-  env:
-    OPENAI_BASE_URL: https://openrouter.ai/api/v1
 
 safe-outputs:
   create-issue:
@@ -52,7 +45,6 @@ safe-outputs:
 tools:
   cache-memory: true
   web-fetch:
-  web-search:
   github:
     toolsets: [default, actions]  # default: context, repos, issues, pull_requests; actions: workflow logs and artifacts
 

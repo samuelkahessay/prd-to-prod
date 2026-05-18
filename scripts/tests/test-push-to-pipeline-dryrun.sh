@@ -101,22 +101,11 @@ case "$1" in
         echo "name: repo-assist" > "$DEST/.github/workflows/repo-assist.lock.yml"
         echo "name: prd-decomposer" > "$DEST/.github/workflows/prd-decomposer.lock.yml"
         echo "name: pr-review-agent" > "$DEST/.github/workflows/pr-review-agent.lock.yml"
-        cat > "$DEST/scripts/patch-codex-openrouter-http-locks.sh" <<'PATCH'
-#!/usr/bin/env bash
-exit 0
-PATCH
-        cat > "$DEST/scripts/patch-pr-review-agent-lock.sh" <<'PATCH'
-#!/usr/bin/env bash
-exit 0
-PATCH
         cat > "$DEST/scripts/patch-runner-labels.sh" <<'PATCH'
 #!/usr/bin/env bash
 exit 0
 PATCH
-        chmod +x \
-          "$DEST/scripts/patch-codex-openrouter-http-locks.sh" \
-          "$DEST/scripts/patch-pr-review-agent-lock.sh" \
-          "$DEST/scripts/patch-runner-labels.sh"
+        chmod +x "$DEST/scripts/patch-runner-labels.sh"
         (
           cd "$DEST" &&
           git init -q &&
@@ -180,7 +169,7 @@ PATCH
     ;;
   variable)
     if [ "$2" = "list" ]; then
-      JSON='[{"name":"PIPELINE_APP_ID","value":"12345"},{"name":"PIPELINE_BOT_LOGIN","value":"prd-to-prod-pipeline"}]'
+      JSON='[{"name":"PIPELINE_APP_ID","value":"12345"},{"name":"PIPELINE_BOT_LOGIN","value":"prd-to-prod-pipeline"},{"name":"PIPELINE_ENABLED","value":"true"}]'
       # Handle --jq
       JQ_FILTER=""
       shift 2
@@ -200,7 +189,7 @@ PATCH
     ;;
   secret)
     if [ "$2" = "list" ]; then
-      JSON='[{"name":"PIPELINE_APP_PRIVATE_KEY"},{"name":"OPENAI_API_KEY"},{"name":"VERCEL_TOKEN"},{"name":"VERCEL_ORG_ID"},{"name":"GH_AW_GITHUB_TOKEN"}]'
+      JSON='[{"name":"PIPELINE_APP_PRIVATE_KEY"},{"name":"COPILOT_GITHUB_TOKEN"},{"name":"VERCEL_TOKEN"},{"name":"VERCEL_ORG_ID"},{"name":"GH_AW_GITHUB_TOKEN"}]'
       JQ_FILTER=""
       shift 2
       while [ $# -gt 0 ]; do
@@ -249,7 +238,7 @@ ln -sf "$(which jq)" "$TMPDIR/bin/jq" 2>/dev/null || true
 
 export PATH="$TMPDIR/bin:$PATH"
 export SCAFFOLD_SOURCE_DIR="$TMPDIR/dist/scaffold"
-export OPENAI_API_KEY="test-token"
+export COPILOT_GITHUB_TOKEN="test-token"
 export VERCEL_TOKEN="test-token"
 export VERCEL_ORG_ID="test-org"
 export PIPELINE_APP_ID="12345"

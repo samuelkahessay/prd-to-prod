@@ -20,10 +20,6 @@ timeout-minutes: 15
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
-engine:
-  id: codex
-  model: openai/gpt-5-codex
-
 permissions: read-all
 
 network:
@@ -52,8 +48,6 @@ tools:
   bash: true
   github:
     toolsets: [issues, labels]
-    repos: all
-    min-integrity: none
   repo-memory:
     max-file-size: 524288   # 512KB — architecture artifacts can exceed 10KB default
     max-patch-size: 102400  # 100KB
@@ -72,6 +66,37 @@ If `${{ github.event.inputs.issue_number }}` is non-empty, read the body of issu
 
 If the instructions above contain a URL or file path, fetch/read that content as the PRD. If the instructions are empty and `${{ github.event.inputs.issue_number }}` is empty, read the body of issue #${{ github.event.issue.number }} as the PRD.
 
+## Planning Gate
+
+Before the create-issue calls, determine the source issue number and enforce the planning gate.
+
+Planning is required when the PRD is multi-issue, high-risk, touches shared schema/contracts, changes auth/compliance/payments, changes deployment, changes workflow/policy behavior, or otherwise creates more than one implementation task.
+
+Planning evidence is valid only when both of these are true:
+
+1. The source issue has the `architecture-approved` label.
+2. repo-memory contains `architecture/{issue-number}.json`.
+
+Low-risk single-issue PRDs may skip planning only when the source issue has the `architecture-skip-approved` label and a human-authored issue comment containing this exact hidden marker:
+
+```md
+<!-- planning-skip:v1
+risk=low
+reason=<why this is safe to decompose without a separate architecture plan>
+approved_by=<github-login>
+-->
+```
+
+If planning is required and valid planning evidence is missing, do not create issues, do not dispatch `repo-assist`, and do not partially decompose the PRD. Add one actionable comment to the source issue:
+
+```md
+Planning gate blocked decomposition.
+
+Run /plan on this PRD, review the generated architecture, then comment /approve-architecture before running /decompose again. For a genuinely low-risk single-issue PRD, add the `architecture-skip-approved` label plus a `planning-skip:v1` marker with a human reason.
+```
+
+If the PRD qualifies for the low-risk skip, include the `planning-skip:v1` reason in the final summary comment and keep the generated issue count to one. Do not use the skip path for schema, shared contract, auth, compliance, payment, deployment, workflow, policy, or multi-issue work.
+
 ## Decomposition Rules
 
 1. **Read the PRD carefully.** Understand the full scope before creating any issues.
@@ -89,6 +114,20 @@ If the instructions above contain a URL or file path, fetch/read that content as
    - If the PRD says `GET /api/scans/metrics`, do **not** rename it to `/api/compliance/metrics`
    - If the PRD says `400` for `ADVISORY` decisions, do **not** omit that behavior
    - If the PRD requires an exact heading or button label, keep that exact text in scope
+
+3a. **Schema and shared-contract completeness cross-check.** Self-containment (rule 10) is correct for *implementation artifacts*, but the database schema, shared TypeScript types, shared enums, and shared API contracts are **global resources** that cannot be validated one issue at a time. Before finalizing the batch, perform an explicit cross-reference pass:
+
+   - **Walk every feature, test, and docs issue** and extract every mention of:
+     - Database tables, columns, indexes, constraints, and enum values
+     - Shared TypeScript interfaces, types, and their fields (e.g., `OrderRecord.customer_email`)
+     - Shared API request/response payload fields (e.g., `billing_details.name`, `customer_details.email`)
+     - Environment variables, feature flags, or config keys that must exist before the feature works
+   - **For each extracted reference**, verify it is explicitly covered by the acceptance criteria of the schema/migration/infrastructure issue in the same batch. "Covered" means the schema issue's acceptance criteria literally names the column/field/enum value — not that the implementing agent is expected to infer it.
+   - **If a reference is missing**, either:
+     1. Extend the schema issue's acceptance criteria to include it (preferred), or
+     2. Add a new small schema-amendment issue that the feature issue depends on.
+   - **Never rely on the implementing agent** to add a missing column ad-hoc in a feature PR. That produces cross-PR drift: the schema PR ships, the feature PR ships against the missing schema, and the gap only surfaces in review — by which point both PRs are merged. For example, a PRD that requires `OrderRecord.customer_email` must produce schema and feature issues that both name the `orders.customer_email` contract up front, rather than requiring a follow-up cleanup migration. Do not repeat it.
+   - **This cross-check must run before the `create-issue` calls are emitted**, not after. Issues cannot be amended once created through the safe-outputs mechanism.
 
 4. **Identify task dependencies.** Some tasks must be done before others (e.g., scaffold before features, features before tests).
 
@@ -151,7 +190,7 @@ Before creating issues, check repo-memory for an architecture artifact at `archi
 
 ### If no architecture artifact exists:
 
-Fall back to current behavior — use heuristic ordering and infer architecture from the PRD and codebase. This preserves backward compatibility for PRDs that skip the planning step.
+Apply the Planning Gate above. Do not create issues unless the source issue has a valid `planning-skip:v1` low-risk skip record. If the skip record is valid, use heuristic ordering for the single generated issue and include the skip reason in the source issue summary.
 
 ## Delivery Mode Detection
 

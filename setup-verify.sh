@@ -131,7 +131,7 @@ done
 ###############################################################################
 header "Labels"
 
-REQUIRED_LABELS=(pipeline feature bug automation in-progress ci-failure ci-auth ci-rate-limit ci-timeout ci-infrastructure needs-human repair-in-progress repair-escalated)
+REQUIRED_LABELS=(pipeline feature bug automation in-progress architecture-draft architecture-approved architecture-skip-approved ci-failure ci-auth ci-rate-limit ci-timeout ci-infrastructure needs-human repair-in-progress repair-escalated)
 
 if [[ "$GH_AUTH_OK" == true ]]; then
   # Fetch all labels once
@@ -161,6 +161,7 @@ header "Pipeline Auth and Secrets"
 if [[ "$GH_AUTH_OK" == true ]]; then
   SECRET_LIST=$(gh secret list --json name -q '.[].name' 2>/dev/null || echo "")
   VAR_LIST=$(gh variable list --json name -q '.[].name' 2>/dev/null || echo "")
+  PIPELINE_ENABLED_VALUE=$(gh variable list --json name,value -q '.[] | select(.name == "PIPELINE_ENABLED") | .value' 2>/dev/null || echo "")
 
   # Check pipeline auth: App OR PAT
   APP_ID_SET=false
@@ -188,12 +189,26 @@ if [[ "$GH_AUTH_OK" == true ]]; then
     PAT_SET=true
   fi
 
+  if echo "$SECRET_LIST" | grep -qx "COPILOT_GITHUB_TOKEN" 2>/dev/null; then
+    pass "Secret 'COPILOT_GITHUB_TOKEN' is set"
+  else
+    fail "Secret 'COPILOT_GITHUB_TOKEN' is not set (run: gh secret set COPILOT_GITHUB_TOKEN)"
+  fi
+
   if [[ "$APP_ID_SET" == true && "$APP_KEY_SET" == true ]]; then
     pass "Pipeline auth: GitHub App configured"
   elif [[ "$PAT_SET" == true ]]; then
     pass "Pipeline auth: PAT configured"
   else
     fail "Pipeline auth: need GitHub App (PIPELINE_APP_ID + PIPELINE_APP_PRIVATE_KEY) or PAT (GH_AW_GITHUB_TOKEN)"
+  fi
+
+  if [[ "$PIPELINE_ENABLED_VALUE" == "true" ]]; then
+    pass "Variable 'PIPELINE_ENABLED' is true"
+  elif echo "$VAR_LIST" | grep -qx "PIPELINE_ENABLED" 2>/dev/null; then
+    fail "Variable 'PIPELINE_ENABLED' is '${PIPELINE_ENABLED_VALUE:-<empty>}' (run after setup is complete: gh variable set PIPELINE_ENABLED --body true)"
+  else
+    fail "Variable 'PIPELINE_ENABLED' is not set (run after setup is complete: gh variable set PIPELINE_ENABLED --body true)"
   fi
 
   # Check Vercel secrets (only if the active profile declares them)
@@ -210,6 +225,8 @@ if [[ "$GH_AUTH_OK" == true ]]; then
   fi
 else
   skip "Pipeline auth check (gh auth required)"
+  skip "Secret 'COPILOT_GITHUB_TOKEN' (gh auth required)"
+  skip "Variable 'PIPELINE_ENABLED' (gh auth required)"
   for secret in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
     skip "Secret '$secret' (gh auth required)"
   done
@@ -229,8 +246,15 @@ if [[ "$GH_AUTH_OK" == true ]]; then
   else
     fail "Auto-merge is not enabled (run: ./scripts/bootstrap.sh)"
   fi
+
+  if bash "$REPO_ROOT/scripts/verify-repo-protection.sh" >/dev/null 2>&1; then
+    pass "Repo protection proof passed"
+  else
+    fail "Repo protection proof failed (run: bash scripts/verify-repo-protection.sh)"
+  fi
 else
   skip "Auto-merge setting (gh auth required)"
+  skip "Repo protection proof (gh auth required)"
 fi
 
 # Check memory/repo-assist branch (uses git, no gh auth required)

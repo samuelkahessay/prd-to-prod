@@ -116,6 +116,25 @@ const MARKET_SIGNALS = [
   },
 ] as const;
 
+const PROOF_SIGNALS = [
+  {
+    value: "3",
+    label: "end-to-end self-healing drills completed",
+  },
+  {
+    value: "80",
+    label: "merged pull requests in the first client build",
+  },
+  {
+    value: "19",
+    label: "platform issues surfaced through real pipeline depth",
+  },
+  {
+    value: "17",
+    label: "upstream gh-aw fixes shipped from those findings",
+  },
+] as const;
+
 const POSITIONING_COMPANIES = [
   {
     name: "Lovable / Bolt",
@@ -329,6 +348,15 @@ export default function VisionPage() {
               interesting because it can keep a governed delivery loop running
               through real friction.
             </p>
+
+            <div className={styles.signalGrid}>
+              {PROOF_SIGNALS.map((signal) => (
+                <section key={signal.label} className={styles.signalCard}>
+                  <div className={styles.signalValue}>{signal.value}</div>
+                  <div className={styles.signalLabel}>{signal.label}</div>
+                </section>
+              ))}
+            </div>
 
             <div className={styles.featureCard}>
               <p className={styles.cardEyebrow}>First client build</p>

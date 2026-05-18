@@ -26,6 +26,7 @@ for label in "pipeline:0075ca:Pipeline-managed issue" \
              "ready:0e8a16:Ready for implementation" \
              "architecture-draft:7057ff:Architecture plan awaiting human review" \
              "architecture-approved:0e8a16:Architecture plan approved for decomposition" \
+             "architecture-skip-approved:FBCA04:Human-approved low-risk planning skip" \
              "completed:0e8a16:Completed and merged" \
              "report:c5def5:Status report" \
              "bug-intake:e4e669:Filed via bug-report template" \
@@ -46,8 +47,6 @@ echo "Labels created."
 # Compile workflows
 echo "Compiling gh-aw workflows..."
 gh aw compile
-bash "$SCRIPT_DIR/patch-codex-openrouter-http-locks.sh"
-bash "$SCRIPT_DIR/patch-pr-review-agent-lock.sh"
 echo "Workflows compiled."
 
 # Seed repo-memory branch (prevents first-run artifact error)
@@ -84,30 +83,50 @@ fi
 echo "Configuring repo settings..."
 gh api repos/{owner}/{repo} --method PATCH \
   -f allow_auto_merge=true \
+  -f allow_squash_merge=true \
+  -f delete_branch_on_merge=true \
   -f squash_merge_commit_message="PR_BODY" \
   -f squash_merge_commit_title="PR_TITLE" \
   --silent 2>/dev/null || true
 echo "Squash merge set to use PR body (preserves Closes #N)."
 echo "Auto-merge enabled."
+echo "Delete branch on merge enabled."
 
 PIPELINE_BOT_LOGIN_VALUE="${PIPELINE_BOT_LOGIN:-prd-to-prod-pipeline}"
 gh variable set PIPELINE_BOT_LOGIN --body "$PIPELINE_BOT_LOGIN_VALUE" >/dev/null 2>&1 || true
 echo "PIPELINE_BOT_LOGIN set to ${PIPELINE_BOT_LOGIN_VALUE}."
+
+if gh variable list --json name -q '.[].name' 2>/dev/null | grep -qx "PIPELINE_ENABLED"; then
+  PIPELINE_ENABLED_VALUE=$(gh variable list --json name,value -q '.[] | select(.name == "PIPELINE_ENABLED") | .value' 2>/dev/null || echo "")
+  echo "PIPELINE_ENABLED already set to ${PIPELINE_ENABLED_VALUE:-<empty>}."
+else
+  gh variable set PIPELINE_ENABLED --body "false" >/dev/null 2>&1 || true
+  echo "PIPELINE_ENABLED initialized to false. Run setup verification before activating scheduled agents."
+fi
+
+if gh secret list --json name -q '.[].name' 2>/dev/null | grep -qx "COPILOT_GITHUB_TOKEN"; then
+  echo "COPILOT_GITHUB_TOKEN secret detected."
+else
+  echo "WARNING: COPILOT_GITHUB_TOKEN is not set. Manual agent runs will fail until configured."
+fi
 
 # Configure secrets reminder
 echo ""
 echo "=== Setup Complete ==="
 echo ""
 echo "Next steps:"
-echo "1. Ensure OPENAI_API_KEY is configured for gh-aw (OpenRouter-compatible)"
-echo "   Run: gh aw secrets bootstrap"
+echo "1. Configure the Copilot engine secret:"
+echo "   gh secret set COPILOT_GITHUB_TOKEN"
 echo "2. Verify required repo settings:"
 echo "   - 'Protect main' ruleset exists and is active"
 echo "   - Ruleset requires 1 approving review"
 echo "   - Ruleset requires the 'review' status check"
 echo "   - Ruleset allows squash-only merges"
-echo "   - Admin bypass remains enabled"
-echo "3. Push changes: git push"
-echo "4. Test the pipeline:"
+echo "   - Ruleset has no bypass actors"
+echo "3. Run: ./setup-verify.sh"
+echo "4. Activate scheduled agents after verification:"
+echo "   gh variable set PIPELINE_ENABLED --body true"
+echo "5. Push changes: git push"
+echo "6. Test the pipeline:"
 echo "   - Create an issue with a PRD, then comment /decompose"
 echo "   - Or run: gh aw run prd-decomposer"

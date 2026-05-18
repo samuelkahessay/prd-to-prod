@@ -18,6 +18,13 @@ V2_CHECKS=(
   "bash scripts/tests/test-bootstrap-test.sh"
   "bash scripts/tests/test-publish-scaffold-template.sh"
   "bash scripts/tests/test-publish-scaffold-template-workflow.sh"
+  "bash scripts/tests/test-copilot-workflow-defaults.sh"
+  "bash scripts/tests/test-setup-activation.sh"
+  "bash scripts/tests/test-gh-aw-least-privilege.sh"
+  "bash scripts/tests/test-planning-gate.sh"
+  "bash scripts/tests/test-repo-protection-proof.sh"
+  "bash scripts/tests/test-agent-output-secret-scan.sh"
+  "bash scripts/tests/test-repo-memory-governance.sh"
   # Phase 3
   "bash scripts/tests/test-extract-prd-mock.sh"
   "bash scripts/tests/test-push-to-pipeline-dryrun.sh"

@@ -48,10 +48,15 @@ CHECKS=(
   "bash scripts/tests/test-extract-linked-issue-numbers.sh"
   "bash scripts/tests/test-agent-memory-bounds.sh"
   "bash scripts/tests/test-frontend-agent.sh"
+  "bash scripts/tests/test-copilot-workflow-defaults.sh"
+  "bash scripts/tests/test-setup-activation.sh"
+  "bash scripts/tests/test-gh-aw-least-privilege.sh"
+  "bash scripts/tests/test-planning-gate.sh"
+  "bash scripts/tests/test-repo-protection-proof.sh"
+  "bash scripts/tests/test-agent-output-secret-scan.sh"
+  "bash scripts/tests/test-repo-memory-governance.sh"
   "bash scripts/tests/test-log-decision.sh"
   "bash scripts/tests/test-pipeline-watchdog.sh"
-  "bash scripts/tests/test-patch-codex-openrouter-http-locks.sh"
-  "bash scripts/tests/test-patch-pr-review-agent-lock.sh"
   "bash scripts/tests/test-pr-review-agent-validation-review.sh"
   "bash scripts/tests/test-pr-review-agent-activation.sh"
   "bash scripts/tests/test-pr-review-submit-policy-gate.sh"
@@ -62,8 +67,11 @@ CHECKS=(
   "bash scripts/tests/test-self-healing-drill-dispatch-substate.sh"
   "bash scripts/tests/test-self-healing-drill-workflow-matching.sh"
   "bash scripts/tests/test-validate-implementation.sh"
-  "dotnet test PRDtoProd.sln"
 )
+
+if [ -f "$REPO_ROOT/PRDtoProd.sln" ]; then
+  CHECKS+=("dotnet test PRDtoProd.sln")
+fi
 
 run_check() {
   local check_cmd="$1"

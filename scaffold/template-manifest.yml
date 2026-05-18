@@ -13,6 +13,7 @@ include:
   - .github/agents/agentic-workflows.agent.md
   - .github/copilot-instructions.md
   - .github/ISSUE_TEMPLATE/
+  - .github/CODEOWNERS
 
   # ── App shell (template gets minimal scaffold, not product web) ──
   # web/ is remapped from scaffold/web-shell/ via directory_remap below
@@ -29,9 +30,7 @@ include:
   - scripts/resolve-deployment-url.sh
   - scripts/pipeline-watchdog.sh
   - scripts/bootstrap.sh
-  - scripts/patch-codex-openrouter-http-locks.sh
   - scripts/patch-runner-labels.sh
-  - scripts/patch-pr-review-agent-lock.sh
   - scripts/capture-run-data.sh
   - scripts/start-run.sh
   - scripts/archive-run.sh
@@ -43,6 +42,9 @@ include:
   - scripts/resolve-nextjs-app-root.sh
   - scripts/require-node.sh
   - scripts/validate-implementation.sh
+  - scripts/scan-sensitive-output.sh
+  - scripts/verify-repo-protection.sh
+  - scripts/repo-memory-governance.sh
   - scripts/tests/
 
   # ── Docs (stable, exported) ──
@@ -50,6 +52,7 @@ include:
   - docs/why-gh-aw.md
   - docs/decision-ledger/README.md
   - docs/prd/sample-prd.md
+  - drills/decisions/
 
   # ── Root files ──
   - autonomy-policy.yml
@@ -77,12 +80,15 @@ forbidden_paths:
   - mocks/
   - docs/prd/
   - docs/internal/
+  - scripts/tests/test-patch-codex-openrouter-http-locks.sh
+  - scripts/tests/test-patch-pr-review-agent-lock.sh
   - Dockerfile
   - global.json
   - CLAUDE.md
 
 exception_paths:
   - docs/prd/sample-prd.md
+  - drills/decisions/
   - showcase/README.md
 
 render:

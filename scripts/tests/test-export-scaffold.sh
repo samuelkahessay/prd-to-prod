@@ -106,6 +106,10 @@ if [ ! -f "$OUTPUT_DIR/.github/workflows/auto-dispatch.yml" ]; then
   echo "FAIL: Test 1: auto-dispatch.yml missing from scaffold" >&2
   exit 1
 fi
+if [ ! -f "$OUTPUT_DIR/.github/CODEOWNERS" ]; then
+  echo "FAIL: Test 1: CODEOWNERS missing from scaffold" >&2
+  exit 1
+fi
 echo "Test 1 passed: auto-dispatch.yml present in scaffold"
 
 # ── Test 2: Forbidden paths absent ──────────────────────────────
@@ -116,6 +120,10 @@ if [ -d "$OUTPUT_DIR/extraction" ]; then
 fi
 if [ -d "$OUTPUT_DIR/PRDtoProd" ]; then
   echo "FAIL: Test 2: PRDtoProd/ should not appear in scaffold" >&2
+  exit 1
+fi
+if [ -d "$OUTPUT_DIR/console" ]; then
+  echo "FAIL: Test 2: console/ should not appear in scaffold" >&2
   exit 1
 fi
 if [ -f "$OUTPUT_DIR/.github/workflows/publish-scaffold-template.yml" ]; then
@@ -188,5 +196,32 @@ if [ -f "$GOLDEN" ]; then
 else
   echo "Test 7 skipped: no golden file yet"
 fi
+
+# ── Test 8: GH-600 remediation surfaces exported ───────────────
+
+for file in \
+  scripts/scan-sensitive-output.sh \
+  scripts/verify-repo-protection.sh \
+  scripts/repo-memory-governance.sh \
+  docs/decision-ledger/README.md; do
+  if [ ! -f "$OUTPUT_DIR/$file" ]; then
+    echo "FAIL: Test 8: $file missing from scaffold" >&2
+    exit 1
+  fi
+done
+
+if [ ! -d "$OUTPUT_DIR/drills/decisions" ]; then
+  echo "FAIL: Test 8: drills/decisions fixtures missing from scaffold" >&2
+  exit 1
+fi
+
+if grep -F '/operator' "$OUTPUT_DIR/docs/ARCHITECTURE.md" >/dev/null || \
+   grep -F '/pipeline' "$OUTPUT_DIR/docs/ARCHITECTURE.md" >/dev/null || \
+   grep -F 'drills/reports/*.json' "$OUTPUT_DIR/docs/ARCHITECTURE.md" >/dev/null; then
+  echo "FAIL: Test 8: template architecture docs still promise core-only operator surfaces" >&2
+  exit 1
+fi
+
+echo "Test 8 passed: GH-600 remediation surfaces exported and docs aligned"
 
 echo "export-scaffold tests passed"

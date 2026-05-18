@@ -619,7 +619,7 @@ find_repair_pr() {
 
   # Look for PRs that reference "Closes #N" or "Fixes #N" for this issue
   local prs_json
-  prs_json=$(gh pr list --repo "$REPO" --state all --limit 50 \
+  prs_json=$(gh pr list --repo "$REPO" --state all --limit 500 \
     --json number,title,body,url,createdAt 2>/dev/null || echo "[]")
 
   local matched

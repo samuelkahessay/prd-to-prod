@@ -34,4 +34,24 @@ grep -F 'bash scripts/validate-implementation.sh' "$PROMPT" >/dev/null || {
   exit 1
 }
 
+grep -F 'Schema and shared-contract completeness cross-check' "$PROMPT" >/dev/null || {
+  echo "FAIL: prd-decomposer must require schema/shared-contract cross-checks" >&2
+  exit 1
+}
+
+grep -F 'OrderRecord.customer_email' "$PROMPT" >/dev/null || {
+  echo "FAIL: prd-decomposer must include the shared type field anti-pattern example" >&2
+  exit 1
+}
+
+grep -F 'orders.customer_email' "$PROMPT" >/dev/null || {
+  echo "FAIL: prd-decomposer must include the missing schema column anti-pattern example" >&2
+  exit 1
+}
+
+grep -F 'before the `create-issue` calls are emitted' "$PROMPT" >/dev/null || {
+  echo "FAIL: prd-decomposer must run the cross-check before issue creation" >&2
+  exit 1
+}
+
 echo "prd-decomposer contract section tests passed"

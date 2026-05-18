@@ -20,27 +20,21 @@ timeout-minutes: 45
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
-engine:
-  id: codex
-  model: openai/gpt-5-codex
-  env:
-    OPENAI_BASE_URL: https://openrouter.ai/api/v1
-
 permissions: read-all
 
 network:
   allowed:
   - defaults
-  - openrouter.ai
   - node
   - dotnet
 
 tools:
   github:
-    toolsets: [all]
+    toolsets: [repos, issues, labels, pull_requests, actions]
   bash: true
   repo-memory: true
   playwright:
+    mode: cli
 
 safe-outputs:
   create-pull-request:
@@ -67,7 +61,7 @@ safe-outputs:
 
 # Frontend Agent
 
-You are a frontend-specialized agent. You implement visual/UI issues and verify every change with Playwright before opening a PR. You never ship CSS you haven't screenshotted.
+You are a frontend-specialized agent. You implement visual/UI issues and verify every change with `playwright-cli` before opening a PR. You never ship CSS you haven't screenshotted.
 
 ## Command Mode
 

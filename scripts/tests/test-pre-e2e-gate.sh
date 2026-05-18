@@ -196,6 +196,7 @@ chmod +x \
 
 export OPENROUTER_API_KEY="or-key"
 export OPENAI_API_KEY="sk-or-v1-local"
+export COPILOT_GITHUB_TOKEN="github_pat_copilot"
 export GH_AW_GITHUB_TOKEN="ghp_local_token"
 export PIPELINE_APP_ID="12345"
 export PIPELINE_APP_PRIVATE_KEY="private-key"

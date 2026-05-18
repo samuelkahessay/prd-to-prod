@@ -30,6 +30,8 @@ jobs:
             bash scripts/tests/test-bootstrap-test.sh
             bash scripts/tests/test-publish-scaffold-template.sh
             bash scripts/tests/test-publish-scaffold-template-workflow.sh
+            bash scripts/tests/test-copilot-workflow-defaults.sh
+            bash scripts/tests/test-setup-activation.sh
             bash scripts/tests/test-validate-prd.sh
             bash scripts/tests/test-validate-schema.sh
             bash scripts/tests/test-classify-transcript.sh
@@ -48,9 +50,9 @@ jobs:
           fi
       - name: Test pipeline PR classification
         run: bash scripts/tests/test-classify-pipeline-pr.sh
-      - name: Test pr-review-agent lock patch script
-        run: bash scripts/tests/test-patch-pr-review-agent-lock.sh
-      - name: Test codex OpenRouter lock patch script
-        run: bash scripts/tests/test-patch-codex-openrouter-http-locks.sh
+      - name: Test Copilot workflow defaults
+        run: bash scripts/tests/test-copilot-workflow-defaults.sh
+      - name: Test setup activation contract
+        run: bash scripts/tests/test-setup-activation.sh
       - name: Test pr-review-agent activation bypass
         run: bash scripts/tests/test-pr-review-agent-activation.sh

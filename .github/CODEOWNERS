@@ -1,0 +1,17 @@
+# Human-owned control surfaces for prd-to-prod.
+#
+# Template-created repos may replace this owner during setup, but the exported
+# scaffold keeps the same protected path coverage.
+
+* @samuelkahessay
+
+/.github/CODEOWNERS @samuelkahessay
+/.github/workflows/ @samuelkahessay
+/.github/copilot-instructions.md @samuelkahessay
+/autonomy-policy.yml @samuelkahessay
+/setup.sh @samuelkahessay
+/setup-verify.sh @samuelkahessay
+/scaffold/ @samuelkahessay
+/scripts/verify-repo-protection.sh @samuelkahessay
+/scripts/scan-sensitive-output.sh @samuelkahessay
+/scripts/repo-memory-governance.sh @samuelkahessay

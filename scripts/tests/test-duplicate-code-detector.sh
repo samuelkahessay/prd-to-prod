@@ -25,6 +25,9 @@ if grep -F '"assignees":["copilot"]' "$WORKFLOW_LOCK" >/dev/null; then
   exit 1
 fi
 
-grep -F 'GH_AW_ASSIGN_COPILOT: "false"' "$WORKFLOW_LOCK" >/dev/null
+grep -F '"agent_id":"copilot"' "$WORKFLOW_LOCK" >/dev/null || {
+  echo "FAIL: duplicate-code-detector.lock.yml should compile with the Copilot engine" >&2
+  exit 1
+}
 
 echo "duplicate-code-detector workflow tests passed"

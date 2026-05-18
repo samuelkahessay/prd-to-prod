@@ -5,6 +5,8 @@ on:
   schedule: daily
   skip-if-match: 'is:pr is:open in:title "[code-simplifier]"'
 
+if: ${{ github.event_name != 'schedule' || vars.PIPELINE_ENABLED == 'true' }}
+
 permissions:
   contents: read
   issues: read
@@ -18,12 +20,6 @@ imports:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
-engine:
-  id: codex
-  model: openai/gpt-5-codex
-  env:
-    OPENAI_BASE_URL: https://openrouter.ai/api/v1
-
 safe-outputs:
   create-pull-request:
     title-prefix: "[code-simplifier] "
@@ -33,7 +29,6 @@ safe-outputs:
 network:
   allowed:
     - defaults
-    - openrouter.ai
     - dotnet
 
 tools:
