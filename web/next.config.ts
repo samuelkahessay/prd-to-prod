@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const config: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        destination: "https://github.com/samuelkahessay/prd-to-prod",
+        permanent: false,
+      },
+    ];
+  },
+
   async rewrites() {
     const apiTarget = process.env.API_URL || "http://127.0.0.1:3000";
     return [

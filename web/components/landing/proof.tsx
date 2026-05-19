@@ -14,11 +14,12 @@ export function Proof() {
 
       <div className={styles.caseStudy}>
         <p className={styles.caseLabel}>First client build</p>
-        <h3 className={styles.caseTitle}>Aurrin Ventures Crowdfunding Platform</h3>
+        <h3 className={styles.caseTitle}>Aurrin Ventures Platform</h3>
         <p className={styles.caseBody}>
           Calgary accelerator replacing their static site with a 12-module
-          platform for founders to build in public and raise money. From idea to
-          working product in 6 days — 80 agent-merged PRs across 133 issues.
+          platform for founder programs, public updates, validation, and
+          operations. From idea to working product in 6 days — 80 agent-merged
+          PRs across 133 issues.
         </p>
         <div className={styles.metrics}>
           {METRICS.map((m) => (
