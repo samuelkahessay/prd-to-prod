@@ -12,10 +12,10 @@ const AUDIENCE_FRAMES = [
       "The point is not to get another flashy build. The point is to get a repo, CI, deployment, and an approval boundary your team can trust.",
   },
   {
-    audience: "For investors",
+    audience: "For builders",
     title: "The strategic layer is moving above code generation.",
     body:
-      "As agents make code abundant, value concentrates in orchestration, control, recovery, and the evidence trail behind every release.",
+      "As agents make code abundant, durable systems concentrate on orchestration, control, recovery, and the evidence trail behind every release.",
   },
 ] as const;
 
@@ -70,7 +70,7 @@ const FOUNDER_POINTS = [
   },
 ] as const;
 
-const INVESTOR_POINTS = [
+const BUILDER_POINTS = [
   {
     label: "This is infrastructure, not a wrapper",
     body:
@@ -178,7 +178,7 @@ const POSITIONING_COMPANIES = [
 export const metadata: Metadata = {
   title: "Vision - prd to prod",
   description:
-    "The case for governed autonomous delivery infrastructure for founders and investors.",
+    "The case for governed autonomous delivery infrastructure for founders and builders.",
 };
 
 export default function VisionPage() {
@@ -210,8 +210,8 @@ export default function VisionPage() {
                 <p className={styles.heroBody}>
                   Founders need a way to move from product brief to shipped
                   software without turning every release into manual operations.
-                  Investors should see the control plane for autonomous software
-                  delivery forming in real time.
+                  Builders should be able to inspect the control plane for
+                  autonomous software delivery in real time.
                 </p>
               </div>
 
@@ -224,16 +224,8 @@ export default function VisionPage() {
 
                 <div className={styles.actions}>
                   <a
-                    href="https://calendly.com/kahessay"
-                    className={styles.ctaPrimary}
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    Book a call
-                  </a>
-                  <a
                     href="https://github.com/samuelkahessay/prd-to-prod"
-                    className={styles.ctaSecondary}
+                    className={styles.ctaPrimary}
                     target="_blank"
                     rel="noopener"
                   >
@@ -298,7 +290,7 @@ export default function VisionPage() {
           <section className={styles.section}>
             <p className={styles.sectionEyebrow}>Implications</p>
             <h2 className={styles.sectionTitle}>
-              What founders and investors should notice.
+              What founders and builders should notice.
             </h2>
 
             <div className={styles.columns}>
@@ -318,13 +310,13 @@ export default function VisionPage() {
               </section>
 
               <section className={styles.columnCard}>
-                <p className={styles.cardEyebrow}>Investors</p>
+                <p className={styles.cardEyebrow}>Builders</p>
                 <h3 className={styles.columnTitle}>
                   This is where the next software infrastructure layer gets
                   built.
                 </h3>
                 <ul className={styles.bulletList}>
-                  {INVESTOR_POINTS.map((point) => (
+                  {BUILDER_POINTS.map((point) => (
                     <li key={point.label} className={styles.bulletItem}>
                       <strong>{point.label}</strong>
                       <span>{point.body}</span>
@@ -364,11 +356,11 @@ export default function VisionPage() {
                 Aurrin Ventures went from brief to working product in 6 days.
               </h3>
               <p className={styles.featureBody}>
-                The pipeline produced a 12-module crowdfunding platform with 80
-                merged pull requests across 133 issues. That matters to founders
-                because the output is a working product, and it matters to
-                investors because the system was tested under real delivery
-                depth instead of a toy scenario.
+                The pipeline produced a 12-module platform with 80 merged pull
+                requests across 133 issues. That matters to founders because the
+                output is a working product, and it matters to builders because
+                the system was tested under real delivery depth instead of a toy
+                scenario.
               </p>
               <a
                 href="/case-studies/aurrin-ventures"
@@ -455,7 +447,7 @@ export default function VisionPage() {
 
             <p>
               Founders can read it as a faster path from intent to launch
-              without surrendering control. Investors can read it as an early
+              without surrendering control. Builders can read it as an early
               control layer for the next software production stack.
             </p>
 
@@ -466,14 +458,12 @@ export default function VisionPage() {
 
             <div className={styles.footerGrid}>
               <a
-                href="https://calendly.com/kahessay"
+                href="/case-studies/aurrin-ventures"
                 className={styles.footerCard}
-                target="_blank"
-                rel="noopener"
               >
                 <span className={styles.cardEyebrow}>Founders</span>
-                <strong>Bring a live PRD and pressure-test the pipeline.</strong>
-                <span>Book a working session.</span>
+                <strong>See a real brief become a working product.</strong>
+                <span>Read the first client build.</span>
               </a>
 
               <a
@@ -482,9 +472,9 @@ export default function VisionPage() {
                 target="_blank"
                 rel="noopener"
               >
-                <span className={styles.cardEyebrow}>Investors</span>
+                <span className={styles.cardEyebrow}>Builders</span>
                 <strong>Start with the repo, then the thesis.</strong>
-                <span>Review the implementation depth and market position.</span>
+                <span>Review the implementation depth and delivery record.</span>
               </a>
             </div>
           </section>

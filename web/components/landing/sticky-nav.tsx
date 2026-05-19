@@ -33,14 +33,6 @@ export function StickyNav() {
             GitHub
           </a>
         </div>
-        <a
-          href="https://calendly.com/kahessay"
-          className={styles.cta}
-          target="_blank"
-          rel="noopener"
-        >
-          Book a call
-        </a>
         <button
           className={`${styles.menuBtn} ${menuOpen ? styles.menuOpen : ""}`}
           onClick={() => setMenuOpen(!menuOpen)}
@@ -53,15 +45,6 @@ export function StickyNav() {
       </div>
       {menuOpen && (
         <div className={styles.dropdown}>
-          <a
-            href="https://calendly.com/kahessay"
-            className={styles.dropLink}
-            target="_blank"
-            rel="noopener"
-            onClick={() => setMenuOpen(false)}
-          >
-            Book a call
-          </a>
           <a href="/#how-it-works" className={styles.dropLink} onClick={() => setMenuOpen(false)}>How it works</a>
           <a href="/vision" className={styles.dropLink} onClick={() => setMenuOpen(false)}>Vision</a>
           <a
