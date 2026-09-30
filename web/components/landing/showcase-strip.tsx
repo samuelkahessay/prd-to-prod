@@ -69,13 +69,18 @@ export function ShowcaseStrip() {
 
         {/* CTA card */}
         <div className={`${styles.card} ${styles.ctaCard}`}>
-          <h3 className={styles.ctaHeading}>Your PRD could be next</h3>
+          <h3 className={styles.ctaHeading}>Run it yourself</h3>
           <p className={styles.ctaDesc}>
-            Send us a product spec. Get back a real repo handoff in the
-            invite-only beta.
+            The hosted beta is retired. The pipeline is open source: fork it
+            and bring your own tokens.
           </p>
-          <a href="/build" className={styles.ctaLink}>
-            Get started →
+          <a
+            href="https://github.com/samuelkahessay/prd-to-prod"
+            target="_blank"
+            rel="noopener"
+            className={styles.ctaLink}
+          >
+            View the source →
           </a>
         </div>
       </div>

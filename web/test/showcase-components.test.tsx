@@ -15,9 +15,9 @@ describe("ShowcaseStrip", () => {
 
   it("renders the CTA card with correct text", () => {
     render(<ShowcaseStrip />);
-    expect(screen.getByText("Your PRD could be next")).toBeInTheDocument();
+    expect(screen.getByText("Run it yourself")).toBeInTheDocument();
     expect(
-      screen.getByText("Send us a product spec. Get back a real repo handoff in the invite-only beta.")
+      screen.getByText("The hosted beta is retired. The pipeline is open source: fork it and bring your own tokens.")
     ).toBeInTheDocument();
   });
 
@@ -43,9 +43,12 @@ describe("ShowcaseStrip", () => {
     expect(screen.getByRole("heading", { name: "Built by the pipeline" })).toBeInTheDocument();
   });
 
-  it("renders the 'Get started →' CTA link pointing to /build", () => {
+  it("points the CTA at the source instead of the retired build flow", () => {
     render(<ShowcaseStrip />);
-    expect(screen.getByRole("link", { name: "Get started →" })).toHaveAttribute("href", "/build");
+    expect(screen.getByRole("link", { name: "View the source →" })).toHaveAttribute(
+      "href",
+      "https://github.com/samuelkahessay/prd-to-prod",
+    );
   });
 
   it("renders the 'See all →' link pointing to /showcase", () => {
