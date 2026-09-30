@@ -4,7 +4,7 @@ import "@testing-library/jest-dom";
 import VisionPage from "@/app/vision/page";
 
 describe("VisionPage", () => {
-  it("frames the thesis for founders and investors with visible proof", () => {
+  it("frames the thesis for founders and builders with visible proof", () => {
     render(<VisionPage />);
 
     expect(
@@ -14,26 +14,29 @@ describe("VisionPage", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getAllByText("For founders").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("For investors").length).toBeGreaterThan(0);
-    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getAllByText("For builders").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/investors/i)).not.toBeInTheDocument();
     expect(
-      screen.getByText("end-to-end self-healing drills completed"),
+      screen.getByText(/Aurrin Ventures went from brief to working product in 6 days\./),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 3,
+        name: "Self-healing has already been proven end to end.",
+      }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         level: 2,
-        name: "What founders and investors should notice.",
+        name: "What founders and builders should notice.",
       }),
     ).toBeInTheDocument();
   });
 
-  it("keeps the founder and investor conversion paths visible", () => {
+  it("keeps the founder and builder paths visible without scheduling links", () => {
     render(<VisionPage />);
 
-    expect(screen.getAllByRole("link", { name: "Book a call" })[0]).toHaveAttribute(
-      "href",
-      "https://calendly.com/kahessay",
-    );
+    expect(screen.queryByRole("link", { name: "Book a call" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Review the repo" })).toHaveAttribute(
       "href",
       "https://github.com/samuelkahessay/prd-to-prod",

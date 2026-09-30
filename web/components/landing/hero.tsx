@@ -14,15 +14,7 @@ export function Hero() {
         trails. We build the orchestration layer that governs the full pipeline.
       </p>
       <div className={styles.actions}>
-        <a
-          href="https://calendly.com/kahessay"
-          className={styles.ctaPrimary}
-          target="_blank"
-          rel="noopener"
-        >
-          Book a call
-        </a>
-        <a href="/vision" className={styles.ctaSecondary}>
+        <a href="/vision" className={styles.ctaPrimary}>
           Read the full thesis →
         </a>
       </div>

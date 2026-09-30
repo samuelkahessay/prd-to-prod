@@ -135,13 +135,18 @@ export default function ShowcasePage() {
           {/* CTA card */}
           <div className={`${styles.card} ${styles.ctaCard}`}>
             <div className={styles.ctaInner}>
-              <h2 className={styles.ctaHeading}>Your PRD could be next</h2>
+              <h2 className={styles.ctaHeading}>Run it yourself</h2>
               <p className={styles.ctaDesc}>
-                Send a product spec. Get back a real repo handoff, optional
-                deploy validation, and a complete audit trail.
+                The hosted beta is retired. The pipeline is open source: fork
+                it and bring your own tokens.
               </p>
-              <a href="/build" className={styles.ctaLink}>
-                Start a build →
+              <a
+                href="https://github.com/samuelkahessay/prd-to-prod"
+                target="_blank"
+                rel="noopener"
+                className={styles.ctaLink}
+              >
+                View the source →
               </a>
             </div>
           </div>

@@ -27,10 +27,9 @@ export function Audience() {
       <div className={styles.convergence}>
         <p>
           <strong>Where the industry is heading:</strong> GitHub shipped Agentic
-          Workflows. Vercel added Mitchell Hashimoto to the board. Factory raised
-          $70M from Sequoia. The infrastructure layer for autonomous delivery is
-          being built right now — and we&apos;re one of the deepest
-          implementations running in production.
+          Workflows. Vercel added Mitchell Hashimoto to the board. Autonomous
+          delivery is moving from code generation into governed systems — and
+          we&apos;re one of the deepest implementations running in production.
         </p>
       </div>
     </section>

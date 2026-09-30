@@ -24,14 +24,11 @@ describe("Hero", () => {
       screen.getByRole("heading", { name: /Code generation is solved\. Delivery isn't\./i }),
     ).toBeInTheDocument();
     expect(screen.getByText(/AI agents can write code/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Book a call" })).toHaveAttribute(
-      "href",
-      "https://calendly.com/kahessay",
-    );
     expect(screen.getByRole("link", { name: "Read the full thesis →" })).toHaveAttribute(
       "href",
       "/vision",
     );
+    expect(screen.queryByRole("link", { name: "Book a call" })).not.toBeInTheDocument();
   });
 });
 
@@ -45,10 +42,7 @@ describe("StickyNav", () => {
       "href",
       "https://github.com/samuelkahessay/prd-to-prod",
     );
-    expect(screen.getByRole("link", { name: "Book a call" })).toHaveAttribute(
-      "href",
-      "https://calendly.com/kahessay",
-    );
+    expect(screen.queryByRole("link", { name: "Book a call" })).not.toBeInTheDocument();
   });
 
   it("adds the scrolled class after scrolling past the threshold", () => {
@@ -162,19 +156,17 @@ describe("Pipeline animation queues", () => {
 describe("BottomCta", () => {
   it("renders the final call to action", () => {
     render(<BottomCta />);
-    expect(screen.getByRole("heading", { name: "Let's talk about your project." })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Book a call" })).toHaveAttribute(
-      "href",
-      "https://calendly.com/kahessay",
-    );
+    expect(screen.getByRole("heading", { name: "Build from the source." })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Technical vision →" })).toHaveAttribute(
       "href",
       "/vision",
     );
-    expect(screen.getByRole("link", { name: "Full pitch deck →" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "View on GitHub →" })).toHaveAttribute(
       "href",
-      "/pitch",
+      "https://github.com/samuelkahessay/prd-to-prod",
     );
+    expect(screen.queryByRole("link", { name: "Book a call" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Full pitch deck →" })).not.toBeInTheDocument();
   });
 });
 

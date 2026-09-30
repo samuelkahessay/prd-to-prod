@@ -1,15 +1,13 @@
 # PRD to Prod
 
-Send a PRD, get an invite-only beta run. The current public path is manual
-$1 entitlement -> single-use access code -> GitHub auth -> BYOK Copilot token
--> private repo provisioned from the public scaffold. Runs finish at repo
-handoff by default, with deployment validation when Vercel credentials are
-configured.
+Open-source agentic delivery pipeline experiment. The hosted beta and landing
+flow are retired, but the source remains available for reference, forking, and
+self-hosting.
 
 Open source. MIT licensed. Powered by [gh-aw](https://github.com/github/gh-aw)
 (GitHub Agentic Workflows).
 
-**[prdtoprod.com](https://prdtoprod.com)**
+Project archive: https://skahessay.dev/archive#prd-to-prod
 
 ## How it works
 
@@ -25,20 +23,7 @@ Open source. MIT licensed. Powered by [gh-aw](https://github.com/github/gh-aw)
 
 Every step is visible in GitHub: issues, PRs, reviews, and workflow runs.
 
-## Use it
-
-### Invite-only beta
-
-Request access through the [landing page](https://prd-to-prod.vercel.app).
-Today, `$1` is a manual entitlement, not a checkout flow.
-
-- We email a single-use access code
-- You authenticate with GitHub
-- You paste a BYOK `COPILOT_GITHUB_TOKEN`
-- Vercel credentials are optional; include them if you want validated deployment
-- Supported lane: greenfield `nextjs-vercel` only
-
-### Run it yourself
+## Run it yourself
 
 The code is MIT. Fork it, bring your own Copilot token for the gh-aw agents,
 deploy anywhere.

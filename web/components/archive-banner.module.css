@@ -1,0 +1,33 @@
+/* Pinned to the bottom edge because the landing nav is fixed to the top. */
+.banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 12px;
+  padding: 8px 16px;
+  background: var(--ink);
+  color: var(--cream);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* The inline script hides the banner inside the archive frame. */
+.banner[hidden] {
+  display: none;
+}
+
+.banner strong {
+  font-weight: 600;
+}
+
+.banner a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
